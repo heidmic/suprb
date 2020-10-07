@@ -99,8 +99,24 @@ class Individual:
             m = cl.matches(X)
             cl.fit(X[np.nonzero(m)], y[np.nonzero(m)])
 
-    def predict(self, x):
-        raise NotImplementedError()
+    def predict(self, X):
+        # TODO make this better
+        out = np.repeat(Config().default_prediction, X.shape[0])
+        if X.ndim == 2:
+            for x_idx in range(X.shape[0]):
+                x = X[x_idx]
+                mixing_sum = 0
+                mixing_taus = 0
+                for cl in self.classifiers:
+                    m = cl.matches(x.reshape((1, -1)))
+                    if not m.any():
+                        continue
+                    mixing_sum += cl.predict(X[np.nonzero(m)])[0]
+                    # see drugowich 6.26
+                    mixing_taus += 1/(cl.experience - Config().xdim) * cl.error
+                if not mixing_sum == 0:
+                    out[x_idx] = mixing_sum / mixing_taus
+        return out.reshape((-1, 1))
 
     def parameters(self) -> float:
         # pycharm gives a warning of type missmatch however this seems to work
