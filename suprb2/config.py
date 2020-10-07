@@ -8,7 +8,10 @@ class Config():
     __shared_state = {"pop_size": 30,
                       "ind_size": 50,
                       "n_elitists": 1,
-                      "generations": 5}
+                      "generations": 5,
+                      "xdim": None,
+                      "default_prediction": None,
+                      "var": None}
 
     def __init__(self):
         self.__dict__ = self.__shared_state
