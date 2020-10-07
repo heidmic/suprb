@@ -19,6 +19,8 @@ class Classifier:
         # TODO expand this int into remember which was matched (to reduce
         # retraining when mutate didnt change the matched data)
         self.experience = None
+        # if set this overrides local_model and outputs constant for all prediction requests
+        self.constant = None
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -34,22 +36,36 @@ class Classifier:
         Returns this classifier's prediction for the given input.
         """
         if X.ndim == 2:
-            return self.model.predict(X)
+            if self.constant is None:
+                return self.model.predict(X)
+            else:
+                return np.repeat(self.constant, X.shape[0])
         else:
-            return self.model.predict(X.reshape((1, -1))).reshape(())
+            if self.constant is None:
+                # TODO why the last reshape?
+                return self.model.predict(X.reshape((1, -1))).reshape(())
+            else:
+                return self.constant
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
         """
         Fits this classifier to the given training data and computes its
         error on it using it's local model's score method.
         """
+        self.constant = None
         if len(X) < 2:
-            # TODO handle this
-            return
-        self.model.fit(X, y)
-        # TODO should this be on validation data?
-        #  We need the score to estimate performance of the whole individual. using validation data would cause an additional loop
-        self.error = self.score(X, y, metric=mean_squared_error)
+            if len(X) == 1:
+                self.constant = y[0]
+            else:
+                self.constant = Config().default_prediction
+            # TODO is this a good default error? should we use the std?
+            self.error = Config().var
+        else:
+            self.model.fit(X, y)
+            # TODO should this be on validation data?
+            #  We need the score to estimate performance of the whole individual. using validation data would cause an additional loop
+            #  using validation data might cause it to bleed over, we should avoid it. in XCS train is used here
+            self.error = self.score(X, y, metric=mean_squared_error)
         self.experience = len(y)
 
     def score(self, X: np.ndarray, y: np.ndarray, metric=None) -> float:
