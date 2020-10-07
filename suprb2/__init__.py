@@ -5,8 +5,6 @@ from sklearn.metrics import *
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-xdim = 11
-
 
 class Classifier:
     def __init__(self, lowers, uppers, local_model, degree):
@@ -80,7 +78,7 @@ class Classifier:
 
     @staticmethod
     def random_cl():
-        lu = np.sort(Random().random.random((2, xdim)) * 2 - 1, axis=0)
+        lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
         return Classifier(lu[0], lu[1], LinearRegression(), 2)
 
 
@@ -115,17 +113,18 @@ class Individual:
 
 
 class LCS:
-    def __init__(self, individuals=None):
+    def __init__(self, xdim, individuals=None):
+        Config().xdim = xdim
         if individuals is None:
             self.population = (list(map(lambda x: Individual.random_individual(
                 Config().ind_size), range(Config().pop_size))))
         else:
             self.population = individuals
         self.elitist = None
-        self.default_prediction = 0
 
     def fit(self, X, y):
-        self.default_prediction = np.mean(y)
+        Config().default_prediction = np.mean(y)
+        Config().var = np.var(y)
         X_train, X_val, y_train, y_val = train_test_split(X, y)
 
         for ind in self.population:
