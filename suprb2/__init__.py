@@ -79,7 +79,13 @@ class Classifier:
     @staticmethod
     def random_cl():
         lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
+        if Config().cl_min_range:
+            diff = lu[1] - lu[0]
+            lu[0] -= diff/2
+            lu[1] += diff/2
+            lu = np.clip(lu, a_max=1, a_min=-1)
         return Classifier(lu[0], lu[1], LinearRegression(), 2)
+
 
 
 class Individual:

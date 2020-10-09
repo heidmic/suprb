@@ -7,6 +7,7 @@ class Config():
     """
     __shared_state = {"pop_size": 30,
                       "ind_size": 50,
+                      "cl_min_range": None,
                       "n_elitists": 1,
                       "generations": 5,
                       "xdim": None,
