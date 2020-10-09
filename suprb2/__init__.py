@@ -135,8 +135,12 @@ class Individual:
 
 
 class LCS:
-    def __init__(self, xdim, individuals=None):
+    def __init__(self, xdim, individuals=None, cl_min_range=None, pop_size=30, ind_size=50, generations=50):
         Config().xdim = xdim
+        Config().cl_min_range = cl_min_range
+        Config().pop_size = pop_size
+        Config().ind_size = ind_size
+        Config().generations = generations
         if individuals is None:
             self.population = (list(map(lambda x: Individual.random_individual(
                 Config().ind_size), range(Config().pop_size))))
