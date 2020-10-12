@@ -88,7 +88,20 @@ class Classifier:
             #return metric(y, list(map(self.predict, X)))
 
     def mutate(self):
-        raise NotImplementedError()
+        """
+        Mutates this matching function.
+
+        This is done similar to how the first XCSF iteration used mutation
+        (Wilson, 2002) but using a Gaussian distribution instead of a uniform
+        one (as done by Drugowitsch, 2007): Each interval [l, u)'s bound x is
+        changed to x' ~ N(x, (u - l) / 10) (Gaussian with standard deviation a
+        10th of the interval's width).
+        """
+        lowers = Random().random.normal(loc=self.lowerBounds, scale=2/10, size=len(self.lowerBounds))
+        uppers = Random().random.normal(loc=self.upperBounds, scale=2/10, size=len(self.upperBounds))
+        lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
+        self.lowerBounds = lu[0]
+        self.upperBounds = lu[1]
 
     @staticmethod
     def random_cl():
