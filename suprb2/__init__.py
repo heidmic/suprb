@@ -153,6 +153,11 @@ class Individual:
                     out[x_idx] = mixing_sum / mixing_taus
         return out.reshape((-1, 1))
 
+    def determine_fitness(self, X_val, y_val):
+        n = len(X_val)
+        # BIC -(n * np.log(rss / n) + complexity * np.log(n))
+        self.fitness = -(n * np.log(np.sum(np.square(y_val - self.predict(X_val))) / n)
+                         + self.parameters() * np.log(n))
 
     def parameters(self, simple=True) -> float:
         if simple:
