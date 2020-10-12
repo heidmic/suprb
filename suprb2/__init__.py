@@ -124,11 +124,10 @@ class Individual:
         self.classifiers = classifiers
         self.fitness = None
 
-    def mutate(self):
-        raise NotImplementedError()
-        # TODO call classifier mutation
-        # TODO Add classifier
-        # TODO Remove classifier
+    @staticmethod
+    def random_individual(size):
+        return Individual(list(map(lambda x: Classifier.random_cl(),
+                                   range(size))))
 
     def fit(self, X, y):
         # TODO Add note that this does only fit the local models and not optimize classifier location
@@ -162,10 +161,21 @@ class Individual:
         else:
             # pycharm gives a warning of type missmatch however this seems to work
             return np.sum([cl.params() for cl in self.classifiers])
-    @staticmethod
-    def random_individual(size):
-        return Individual(list(map(lambda x: Classifier.random_cl(),
-                                   range(size))))
+
+    def mutate(self):
+        # Add classifier
+        # TODO add hyperparameter
+        if Random().random.random() > 0.5:
+            self.classifiers.append(Classifier.random_cl())
+
+        # Remove a random classifier
+        # TODO add hyperparameter
+        if Random().random.random() > 0.5:
+            self.classifiers.pop(Random().random.integers(len(self.classifiers)))
+
+        # Mutate classifiers
+        for cl in self.classifiers:
+            cl.mutate()
 
 
 class LCS:
