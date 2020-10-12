@@ -164,7 +164,7 @@ class LCS:
     def fit(self, X, y):
         Config().default_prediction = np.mean(y)
         Config().var = np.var(y)
-        X_train, X_val, y_train, y_val = train_test_split(X, y)
+        X_train, X_val, y_train, y_val = train_test_split(X, y, random_state=Random().split_seed())
 
         for ind in self.population:
             ind.fit(X_train, y_train)

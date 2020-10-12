@@ -16,3 +16,7 @@ class Random:
     def seed(self, seed):
         self.random = np.random.default_rng(seed)
         self._seed = seed
+
+    def split_seed(self):
+        return self.random.integers(2 ** 32 - 1)
+

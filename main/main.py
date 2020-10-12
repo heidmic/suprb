@@ -1,5 +1,6 @@
 from problems import amgauss, make_problem
 from suprb2 import LCS
+from suprb2.random_gen import Random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler
@@ -16,7 +17,7 @@ if __name__ == '__main__':
 
     scale.fit(y)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, scale.transform(y))
+    X_train, X_test, y_train, y_test = train_test_split(X, scale.transform(y), random_state=Random().split_seed())
 
     lcs = LCS(xdim=(prob.xdim+prob.adim))
 
