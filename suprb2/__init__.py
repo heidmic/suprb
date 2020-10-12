@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from suprb2.random_gen import Random
 from suprb2.config import Config
 from sklearn.metrics import *
@@ -186,12 +187,25 @@ class LCS:
         Config().var = np.var(y)
         X_train, X_val, y_train, y_val = train_test_split(X, y, random_state=Random().split_seed())
 
-        for ind in self.population:
-            ind.fit(X_train, y_train)
+        self._train(X_train, y_train, X_val, y_val)
 
         # TODO allow other termination criteria. Early Stopping?
         for i in range(Config().generations):
-            pass
+            # TODO allow more elitist
+            # TODO currently population grows by 1 every generation
+            elitist = deepcopy(self.elitist)
+            for ind in self.population:
+                ind.mutate()
+            self._train(X_train, y_train, X_val, y_val)
+            self.population.append(elitist)
+
+    def _train(self, X_train, y_train, X_val, y_val):
+        for ind in self.population:
+            ind.fit(X_train, y_train)
+            ind.determine_fitness(X_val, y_val)
+            # TODO allow more elitist
+            if self.elitist is None or self.elitist.fitness < ind.fitness:
+                self.elitist = ind
 
     def predict(self, x):
         raise NotImplementedError()
