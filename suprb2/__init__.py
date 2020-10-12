@@ -179,15 +179,15 @@ class Individual:
             return np.sum([cl.params() for cl in self.classifiers])
 
     def mutate(self):
-        # Add classifier
-        # TODO add hyperparameter
-        if Random().random.random() > 0.5:
-            self.classifiers.append(Classifier.random_cl())
-
         # Remove a random classifier
         # TODO add hyperparameter
         if Random().random.random() > 0.5:
             self.classifiers.pop(Random().random.integers(len(self.classifiers)))
+
+        # Add classifier
+        # TODO add hyperparameter
+        if Random().random.random() > 0.5:
+            self.classifiers.append(Classifier.random_cl())
 
         # Mutate classifiers
         for cl in self.classifiers:
