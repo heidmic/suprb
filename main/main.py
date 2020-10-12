@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, scale.transform(y), random_state=Random().split_seed())
 
-    lcs = LCS(xdim=(prob.xdim+prob.adim))
+    lcs = LCS(xdim=(prob.xdim+prob.adim), pop_size=50, ind_size=25, cl_min_range=0.2, generations=50)
 
     lcs.fit(X_train, y_train)
 
