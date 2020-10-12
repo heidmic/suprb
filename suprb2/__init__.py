@@ -136,21 +136,33 @@ class Individual:
 
     def predict(self, X):
         # TODO make this better
-        out = np.repeat(Config().default_prediction, X.shape[0])
+        out = np.repeat(Config().default_prediction, len(X))
         if X.ndim == 2:
-            for x_idx in range(X.shape[0]):
-                x = X[x_idx]
-                mixing_sum = 0
-                mixing_taus = 0
-                for cl in self.classifiers:
-                    m = cl.matches(x.reshape((1, -1)))
-                    if not m.any():
-                        continue
-                    mixing_sum += cl.predict(X[np.nonzero(m)])[0]
-                    # see drugowich 6.26
-                    mixing_taus += 1/(cl.experience - Config().xdim) * cl.error
-                if not mixing_sum == 0:
-                    out[x_idx] = mixing_sum / mixing_taus
+            y_preds = np.zeros(len(X))
+            taus = np.zeros(len(X))
+            for cl in self.classifiers:
+                m = cl.matches(X)
+                if not m.any():
+                    continue
+                # an empty array to put predictions in
+                local_pred = np.zeros(len(X))
+                # unbiased version, with a potential division by zero: 1/(cl.experience - Config().xdim) * cl.error
+                tau = 1/(1/(cl.experience + 1) * cl.error + 1)
+                # put predictions for matched samples into local_pred
+                np.put(local_pred, np.nonzero(m), cl.predict(X[np.nonzero(m)]) * tau)
+                # add to the aggregated predictions
+                y_preds += local_pred
+
+                local_taus = np.zeros(len(X))
+                np.put(local_taus, np.nonzero(m), tau)
+                taus += local_taus
+
+            # prevent division by zero
+            np.put(taus, (taus == 0).nonzero(), 1)
+
+            y_pred = y_preds / taus
+            np.put(out, np.nonzero(y_pred), y_pred)
+        # TODO is this shape still needed?
         return out.reshape((-1, 1))
 
     def determine_fitness(self, X_val, y_val):
