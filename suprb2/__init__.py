@@ -47,6 +47,19 @@ class Classifier:
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
         """
+        fits this classifier to the given training date if matched samples changed since the last fit
+        :param X:
+        :param y:
+        :return:
+        """
+        m = self.matches(X)
+        # we save the training match to optimize fit (only re-fit when match changed after mutation)
+        if self.last_training_match is None or (m != self.last_training_match).any():
+            self.last_training_match = m
+            self._fit(X[np.nonzero(m)], y[np.nonzero(m)])
+
+    def _fit(self, X: np.ndarray, y: np.ndarray) -> None:
+        """
         Fits this classifier to the given training data and computes its
         error on it using it's local model's score method.
         """
