@@ -233,8 +233,8 @@ class LCS:
             if self.elitist is None or self.elitist.fitness < ind.fitness:
                 self.elitist = ind
 
-    def predict(self, x):
-        raise NotImplementedError()
+    def predict(self, X):
+        return self.elitist.predict(X)
 
 
 if __name__ == '__main__':
