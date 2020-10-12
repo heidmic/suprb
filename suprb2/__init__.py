@@ -113,6 +113,9 @@ class Classifier:
             lu = np.clip(lu, a_max=1, a_min=-1)
         return Classifier(lu[0], lu[1], LinearRegression(), 2)
 
+    def params(self):
+        if self.model is LinearRegression:
+            return self.model.coef_
 
 
 class Individual:
@@ -151,10 +154,13 @@ class Individual:
                     out[x_idx] = mixing_sum / mixing_taus
         return out.reshape((-1, 1))
 
-    def parameters(self) -> float:
-        # pycharm gives a warning of type missmatch however this seems to work
-        return np.sum([cl.degree for cl in self.classifiers])
 
+    def parameters(self, simple=True) -> float:
+        if simple:
+            return len(self.classifiers)
+        else:
+            # pycharm gives a warning of type missmatch however this seems to work
+            return np.sum([cl.params() for cl in self.classifiers])
     @staticmethod
     def random_individual(size):
         return Individual(list(map(lambda x: Classifier.random_cl(),
