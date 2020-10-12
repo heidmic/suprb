@@ -132,8 +132,7 @@ class Individual:
     def fit(self, X, y):
         # TODO Add note that this does only fit the local models and not optimize classifier location
         for cl in self.classifiers:
-            m = cl.matches(X)
-            cl.fit(X[np.nonzero(m)], y[np.nonzero(m)])
+            cl.fit(X, y)
 
     def predict(self, X):
         # TODO make this better
