@@ -226,8 +226,14 @@ class LCS:
         # TODO allow other termination criteria. Early Stopping?
         for i in range(Config().generations):
             # TODO allow more elitist
-            # TODO currently population grows by 1 every generation
             elitist = deepcopy(self.elitist)
+            new_pop = list()
+            while len(new_pop) < Config().pop_size:
+                parents = self.tournament_simple(2)
+                child_a, child_b = self.crossover(parents[0], parents[1])
+                new_pop.append(child_a)
+                new_pop.append(child_b)
+            self.population = new_pop
             for ind in self.population:
                 ind.mutate()
             self._train(X_train, y_train, X_val, y_val)
@@ -247,6 +253,70 @@ class LCS:
             PerfRecorder().elitist_matched.append(np.sum(np.array([cl.matches(X_val) for cl in self.elitist.classifiers]).any(axis=0)))
             PerfRecorder().elitist_complexity.append(self.elitist.parameters())
 
+    def crossover(self, parent_a, parent_b):
+        """
+        Creates offspring from the two given individuals by crossover.
+
+        – If `crossover_type` is `"normal"` for this population, we use a
+          normal distribution to determine sizes of the children to more often
+          create similarly large children.
+
+        – If `crossover_type` is `"uniform"`, the crossover definition from
+          (Drugowitsch, 2007) is used (e.g. creates one very small and one very
+          big child with the same probability as it does two children of equal
+          size).
+
+        – If `crossover_type` is `"off"`, no crossover is performed but (deep)
+          copies of the parents are returned.
+
+        If the parent's combined lengths are less than 2, return the parents
+        unchanged.
+        """
+        if len(parent_a.classifiers) + len(parent_b.classifiers) <= 2:
+            return parent_a, parent_b
+        elif Config().crossover_type == "off":
+            return deepcopy(parent_a), deepcopy(parent_b)
+        else:
+            parenta_cl = deepcopy(parent_a.classifiers)
+            parentb_cl = deepcopy(parent_b.classifiers)
+            all_cl = parenta_cl + parentb_cl
+
+            Random().random.shuffle(all_cl)
+
+            if Config().crossover_type == "normal":
+                p = 0
+                # ensure there is at least one classifier per individuum
+                while not 1 <= p <= len(all_cl) - 1:
+                    # random crossover point
+                    p = round(Random().random.normal(loc=np.floor(len(all_cl) / 2)))
+            elif Config().crossover_type == "uniform":
+                p = Random().random.integers(1, len(all_cl) - 1)
+
+            cl_a_new = all_cl[:p]
+            cl_b_new = all_cl[p:]
+
+            return Individual(cl_a_new), Individual(cl_b_new)
+
+    def tournament_simple(self, n: int):
+        """
+        Very simple tournament selection: Each tournament only consists of two
+        individuals the best of which always wins.
+
+        Note: We select competitors without replacement.
+
+        :param n: How many individuals to select (by holding successive
+            tournaments).
+        """
+        winners = list()
+        for _ in range(n):
+            competitors = Random().random.choice(self.population,
+                                                 size=2,
+                                                 replace=False)
+            if competitors[0].fitness > competitors[1].fitness:
+                winners.append(competitors[0])
+            else:
+                winners.append(competitors[1])
+        return winners
 
     def predict(self, X):
         return self.elitist.predict(X)
