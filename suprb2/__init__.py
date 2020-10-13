@@ -125,6 +125,7 @@ class Individual:
     def __init__(self, classifiers):
         self.classifiers = classifiers
         self.fitness = None
+        self.error = None
 
     @staticmethod
     def random_individual(size):
@@ -168,10 +169,20 @@ class Individual:
         return out.reshape((-1, 1))
 
     def determine_fitness(self, X_val, y_val):
-        n = len(X_val)
-        # BIC -(n * np.log(rss / n) + complexity * np.log(n))
-        self.fitness = -(n * np.log(np.sum(np.square(y_val - self.predict(X_val))) / n)
-                         + self.parameters() * np.log(n))
+        if Config().fitness == "pseudo-BIC":
+            n = len(X_val)
+            # mse = ResidualSumOfSquares / NumberOfSamples
+            mse = np.sum(np.square(y_val - self.predict(X_val))) / n
+            # for debugging
+            self.error = mse
+            # BIC -(n * np.log(rss / n) + complexity * np.log(n))
+            self.fitness = - (n * np.log(mse) + self.parameters() * np.log(n))
+        elif Config().fitness == "MSE":
+            self.error = mean_squared_error(y_val, self.predict(X_val))
+            self.fitness = - self.error
+        elif Config().fitness == "stupid_compl":
+            self.error = mean_squared_error(y_val, self.predict(X_val))
+            self.fitness = - self.error - (len(self.classifiers) - Config().ind_size if len(self.classifiers) > Config().ind_size else 0)
 
     def parameters(self, simple=True) -> float:
         if simple:
