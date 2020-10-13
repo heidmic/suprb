@@ -4,6 +4,7 @@ from suprb2.random_gen import Random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from datetime import datetime
 import numpy as np
 
 def f(X):
@@ -11,6 +12,7 @@ def f(X):
 
 
 if __name__ == '__main__':
+    print(f"Starting at {datetime.now().time()}")
     n = 10000
 
     """prob = make_problem("amgauss", 1)
@@ -34,10 +36,15 @@ if __name__ == '__main__':
     y = scale_y.transform(y)
 
     X_train, X_test, y_train, y_test = train_test_split(X, scale.transform(y), random_state=Random().split_seed())
+    print(f"Samples generated. Starting training at {datetime.now().time()}")
 
-    lcs = LCS(xdim=(prob.xdim+prob.adim), pop_size=50, ind_size=25, cl_min_range=0.2, generations=50)
+    lcs = LCS(xdim=xdim, pop_size=50, ind_size=10, cl_min_range=0.2, generations=50,
+              fitness="pseudo-BIC")
 
     lcs.fit(X_train, y_train)
 
-    error = mean_squared_error(y_test, lcs.predict(X_test))
+    y_pred = lcs.predict(X_test)
+
+    error = mean_squared_error(y_test, y_pred)
+    print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
 
