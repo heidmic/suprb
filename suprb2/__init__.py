@@ -2,9 +2,11 @@ import numpy as np
 from copy import deepcopy
 from suprb2.random_gen import Random
 from suprb2.config import Config
+from suprb2.perf_recorder import PerfRecorder
 from sklearn.metrics import *
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from datetime import datetime
 
 
 class Classifier:
@@ -195,12 +197,18 @@ class Individual:
 
 
 class LCS:
-    def __init__(self, xdim, individuals=None, cl_min_range=None, pop_size=30, ind_size=50, generations=50):
+    def __init__(self, xdim, individuals=None, cl_min_range=None, pop_size=30, ind_size=50, generations=50,
+                 fitness="pseudo-BIC", logging=True):
         Config().xdim = xdim
         Config().cl_min_range = cl_min_range
         Config().pop_size = pop_size
         Config().ind_size = ind_size
         Config().generations = generations
+        Config().fitness = fitness
+        Config().logging = logging
+        if Config().logging:
+            self.config = Config()
+            self.perf_recording = PerfRecorder()
         if individuals is None:
             self.population = (list(map(lambda x: Individual.random_individual(
                 Config().ind_size), range(Config().pop_size))))
@@ -232,6 +240,13 @@ class LCS:
             # TODO allow more elitist
             if self.elitist is None or self.elitist.fitness < ind.fitness:
                 self.elitist = ind
+        if Config().logging:
+            PerfRecorder().elitist_fitness.append(self.elitist.fitness)
+            PerfRecorder().elitist_val_error.append(self.elitist.error)
+            PerfRecorder().val_size.append(len(X_val))
+            PerfRecorder().elitist_matched.append(np.sum(np.array([cl.matches(X_val) for cl in self.elitist.classifiers]).any(axis=0)))
+            PerfRecorder().elitist_complexity.append(self.elitist.parameters())
+
 
     def predict(self, X):
         return self.elitist.predict(X)
