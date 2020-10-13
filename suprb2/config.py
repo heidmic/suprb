@@ -12,7 +12,10 @@ class Config():
                       "generations": 5,
                       "xdim": None,
                       "default_prediction": None,
-                      "var": None}
+                      "var": None,
+                      "crossover_type": "normal",
+                      "fitness": "pseudo-BIC",
+                      "logging": True}
 
     def __init__(self):
         self.__dict__ = self.__shared_state
