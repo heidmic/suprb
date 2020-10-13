@@ -238,6 +238,8 @@ class LCS:
                 ind.mutate()
             self._train(X_train, y_train, X_val, y_val)
             self.population.append(elitist)
+            if i % 5 == 0:
+                print(f"Finished generation {i+1} at {datetime.now().time()}")
 
     def _train(self, X_train, y_train, X_val, y_val):
         for ind in self.population:
