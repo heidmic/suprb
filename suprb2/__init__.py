@@ -193,8 +193,8 @@ class Individual:
     def mutate(self):
         # Remove a random classifier
         # TODO add hyperparameter
-        if Random().random.random() > 0.5:
-            self.classifiers.pop(Random().random.integers(len(self.classifiers)))
+        if Random().random.random() > 0.5 and len(self.classifiers) > 1:
+            self.classifiers.pop(Random().random.integers(low=0, high=len(self.classifiers)-1))
 
         # Add classifier
         # TODO add hyperparameter
