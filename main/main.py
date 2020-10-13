@@ -35,7 +35,8 @@ if __name__ == '__main__':
     scale_y.fit(y)
     y = scale_y.transform(y)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, scale.transform(y), random_state=Random().split_seed())
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=Random().split_seed())
+
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
     lcs = LCS(xdim=xdim, pop_size=50, ind_size=10, cl_min_range=0.2, generations=50,
