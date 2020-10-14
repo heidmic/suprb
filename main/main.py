@@ -14,11 +14,27 @@ def f(X):
     return 0.75*X**3-5*X**2+4*X+12
 
 
-def plot_results(X, y_test, y_pred):
+def plot_results(X, y_test, y_pred, elitist=None):
+    fig, ax = plt.subplots()
     plt.scatter(X, y_test, marker='^', c='red', label='test')
     plt.scatter(X, y_pred, marker='o', c='blue', label='pred')
     plt.xlabel('x')
     plt.ylabel('y')
+
+    if elitist is not None:
+        import matplotlib.colors as mcolors
+        from matplotlib.collections import PatchCollection
+        from matplotlib.patches import Rectangle
+        colors = list(mcolors.CSS4_COLORS.values())
+        size = np.max(y_test) - np.min(y_test)
+        per_cl = size / len(elitist.classifiers)
+        cls = []
+        for i in range(len(elitist.classifiers)):
+            plt.axvline(elitist.classifiers[i].lowerBounds[0], color=colors[i], lw=1)
+            plt.axvline(elitist.classifiers[i].upperBounds[0], color=colors[i], lw=1)
+            cls.append(Rectangle((elitist.classifiers[i].lowerBounds[0], np.min(y_test)+i*per_cl), elitist.classifiers[i].upperBounds[0]-elitist.classifiers[i].lowerBounds[0], per_cl, fill=False, linewidth=1, edgecolor=colors[i], hatch='/'))
+        ax.add_collection(PatchCollection(cls, alpha=0.5))
+
     plt.legend()
 
     plt.show()
@@ -96,7 +112,7 @@ if __name__ == '__main__':
 
     error = mean_squared_error(y_test, y_pred)
 
-    plot_results(X_test, y_test, y_pred)
+    plot_results(X_test, y_test, y_pred, lcs.elitist)
 
     plot_perfrecords(lcs.perf_recording.__dict__, ["elitist_complexity", "elitist_val_error"])
     plot_error_complexity(lcs.perf_recording)
