@@ -28,12 +28,10 @@ def plot_results(X, y_test, y_pred, elitist=None):
         colors = list(mcolors.CSS4_COLORS.values())
         size = np.max(y_test) - np.min(y_test)
         per_cl = size / len(elitist.classifiers)
-        cls = []
         for i in range(len(elitist.classifiers)):
             plt.axvline(elitist.classifiers[i].lowerBounds[0], color=colors[i], lw=1)
             plt.axvline(elitist.classifiers[i].upperBounds[0], color=colors[i], lw=1)
-            cls.append(Rectangle((elitist.classifiers[i].lowerBounds[0], np.min(y_test)+i*per_cl), elitist.classifiers[i].upperBounds[0]-elitist.classifiers[i].lowerBounds[0], per_cl, fill=False, linewidth=1, edgecolor=colors[i], hatch='/'))
-        ax.add_collection(PatchCollection(cls, alpha=0.5))
+            ax.add_patch(Rectangle((elitist.classifiers[i].lowerBounds[0], np.min(y_test)+i*per_cl), elitist.classifiers[i].upperBounds[0]-elitist.classifiers[i].lowerBounds[0], per_cl, fill=False, linewidth=2, edgecolor=colors[i], hatch='/'))
 
     plt.legend()
 
