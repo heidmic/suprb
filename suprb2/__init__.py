@@ -309,7 +309,7 @@ class LCS:
 
             return Individual(cl_a_new), Individual(cl_b_new)
 
-    def tournament_simple(self, n: int):
+    def tournament_simple(self, n: int, size: int = 2):
         """
         Very simple tournament selection: Each tournament only consists of two
         individuals the best of which always wins.
@@ -318,16 +318,19 @@ class LCS:
 
         :param n: How many individuals to select (by holding successive
             tournaments).
+        :param size: Tournament size, default is 2
         """
         winners = list()
         for _ in range(n):
             competitors = Random().random.choice(self.population,
-                                                 size=2,
+                                                 size=size,
                                                  replace=False)
-            if competitors[0].fitness > competitors[1].fitness:
-                winners.append(competitors[0])
-            else:
-                winners.append(competitors[1])
+            #if competitors[0].fitness > competitors[1].fitness:
+             #   winners.append(competitors[0])
+            #else:
+            #    winners.append(competitors[1])
+            winners.append(competitors[np.argmax([ind.fitness for ind in
+                                            competitors])])
         return winners
 
     def predict(self, X):
