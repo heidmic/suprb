@@ -8,6 +8,7 @@ from datetime import datetime
 import numpy as np
 
 import matplotlib.pyplot as plt
+import mlflow as mf
 
 
 def f(X):
@@ -103,23 +104,29 @@ if __name__ == '__main__':
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
-    lcs = LCS(xdim=xdim, pop_size=50, ind_size=10, cl_min_range=0.2, generations=50,
-              fitness="pseudo-BIC")
+    mf.set_experiment("Test Experiment 4")
 
-    lcs.fit(X_train, y_train)
+    with mf.start_run():
 
         # we reset the seed here
         Random().seed(0)
-    y_pred = lcs.predict(X_test)
 
-    error = mean_squared_error(y_test, y_pred)
+        lcs = LCS(xdim=xdim, pop_size=50, ind_size=10, cl_min_range=0.2,
+                  generations=500, fitness="pseudo-BIC", logging=True)
 
-    plot_results(X_test, y_test, y_pred, lcs.elitist)
+        lcs.fit(X_train, y_train)
 
-    plot_perfrecords(lcs.perf_recording.__dict__, ["elitist_complexity", "elitist_val_error"])
-    plot_error_complexity(lcs.perf_recording)
+        y_pred = lcs.predict(X_test)
 
-    print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
+        error = mean_squared_error(y_test, y_pred)
+
+        if False:
+            plot_results(X_test, y_test, y_pred, lcs.elitist)
+            plot_perfrecords(lcs.perf_recording.__dict__, ["elitist_complexity", "elitist_val_error"])
+            plot_error_complexity(lcs.perf_recording)
+
+        mf.log_metric("RMSE", np.sqrt(error))
+        print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
 
     pass
 
