@@ -7,6 +7,7 @@ from sklearn.metrics import *
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from datetime import datetime
+import mlflow as mf
 
 
 class Classifier:
@@ -217,6 +218,8 @@ class LCS:
         Config().fitness = fitness
         Config().logging = logging
         if Config().logging:
+            mf.log_params(Config().__dict__)
+            mf.log_param("seed", Random()._seed)
             self.config = Config()
             self.perf_recording = PerfRecorder()
         if individuals is None:
@@ -231,7 +234,7 @@ class LCS:
         Config().var = np.var(y)
         X_train, X_val, y_train, y_val = train_test_split(X, y, random_state=Random().split_seed())
 
-        self._train(X_train, y_train, X_val, y_val)
+        self._train(X_train, y_train, X_val, y_val, gen=0)
 
         # TODO allow other termination criteria. Early Stopping?
         for i in range(Config().generations):
@@ -246,12 +249,12 @@ class LCS:
             self.population = new_pop
             for ind in self.population:
                 ind.mutate()
-            self._train(X_train, y_train, X_val, y_val)
+            self._train(X_train, y_train, X_val, y_val, i+1)
             self.population.append(elitist)
             if i % 5 == 0:
                 print(f"Finished generation {i+1} at {datetime.now().time()}")
 
-    def _train(self, X_train, y_train, X_val, y_val):
+    def _train(self, X_train, y_train, X_val, y_val, gen):
         for ind in self.population:
             ind.fit(X_train, y_train)
             ind.determine_fitness(X_val, y_val)
@@ -259,6 +262,7 @@ class LCS:
             if self.elitist is None or self.elitist.fitness < ind.fitness:
                 self.elitist = ind
         if Config().logging:
+            mf.log_metric("fitness elite", self.elitist.fitness, gen)
             PerfRecorder().elitist_fitness.append(self.elitist.fitness)
             PerfRecorder().elitist_val_error.append(self.elitist.error)
             PerfRecorder().val_size.append(len(X_val))
