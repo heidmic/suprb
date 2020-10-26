@@ -85,6 +85,8 @@ if __name__ == '__main__':
     
     xdim = prob.xdim + prob.adim"""
 
+    Random().seed(0)
+
     X = Random().random.uniform(-2.5, 7, (n, 1))
     y = f(X)
     xdim = 1
@@ -106,6 +108,8 @@ if __name__ == '__main__':
 
     lcs.fit(X_train, y_train)
 
+        # we reset the seed here
+        Random().seed(0)
     y_pred = lcs.predict(X_test)
 
     error = mean_squared_error(y_test, y_pred)
