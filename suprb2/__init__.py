@@ -288,6 +288,11 @@ class LCS:
             PerfRecorder().elitist_matched.append(np.sum(np.array([cl.matches(X_val) for cl in self.elitist.classifiers]).any(axis=0)))
             PerfRecorder().elitist_complexity.append(self.elitist.parameters())
 
+    def score(self, X, y):
+        # TODO add a score according to https://scikit-learn.org/stable/developers/develop.html#apis-of-scikit-learn-objects
+        #  likely R2
+        raise NotImplementedError()
+
     def crossover(self, parent_a, parent_b):
         """
         Creates offspring from the two given individuals by crossover.
