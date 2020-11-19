@@ -150,7 +150,8 @@ class Individual:
                 # an empty array to put predictions in
                 local_pred = np.zeros(len(X))
                 # unbiased version, with a potential division by zero: 1/(cl.experience - Config().xdim) * cl.error
-                tau = 1/(1/(cl.experience + np.finfo(np.float64).tiny) * cl.error + np.finfo(np.float64).tiny)
+                tau = 1 / (#1 / (cl.experience + np.finfo(np.float64).tiny) *
+                           cl.error + np.finfo(np.float64).tiny)
                 # put predictions for matched samples into local_pred
                 np.put(local_pred, np.nonzero(m), cl.predict(X[np.nonzero(m)]) * tau)
                 # add to the aggregated predictions
