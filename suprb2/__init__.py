@@ -8,6 +8,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from datetime import datetime
 import mlflow as mf
+from suprb2.mutation import GaussianMutation, MutationStrategies, DirectedMutationLinExtrapolation
 
 
 class Classifier:
@@ -24,6 +25,10 @@ class Classifier:
         # if set this overrides local_model and outputs constant for all prediction requests
         self.constant = None
         self.last_training_match = None
+        # best values the classifier had for error, lower bounds, upper bounds
+        self.bestError = 1.0
+        self.bestLower = self.lowerBounds
+        self.bestUpper = self.upperBounds
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -76,12 +81,22 @@ class Classifier:
                 self.constant = Config().default_prediction
             # TODO is this a good default error? should we use the std?
             self.error = Config().var
+            # check if better than current best and update
+            if self.error < self.bestError:
+                self.bestError = self.error
+                self.bestLower = self.lowerBounds
+                self.bestUpper = self.upperBounds
         else:
             self.model.fit(X, y)
             # TODO should this be on validation data?
             #  We need the score to estimate performance of the whole individual. using validation data would cause an additional loop
             #  using validation data might cause it to bleed over, we should avoid it. in XCS train is used here
             self.error = self.score(X, y, metric=mean_squared_error)
+            # check if better than current best and update
+            if self.error < self.bestError:
+                self.bestError = self.error
+                self.bestLower = self.lowerBounds
+                self.bestUpper = self.upperBounds
         self.experience = len(y)
 
     def score(self, X: np.ndarray, y: np.ndarray, metric=None) -> float:
@@ -101,11 +116,16 @@ class Classifier:
         changed to x' ~ N(x, (u - l) / 10) (Gaussian with standard deviation a
         10th of the interval's width).
         """
-        lowers = Random().random.normal(loc=self.lowerBounds, scale=2/10, size=len(self.lowerBounds))
-        uppers = Random().random.normal(loc=self.upperBounds, scale=2/10, size=len(self.upperBounds))
-        lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
-        self.lowerBounds = lu[0]
-        self.upperBounds = lu[1]
+        # lowers = Random().random.normal(loc=self.lowerBounds, scale=2/10, size=len(self.lowerBounds))
+        # uppers = Random().random.normal(loc=self.upperBounds, scale=2/10, size=len(self.upperBounds))
+        # lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
+        # self.lowerBounds = lu[0]
+        # self.upperBounds = lu[1]
+        mut = GaussianMutation()
+        mut_strategy = MutationStrategies(mut)
+        mut_strategy.do_mutate_cl(cl=self)
+        # self.lowerBounds = new_bounds[0]
+        # self.upperBounds = new_bounds[1]
 
     @staticmethod
     def random_cl():
@@ -222,8 +242,11 @@ class Individual:
             self.classifiers.append(Classifier.random_cl())
 
         # Mutate classifiers
-        for cl in self.classifiers:
-            cl.mutate()
+        mut = GaussianMutation()
+        mut_strategy = MutationStrategies(mut)
+        mut_strategy.do_mutate_ind(ind=self)
+        # for cl in self.classifiers:
+        # cl.mutate()
 
 
 class LCS:
