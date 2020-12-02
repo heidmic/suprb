@@ -229,6 +229,30 @@ class Individual:
             cl.mutate()
 
 
+class ClassifierPool:
+    def __init__(self, X_train, y_train):
+        self.classifiers = list()
+        # draw n examples from data
+        # place classifiers around those examples
+        # test if classifiers overlap
+        # remove random overlapping classifiers until overlaps are resolved
+        # draw new examples and place classifiers around them until no more overlaps are found
+        ## maybe we allow some overlap? Would make the checks optional (and easier)
+
+        # fit all classifiers
+
+        #
+
+        # do
+        #   determine subpopulation based on localisation
+        #   perform a few generations of ES/GA for each subpop (maybe limit this based on local solution strength
+        #   select good solutions and make them available for LCS
+        #       set aside/freeze or do we just hope they survive?
+        # while LCS termination criterion is not found
+
+
+
+
 class LCS:
     def __init__(self, xdim, individuals=None, cl_min_range=None, pop_size=30, ind_size=50, generations=50,
                  fitness="pseudo-BIC", logging=True):
