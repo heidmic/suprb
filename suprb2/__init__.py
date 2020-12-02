@@ -108,8 +108,11 @@ class Classifier:
         self.upperBounds = lu[1]
 
     @staticmethod
-    def random_cl():
-        lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
+    def random_cl(point=None):
+        if point is not None:
+            lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, Config().xdim)) * 2 - 1, axis=0)
+        else:
+            lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
         if Config().cl_min_range:
             diff = lu[1] - lu[0]
             lu[0] -= diff/2
