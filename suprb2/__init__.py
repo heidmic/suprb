@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from datetime import datetime
 import mlflow as mf
-from suprb2.mutation import GaussianMutation, MutationStrategies, DirectedMutationLinExtrapolation
+from suprb2.mutation import *
 
 
 class Classifier:
@@ -26,9 +26,9 @@ class Classifier:
         self.constant = None
         self.last_training_match = None
         # best values the classifier had for error, lower bounds, upper bounds
-        self.bestError = 1.0
-        self.bestLower = self.lowerBounds
-        self.bestUpper = self.upperBounds
+        # self.bestError = 1.0
+        # self.bestLower = self.lowerBounds
+        # self.bestUpper = self.upperBounds
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -82,10 +82,10 @@ class Classifier:
             # TODO is this a good default error? should we use the std?
             self.error = Config().var
             # check if better than current best and update
-            if self.error < self.bestError:
+            """if self.error < self.bestError:
                 self.bestError = self.error
                 self.bestLower = self.lowerBounds
-                self.bestUpper = self.upperBounds
+                self.bestUpper = self.upperBounds"""
         else:
             self.model.fit(X, y)
             # TODO should this be on validation data?
@@ -93,10 +93,10 @@ class Classifier:
             #  using validation data might cause it to bleed over, we should avoid it. in XCS train is used here
             self.error = self.score(X, y, metric=mean_squared_error)
             # check if better than current best and update
-            if self.error < self.bestError:
+            """if self.error < self.bestError:
                 self.bestError = self.error
                 self.bestLower = self.lowerBounds
-                self.bestUpper = self.upperBounds
+                self.bestUpper = self.upperBounds"""
         self.experience = len(y)
 
     def score(self, X: np.ndarray, y: np.ndarray, metric=None) -> float:
@@ -106,7 +106,7 @@ class Classifier:
             return metric(y, self.predict(X))
             #return metric(y, list(map(self.predict, X)))
 
-    def mutate(self):
+    def mutate(self, X, y):
         """
         Mutates this matching function.
 
@@ -121,9 +121,9 @@ class Classifier:
         # lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
         # self.lowerBounds = lu[0]
         # self.upperBounds = lu[1]
-        mut = GaussianMutation()
+        mut = SimpleStochasticHillClimbing()
         mut_strategy = MutationStrategies(mut)
-        mut_strategy.do_mutate_cl(cl=self)
+        mut_strategy.do_mutate_cl(cl=self, X=X, y=y)
         # self.lowerBounds = new_bounds[0]
         # self.upperBounds = new_bounds[1]
 
@@ -230,7 +230,7 @@ class Individual:
             # pycharm gives a warning of type missmatch however this seems to work
             return np.sum([cl.params() for cl in self.classifiers])
 
-    def mutate(self):
+    def mutate(self, X, y):
         # Remove a random classifier
         # TODO add hyperparameter
         if Random().random.random() > 0.5 and len(self.classifiers) > 1:
@@ -241,12 +241,20 @@ class Individual:
         if Random().random.random() > 0.5:
             self.classifiers.append(Classifier.random_cl())
 
-        # Mutate classifiers
+        # Mutation probability for a single classifier; 1.0 for all classifiers being mutated
+        # TODO add hyperparameter
+        mutProb = 0.2
+
+        # Mutate classifiers for individual
         mut = GaussianMutation()
         mut_strategy = MutationStrategies(mut)
-        mut_strategy.do_mutate_ind(ind=self)
+        mut_strategy.do_mutate_ind(ind=self, X=X, y=y, mutProb=mutProb)
+
+        # Mutate classifiers one at a time
+        # takes much longer than mutating variant for individual, but more flexibility
         # for cl in self.classifiers:
-        # cl.mutate()
+        #     if Random().random.random() < mutProb:
+        #          cl.mutate(X=X, y=y)
 
 
 class LCS:
@@ -290,7 +298,7 @@ class LCS:
                 new_pop.append(child_b)
             self.population = new_pop
             for ind in self.population:
-                ind.mutate()
+                ind.mutate(X_train, y_train)
             self._train(X_train, y_train, X_val, y_val, i+1)
             self.population.append(elitist)
             if i % 5 == 0:
