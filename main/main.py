@@ -76,7 +76,7 @@ def plot_error_complexity(recorder):
 
 if __name__ == '__main__':
     print(f"Starting at {datetime.now().time()}")
-    n = 10000
+    n = 100
 
     """prob = make_problem("amgauss", 1)
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         Random().seed(0)
 
         lcs = LCS(xdim=xdim, pop_size=50, ind_size=10, cl_min_range=0.2,
-                  generations=500, fitness="pseudo-BIC", logging=True)
+                  generations=1, fitness="pseudo-BIC", logging=True)
 
         lcs.fit(X_train, y_train)
 
