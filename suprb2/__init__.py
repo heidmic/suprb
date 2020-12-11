@@ -230,7 +230,7 @@ class Individual:
             # pycharm gives a warning of type missmatch however this seems to work
             return np.sum([cl.params() for cl in self.classifiers])
 
-    def mutate(self, X, y):
+    def mutate(self, X, y, X_val, y_val, gen, max_gen):
         # Remove a random classifier
         # TODO add hyperparameter
         if Random().random.random() > 0.5 and len(self.classifiers) > 1:
@@ -246,9 +246,9 @@ class Individual:
         mutProb = 0.2
 
         # Mutate classifiers for individual
-        mut = GaussianMutation()
+        mut = NonUniformMutation()
         mut_strategy = MutationStrategies(mut)
-        mut_strategy.do_mutate_ind(ind=self, X=X, y=y, mutProb=mutProb)
+        mut_strategy.do_mutate_ind(ind=self, X=X, y=y, mutProb=mutProb, xv=X_val, yv=y_val, gen=gen, max_gen=max_gen)
 
         # Mutate classifiers one at a time
         # takes much longer than mutating variant for individual, but more flexibility
@@ -298,7 +298,7 @@ class LCS:
                 new_pop.append(child_b)
             self.population = new_pop
             for ind in self.population:
-                ind.mutate(X_train, y_train)
+                ind.mutate(X_train, y_train, X_val, y_val, i, Config().generations)
             self._train(X_train, y_train, X_val, y_val, i+1)
             self.population.append(elitist)
             if i % 5 == 0:
