@@ -112,7 +112,7 @@ if __name__ == '__main__':
         Random().seed(0)
 
         lcs = LCS(xdim=xdim, pop_size=50, ind_size=10, cl_min_range=0.2,
-                  generations=1, fitness="pseudo-BIC", logging=True)
+                  generations=2, fitness="pseudo-BIC", logging=True)
 
         lcs.fit(X_train, y_train)
 
@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
         error = mean_squared_error(y_test, y_pred)
 
-        if False:
+        if True:
             plot_results(X_test, y_test, y_pred, lcs.elitist)
             plot_perfrecords(lcs.perf_recording.__dict__, ["elitist_complexity", "elitist_val_error"])
             plot_error_complexity(lcs.perf_recording)
