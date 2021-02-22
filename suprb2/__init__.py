@@ -67,6 +67,10 @@ class LCS:
                 self.log(0, X)
                 # self.log(0, X_val)
 
+            # add verbosity option
+            if i % 25 == 0:
+                print(f"Finished step {i + 1} at {datetime.now().time()}\n")
+
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
                       .fitness, step)
