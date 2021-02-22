@@ -45,12 +45,26 @@ class LCS:
         #     y_val = y
 
         if Config().logging:
-            mf.log_metric("fitness elite", self.elitist.fitness, gen)
-            PerfRecorder().elitist_fitness.append(self.elitist.fitness)
-            PerfRecorder().elitist_val_error.append(self.elitist.error)
-            PerfRecorder().val_size.append(len(X_val))
-            PerfRecorder().elitist_matched.append(np.sum(np.array([cl.matches(X_val) for cl in self.elitist.classifiers]).any(axis=0)))
-            PerfRecorder().elitist_complexity.append(self.elitist.parameters())
+            self.log(0, X)
+            # self.log(0, X_val)
+            if Config().logging:
+                self.log(0, X)
+                # self.log(0, X_val)
+
+    def log(self, step, X_val):
+        mf.log_metric("fitness elite", self.sol_opt.get_elitist()
+                      .fitness, step)
+        PerfRecorder().elitist_fitness.append(
+            self.sol_opt.get_elitist().fitness)
+        PerfRecorder().elitist_val_error.append(
+            self.sol_opt.get_elitist().error)
+        PerfRecorder().val_size.append(len(X_val))
+        PerfRecorder().elitist_matched.append(np.sum(np.array(
+            [cl.matches(X_val) for cl in
+             [ClassifierPool().classifiers[i] for i in np.nonzero(
+                 self.sol_opt.get_elitist().genome)[0]]]).any(axis=0)))
+        PerfRecorder().elitist_complexity.append(
+            self.sol_opt.get_elitist().parameters())
 
     def get_elitist(self):
         return self.sol_opt.get_elitist()
