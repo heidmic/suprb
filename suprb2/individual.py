@@ -62,8 +62,9 @@ class Individual:
         #  only happen for matrizes, see below
         return [ClassifierPool().classifiers[i] for i in np.nonzero(
             self.genome)[0]]
+
     def determine_fitness(self, X_val, y_val):
-        if Config().fitness == "pseudo-BIC":
+        if Config().solution_creation['fitness'] == "pseudo-BIC":
             n = len(X_val)
             # mse = ResidualSumOfSquares / NumberOfSamples
             mse = np.sum(np.square(y_val - self.predict(X_val))) / n
@@ -72,7 +73,7 @@ class Individual:
             # BIC -(n * np.log(rss / n) + complexity * np.log(n))
             self.fitness = - (n * np.log(mse) + self.parameters() * np.log(n))
 
-        elif Config().fitness == "BIC_matching_punishment":
+        elif Config().solution_creation['fitness'] == "BIC_matching_punishment":
             n = len(X_val)
             # mse = ResidualSumOfSquares / NumberOfSamples
             mse = np.sum(np.square(y_val - self.predict(X_val))) / n
@@ -88,11 +89,11 @@ class Individual:
                                                  + matching_pun
                                                  ) * np.log(n))
 
-        elif Config().fitness == "MSE":
+        elif Config().solution_creation['fitness'] == "MSE":
             self.error = mean_squared_error(y_val, self.predict(X_val))
             self.fitness = - self.error
 
-        elif Config().fitness == "stupid_compl":
+        elif Config().solution_creation['fitness'] == "simplified_compl":
             self.error = mean_squared_error(y_val, self.predict(X_val))
             self.fitness = - self.error - (len(self.classifiers) - Config().ind_size if len(self.classifiers) > Config().ind_size else 0)
 
