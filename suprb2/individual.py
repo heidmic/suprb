@@ -105,17 +105,9 @@ class Individual:
             ## to work
             #return np.sum([cl.params() for cl in self.classifiers])
 
-    def mutate(self):
-        # Remove a random classifier
-        # TODO add hyperparameter
-        if Random().random.random() > 0.5 and len(self.classifiers) > 1:
-            self.classifiers.pop(Random().random.integers(low=0, high=len(self.classifiers)-1))
-
-        # Add classifier
-        # TODO add hyperparameter
-        if Random().random.random() > 0.5:
-            self.classifiers.append(Classifier.random_cl())
-
-        # Mutate classifiers
-        for cl in self.classifiers:
-            cl.mutate()
+    def mutate(self, rate=0.2):
+        pool_length = len(ClassifierPool().classifiers)
+        mutations = np.concatenate((Random().random.random(pool_length) < rate,
+                        np.zeros(len(self.genome)-pool_length, dtype='bool')),
+                                   dtype='bool')
+        self.genome = np.logical_xor(self.genome, mutations)
