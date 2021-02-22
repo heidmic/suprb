@@ -5,6 +5,7 @@ from suprb2.config import Config
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import *
 
+
 class Classifier:
     def __init__(self, lowers, uppers, local_model, degree):
         self.lowerBounds = lowers
@@ -108,12 +109,12 @@ class Classifier:
             lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, Config().xdim)) * 2 - 1, axis=0)
         else:
             lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
-        if Config().cl_min_range:
+        if Config().rule_discovery['cl_min_range']:
             diff = lu[1] - lu[0]
             lu[0] -= diff/2
             lu[1] += diff/2
             lu = np.clip(lu, a_max=1, a_min=-1)
-        return Classifier(lu[0], lu[1], LinearRegression(), 2)
+        return Classifier(lu[0], lu[1], LinearRegression(), 1)
 
     def params(self):
         if self.model is LinearRegression:
