@@ -1,5 +1,6 @@
 from problems import amgauss, make_problem
 from suprb2 import LCS
+from suprb2.config import Config
 from suprb2.random_gen import Random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
@@ -15,7 +16,7 @@ def f(X):
     return 0.75*X**3-5*X**2+4*X+12
 
 
-def plot_results(X, y_test, y_pred, elitist=None):
+def plot_results(X, y_test, y_pred, elitist=None, saveas=None):
     fig, ax = plt.subplots()
     plt.scatter(X, y_test, marker='^', c='red', label='test')
     plt.scatter(X, y_pred, marker='o', c='blue', label='pred')
@@ -28,18 +29,21 @@ def plot_results(X, y_test, y_pred, elitist=None):
         from matplotlib.patches import Rectangle
         colors = list(mcolors.CSS4_COLORS.values())
         size = np.max(y_test) - np.min(y_test)
-        per_cl = size / len(elitist.classifiers)
-        for i in range(len(elitist.classifiers)):
-            plt.axvline(elitist.classifiers[i].lowerBounds[0], color=colors[i], lw=1)
-            plt.axvline(elitist.classifiers[i].upperBounds[0], color=colors[i], lw=1)
-            ax.add_patch(Rectangle((elitist.classifiers[i].lowerBounds[0], np.min(y_test)+i*per_cl), elitist.classifiers[i].upperBounds[0]-elitist.classifiers[i].lowerBounds[0], per_cl, fill=False, linewidth=2, edgecolor=colors[i], hatch='/'))
+        per_cl = size / len(elitist.get_classifiers())
+        for i in range(len(elitist.get_classifiers())):
+            plt.axvline(elitist.get_classifiers()[i].lowerBounds[0], color=colors[i], lw=1.5)
+            plt.axvline(elitist.get_classifiers()[i].upperBounds[0], color=colors[i], lw=1.5)
+            ax.add_patch(Rectangle((elitist.get_classifiers()[i].lowerBounds[0], np.min(y_test)+i*per_cl), elitist.get_classifiers()[i].upperBounds[0]-elitist.get_classifiers()[i].lowerBounds[0], per_cl, fill=False, linewidth=2, edgecolor=colors[i], hatch='/'))
 
     plt.legend()
 
-    plt.show()
+    if saveas is None:
+        plt.show()
+    else:
+        plt.savefig(f"figs/results_{saveas}.png", format='png', dpi=600)
 
 
-def plot_perfrecords(recorder, ignore=[]):
+def plot_perfrecords(recorder, ignore=[], saveas=None):
     g = np.arange(0, len(list(recorder.values())[0]), 1)
     for i in range(len(recorder.keys())):
         if list(recorder.keys())[i] in ignore:
@@ -50,10 +54,13 @@ def plot_perfrecords(recorder, ignore=[]):
     plt.ylabel('value')
     plt.legend()
 
-    plt.show()
+    if saveas is None:
+        plt.show()
+    else:
+        plt.savefig(f"figs/perfrecords_{saveas}.png", format='png', dpi=600)
 
 
-def plot_error_complexity(recorder):
+def plot_error_complexity(recorder, saveas=None):
     g = np.arange(0, len(recorder.elitist_val_error), 1)
     fig, ax1 = plt.subplots()
 
@@ -71,12 +78,16 @@ def plot_error_complexity(recorder):
     ax2.tick_params(axis='y', labelcolor=color)
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    plt.show()
+    if saveas is None:
+        plt.show()
+    else:
+        plt.savefig(f"figs/error_complexity_{saveas}.png", format='png',
+                    dpi=600)
 
 
 if __name__ == '__main__':
     print(f"Starting at {datetime.now().time()}")
-    n = 10000
+    n = 1000
 
     """prob = make_problem("amgauss", 1)
 
@@ -86,7 +97,7 @@ if __name__ == '__main__':
     
     xdim = prob.xdim + prob.adim"""
 
-    Random().seed(0)
+    Random().reseed(0)
 
     X = Random().random.uniform(-2.5, 7, (n, 1))
     y = f(X)
@@ -104,29 +115,29 @@ if __name__ == '__main__':
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
-    mf.set_experiment("Test Experiment 4")
+    mf.set_experiment("Test Experiment 5")
+    for seed in range(0, 1):
+        with mf.start_run():
 
-    with mf.start_run():
+            # we reset the seed here
+            Random().reseed(seed)
 
-        # we reset the seed here
-        Random().seed(0)
+            lcs = LCS(xdim)
 
-        lcs = LCS(xdim=xdim, pop_size=50, ind_size=10, cl_min_range=0.2,
-                  generations=500, fitness="pseudo-BIC", logging=True)
+            lcs.fit(X_train, y_train)
 
-        lcs.fit(X_train, y_train)
+            y_pred = lcs.predict(X_test)
 
-        y_pred = lcs.predict(X_test)
+            error = mean_squared_error(y_test, y_pred)
 
-        error = mean_squared_error(y_test, y_pred)
+            if True:
+                plot_results(X_test, y_test, y_pred, lcs.get_elitist(), seed)
+                plot_perfrecords(lcs.perf_recording.__dict__,
+                                 ["elitist_complexity", "elitist_val_error"], seed)
+                plot_error_complexity(lcs.perf_recording, seed)
 
-        if False:
-            plot_results(X_test, y_test, y_pred, lcs.elitist)
-            plot_perfrecords(lcs.perf_recording.__dict__, ["elitist_complexity", "elitist_val_error"])
-            plot_error_complexity(lcs.perf_recording)
-
-        mf.log_metric("RMSE", np.sqrt(error))
-        print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
+            mf.log_metric("RMSE", np.sqrt(error))
+            print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
 
     pass
 

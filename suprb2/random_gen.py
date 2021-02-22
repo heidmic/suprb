@@ -13,7 +13,7 @@ class Random:
     def __init__(self):
         self.__dict__ = self.__shared_state
 
-    def seed(self, seed):
+    def reseed(self, seed):
         self.random = np.random.default_rng(seed)
         self._seed = seed
 
