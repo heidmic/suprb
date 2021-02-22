@@ -118,3 +118,4 @@ class Classifier:
     def params(self):
         if self.model is LinearRegression:
             return self.model.coef_
+
