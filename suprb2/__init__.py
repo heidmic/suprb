@@ -30,7 +30,7 @@ class LCS:
         self.sol_opt = None
 
     def fit(self, X, y):
-        Config().default_prediction = np.mean(y)
+        Config().default_prediction = 0  # np.mean(y)
         Config().var = np.var(y)
 
         # if Config().use_validation:
