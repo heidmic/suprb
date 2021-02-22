@@ -44,6 +44,8 @@ class LCS:
         #     y_train = y
         #     y_val = y
 
+        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
+            self.discover_rules(X, y)
         if Config().logging:
             self.log(0, X)
             # self.log(0, X_val)
