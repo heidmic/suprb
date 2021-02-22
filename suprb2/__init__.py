@@ -4,6 +4,8 @@ from suprb2.config import Config
 from suprb2.perf_recorder import PerfRecorder
 from suprb2.classifier import Classifier
 from suprb2.individual import Individual
+from suprb2.solutions import ES_1plus1
+from suprb2.pool import ClassifierPool
 
 from sklearn.model_selection import train_test_split
 from datetime import datetime
@@ -53,6 +55,14 @@ class LCS:
         if Config().logging:
             self.log(0, X)
             # self.log(0, X_val)
+
+        # TODO allow other termination criteria. Early Stopping?
+        for i in range(Config().steps):
+            self.discover_rules(X, y)
+
+            self.sol_opt.step(X, y)
+            # self.sol_opt.step(X_val, y_val)
+
             if Config().logging:
                 self.log(0, X)
                 # self.log(0, X_val)
