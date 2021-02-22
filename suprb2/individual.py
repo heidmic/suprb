@@ -7,27 +7,31 @@ from sklearn.metrics import *
 
 
 class Individual:
-    def __init__(self, classifiers):
-        self.classifiers = classifiers
+    def __init__(self, genome):
+        self.genome = genome
         self.fitness = None
         self.error = None
 
     @staticmethod
-    def random_individual(size):
-        return Individual(list(map(lambda x: Classifier.random_cl(),
-                                   range(size))))
+    def random_individual(genome_length):
+        pool_length = len(ClassifierPool().classifiers)
+        # from interval [low, high)
+        return Individual(np.concatenate((
+            Random().random.integers(low=0, high=2, size=pool_length,
+                                        dtype=bool),
+            np.zeros(genome_length-pool_length))))
 
     def fit(self, X, y):
-        # TODO Add note that this does only fit the local models and not optimize classifier location
-        for cl in self.classifiers:
-            cl.fit(X, y)
+        # Classifiers are already fitted, this should thus do nothing. But to
+        # keep in line with sklearn syntax is kept in for the moment.
+        raise NotImplementedError()
 
     def predict(self, X):
         out = np.repeat(Config().default_prediction, len(X))
         if X.ndim == 2:
             y_preds = np.zeros(len(X))
             taus = np.zeros(len(X))
-            for cl in self.classifiers:
+            for cl in self.get_classifiers():
                 m = cl.matches(X)
                 if not m.any():
                     continue
@@ -53,6 +57,11 @@ class Individual:
         # TODO is this shape still needed?
         return out.reshape((-1, 1))
 
+    def get_classifiers(self):
+        # TODO for some reason returns tuple here, although this should
+        #  only happen for matrizes, see below
+        return [ClassifierPool().classifiers[i] for i in np.nonzero(
+            self.genome)[0]]
     def determine_fitness(self, X_val, y_val):
         if Config().fitness == "pseudo-BIC":
             n = len(X_val)
@@ -89,10 +98,12 @@ class Individual:
 
     def parameters(self, simple=True) -> float:
         if simple:
-            return len(self.classifiers)
+            return np.count_nonzero(self.genome)
         else:
-            # pycharm gives a warning of type missmatch however this seems to work
-            return np.sum([cl.params() for cl in self.classifiers])
+            raise NotImplementedError()
+            ## pycharm gives a warning of type missmatch however this seems
+            ## to work
+            #return np.sum([cl.params() for cl in self.classifiers])
 
     def mutate(self):
         # Remove a random classifier
