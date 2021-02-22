@@ -1,5 +1,6 @@
 from problems import amgauss, make_problem
 from suprb2 import LCS
+from suprb2.config import Config
 from suprb2.random_gen import Random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
@@ -76,7 +77,7 @@ def plot_error_complexity(recorder):
 
 if __name__ == '__main__':
     print(f"Starting at {datetime.now().time()}")
-    n = 100
+    n = 1000
 
     """prob = make_problem("amgauss", 1)
 
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     
     xdim = prob.xdim + prob.adim"""
 
-    Random().seed(0)
+    Random().reseed(0)
 
     X = Random().random.uniform(-2.5, 7, (n, 1))
     y = f(X)
@@ -104,29 +105,29 @@ if __name__ == '__main__':
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
-    mf.set_experiment("Test Experiment 4")
+    mf.set_experiment("Test Experiment 5")
+    for seed in range(0, 1):
+        with mf.start_run():
 
-    with mf.start_run():
+            # we reset the seed here
+            Random().reseed(seed)
 
-        # we reset the seed here
-        Random().seed(0)
+            lcs = LCS(xdim)
 
-        lcs = LCS(xdim=xdim, pop_size=50, ind_size=10, cl_min_range=0.2,
-                  generations=2, fitness="pseudo-BIC", logging=True)
+            lcs.fit(X_train, y_train)
 
-        lcs.fit(X_train, y_train)
+            y_pred = lcs.predict(X_test)
 
-        y_pred = lcs.predict(X_test)
+            error = mean_squared_error(y_test, y_pred)
 
-        error = mean_squared_error(y_test, y_pred)
+            if True:
+                plot_results(X_test, y_test, y_pred, lcs.get_elitist(), seed)
+                plot_perfrecords(lcs.perf_recording.__dict__,
+                                 ["elitist_complexity", "elitist_val_error"], seed)
+                plot_error_complexity(lcs.perf_recording, seed)
 
-        if True:
-            plot_results(X_test, y_test, y_pred, lcs.elitist)
-            plot_perfrecords(lcs.perf_recording.__dict__, ["elitist_complexity", "elitist_val_error"])
-            plot_error_complexity(lcs.perf_recording)
-
-        mf.log_metric("RMSE", np.sqrt(error))
-        print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
+            mf.log_metric("RMSE", np.sqrt(error))
+            print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
 
     pass
 
