@@ -80,6 +80,26 @@ class LCS:
         #  likely R2
         raise NotImplementedError()
 
+    def discover_rules(self, X, y):
+        # draw n examples from data
+        idxs = Random().random.choice(np.arange(len(X)),
+                                      Config().rule_discovery['nrules'], False)
+
+        for x in X[idxs]:
+            cl = Classifier.random_cl(x)
+            cl.fit(X, y)
+            for i in range(Config().rule_discovery['steps_per_step']):
+                children = list()
+                for j in range(Config().rule_discovery['lmbd']):
+                    child = deepcopy(cl)
+                    child.mutate(Config().rule_discovery['sigma'])
+                    child.fit(X, y)
+                    children.append(child)
+                # code inspection predicts a type missmatch but it should be fine?
+                cl = children[np.argmin([child.error for child in children])]
+            if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
+                ClassifierPool().classifiers.append(cl)
+
     @staticmethod
     def default_error(y):
         return np.sum(y**2)/len(y)
