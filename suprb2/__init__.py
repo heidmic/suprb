@@ -31,7 +31,6 @@ class LCS:
                 Config().ind_size), range(Config().pop_size))))
         else:
             self.population = individuals
-        self.elitist = None
 
     def fit(self, X, y):
         Config().default_prediction = np.mean(y)
@@ -72,6 +71,10 @@ class LCS:
             PerfRecorder().val_size.append(len(X_val))
             PerfRecorder().elitist_matched.append(np.sum(np.array([cl.matches(X_val) for cl in self.elitist.classifiers]).any(axis=0)))
             PerfRecorder().elitist_complexity.append(self.elitist.parameters())
+
+    def get_elitist(self):
+        return self.sol_opt.get_elitist()
+
     def predict(self, X):
         return self.sol_opt.get_elitist().predict(X)
 
