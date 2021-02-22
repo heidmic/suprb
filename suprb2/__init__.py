@@ -12,25 +12,22 @@ from copy import deepcopy
 
 
 class LCS:
-    def __init__(self, xdim, individuals=None, cl_min_range=None, pop_size=30, ind_size=50, generations=50,
-                 fitness="pseudo-BIC", logging=True):
+    def __init__(self, xdim,
+                 # pop_size=30, ind_size=50, generations=50,
+                 # fitness="pseudo-BIC",
+                 logging=True):
         Config().xdim = xdim
-        Config().cl_min_range = cl_min_range
-        Config().pop_size = pop_size
-        Config().ind_size = ind_size
-        Config().generations = generations
-        Config().fitness = fitness
+        # Config().pop_size = pop_size
+        # Config().ind_size = ind_size
+        # Config().generations = generations
+        # Config().fitness = fitness
         Config().logging = logging
         if Config().logging:
             mf.log_params(Config().__dict__)
             mf.log_param("seed", Random()._seed)
             self.config = Config()
             self.perf_recording = PerfRecorder()
-        if individuals is None:
-            self.population = (list(map(lambda x: Individual.random_individual(
-                Config().ind_size), range(Config().pop_size))))
-        else:
-            self.population = individuals
+        self.sol_opt = None
 
     def fit(self, X, y):
         Config().default_prediction = np.mean(y)
