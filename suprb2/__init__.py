@@ -32,8 +32,17 @@ class LCS:
     def fit(self, X, y):
         Config().default_prediction = np.mean(y)
         Config().var = np.var(y)
-        X_train, X_val, y_train, y_val = train_test_split(X, y, random_state=Random().split_seed())
 
+        # if Config().use_validation:
+        #     X_train, X_val, y_train, y_val = train_test_split(X, y,
+        #                                                       random_state=Random().split_seed())
+        #
+        #
+        # else:
+        #     X_train = X
+        #     X_val = X
+        #     y_train = y
+        #     y_val = y
         self._train(X_train, y_train, X_val, y_val, gen=0)
 
         # TODO allow other termination criteria. Early Stopping?
