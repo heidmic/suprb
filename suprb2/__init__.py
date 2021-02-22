@@ -145,6 +145,9 @@ class LCS:
             winners.append(competitors[np.argmax([ind.fitness for ind in
                                             competitors])])
         return winners
+    @staticmethod
+    def default_error(y):
+        return np.sum(y**2)/len(y)
 
 
     # place classifiers around those examples
