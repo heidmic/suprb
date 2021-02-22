@@ -2,6 +2,7 @@ import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
 from suprb2.classifier import Classifier
+from suprb2.pool import ClassifierPool
 
 from sklearn.metrics import *
 
@@ -40,6 +41,10 @@ class Individual:
                 # unbiased version, with a potential division by zero: 1/(cl.experience - Config().xdim) * cl.error
                 tau = 1 / (#1 / (cl.experience + np.finfo(np.float64).tiny) *
                            cl.error + np.finfo(np.float64).tiny)
+                # TODO is there a better way to solve "RuntimeWarning: overflow
+                #  encountered in add" when adding taus? Investigate for good
+                #  bounds. error should always be > 0? float64 max is e308
+                tau = np.clip(tau, 0, 1e100)
                 # put predictions for matched samples into local_pred
                 np.put(local_pred, np.nonzero(m), cl.predict(X[np.nonzero(m)]) * tau)
                 # add to the aggregated predictions
