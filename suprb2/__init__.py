@@ -43,33 +43,7 @@ class LCS:
         #     X_val = X
         #     y_train = y
         #     y_val = y
-        self._train(X_train, y_train, X_val, y_val, gen=0)
 
-        # TODO allow other termination criteria. Early Stopping?
-        for i in range(Config().generations):
-            # TODO allow more elitist
-            elitist = deepcopy(self.elitist)
-            new_pop = list()
-            while len(new_pop) < Config().pop_size:
-                parents = self.tournament_simple(2)
-                child_a, child_b = self.crossover(parents[0], parents[1])
-                new_pop.append(child_a)
-                new_pop.append(child_b)
-            self.population = new_pop
-            for ind in self.population:
-                ind.mutate()
-            self._train(X_train, y_train, X_val, y_val, i+1)
-            self.population.append(elitist)
-            if i % 5 == 0:
-                print(f"Finished generation {i+1} at {datetime.now().time()}")
-
-    def _train(self, X_train, y_train, X_val, y_val, gen):
-        for ind in self.population:
-            ind.fit(X_train, y_train)
-            ind.determine_fitness(X_val, y_val)
-            # TODO allow more elitist
-            if self.elitist is None or self.elitist.fitness < ind.fitness:
-                self.elitist = ind
         if Config().logging:
             mf.log_metric("fitness elite", self.elitist.fitness, gen)
             PerfRecorder().elitist_fitness.append(self.elitist.fitness)
