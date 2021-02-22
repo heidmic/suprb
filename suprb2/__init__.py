@@ -72,6 +72,8 @@ class LCS:
             PerfRecorder().val_size.append(len(X_val))
             PerfRecorder().elitist_matched.append(np.sum(np.array([cl.matches(X_val) for cl in self.elitist.classifiers]).any(axis=0)))
             PerfRecorder().elitist_complexity.append(self.elitist.parameters())
+    def predict(self, X):
+        return self.sol_opt.get_elitist().predict(X)
 
     def score(self, X, y):
         # TODO add a score according to https://scikit-learn.org/stable/developers/develop.html#apis-of-scikit-learn-objects
@@ -176,8 +178,6 @@ class LCS:
 
 
 
-    def predict(self, X):
-        return self.elitist.predict(X)
 
 
 if __name__ == '__main__':
