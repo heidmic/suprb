@@ -46,6 +46,10 @@ class LCS:
 
         while len(ClassifierPool().classifiers) < Config().initial_pool_size:
             self.discover_rules(X, y)
+
+        self.sol_opt = ES_1plus1(X, y)
+        # self.sol_opt = ES_1plus1(X_val, y_val)
+
         if Config().logging:
             self.log(0, X)
             # self.log(0, X_val)
