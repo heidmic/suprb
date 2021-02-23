@@ -31,33 +31,41 @@ class Individual:
         out = np.repeat(Config().default_prediction, len(X))
         if X.ndim == 2:
             y_preds = np.zeros(len(X))
-            taus = np.zeros(len(X))
-            for cl in self.get_classifiers():
+            tausum = np.zeros(len(X))
+            cls = self.get_classifiers()
+            t_ = np.zeros(len(cls))
+            for i in range(len(cls)):
+                cl = cls[i]
+                # unbiased version, with a potential division by zero: 1/(cl.experience - Config().xdim) * cl.error
+                with np.errstate(divide='ignore'):
+                    tau = 1 / (1 / np.array(cl.experience) * np.array(cl.error))
+                t_[i] = tau
+            was_inf = np.inf in t_
+            for i in range(len(cls)):
+                cl = cls[i]
+                # an empty array to put predictions in
+                local_pred = np.zeros(len(X))
+                if was_inf and t_[i] == np.inf:
+                    t_[i] = 1
+                elif was_inf:
+                    t_[i] = 0
                 m = cl.matches(X)
                 if not m.any():
                     continue
-                # an empty array to put predictions in
-                local_pred = np.zeros(len(X))
-                # unbiased version, with a potential division by zero: 1/(cl.experience - Config().xdim) * cl.error
-                tau = 1 / (#1 / (cl.experience + np.finfo(np.float64).tiny) *
-                           cl.error + np.finfo(np.float64).tiny)
-                # TODO is there a better way to solve "RuntimeWarning: overflow
-                #  encountered in add" when adding taus? Investigate for good
-                #  bounds. error should always be > 0? float64 max is e308
-                tau = np.clip(tau, 0, 1e100)
                 # put predictions for matched samples into local_pred
-                np.put(local_pred, np.nonzero(m), cl.predict(X[np.nonzero(m)]) * tau)
+                np.put(local_pred, np.nonzero(m), cl.predict(X[np.nonzero(m)])
+                       * t_[i])
                 # add to the aggregated predictions
                 y_preds += local_pred
 
                 local_taus = np.zeros(len(X))
-                np.put(local_taus, np.nonzero(m), tau)
-                taus += local_taus
+                np.put(local_taus, np.nonzero(m), t_[i])
+                tausum += local_taus
 
             # prevent division by zero
-            np.put(taus, (taus == 0).nonzero(), 1)
+            np.put(tausum, (tausum == 0).nonzero(), 1)
 
-            y_pred = y_preds / taus
+            y_pred = y_preds / tausum
             np.put(out, np.nonzero(y_pred), y_pred)
         # TODO is this shape still needed?
         return out.reshape((-1, 1))
