@@ -120,6 +120,7 @@ class LCS:
 
     @staticmethod
     def default_error(y):
+        # for standardised data this should be equivalent to np.var(y)
         return np.sum(y**2)/len(y)
 
 
