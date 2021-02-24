@@ -1,4 +1,4 @@
-class Config():
+class Config:
     """
     We use Alex Martelli's Borg pattern to share our random generator properly
     in a kind of singleton way.
