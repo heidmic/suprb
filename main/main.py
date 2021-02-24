@@ -56,7 +56,8 @@ def plot_perfrecords(recorder, ignore=[], saveas=None):
     for i in range(len(recorder.keys())):
         if list(recorder.keys())[i] in ignore:
             continue
-        plt.scatter(g, list(recorder.values())[i], marker=i, label=list(recorder.keys())[i])
+        plt.scatter(g, list(recorder.values())[i], marker=i,
+                    label=list(recorder.keys())[i])
 
     plt.xlabel('Generations')
     plt.ylabel('value')
@@ -81,7 +82,8 @@ def plot_error_complexity(recorder, saveas=None):
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 
     color = 'tab:blue'
-    ax2.set_ylabel('complexity', color=color)  # we already handled the x-label with ax1
+    ax2.set_ylabel('complexity', color=color)
+    # we already handled the x-label with ax1
     ax2.plot(g, recorder.elitist_complexity, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
 
