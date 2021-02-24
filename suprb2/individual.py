@@ -46,6 +46,10 @@ class Individual:
                 # an empty array to put predictions in
                 local_pred = np.zeros(len(X))
                 if was_inf and t_[i] == np.inf:
+                    # TODO it might be useful to also do some experience
+                    #  weighting here.
+                    # TODO Currently a 0 error solution
+                    #  fully dominates an e-100 error solution
                     t_[i] = 1
                 elif was_inf:
                     t_[i] = 0
