@@ -31,9 +31,17 @@ def plot_results(X, y_test, y_pred, elitist=None, saveas=None):
         size = np.max(y_test) - np.min(y_test)
         per_cl = size / len(elitist.get_classifiers())
         for i in range(len(elitist.get_classifiers())):
-            plt.axvline(elitist.get_classifiers()[i].lowerBounds[0], color=colors[i], lw=1.5)
-            plt.axvline(elitist.get_classifiers()[i].upperBounds[0], color=colors[i], lw=1.5)
-            ax.add_patch(Rectangle((elitist.get_classifiers()[i].lowerBounds[0], np.min(y_test)+i*per_cl), elitist.get_classifiers()[i].upperBounds[0]-elitist.get_classifiers()[i].lowerBounds[0], per_cl, fill=False, linewidth=2, edgecolor=colors[i], hatch='/'))
+            plt.axvline(elitist.get_classifiers()[i].lowerBounds[0],
+                        color=colors[i % len(colors)], lw=1.5)
+            plt.axvline(elitist.get_classifiers()[i].upperBounds[0],
+                        color=colors[i % len(colors)], lw=1.5)
+            ax.add_patch(Rectangle((elitist.get_classifiers()[i].lowerBounds[
+                                        0], np.min(y_test)+i*per_cl),
+                                   elitist.get_classifiers()[i].upperBounds[
+                                       0]-elitist.get_classifiers()[
+                                       i].lowerBounds[0], per_cl, fill=False,
+                                   linewidth=2, edgecolor=colors[i % len(colors)],
+                                   hatch='/'))
 
     plt.legend()
 
