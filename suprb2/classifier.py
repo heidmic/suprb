@@ -71,6 +71,7 @@ class Classifier:
             else:
                 self.constant = Config().default_prediction
             # TODO is this a good default error? should we use the std?
+            #  Equivalent with standardised data?
             self.error = Config().var
         else:
             self.model.fit(X, y)
