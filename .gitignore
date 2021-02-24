@@ -4,3 +4,4 @@ mlruns/*
 */__pycache__/*
 figs/*
 */figs/*
+venv/*
