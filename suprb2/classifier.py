@@ -88,6 +88,8 @@ class Classifier:
             return metric(y, self.predict(X))
             # return metric(y, list(map(self.predict, X)))
 
+    # TODO increasing the probability to expand rather than shrink,
+    #  might improve the overall finding of good rules
     def mutate(self, sigma=0.2):
         """
         Mutates this matching function.

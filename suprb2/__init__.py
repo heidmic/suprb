@@ -113,7 +113,8 @@ class LCS:
                     child.mutate(Config().rule_discovery['sigma'])
                     child.fit(X, y)
                     children.append(child)
-                # code inspection predicts a type missmatch but it should be fine?
+                # ToDo instead of greedily taking the minimum, treating all
+                #  below a certain threshhold as equal might yield better models
                 cl = children[np.argmin([child.error for child in children])]
             if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
                 ClassifierPool().classifiers.append(cl)
