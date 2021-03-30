@@ -64,7 +64,7 @@ class LCS:
             # self.sol_opt.step(X_val, y_val)
 
             if Config().logging:
-                self.log(0, X)
+                self.log(i+1, X)
                 # self.log(0, X_val)
 
             # add verbosity option
