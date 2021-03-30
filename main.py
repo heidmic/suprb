@@ -36,12 +36,12 @@ def plot_results(X, y_test, y_pred, elitist=None, saveas=None):
             plt.axvline(elitist.get_classifiers()[i].upperBounds[0],
                         color=colors[i % len(colors)], lw=1.5)
             ax.add_patch(Rectangle((elitist.get_classifiers()[i].lowerBounds[
-                                        0], np.min(y_test)+i*per_cl),
-                                   elitist.get_classifiers()[i].upperBounds[
-                                       0]-elitist.get_classifiers()[
-                                       i].lowerBounds[0], per_cl, fill=False,
-                                   linewidth=2, edgecolor=colors[i % len(colors)],
-                                   hatch='/'))
+                0], np.min(y_test)+i*per_cl),
+                elitist.get_classifiers()[i].upperBounds[
+                0]-elitist.get_classifiers()[
+                i].lowerBounds[0], per_cl, fill=False,
+                linewidth=2, edgecolor=colors[i % len(colors)],
+                hatch='/'))
 
     plt.legend()
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     X, y = prob.generate(n)
 
     y = np.reshape(y, (-1, 1))
-    
+
     xdim = prob.xdim + prob.adim"""
 
     Random().reseed(0)
@@ -150,4 +150,3 @@ if __name__ == '__main__':
             print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
 
     pass
-
