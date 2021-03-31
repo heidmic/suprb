@@ -38,13 +38,14 @@ class LCS:
         delta = delta_time.seconds + (delta_time.microseconds / 1e6)
         return round(delta, 3)
 
-    def log_duration(self, start_time, discover_rules_time, solution_creation_time, step):
+    def log_discover_rules_duration(self, start_time, discover_rules_time, step):
         discover_rules_duration = self.calculate_delta_time(start_time, discover_rules_time)
         self.rules_discovery_duration_cumulative += discover_rules_duration
         mf.log_metric("rules_discovery_duration", discover_rules_duration, step)
         mf.log_metric("rules_discovery_duration_cumulative", self.rules_discovery_duration_cumulative, step)
 
-        solution_creation_duration = self.calculate_delta_time(discover_rules_time, solution_creation_time)
+    def log_solution_creation_duration(self, start_time, solution_creation_time, step):
+        solution_creation_duration = self.calculate_delta_time(start_time, solution_creation_time)
         self.solution_creation_duration_cumulative += solution_creation_duration
         mf.log_metric("solution_creation_duration", solution_creation_duration, step)
         mf.log_metric("solution_creation_duration_cumulative", self.solution_creation_duration_cumulative, step)
@@ -63,9 +64,11 @@ class LCS:
         #     X_val = X
         #     y_train = y
         #     y_val = y
-
+        start_time = datetime.now()
         while len(ClassifierPool().classifiers) < Config().initial_pool_size:
             self.discover_rules(X, y)
+
+        discover_rules_time = datetime.now()
 
         self.sol_opt = ES_1plus1(X, y)
         # self.sol_opt = ES_1plus1(X_val, y_val)
@@ -73,6 +76,7 @@ class LCS:
         if Config().logging:
             self.log(0, X)
             # self.log(0, X_val)
+            self.log_discover_rules_duration(start_time, discover_rules_time, 0)
 
         # TODO allow other termination criteria. Early Stopping?
         for step in range(Config().steps):
@@ -88,7 +92,8 @@ class LCS:
             if Config().logging:
                 self.log(step+1, X)
                 # self.log(0, X_val)
-                self.log_duration(start_time, discover_rules_time, solution_creation_time, step)
+                self.log_discover_rules_duration(start_time, discover_rules_time, step+1)
+                self.log_solution_creation_duration(discover_rules_time, solution_creation_time, step+1)
 
             # add verbosity option
             if step % 25 == 0:
