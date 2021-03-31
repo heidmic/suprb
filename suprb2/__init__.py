@@ -35,7 +35,7 @@ class LCS:
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
-        delta = delta_time.seconds + (delta_time.microseconds / 1000000)
+        delta = delta_time.seconds + (delta_time.microseconds / 1e6)
         return round(delta, 3)
 
     def log_duration(self, start_time, discover_rules_time, solution_creation_time, step):
@@ -88,7 +88,7 @@ class LCS:
             if Config().logging:
                 self.log(step+1, X)
                 # self.log(0, X_val)
-                self.log_duration(start_time, discover_rules_time, solution_creation_time, step+1)
+                self.log_duration(start_time, discover_rules_time, solution_creation_time, step)
 
             # add verbosity option
             if step % 25 == 0:
