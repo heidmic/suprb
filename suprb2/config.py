@@ -21,7 +21,7 @@ class Config:
                           # "crossover_type": None,
                           "mutation_rate": 0.2,
                           "fitness": "pseudo-BIC",
-                          "steps_per_step": 10
+                          "steps_per_step": 1000
                       },
                       "initial_pool_size": 50,
                       "initial_genome_length": 100000,

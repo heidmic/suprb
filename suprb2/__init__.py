@@ -30,6 +30,42 @@ class LCS:
             self.config = Config()
             self.perf_recording = PerfRecorder()
         self.sol_opt = None
+        self.rules_discovery_duration_cumulative = 0
+        self.solution_creation_duration_cumulative = 0
+
+    def calculate_delta_time(self, start_time, end_time):
+        delta_time = end_time - start_time
+        delta = delta_time.seconds + (delta_time.microseconds / 1e6)
+        return round(delta, 3)
+
+    def log_discover_rules_duration(self, start_time, discover_rules_time, step):
+        discover_rules_duration = self.calculate_delta_time(start_time, discover_rules_time)
+        self.rules_discovery_duration_cumulative += discover_rules_duration
+        mf.log_metric("rules_discovery_duration", discover_rules_duration, step)
+        mf.log_metric("rules_discovery_duration_cumulative", self.rules_discovery_duration_cumulative, step)
+
+    def log_solution_creation_duration(self, start_time, solution_creation_time, step):
+        solution_creation_duration = self.calculate_delta_time(start_time, solution_creation_time)
+        self.solution_creation_duration_cumulative += solution_creation_duration
+        mf.log_metric("solution_creation_duration", solution_creation_duration, step)
+        mf.log_metric("solution_creation_duration_cumulative", self.solution_creation_duration_cumulative, step)
+
+    def run_inital_step(self, X, y):
+        start_time = datetime.now()
+        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
+            self.discover_rules(X, y)
+
+        discover_rules_time = datetime.now()
+
+        self.sol_opt = ES_1plus1(X, y)
+        # self.sol_opt = ES_1plus1(X_val, y_val)
+        solution_creation_time = datetime.now()
+
+        if Config().logging:
+            self.log(0, X)
+            # self.log(0, X_val)
+            self.log_discover_rules_duration(start_time, discover_rules_time, 0)
+            self.log_solution_creation_duration(discover_rules_time, solution_creation_time, 0)
 
     def fit(self, X, y):
         Config().default_prediction = 0  # np.mean(y)
@@ -46,30 +82,28 @@ class LCS:
         #     y_train = y
         #     y_val = y
 
-        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
-            self.discover_rules(X, y)
-
-        self.sol_opt = ES_1plus1(X, y)
-        # self.sol_opt = ES_1plus1(X_val, y_val)
-
-        if Config().logging:
-            self.log(0, X)
-            # self.log(0, X_val)
+        self.run_inital_step(X, y)
 
         # TODO allow other termination criteria. Early Stopping?
-        for i in range(Config().steps):
+        for step in range(Config().steps):
+            start_time = datetime.now()
+
             self.discover_rules(X, y)
+            discover_rules_time = datetime.now()
 
             self.sol_opt.step(X, y)
             # self.sol_opt.step(X_val, y_val)
+            solution_creation_time = datetime.now()
 
             if Config().logging:
-                self.log(i+1, X)
+                self.log(step+1, X)
                 # self.log(0, X_val)
+                self.log_discover_rules_duration(start_time, discover_rules_time, step+1)
+                self.log_solution_creation_duration(discover_rules_time, solution_creation_time, step+1)
 
             # add verbosity option
-            if i % 25 == 0:
-                print(f"Finished step {i + 1} at {datetime.now().time()}\n")
+            if step % 25 == 0:
+                print(f"Finished step {step + 1} at {datetime.now().time()}\n")
 
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
@@ -124,13 +158,12 @@ class LCS:
         # for standardised data this should be equivalent to np.var(y)
         return np.sum(y**2)/len(y)
 
-
     # place classifiers around those examples
     # test if classifiers overlap
     # remove random overlapping classifiers until overlaps are resolved
     # draw new examples and place classifiers around them until no more
     #   overlaps are found
-    ## maybe we allow some overlap? Would make the checks optional (and easier)
+    # maybe we allow some overlap? Would make the checks optional (and easier)
 
     # fit all classifiers
 
@@ -143,8 +176,6 @@ class LCS:
     #   select good solutions and make them available for LCS
     #       set aside/freeze or do we just hope they survive?
     # while LCS termination criterion is not found
-
-
 
 
 # def crossover(self, parent_a, parent_b):
@@ -215,9 +246,6 @@ class LCS:
 #         winners.append(competitors[np.argmax([ind.fitness for ind in
 #                                               competitors])])
 #     return winners
-
-
-
 
 
 if __name__ == '__main__':
