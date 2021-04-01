@@ -50,6 +50,23 @@ class LCS:
         mf.log_metric("solution_creation_duration", solution_creation_duration, step)
         mf.log_metric("solution_creation_duration_cumulative", self.solution_creation_duration_cumulative, step)
 
+    def run_inital_step(self, X, y):
+        start_time = datetime.now()
+        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
+            self.discover_rules(X, y)
+
+        discover_rules_time = datetime.now()
+
+        self.sol_opt = ES_1plus1(X, y)
+        # self.sol_opt = ES_1plus1(X_val, y_val)
+        solution_creation_time = datetime.now()
+
+        if Config().logging:
+            self.log(0, X)
+            # self.log(0, X_val)
+            self.log_discover_rules_duration(start_time, discover_rules_time, 0)
+            self.log_solution_creation_duration(discover_rules_time, solution_creation_time, 0)
+
     def fit(self, X, y):
         Config().default_prediction = 0  # np.mean(y)
         Config().var = np.var(y)
@@ -64,19 +81,8 @@ class LCS:
         #     X_val = X
         #     y_train = y
         #     y_val = y
-        start_time = datetime.now()
-        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
-            self.discover_rules(X, y)
 
-        discover_rules_time = datetime.now()
-
-        self.sol_opt = ES_1plus1(X, y)
-        # self.sol_opt = ES_1plus1(X_val, y_val)
-
-        if Config().logging:
-            self.log(0, X)
-            # self.log(0, X_val)
-            self.log_discover_rules_duration(start_time, discover_rules_time, 0)
+        self.run_inital_step(X, y)
 
         # TODO allow other termination criteria. Early Stopping?
         for step in range(Config().steps):
