@@ -69,7 +69,7 @@ class LCS:
             self.log_solution_creation_duration(discover_rules_time, solution_creation_time, 0)
 
     def fit(self, X, y):
-        Config().default_prediction = 0  # np.mean(y)
+        Config().default_prediction = 0.0  # np.mean(y)
         Config().var = np.var(y)
 
         # if Config().use_validation:
