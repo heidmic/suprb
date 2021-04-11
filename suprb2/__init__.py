@@ -30,6 +30,7 @@ class LCS:
             self.config = Config()
             self.perf_recording = PerfRecorder()
         self.sol_opt = None
+        self.rule_discovery = RuleDiscoverer()
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
 
@@ -53,7 +54,7 @@ class LCS:
     def run_inital_step(self, X, y):
         start_time = datetime.now()
         while len(ClassifierPool().classifiers) < Config().initial_pool_size:
-            self.discover_rules(X, y)
+            self.rule_discovery.discover_rules(X, y)
 
         discover_rules_time = datetime.now()
 
@@ -88,7 +89,7 @@ class LCS:
         for step in range(Config().steps):
             start_time = datetime.now()
 
-            self.discover_rules(X, y)
+            self.rule_discovery.step(X, y)
             discover_rules_time = datetime.now()
 
             self.sol_opt.step(X, y)
@@ -132,31 +133,6 @@ class LCS:
         #  likely R2
         raise NotImplementedError()
 
-    def discover_rules(self, X, y):
-        # draw n examples from data
-        idxs = Random().random.choice(np.arange(len(X)),
-                                      Config().rule_discovery['nrules'], False)
-
-        for x in X[idxs]:
-            cl = Classifier.random_cl(x)
-            cl.fit(X, y)
-            for i in range(Config().rule_discovery['steps_per_step']):
-                children = list()
-                for j in range(Config().rule_discovery['lmbd']):
-                    child = deepcopy(cl)
-                    child.mutate(Config().rule_discovery['sigma'])
-                    child.fit(X, y)
-                    children.append(child)
-                # ToDo instead of greedily taking the minimum, treating all
-                #  below a certain threshhold as equal might yield better models
-                cl = children[np.argmin([child.error for child in children])]
-            if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
-                ClassifierPool().classifiers.append(cl)
-
-    @staticmethod
-    def default_error(y):
-        # for standardised data this should be equivalent to np.var(y)
-        return np.sum(y**2)/len(y)
 
     # place classifiers around those examples
     # test if classifiers overlap
