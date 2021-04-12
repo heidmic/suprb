@@ -133,20 +133,6 @@ class LCS:
         #  likely R2
         raise NotImplementedError()
 
-    def get_classifier_quality(self, child):
-        volume = 0
-        cartesian_product = itertools.product(child.upperBounds, child.lowerBounds)
-        for p in cartesian_product:
-            volume += abs(p[0] - p[1])
-
-        # TODO is this correct or shall the quality drop to 0 since upper and lower bounds are the same?
-        if volume == 0:
-            volume = 1
-
-        quality = child.error / (volume * Config().rule_discovery["quality_parameter"])
-
-        return quality
-
     def discover_rules(self, X, y):
         # draw n examples from data
         idxs = Random().random.choice(np.arange(len(X)),
@@ -164,7 +150,8 @@ class LCS:
                     children.append(child)
                 # ToDo instead of greedily taking the minimum, treating all
                 #  below a certain threshhold as equal might yield better models
-                cl = children[np.argmin([self.get_classifier_quality(child) for child in children])]
+                cl = children[np.argmin([child.get_weighted_error() for child in children])]
+
             if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
                 ClassifierPool().classifiers.append(cl)
 

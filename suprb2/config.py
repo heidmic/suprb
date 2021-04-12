@@ -14,7 +14,7 @@ class Config:
             "lmbd": 20,  # not allowed to use lambda
             "sigma": 0.2,
             "steps_per_step": 10,
-            "quality_parameter": 1
+            "weighted_error_constant": 1
         },
         "solution_creation": {
             "name": '(1+1)-ES',
