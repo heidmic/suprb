@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
@@ -123,3 +124,15 @@ class Classifier:
         if self.model is LinearRegression:
             return self.model.coef_
 
+    def get_weighted_error(self):
+        '''
+        Calculates the weighted error of the classifier, depending on its error, volume and a constant. 
+        -inf is the best possible value for the weighted error
+        '''
+        weighted_error = math.inf
+        volume = np.prod(self.upperBounds - self.lowerBounds)
+
+        if volume != 0:
+            weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
+
+        return weighted_error
