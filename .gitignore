@@ -5,3 +5,6 @@ mlruns/*
 figs/*
 */figs/*
 venv/*
+
+.python-version
+.vscode

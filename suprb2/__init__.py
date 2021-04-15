@@ -6,6 +6,7 @@ from suprb2.classifier import Classifier
 from suprb2.individual import Individual
 from suprb2.solutions import ES_1plus1
 from suprb2.pool import ClassifierPool
+from suprb2.discovery import RuleDiscoverer
 
 from sklearn.model_selection import train_test_split
 from datetime import datetime

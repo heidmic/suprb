@@ -11,7 +11,8 @@ class Config:
                           "name": '(1+lambda)-ES',
                           "cl_min_range": 0.2,
                           "nrules": 50,
-                          "lmbd": 20,  # not allowed to use lambda
+                          "lmbd": 20,
+                          "mu": 10,
                           "sigma": 0.2,
                           "steps_per_step": 10
                       },
