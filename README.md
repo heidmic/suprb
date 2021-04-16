@@ -30,3 +30,5 @@ The commit messages of all the commits in your PR should be properly formatted:
 - The body may contain bullet lists.
 - Basically, adhere to
   [this](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
+
+Avoid merge commits by using rebase rather than merge when combining branches
