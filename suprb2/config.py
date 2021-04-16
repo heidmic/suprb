@@ -15,7 +15,9 @@ class Config:
             "mu": 10,
             "sigma": 0.2,
             "steps_per_step": 10,
-            "weighted_error_constant": 1
+            "weighted_error_constant": 1,
+            "recombination": None,
+            "selection": '+'
         },
         "solution_creation": {
             "name": '(1+1)-ES',
