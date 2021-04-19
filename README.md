@@ -12,6 +12,10 @@ Tested with Python 3.8.5 and Python 3.7.3.
 
 ## Contributing
 
+A newly created branch must follow the following convention:
+**oc_<PR_number>\_<short_description_of_PR>**
+e.g. oc_3_introduce_volume_for_rule_discovery
+
 
 The commit messages of all the commits in your PR should be properly formatted:
 - The first line is the commit message's *summary line*.
