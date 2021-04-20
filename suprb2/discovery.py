@@ -13,12 +13,12 @@ class RuleDiscoverer:
         pass
 
 
-    def step(self, X, y):
+    def step(self, X: np.ndarray, y: np.ndarray):
         lmbd = Config().rule_discovery['lmbd']
 
         for i in range(Config().rule_discovery['steps_per_step']):
             children = np.array([])
-            parents = self.take_parents_from_pool()
+            parents = self.remove_parents_from_pool()
 
             for j in range(lmbd):
                 child = self.recombine(parents)
@@ -26,13 +26,13 @@ class RuleDiscoverer:
                 child.fit(X, y)
                 children = np.append(children, child)
 
-            just_children = Config().rule_discovery['selection'] == ','
-            next_generation = children if just_children else np.concatenate((children, parents))
-            sorted_generation = sorted(next_generation, key=lambda cl: cl.error if cl.error is not None else float('inf'))
-            ClassifierPool().classifiers = (self.filter_classifiers(sorted_generation, lmbd, X, y) + ClassifierPool().classifiers)
+            classifiers = self.replace(parents, children)
+            candidates = self.filter_classifiers(classifiers, X, y)
+            next_generation = self.best_lambda_classifiers(candidates, lmbd)
+            ClassifierPool().classifiers = next_generation
 
 
-    def discover_rules(self, X, y):
+    def discover_initial_rules(self, X: np.ndarray, y: np.ndarray):
         # draw n examples from data
         idxs = Random().random.choice(np.arange(len(X)),
                                         Config().rule_discovery['mu'], False)
@@ -45,15 +45,12 @@ class RuleDiscoverer:
             self.step(X, y)
 
 
-    def filter_classifiers(self, classifiers, lmbd, X, y):
-        return [cl for cl in classifiers[:lmbd]
-            if cl.error < self.default_error(y[np.nonzero(cl.matches(X))])]
+    def remove_parents_from_pool(self):
+        pool = ClassifierPool().classifiers
+        mu = min(Config().rule_discovery['mu'], len(pool))
+        parents = Random().random.choice(pool, mu, False)
 
-
-    def take_parents_from_pool(self):
-        parents = Random().random.choice(ClassifierPool().classifiers,
-                                                Config().rule_discovery['mu'], False)
-        ClassifierPool().classifiers = [cl for cl in ClassifierPool().classifiers if cl not in parents]
+        ClassifierPool().classifiers = list(filter(lambda cl: cl not in parents, pool))
         return parents
 
 
@@ -66,8 +63,35 @@ class RuleDiscoverer:
             return deepcopy(Random().random.choice(parents))
 
 
+    def replace(self, parents: np.ndarray, children: np.ndarray):
+        next_generation = children
+        if Config().rule_discovery['replacement'] == '+':
+            next_generation = np.concatenate((children, parents))
+        return next_generation
+
+
+    def filter_classifiers(self, classifiers: np.ndarray, X: np.ndarray, y: np.ndarray):
+        filter_array = []
+        for cl in classifiers:
+            default_error = self.default_error(y[np.nonzero(cl.matches(X))])
+            if cl.error is None or cl.error > default_error:
+                filter_array.append(False)
+            else:
+                filter_array.append(True)
+
+        return classifiers[filter_array]
+
+
+    def best_lambda_classifiers(self, candidates: np.ndarray, lmbd: int):
+        if candidates.size < lmbd:
+            lmbd = candidates.size
+
+        sorted_candidates = sorted(candidates, key=lambda cl: cl.error if cl.error is not None else float('inf'))
+        return np.array(sorted_candidates[:lmbd])
+
+
     @staticmethod
-    def default_error(y):
+    def default_error(y: np.ndarray):
         if y.size == 0:
             return 0
         else:

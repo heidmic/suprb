@@ -12,17 +12,20 @@ class Examples:
     for generating the necessary data for tests.
     """
 
-    def mock_classifiers(n):
+    def mock_classifiers(n: int, errors=None):
         """
         Creates n classifiers without relevant attributes.
         Example:
         child_1 = Classifier(lowerBoundary=1, upperBoundary=1,
                                 local_model= None, degree=1)
         """
-        return [Classifier(i, i, None, 1) for i in range(1, n)]
+        if errors is None:
+            return np.array([Classifier(i, i, None, 1) for i in range(1, n)])
+        else:
+            return np.array([Classifier(i, i, None, 1, errors[i]) for i in range(1, n)])
 
 
-    def initiate_pool(n):
+    def initiate_pool(n: int, seed: int):
         """
         Initiate the ClassifierPool with n classifiers
         and return the auto generated samples used to
@@ -33,7 +36,8 @@ class Examples:
         y = 0.75 * X**3 - 5 * X**2 + 4 * X + 12
         """
         Config().xdim = 1
-        X = Random().random.uniform(-2.5, 7, (n, 1))
+        np.random.seed(seed)
+        X = np.random.uniform(-2.5, 7, (n, 1))
         y = 0.75*X**3-5*X**2+4*X+12
 
         for x in X:
@@ -51,10 +55,3 @@ class Examples:
         """
         for key, value in configs.items():
             Config().rule_discovery[key] = value
-
-
-    def reset_enviroment():
-        """
-        Resets the Classifier Pool for the next test.
-        """
-        ClassifierPool().classifiers = list()

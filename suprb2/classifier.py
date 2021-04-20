@@ -8,13 +8,13 @@ from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, local_model, degree):
+    def __init__(self, lowers, uppers, local_model, degree, error=None):
         self.lowerBounds = lowers
         self.upperBounds = uppers
         self.model = local_model
         # TODO make this part of local model (as a class)
         self.degree = degree
-        self.error = None
+        self.error = error
         # TODO expand this int into remember which was matched (to reduce
         # retraining when mutate didnt change the matched data)
         self.experience = None
@@ -126,7 +126,7 @@ class Classifier:
 
     def get_weighted_error(self):
         '''
-        Calculates the weighted error of the classifier, depending on its error, volume and a constant. 
+        Calculates the weighted error of the classifier, depending on its error, volume and a constant.
         -inf is the best possible value for the weighted error
         '''
         weighted_error = math.inf

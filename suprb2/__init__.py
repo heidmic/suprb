@@ -56,7 +56,7 @@ class LCS:
     def run_inital_step(self, X, y):
         start_time = datetime.now()
         while len(ClassifierPool().classifiers) < Config().initial_pool_size:
-            self.rule_discovery.discover_rules(X, y)
+            self.rule_discovery.discover_initial_rules(X, y)
 
         discover_rules_time = datetime.now()
 

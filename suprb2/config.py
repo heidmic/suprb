@@ -17,7 +17,7 @@ class Config:
             "steps_per_step": 10,
             "weighted_error_constant": 1,
             "recombination": None,
-            "selection": '+'
+            "replacement": '+'
         },
         "solution_creation": {
             "name": '(1+1)-ES',
