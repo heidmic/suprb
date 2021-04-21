@@ -6,7 +6,7 @@ from suprb2.discovery import RuleDiscoverer
 
 import numpy as np
 
-class Examples:
+class TestSupport:
     """
     This module serves as a container with helpful methods
     for generating the necessary data for tests.

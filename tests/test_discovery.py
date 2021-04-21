@@ -1,4 +1,4 @@
-from tests.examples import Examples
+from tests.test_support import TestSupport
 from suprb2.pool import ClassifierPool
 from suprb2.classifier import Classifier
 from suprb2.discovery import RuleDiscoverer
@@ -31,8 +31,8 @@ class TestDiscovery(unittest.TestCase):
         that is why all errors are mocked with -1.
         """
         mu, lmbd = (10, 10)
-        Examples.set_rule_discovery_configs(mu=mu, lmbd=lmbd, selection='+', steps_per_step=1)
-        X, y = Examples.initiate_pool(mu, 1)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, selection='+', steps_per_step=1)
+        X, y = TestSupport.initiate_pool(mu, 1)
 
         optimizer = RuleDiscoverer()
         optimizer.step(X, y)
@@ -49,8 +49,8 @@ class TestDiscovery(unittest.TestCase):
         that is why all errors are mocked with -1.
         """
         mu, lmbd = (15, 10)
-        Examples.set_rule_discovery_configs(mu=mu, lmbd=lmbd, selection='+', steps_per_step=1)
-        X, y = Examples.initiate_pool(mu, 1)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, selection='+', steps_per_step=1)
+        X, y = TestSupport.initiate_pool(mu, 1)
 
         optimizer = RuleDiscoverer()
         optimizer.step(X, y)
@@ -67,8 +67,8 @@ class TestDiscovery(unittest.TestCase):
         that is why all errors are mocked with -1.
         """
         mu, lmbd = (10, 15)
-        Examples.set_rule_discovery_configs(mu=mu, lmbd=lmbd, selection='+', steps_per_step=1)
-        X, y = Examples.initiate_pool(mu, 1)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, selection='+', steps_per_step=1)
+        X, y = TestSupport.initiate_pool(mu, 1)
 
         optimizer = RuleDiscoverer()
         optimizer.step(X, y)
@@ -86,8 +86,8 @@ class TestDiscovery(unittest.TestCase):
         after the operation is over.
         """
         mu = 10
-        X, y = Examples.initiate_pool(mu, 1)
-        Examples.set_rule_discovery_configs(mu=mu)
+        X, y = TestSupport.initiate_pool(mu, 1)
+        TestSupport.set_rule_discovery_configs(mu=mu)
 
         optimizer = RuleDiscoverer()
         parents = optimizer.remove_parents_from_pool()
@@ -108,8 +108,8 @@ class TestDiscovery(unittest.TestCase):
         child.lowerBound = average(parents.lowerBounds)
         child.upperBound = average(parents.upperBounds)
         """
-        Examples.set_rule_discovery_configs(recombination='intermediate')
-        child = RuleDiscoverer().recombine(Examples.mock_classifiers(10))
+        TestSupport.set_rule_discovery_configs(recombination='intermediate')
+        child = RuleDiscoverer().recombine(TestSupport.mock_classifiers(10))
         self.assertEquals((child.lowerBounds, child.upperBounds), (5, 5))
 
 
@@ -123,7 +123,7 @@ class TestDiscovery(unittest.TestCase):
         instead it just checks that the generated child is a
         Classifier.
         """
-        parents = Examples.mock_classifiers(10)
+        parents = TestSupport.mock_classifiers(10)
         child = RuleDiscoverer().recombine(parents)
         self.assertIsInstance(child, Classifier)
 
@@ -139,9 +139,9 @@ class TestDiscovery(unittest.TestCase):
         is propperly returning both parents and
         children.
         """
-        Examples.set_rule_discovery_configs(replacement='+')
-        parents = Examples.mock_classifiers(5)
-        children = Examples.mock_classifiers(3)
+        TestSupport.set_rule_discovery_configs(replacement='+')
+        parents = TestSupport.mock_classifiers(5)
+        children = TestSupport.mock_classifiers(3)
 
         array_concatenation = np.concatenate((children, parents))
         replacement_array = RuleDiscoverer().replace(parents, children)
@@ -158,7 +158,7 @@ class TestDiscovery(unittest.TestCase):
         Checks that all classifiers filtered have an error
         smaller than the default one.
         """
-        X, y = Examples.initiate_pool(10, 1)
+        X, y = TestSupport.initiate_pool(10, 1)
 
         optimizer = RuleDiscoverer()
         filtered_cls = optimizer.filter_classifiers(np.array(ClassifierPool().classifiers), X, y)
@@ -174,7 +174,7 @@ class TestDiscovery(unittest.TestCase):
         filtered group have either no error (error == None)
         or error is bigger than the default error.
         """
-        X, y = Examples.initiate_pool(10, 1)
+        X, y = TestSupport.initiate_pool(10, 1)
 
         optimizer = RuleDiscoverer()
         filtered_cls = optimizer.filter_classifiers(np.array(ClassifierPool().classifiers), X, y)
@@ -194,7 +194,7 @@ class TestDiscovery(unittest.TestCase):
         ascending acoording to their errors.
         """
         lmbd = 5
-        candidates = Examples.mock_classifiers(10, errors=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        candidates = TestSupport.mock_classifiers(10, errors=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         best_lambda_cls = RuleDiscoverer().best_lambda_classifiers(candidates, lmbd)
 
         self.assertEquals(len(best_lambda_cls), lmbd)
@@ -209,7 +209,7 @@ class TestDiscovery(unittest.TestCase):
         errors than any of the lambda classifiers.
         """
         lmbd = 5
-        candidates = Examples.mock_classifiers(10, errors=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        candidates = TestSupport.mock_classifiers(10, errors=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         best_lambda_cls = RuleDiscoverer().best_lambda_classifiers(candidates, lmbd)
 
         for cl in candidates:
@@ -224,7 +224,7 @@ class TestDiscovery(unittest.TestCase):
         If candidates.size < lmbd, then lmbd = candidates.size.
         """
         lmbd = 10
-        candidates = Examples.mock_classifiers(5, errors=[0, 1, 2, 3, 4])
+        candidates = TestSupport.mock_classifiers(5, errors=[0, 1, 2, 3, 4])
         old_size = len(candidates)
         best_lambda_cls = RuleDiscoverer().best_lambda_classifiers(candidates, lmbd)
 
