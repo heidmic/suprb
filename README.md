@@ -14,7 +14,7 @@ Tested with Python 3.8.5 and Python 3.7.3.
 
 A newly created branch must follow the following convention:
 
-**oc_<PR_number>\_<short_description_of_PR>**
+**<affiliation>_<Issue_number>\_<short_description_of_PR>**
 
 e.g. oc_3_introduce_volume_for_rule_discovery
 
