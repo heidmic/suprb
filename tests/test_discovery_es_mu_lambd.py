@@ -2,14 +2,14 @@ from suprb2.config import Config
 from suprb2.pool import ClassifierPool
 from suprb2.classifier import Classifier
 from tests.test_support import TestSupport
-from suprb2.discovery import RuleDiscoverer
+from suprb2.discovery import ES_MuLambd
 
 import unittest
 import numpy as np
 
-class TestDiscovery(unittest.TestCase):
+class TestDiscoveryES_MuLambd(unittest.TestCase):
     """
-    This module test all methods from RuleDiscoverer
+    This module test all methods from ES_MuLambd
     """
 
 
@@ -25,7 +25,7 @@ class TestDiscovery(unittest.TestCase):
 
     def test_step_mu_equals_lambda_comma(self):
         """
-        Tests the method RuleDiscoverer.step().
+        Tests the method ES_MuLambd.step().
 
         With seed = 1, just one of the children have
         errors good enough to be added to the pool.
@@ -37,14 +37,14 @@ class TestDiscovery(unittest.TestCase):
         TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1)
         X, y = TestSupport.initiate_pool(mu, 1)
 
-        optimizer = RuleDiscoverer()
+        optimizer = ES_MuLambd()
         optimizer.step(X, y)
         self.assertEqual(len(ClassifierPool().classifiers), 1)
 
 
     def test_step_mu_equals_lambda_plus(self):
         """
-        Tests the method RuleDiscoverer.step().
+        Tests the method ES_MuLambd.step().
 
         With seed = 2, just 2 of the children have
         errors good enough to be added to the pool.
@@ -56,14 +56,14 @@ class TestDiscovery(unittest.TestCase):
         TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1)
         X, y = TestSupport.initiate_pool(mu, 2)
 
-        optimizer = RuleDiscoverer()
+        optimizer = ES_MuLambd()
         optimizer.step(X, y)
         self.assertEqual(len(ClassifierPool().classifiers), 12)
 
 
     def test_step_mu_bigger_than_lambda_comma(self):
         """
-        Tests the method RuleDiscoverer.step().
+        Tests the method ES_MuLambd.step().
 
         With seed = 1, just one of the children have
         errors good enough to be added to the pool.
@@ -75,14 +75,14 @@ class TestDiscovery(unittest.TestCase):
         TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1)
         X, y = TestSupport.initiate_pool(mu, 1)
 
-        optimizer = RuleDiscoverer()
+        optimizer = ES_MuLambd()
         optimizer.step(X, y)
         self.assertEqual(len(ClassifierPool().classifiers), 1)
 
 
     def test_step_mu_bigger_than_lambda_plus(self):
         """
-        Tests the method RuleDiscoverer.step().
+        Tests the method ES_MuLambd.step().
 
         With seed = 1, just one of the children have
         errors good enough to be added to the pool.
@@ -94,14 +94,14 @@ class TestDiscovery(unittest.TestCase):
         TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1)
         X, y = TestSupport.initiate_pool(mu, 1)
 
-        optimizer = RuleDiscoverer()
+        optimizer = ES_MuLambd()
         optimizer.step(X, y)
         self.assertEqual(len(ClassifierPool().classifiers), 16)
 
 
     def test_step_mu_smaller_than_lambda_comma(self):
         """
-        Tests the method RuleDiscoverer.step().
+        Tests the method ES_MuLambd.step().
 
         With seed = 2, just one of the children have
         errors good enough to be added to the pool.
@@ -113,14 +113,14 @@ class TestDiscovery(unittest.TestCase):
         TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1)
         X, y = TestSupport.initiate_pool(mu, 2)
 
-        optimizer = RuleDiscoverer()
+        optimizer = ES_MuLambd()
         optimizer.step(X, y)
         self.assertGreaterEqual(len(ClassifierPool().classifiers), 1)
 
 
     def test_step_mu_smaller_than_lambda_plus(self):
         """
-        Tests the method RuleDiscoverer.step().
+        Tests the method ES_MuLambd.step().
 
         With seed = 1, just one of the children have
         errors good enough to be added to the pool.
@@ -132,17 +132,17 @@ class TestDiscovery(unittest.TestCase):
         TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1)
         X, y = TestSupport.initiate_pool(mu, 1)
 
-        optimizer = RuleDiscoverer()
+        optimizer = ES_MuLambd()
         optimizer.step(X, y)
         self.assertEqual(len(ClassifierPool().classifiers), 11)
 
 
-    # ------------- remove_parents_from_pool() --------------
+    # ------------- select_parents_from_pool() --------------
 
 
-    def test_remove_parents_from_pool(self):
+    def test_select_parents_from_pool(self):
         """
-        Tests the method RuleDiscoverer.remove_parents_from_pool().
+        Tests the method ES_MuLambd.select_parents_from_pool().
 
         Checks that parents are no longer in the pool
         after the operation is over.
@@ -151,10 +151,13 @@ class TestDiscovery(unittest.TestCase):
         X, y = TestSupport.initiate_pool(mu, 1)
         TestSupport.set_rule_discovery_configs(mu=mu)
 
-        optimizer = RuleDiscoverer()
-        parents = optimizer.remove_parents_from_pool()
+        optimizer = ES_MuLambd()
+        parents = optimizer.select_parents_from_pool()
 
-        self.assertEqual(len(ClassifierPool().classifiers), 0)
+        self.assertEqual(len(ClassifierPool().classifiers), mu)
+        self.assertEqual(parents.size, mu)
+        for cl in parents:
+            self.assertIn(cl, ClassifierPool().classifiers)
 
 
     # ------------- recombine() --------------
@@ -162,7 +165,7 @@ class TestDiscovery(unittest.TestCase):
 
     def test_recombine_average(self):
         """
-        Tests the method RuleDiscoverer.recombine().
+        Tests the method ES_MuLambd.recombine().
 
         Checks if the average of the classifiers' boundaries
         is propperly calculated.
@@ -171,14 +174,14 @@ class TestDiscovery(unittest.TestCase):
         child_1.upperBound = average(random_vater.upperBound, random_mother.upperBound)
         """
         TestSupport.set_rule_discovery_configs(recombination='intermediate')
-        child = RuleDiscoverer().recombine(TestSupport.mock_specific_classifiers([ [2, 2, 0], [4, 2, 0], [2, 4, 0], [4, 4, 0] ]))[0]
+        child = ES_MuLambd().recombine(TestSupport.mock_specific_classifiers([ [2, 2, 0], [4, 2, 0], [2, 4, 0], [4, 4, 0] ]))[0]
         self.assertIn(child.lowerBounds, [2, 3, 4])
         self.assertIn(child.upperBounds, [2, 3, 4])
 
 
     def test_recombine_default_strategy(self):
         """
-        Tests the method RuleDiscoverer.recombine().
+        Tests the method ES_MuLambd.recombine().
 
         Checks if no recombination method is configured, then
         use a default strategy (just copy one of the parents).
@@ -187,7 +190,7 @@ class TestDiscovery(unittest.TestCase):
         Classifier.
         """
         parents = TestSupport.mock_classifiers(10)
-        child = RuleDiscoverer().recombine(parents)[0]
+        child = ES_MuLambd().recombine(parents)[0]
         self.assertIsInstance(child, Classifier)
 
 
@@ -196,7 +199,7 @@ class TestDiscovery(unittest.TestCase):
 
     def test_mutate_and_fit(self):
         """
-        Tests the method RuleDiscoverer.mutate_and_fit().
+        Tests the method ES_MuLambd.mutate_and_fit().
 
         Checks if the lower and upper bounds were slightly
         ( <= (u - l) / 10 ) changed and if there is an
@@ -205,7 +208,7 @@ class TestDiscovery(unittest.TestCase):
         n = 2
         classifiers = TestSupport.mock_specific_classifiers([ [[5], [10], None], [[10], [5], None] ])
         X, y = TestSupport.generate_input(n)
-        RuleDiscoverer().mutate_and_fit(classifiers, X, y)
+        ES_MuLambd().mutate_and_fit(classifiers, X, y)
         self.assertLessEqual(classifiers[0].lowerBounds, 5 + (10 - 5 / 10))
 
 
@@ -214,7 +217,7 @@ class TestDiscovery(unittest.TestCase):
 
     def test_replace_plus(self):
         """
-        Tests the method RuleDiscoverer.replace().
+        Tests the method ES_MuLambd.replace().
 
         Chaecks that the + replacement operator
         is propperly returning both parents and
@@ -225,7 +228,7 @@ class TestDiscovery(unittest.TestCase):
         children = TestSupport.mock_classifiers(3)
 
         array_concatenation = np.concatenate((children, parents))
-        replacement_array = RuleDiscoverer().replace(parents, children)
+        replacement_array = ES_MuLambd().replace(parents, children)
         self.assertIsNone(np.testing.assert_array_equal(replacement_array, array_concatenation))
 
 

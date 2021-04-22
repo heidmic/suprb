@@ -1,19 +1,29 @@
 # from suprb2.perf_recorder import PerfRecorder
-from suprb2.random_gen import Random
 from suprb2.config import Config
-from suprb2.classifier import Classifier
+from suprb2.random_gen import Random
 from suprb2.pool import ClassifierPool
+from suprb2.classifier import Classifier
 from sklearn.linear_model import LinearRegression
 
 import numpy as np  # type: ignore
 from copy import deepcopy
+from abc import *
 
-class RuleDiscoverer:
+class RuleDiscoverer(ABC):
     def __init__(self):
         pass
 
 
-    def discover_initial_rules(self, X: np.ndarray, y: np.ndarray):
+    def step(self, X: np.ndarray, y: np.ndarray):
+        pass
+
+
+class ES_OnePlusLambd(RuleDiscoverer):
+    def __init__(self):
+        pass
+
+
+    def step(self, X: np.ndarray, y: np.ndarray):
         # draw n examples from data
         idxs = Random().random.choice(np.arange(len(X)),
                                         Config().rule_discovery['mu'], False)
@@ -26,26 +36,28 @@ class RuleDiscoverer:
             self.step(X, y)
 
 
+class ES_MuLambd(RuleDiscoverer):
+    def __init__(self):
+        pass
+
+
     def step(self, X: np.ndarray, y: np.ndarray):
         for i in range(Config().rule_discovery['steps_per_step']):
-            parents = self.remove_parents_from_pool()
+            parents = self.select_parents_from_pool()
             recombined_classifiers = self.recombine(parents)
             children = self.mutate_and_fit(recombined_classifiers, X, y)
             next_generation = self.replace(parents, children)
             ClassifierPool().classifiers = next_generation
 
 
-    def remove_parents_from_pool(self):
+    def select_parents_from_pool(self):
         pool = ClassifierPool().classifiers
         mu = min(Config().rule_discovery['mu'], len(pool))
         parents = Random().random.choice(pool, mu, False)
-
-        ClassifierPool().classifiers = list(filter(lambda cl: cl not in parents, pool))
         return parents
 
 
     def recombine(self, parents: np.ndarray):
-            # next_generation = self.best_lambda_classifiers(candidates, lmbd)
         lmbd = Config().rule_discovery['lmbd']
         if Config().rule_discovery['recombination'] == 'intermediate':
             return self.intermediate_recombination(parents, lmbd)
@@ -55,9 +67,10 @@ class RuleDiscoverer:
 
     def intermediate_recombination(self, parents: np.ndarray, lmbd: int):
         children = []
+        rho = Config().rule_discovery['rho']
         for i in range(lmbd):
-            couple = Random().random.choice(parents, 2, False)
-            averages = np.mean([[p.lowerBounds, p.upperBounds] for p in couple], axis=0)
+            candidates = Random().random.choice(parents, rho, False)
+            averages = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
             children.append(Classifier(averages[0], averages[1],
                                             LinearRegression(), 1))  # Klaus: Change later
         return np.array(children)
