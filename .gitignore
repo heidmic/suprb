@@ -1,8 +1,9 @@
 */mlruns/*
 mlruns/*
 .idea/*
-__pycache__/
-figs/
+*/__pycache__/*
+figs/*
+*/figs/*
 venv/*
 
 .python-version
