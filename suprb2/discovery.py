@@ -1,38 +1,29 @@
 # from suprb2.perf_recorder import PerfRecorder
-from suprb2.random_gen import Random
 from suprb2.config import Config
-from suprb2.classifier import Classifier
+from suprb2.random_gen import Random
 from suprb2.pool import ClassifierPool
+from suprb2.classifier import Classifier
 from sklearn.linear_model import LinearRegression
 
 import numpy as np  # type: ignore
 from copy import deepcopy
+from abc import *
 
-class RuleDiscoverer:
+class RuleDiscoverer(ABC):
     def __init__(self):
         pass
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        lmbd = Config().rule_discovery['lmbd']
-
-        for i in range(Config().rule_discovery['steps_per_step']):
-            children = np.array([])
-            parents = self.remove_parents_from_pool()
-
-            for j in range(lmbd):
-                child = self.recombine(parents)
-                child.mutate(Config().rule_discovery['sigma'])
-                child.fit(X, y)
-                children = np.append(children, child)
-
-            classifiers = self.replace(parents, children)
-            candidates = self.filter_classifiers(classifiers, X, y)
-            next_generation = self.best_lambda_classifiers(candidates, lmbd)
-            ClassifierPool().classifiers = next_generation
+        pass
 
 
-    def discover_initial_rules(self, X: np.ndarray, y: np.ndarray):
+class ES_OnePlusLambd(RuleDiscoverer):
+    def __init__(self):
+        pass
+
+
+    def step(self, X: np.ndarray, y: np.ndarray):
         # draw n examples from data
         idxs = Random().random.choice(np.arange(len(X)),
                                         Config().rule_discovery['mu'], False)
@@ -45,22 +36,55 @@ class RuleDiscoverer:
             self.step(X, y)
 
 
-    def remove_parents_from_pool(self):
+class ES_MuLambd(RuleDiscoverer):
+    def __init__(self):
+        pass
+
+
+    def step(self, X: np.ndarray, y: np.ndarray):
+        for i in range(Config().rule_discovery['steps_per_step']):
+            parents = self.select_parents_from_pool()
+            recombined_classifiers = self.recombine(parents)
+            children = self.mutate_and_fit(recombined_classifiers, X, y)
+            next_generation = self.replace(parents, children)
+            ClassifierPool().classifiers = next_generation
+
+
+    def select_parents_from_pool(self):
         pool = ClassifierPool().classifiers
         mu = min(Config().rule_discovery['mu'], len(pool))
         parents = Random().random.choice(pool, mu, False)
-
-        ClassifierPool().classifiers = list(filter(lambda cl: cl not in parents, pool))
         return parents
 
 
     def recombine(self, parents: np.ndarray):
+        lmbd = Config().rule_discovery['lmbd']
         if Config().rule_discovery['recombination'] == 'intermediate':
-            averages = np.mean([[p.lowerBounds, p.upperBounds] for p in parents], axis=0)
-            # Klaus: Only worried about the Linear Regression for now
-            return Classifier(averages[0], averages[1], LinearRegression(), 1)
+            return self.intermediate_recombination(parents, lmbd)
         else:
-            return deepcopy(Random().random.choice(parents))
+            return np.array([deepcopy(Random().random.choice(parents))])
+
+
+    def intermediate_recombination(self, parents: np.ndarray, lmbd: int):
+        children = []
+        rho = Config().rule_discovery['rho']
+        for i in range(lmbd):
+            candidates = Random().random.choice(parents, rho, False)
+            averages = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
+            children.append(Classifier(averages[0], averages[1],
+                                            LinearRegression(), 1))  # Klaus: Change later
+        return np.array(children)
+
+
+    def mutate_and_fit(self, classifiers: np.ndarray, X: np.ndarray, y:np.ndarray):
+        children = []
+        for cl in classifiers:
+            cl.mutate(Config().rule_discovery['sigma'])
+            cl.fit(X, y)
+            default_error = self.default_error(y[np.nonzero(cl.matches(X))])
+            if cl.error is not None and cl.error < default_error:
+                children.append(cl)
+        return np.array(children)
 
 
     def replace(self, parents: np.ndarray, children: np.ndarray):
@@ -68,26 +92,6 @@ class RuleDiscoverer:
         if Config().rule_discovery['replacement'] == '+':
             next_generation = np.concatenate((children, parents))
         return next_generation
-
-
-    def filter_classifiers(self, classifiers: np.ndarray, X: np.ndarray, y: np.ndarray):
-        filter_array = []
-        for cl in classifiers:
-            default_error = self.default_error(y[np.nonzero(cl.matches(X))])
-            if cl.error is None or cl.error > default_error:
-                filter_array.append(False)
-            else:
-                filter_array.append(True)
-
-        return classifiers[filter_array]
-
-
-    def best_lambda_classifiers(self, candidates: np.ndarray, lmbd: int):
-        if candidates.size < lmbd:
-            lmbd = candidates.size
-
-        sorted_candidates = sorted(candidates, key=lambda cl: cl.error if cl.error is not None else float('inf'))
-        return np.array(sorted_candidates[:lmbd])
 
 
     @staticmethod

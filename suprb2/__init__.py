@@ -6,7 +6,7 @@ from suprb2.classifier import Classifier
 from suprb2.individual import Individual
 from suprb2.solutions import ES_1plus1
 from suprb2.pool import ClassifierPool
-from suprb2.discovery import RuleDiscoverer
+from suprb2.discovery import ES_MuLambd
 
 from sklearn.model_selection import train_test_split
 from datetime import datetime
@@ -32,7 +32,7 @@ class LCS:
             self.config = Config()
             self.perf_recording = PerfRecorder()
         self.sol_opt = None
-        self.rule_discovery = RuleDiscoverer()
+        self.mu_lambd_es = None
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
 
@@ -55,13 +55,13 @@ class LCS:
 
     def run_inital_step(self, X, y):
         start_time = datetime.now()
-        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
-            self.rule_discovery.discover_initial_rules(X, y)
 
+        self.mu_lambd_es = ES_MuLambd()
+        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
+            self.mu_lambd_es(X, y)
         discover_rules_time = datetime.now()
 
         self.sol_opt = ES_1plus1(X, y)
-        # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
         if Config().logging:
@@ -91,11 +91,10 @@ class LCS:
         for step in range(Config().steps):
             start_time = datetime.now()
 
-            self.rule_discovery.step(X, y)
+            self.mu_lambd_es.step(X, y)
             discover_rules_time = datetime.now()
 
             self.sol_opt.step(X, y)
-            # self.sol_opt.step(X_val, y_val)
             solution_creation_time = datetime.now()
 
             if Config().logging:

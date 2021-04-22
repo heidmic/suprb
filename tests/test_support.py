@@ -25,6 +25,29 @@ class TestSupport:
             return np.array([Classifier(i, i, None, 1, errors[i]) for i in range(1, n)])
 
 
+    def mock_specific_classifiers(values: list):
+        """
+        'value' is an array, where each line is represents:
+        [ classifier.lowerBounds, classifier.upperBounds, classifier.error ]
+
+        Example:
+        value = [
+            [1, 1, 0],  # Classifier(lowerBounds=1, upperBounds=1, local_model=None, degree=1, error=0)
+            [2, 1, 3]   # Classifier(lowerBounds=2, upperBounds=1, local_model=None, degree=1, error=3)
+        ]
+        """
+        classifiers = []
+        for i in range(len(values)):
+            classifiers.append(Classifier(values[i][0], values[i][1], None, 1, values[i][2]))
+        return np.array(classifiers)
+
+
+    def generate_input(n):
+        X = np.random.uniform(-2.5, 7, (n, 1))
+        y = 0.75*X**3-5*X**2+4*X+12
+        return (X, y)
+
+
     def initiate_pool(n: int, seed: int):
         """
         Initiate the ClassifierPool with n classifiers
@@ -37,15 +60,12 @@ class TestSupport:
         """
         Config().xdim = 1
         np.random.seed(seed)
-        X = np.random.uniform(-2.5, 7, (n, 1))
-        y = 0.75*X**3-5*X**2+4*X+12
-
+        X, y = TestSupport.generate_input(n)
         for x in X:
             cl = Classifier.random_cl(x)
             cl.fit(X, y)
             cl.error = np.random.randint(-1, 0)
             ClassifierPool().classifiers.append(cl)
-
         return (X, y)
 
 
