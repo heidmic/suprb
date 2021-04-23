@@ -5,6 +5,8 @@ mlruns/*
 figs/*
 */figs/*
 venv/*
+.coverage
+htmlcov
 
 .python-version
 .vscode
