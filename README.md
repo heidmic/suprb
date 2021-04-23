@@ -1,5 +1,15 @@
 # SupRB-2
 
+## What is SupRB-2?
+
+SupRB-2 is a Learning Classifier System (LCS) that utilises two separate optimizers that discover new rules and create global solutions to the learning problem, respectively. Those rules are stored in a Pool that expands during runtime and provides rules for solution creation.
+
+<object data="docs/classifier.pdf" type="application/pdf" width="700px" height="700px">
+    <embed src="docs/classifier.pdf">
+        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="docs/classifier.pdf">Download PDF</a>.</p>
+    </embed>
+</object>
+
 
 ## Install all requirements
 
