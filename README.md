@@ -9,7 +9,7 @@ SupRB-2 is a Learning Classifier System (LCS) that utilises two separate optimiz
         <p>This browser does not support PDFs. Please download the PDF to view it: <a href="docs/classifier.pdf">Download PDF</a>.</p>
     </embed>
 </object>
-![SupRB-2](/docs/classifier.pdf?raw=true)
+![SupRB-2](docs/classifier.pdf?raw=true)
 
 
 ## Install all requirements
