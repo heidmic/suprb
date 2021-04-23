@@ -14,7 +14,7 @@ Solutions of the problem select classifiers from the unchanging pool.
 
 <img src="./docs/solution.png" alt="Solutions and Pool of classifiers" width="600"/>
 
-![Solutions and Pool of classifiers](./docs/solution.png)
+![Solutions and Pool of classifiers](./docs/solution.png){height="36px" width="36px";}
 
 
 ## Install all requirements
