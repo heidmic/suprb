@@ -27,114 +27,96 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         Tests the method ES_MuLambd.step().
 
-        With seed = 1, just one of the children have
-        errors good enough to be added to the pool.
-        Since we are using the ',' replacement, this
-        lonly child will replace their parents, and
-        we will have a population of 1
+        After one step, the population can have max.
+        lmbd = 15 classifiers.
         """
-        mu, lmbd = (10, 10)
-        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1)
+        mu, lmbd = (15, 15)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1, recombination='intermediate')
         X, y = TestSupport.initiate_pool(mu, 1)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 1)
+        self.assertEqual(len(ClassifierPool().classifiers), lmbd)
 
 
     def test_step_mu_equals_lambda_plus(self):
         """
         Tests the method ES_MuLambd.step().
 
-        With seed = 2, just 2 of the children have
-        errors good enough to be added to the pool.
-        Since we are using the '+' replacement, this
-        lonly child will be added with their parents
-        to the next generation (with size 10 + 2 = 12)
+        After one step, the population can have max.
+        mu + lmbd = 20 classifiers.
         """
         mu, lmbd = (10, 10)
-        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1, recombination='intermediate')
         X, y = TestSupport.initiate_pool(mu, 2)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 12)
+        self.assertLessEqual(len(ClassifierPool().classifiers), mu + lmbd)
 
 
     def test_step_mu_bigger_than_lambda_comma(self):
         """
         Tests the method ES_MuLambd.step().
 
-        With seed = 1, just one of the children have
-        errors good enough to be added to the pool.
-        Since we are using the ',' replacement, this
-        lonly child will replace their parents, and
-        we will have a population of 1
+        After one step, the population can have max.
+        lmbd = 10 classifiers.
         """
         mu, lmbd = (15, 10)
-        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1, recombination='intermediate')
         X, y = TestSupport.initiate_pool(mu, 1)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 1)
+        self.assertLessEqual(len(ClassifierPool().classifiers), lmbd)
 
 
     def test_step_mu_bigger_than_lambda_plus(self):
         """
         Tests the method ES_MuLambd.step().
 
-        With seed = 1, just one of the children have
-        errors good enough to be added to the pool.
-        Since we are using the '+' replacement, this
-        lonly child will be added with their parents
-        to the next generation (with size 15 + 1 = 16)
+        After one step, the population can have max.
+        mu + lmbd = 25 classifiers.
         """
         mu, lmbd = (15, 10)
-        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1)
-        X, y = TestSupport.initiate_pool(mu, 1)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1, recombination='intermediate')
+        X, y = TestSupport.initiate_pool(mu, 3)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 16)
+        self.assertLessEqual(len(ClassifierPool().classifiers), mu + lmbd)
 
 
     def test_step_mu_smaller_than_lambda_comma(self):
         """
         Tests the method ES_MuLambd.step().
 
-        With seed = 2, just one of the children have
-        errors good enough to be added to the pool.
-        Since we are using the ',' replacement, this
-        lonly child will replace their parents, and
-        we will have a population of 1
+        After one step, the population can have max.
+        lmbd = 15 classifiers.
         """
         mu, lmbd = (10, 15)
-        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1, recombination='intermediate')
         X, y = TestSupport.initiate_pool(mu, 2)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertGreaterEqual(len(ClassifierPool().classifiers), 1)
+        self.assertLessEqual(len(ClassifierPool().classifiers), lmbd)
 
 
     def test_step_mu_smaller_than_lambda_plus(self):
         """
         Tests the method ES_MuLambd.step().
 
-        With seed = 1, just one of the children have
-        errors good enough to be added to the pool.
-        Since we are using the '+' replacement, this
-        lonly child will be added with their parents
-        to the next generation (with size 10 + 1 = 11)
+        After one step, the population can have max.
+        mu + lmbd = 25 classifiers.
         """
         mu, lmbd = (10, 15)
-        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1)
-        X, y = TestSupport.initiate_pool(mu, 1)
+        TestSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=1, recombination='intermediate')
+        X, y = TestSupport.initiate_pool(mu, 2)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 11)
+        self.assertLessEqual(len(ClassifierPool().classifiers), mu + lmbd)
 
 
     # ------------- select_parents_from_pool() --------------
@@ -177,6 +159,36 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         child = ES_MuLambd().recombine(TestSupport.mock_specific_classifiers([ [2, 2, 0], [4, 2, 0], [2, 4, 0], [4, 4, 0] ]))[0]
         self.assertIn(child.lowerBounds, [2, 3, 4])
         self.assertIn(child.upperBounds, [2, 3, 4])
+
+
+    def test_recombine_discrete_random_values(self):
+        """
+        Tests the method ES_MuLambd.recombine().
+
+        Checks if the discrete recombination of the classifiers' boundaries
+        is propperly calculated.
+
+        child_1.lowerBound = one_random(parents.lowerBounds)
+        child_1.upperBound = one_random(parents.upperBounds)
+        """
+        TestSupport.set_rule_discovery_configs(recombination='discrete')
+        child = ES_MuLambd().recombine(TestSupport.mock_specific_classifiers([ [[1], [40], 0], [[2], [30], 0], [[3], [20], 0], [[4], [10], 0] ]))[0]
+        self.assertIn(child.lowerBounds, [1, 2, 3, 4])
+        self.assertIn(child.upperBounds, [10, 20, 30, 40])
+
+
+    def test_recombine_discrete_flip_is_working(self):
+        """
+        Tests the method ES_MuLambd.recombine().
+
+        Checks if the random interval for one boundary
+        is flipped (upperBound < lowerBound), that the
+        recombination will flip them back.
+        """
+        TestSupport.set_rule_discovery_configs(recombination='discrete')
+        child = ES_MuLambd().recombine(TestSupport.mock_specific_classifiers([ [[10], [4], 0], [[20], [3], 0], [[30], [2], 0], [[40], [1], 0] ]))[0]
+        self.assertIn(child.lowerBounds, [1, 2, 3, 4])
+        self.assertIn(child.upperBounds, [10, 20, 30, 40])
 
 
     def test_recombine_default_strategy(self):

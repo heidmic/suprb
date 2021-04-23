@@ -38,7 +38,7 @@ class TestSupport:
         """
         classifiers = []
         for i in range(len(values)):
-            classifiers.append(Classifier(values[i][0], values[i][1], None, 1, values[i][2]))
+            classifiers.append(Classifier(np.array(values[i][0]), np.array(values[i][1]), None, 1, values[i][2]))
         return np.array(classifiers)
 
 

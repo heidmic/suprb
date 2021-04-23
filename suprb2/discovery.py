@@ -59,15 +59,19 @@ class ES_MuLambd(RuleDiscoverer):
 
     def recombine(self, parents: np.ndarray):
         lmbd = Config().rule_discovery['lmbd']
-        if Config().rule_discovery['recombination'] == 'intermediate':
-            return self.intermediate_recombination(parents, lmbd)
+        rho = Config().rule_discovery['rho']
+        recombination_type = Config().rule_discovery['recombination']
+
+        if recombination_type == 'intermediate':
+            return self.intermediate_recombination(parents, lmbd, rho)
+        elif recombination_type == 'discrete':
+            return self.discrete_recombination(parents, lmbd, rho)
         else:
             return np.array([deepcopy(Random().random.choice(parents))])
 
 
-    def intermediate_recombination(self, parents: np.ndarray, lmbd: int):
+    def intermediate_recombination(self, parents: np.ndarray, lmbd: int, rho: int):
         children = []
-        rho = Config().rule_discovery['rho']
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
             averages = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
@@ -76,13 +80,34 @@ class ES_MuLambd(RuleDiscoverer):
         return np.array(children)
 
 
+    def discrete_recombination(self, parents: np.ndarray, lmbd: int, rho: int):
+        children = []
+        Xdim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
+        for i in range(lmbd):
+            candidates = Random().random.choice(parents, rho, False)
+            lowerBounds = np.empty(Xdim)
+            upperBounds = np.empty(Xdim)
+            for i_dim in range(Xdim):
+                lower = Random().random.choice([ c.lowerBounds[i_dim] for c in candidates ])
+                upper = Random().random.choice([ c.upperBounds[i_dim] for c in candidates ])
+                if lower > upper:
+                    lowerBounds[i_dim] = upper
+                    upperBounds[i_dim] = lower
+                else:
+                    lowerBounds[i_dim] = lower
+                    upperBounds[i_dim] = upper
+            children.append(Classifier(lowerBounds, upperBounds, LinearRegression(), 1))
+        return np.array(children)
+
+
+
     def mutate_and_fit(self, classifiers: np.ndarray, X: np.ndarray, y:np.ndarray):
         children = []
         for cl in classifiers:
             cl.mutate(Config().rule_discovery['sigma'])
             cl.fit(X, y)
             default_error = self.default_error(y[np.nonzero(cl.matches(X))])
-            if cl.error is not None and cl.error < default_error:
+            if cl.error is not None and cl.error <= default_error:
                 children.append(cl)
         return np.array(children)
 
