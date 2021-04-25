@@ -8,13 +8,13 @@ from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, local_model, degree, error=None):
+    def __init__(self, lowers, uppers, local_model, degree):
         self.lowerBounds = lowers
         self.upperBounds = uppers
         self.model = local_model
         # TODO make this part of local model (as a class)
         self.degree = degree
-        self.error = error
+        self.error = None
         # TODO expand this int into remember which was matched (to reduce
         # retraining when mutate didnt change the matched data)
         self.experience = None
@@ -133,6 +133,6 @@ class Classifier:
         volume = np.prod(self.upperBounds - self.lowerBounds)
 
         if volume != 0:
-            weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
+            weighted_error = self.current_error() / (volume * Config().rule_discovery["weighted_error_constant"])
 
         return weighted_error

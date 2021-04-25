@@ -6,7 +6,7 @@ from suprb2.discovery import RuleDiscoverer
 
 import numpy as np
 
-class TestSupport:
+class TestsSupport:
     """
     This module serves as a container with helpful methods
     for generating the necessary data for tests.
@@ -19,27 +19,24 @@ class TestSupport:
         child_1 = Classifier(lowerBoundary=1, upperBoundary=1,
                                 local_model= None, degree=1)
         """
-        if errors is None:
-            return np.array([Classifier(i, i, None, 1) for i in range(1, n)])
-        else:
-            return np.array([Classifier(i, i, None, 1, errors[i]) for i in range(1, n)])
+        return [Classifier(i, i, None, 1) for i in range(1, n)]
 
 
     def mock_specific_classifiers(values: list):
         """
         'value' is an array, where each line is represents:
-        [ classifier.lowerBounds, classifier.upperBounds, classifier.error ]
+        [ classifier.lowerBounds, classifier.upperBounds ]
 
         Example:
         value = [
-            [1, 1, 0],  # Classifier(lowerBounds=1, upperBounds=1, local_model=None, degree=1, error=0)
-            [2, 1, 3]   # Classifier(lowerBounds=2, upperBounds=1, local_model=None, degree=1, error=3)
+            [1, 1],  # Classifier(lowerBounds=1, upperBounds=1, local_model=None, degree=1)
+            [2, 1]   # Classifier(lowerBounds=2, upperBounds=1, local_model=None, degree=1)
         ]
         """
         classifiers = []
         for i in range(len(values)):
-            classifiers.append(Classifier(values[i][0], values[i][1], None, 1, values[i][2]))
-        return np.array(classifiers)
+            classifiers.append(Classifier(values[i][0], values[i][1], None, 1))
+        return classifiers
 
 
     def generate_input(n):
@@ -60,7 +57,7 @@ class TestSupport:
         """
         Config().xdim = 1
         np.random.seed(seed)
-        X, y = TestSupport.generate_input(n)
+        X, y = TestsSupport.generate_input(n)
         for x in X:
             cl = Classifier.random_cl(x)
             cl.fit(X, y)
