@@ -133,6 +133,6 @@ class Classifier:
         volume = np.prod(self.upperBounds - self.lowerBounds)
 
         if volume != 0:
-            weighted_error = self.current_error() / (volume * Config().rule_discovery["weighted_error_constant"])
+            weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
 
         return weighted_error

@@ -12,7 +12,7 @@ class TestsSupport:
     for generating the necessary data for tests.
     """
 
-    def mock_classifiers(n: int, errors=None):
+    def mock_classifiers(n: int):
         """
         Creates n classifiers without relevant attributes.
         Example:
@@ -56,7 +56,7 @@ class TestsSupport:
         y = 0.75 * X**3 - 5 * X**2 + 4 * X + 12
         """
         Config().xdim = 1
-        np.random.seed(seed)
+        Random().reseed(seed)
         X, y = TestsSupport.generate_input(n)
         for x in X:
             cl = Classifier.random_cl(x)
