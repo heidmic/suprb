@@ -56,12 +56,12 @@ class TestsSupport:
         y = 0.75 * X**3 - 5 * X**2 + 4 * X + 12
         """
         Config().xdim = 1
-        Random().reseed(seed)
+        rng = Random().reseed(seed)
         X, y = TestsSupport.generate_input(n)
         for x in X:
             cl = Classifier.random_cl(x)
             cl.fit(X, y)
-            cl.error = np.random.randint(-1, 0)
+            cl.error = Random().random.integers(-1, 0, endpoint=True)
             ClassifierPool().classifiers.append(cl)
         return (X, y)
 
