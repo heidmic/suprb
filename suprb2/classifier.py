@@ -80,6 +80,8 @@ class Classifier:
             #  We need the score to estimate performance of the whole individual. using validation data would cause an additional loop
             #  using validation data might cause it to bleed over, we should avoid it. in XCS train is used here
             self.error = self.score(X, y, metric=mean_squared_error)
+            if self.error <= 1e-4:
+                self.error = 1e-4
         self.experience = len(y)
 
     def score(self, X: np.ndarray, y: np.ndarray, metric=None) -> float:
