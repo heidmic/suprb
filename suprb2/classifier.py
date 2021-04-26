@@ -28,7 +28,7 @@ class Classifier:
         u = np.reshape(np.tile(self.upperBounds, X.shape[0]), (X.shape[0],
                                                                X.shape[1]))
         # Test if greater lower and smaller upper and return True for each line
-        m = ((l < X) & (X < u)).all(1)
+        m = ((l <= X) & (X <= u)).all(1)
         return m
 
     def predict(self, X: np.ndarray) -> float:
