@@ -56,7 +56,7 @@ class TestsSupport:
         y = 0.75 * X**3 - 5 * X**2 + 4 * X + 12
         """
         Config().xdim = 1
-        rng = Random().reseed(seed)
+        Random().reseed(seed)
         X, y = TestsSupport.generate_input(n)
         for x in X:
             cl = Classifier.random_cl(x)
