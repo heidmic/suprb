@@ -19,7 +19,7 @@ class Individual:
         # from interval [low, high)
         return Individual(np.concatenate((
             Random().random.integers(low=0, high=2, size=pool_length,
-                                        dtype=bool),
+                                     dtype=bool),
             np.zeros(genome_length-pool_length))))
 
     def fit(self, X, y):
@@ -27,22 +27,30 @@ class Individual:
         # keep in line with sklearn syntax is kept in for the moment.
         raise NotImplementedError()
 
+    def calculate_mixing_weights(self):
+        classifiers = self.get_classifiers()
+        tau = np.full(len(classifiers), np.inf)
+
+        for i in range(len(classifiers)):
+            experience = np.array(classifiers[i].experience)
+            error = np.array(classifiers[i].error)
+
+            if experience and error:
+                if (experience != 0) and (error != 0):
+                    tau[i] = 1 / ((1 / experience) * error)
+
+        return tau
+
     def predict(self, X):
         out = np.repeat(Config().default_prediction, len(X))
         if X.ndim == 2:
+            classifiers = self.get_classifiers()
             y_preds = np.zeros(len(X))
             tausum = np.zeros(len(X))
-            cls = self.get_classifiers()
-            t_ = np.zeros(len(cls))
-            for i in range(len(cls)):
-                cl = cls[i]
-                # unbiased version, with a potential division by zero: 1/(cl.experience - Config().xdim) * cl.error
-                with np.errstate(divide='ignore'):
-                    tau = 1 / (1 / np.array(cl.experience) * np.array(cl.error))
-                t_[i] = tau
+            t_ = self.calculate_mixing_weights()
             was_inf = np.inf in t_
-            for i in range(len(cls)):
-                cl = cls[i]
+            for i in range(len(classifiers)):
+                cl = classifiers[i]
                 # an empty array to put predictions in
                 local_pred = np.zeros(len(X))
                 if was_inf and t_[i] == np.inf:
@@ -112,20 +120,21 @@ class Individual:
 
         elif Config().solution_creation['fitness'] == "simplified_compl":
             self.error = mean_squared_error(y_val, self.predict(X_val))
-            self.fitness = - self.error - (len(self.classifiers) - Config().ind_size if len(self.classifiers) > Config().ind_size else 0)
+            self.fitness = -self.error - (len(self.classifiers) - Config().ind_size
+                                          if len(self.classifiers) > Config().ind_size else 0)
 
     def parameters(self, simple=True) -> float:
         if simple:
             return np.count_nonzero(self.genome)
         else:
             raise NotImplementedError()
-            ## pycharm gives a warning of type missmatch however this seems
-            ## to work
-            #return np.sum([cl.params() for cl in self.classifiers])
+            # pycharm gives a warning of type missmatch however this seems
+            # to work
+            # return np.sum([cl.params() for cl in self.classifiers])
 
     def mutate(self, rate=0.2):
         pool_length = len(ClassifierPool().classifiers)
         mutations = np.concatenate((Random().random.random(pool_length) < rate,
-                        np.zeros(len(self.genome)-pool_length, dtype='bool')),
+                                    np.zeros(len(self.genome)-pool_length, dtype='bool')),
                                    dtype='bool')
         self.genome = np.logical_xor(self.genome, mutations)
