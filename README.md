@@ -43,7 +43,7 @@ Avoid merge commits by using rebase rather than merge when combining branches
 
 We use `unittest` to test our application and `coverage` to extract the results.
 `unittest` is a default library from python, there is no need to install it.
-`coverage` can  be installed via pip.
+`coverage` can be installed via pip.
 
 To run the tests, use the following program
 ```bash

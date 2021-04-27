@@ -105,29 +105,33 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         Tests the method ES_MuLambd.step().
 
-        When mu is zero, then raise Exception (ValueError).
+        When mu is zero, then no classifier is added to the pool.
         """
         mu, lmbd = (0, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.initiate_pool(mu, 1)
 
         optimizer = ES_MuLambd()
-        self.assertRaises(ValueError, optimizer.step, X, y)
+        optimizer.step(X, y)
+        self.assertEqual(len(ClassifierPool().classifiers), mu)
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
     @patch.object(Utilities, 'default_error', return_value=0.5)
-    def test_step_no_population(self, mock_error, mock_default_error):
+    def test_step_no_input(self, mock_error, mock_default_error):
         """
         Tests the method ES_MuLambd.step().
 
-        If our ClassifierPool is empty, then raise Exception (ValueError).
+        If our X is empty (no data is given), then our population will
+        remain empty.
         """
         mu, lmbd = (0, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        X, y = TestsSupport.initiate_pool(0, 1)
 
         optimizer = ES_MuLambd()
-        self.assertRaises(ValueError, optimizer.step, None, None)
+        optimizer.step(X, y)
+        self.assertEqual(len(ClassifierPool().classifiers), 0)
 
 
     # ------------- recombine() --------------
