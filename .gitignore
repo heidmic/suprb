@@ -5,3 +5,4 @@ mlruns/*
 figs/*
 */figs/*
 venv/*
+.hypothesis
