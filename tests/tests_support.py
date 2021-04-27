@@ -40,29 +40,9 @@ class TestsSupport:
 
 
     def generate_input(n):
+        Config().xdim = 1
         X = np.random.uniform(-2.5, 7, (n, 1))
         y = 0.75*X**3-5*X**2+4*X+12
-        return (X, y)
-
-
-    def initiate_pool(n: int, seed: int):
-        """
-        Initiate the ClassifierPool with n classifiers
-        and return the auto generated samples used to
-        fit the classifier. The classifier's error is
-        either -1 or 0.
-
-        X = Random().random.uniform(-2.5, 7, (n, 1))
-        y = 0.75 * X**3 - 5 * X**2 + 4 * X + 12
-        """
-        Config().xdim = 1
-        Random().reseed(seed)
-        X, y = TestsSupport.generate_input(n)
-        for x in X:
-            cl = Classifier.random_cl(x)
-            cl.fit(X, y)
-            cl.error = Random().random.integers(-1, 0, endpoint=True)
-            ClassifierPool().classifiers.append(cl)
         return (X, y)
 
 

@@ -38,7 +38,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1, recombination='intermediate')
-        X, y = TestsSupport.initiate_pool(mu, 1)
+        X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
@@ -57,7 +57,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
-        X, y = TestsSupport.initiate_pool(mu, 1)
+        X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
@@ -75,7 +75,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
-        X, y = TestsSupport.initiate_pool(mu - 5, 1)
+        X, y = TestsSupport.generate_input(mu - 5)
 
         optimizer = ES_MuLambd()
         self.assertRaises(ValueError, optimizer.step, X, y)
@@ -92,7 +92,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 0)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
-        X, y = TestsSupport.initiate_pool(mu, 1)
+        X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
@@ -109,7 +109,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (0, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
-        X, y = TestsSupport.initiate_pool(mu, 1)
+        X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
@@ -127,7 +127,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (0, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
-        X, y = TestsSupport.initiate_pool(0, 1)
+        X, y = TestsSupport.generate_input(0)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)

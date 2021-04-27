@@ -117,9 +117,8 @@ class ES_MuLambd(RuleDiscoverer):
             generation.extend(self.replace(parents, children))
 
         # add search results to pool
-        mask = [cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]) for cl in generation]
-        if len(mask) > 0:
-            ClassifierPool().classifiers.extend(generation[mask])
+        mask = np.array([cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]) for cl in generation], dtype='bool')
+        ClassifierPool().classifiers.extend(np.array(generation, dtype='object')[mask])
 
 
     def recombine(self, parents: List[Classifier]):
@@ -139,7 +138,8 @@ class ES_MuLambd(RuleDiscoverer):
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
             averages = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
-            children.append(Classifier(averages[0], averages[1],
+            copy_avg = averages.copy()
+            children.append(Classifier(copy_avg[0], copy_avg[1],
                                             LinearRegression(), 1))  # Reminder: LinearRegression might change in the future
         return children
 
