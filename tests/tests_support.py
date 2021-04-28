@@ -42,7 +42,7 @@ class TestsSupport:
         for i in range(len(values)):
             classifiers.append(Classifier(values[i][0], values[i][1],
                                             None, 1,
-                                            np.array(values[i][2], dtype=np.float64)))
+                                            np.array(values[i][2], dtype=np.float64)) if values[i][2] is not None else None)
         return classifiers
 
 

@@ -44,7 +44,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         classifiers.
         """
         mu, lmbd = (15, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1, recombination='intermediate', sigma='vector')
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
@@ -63,7 +63,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         classifiers.
         """
         mu, lmbd = (15, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', sigma=0.2)
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
@@ -81,7 +81,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         Exception (ValueError).
         """
         mu, lmbd = (15, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', sigma=0.2)
         X, y = TestsSupport.generate_input(mu - 5)
 
         optimizer = ES_MuLambd()
@@ -98,7 +98,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         population.
         """
         mu, lmbd = (15, 0)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', sigma=0.2)
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
@@ -115,7 +115,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         When mu is zero, then no classifier is added to the pool.
         """
         mu, lmbd = (0, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', sigma=0.2)
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
@@ -133,7 +133,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         remain empty.
         """
         mu, lmbd = (0, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', simga=0.2)
         X, y = TestsSupport.generate_input(0)
 
         optimizer = ES_MuLambd()

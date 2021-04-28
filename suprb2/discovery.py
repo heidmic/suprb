@@ -125,39 +125,44 @@ class ES_MuLambd(RuleDiscoverer):
 
         lmbd = Config().rule_discovery['lmbd']
         rho = Config().rule_discovery['rho']
+        use_mutation_vector = Config().rule_discovery['sigma'] == 'vector'
         recombination_type = Config().rule_discovery['recombination']
 
         if recombination_type == 'intermediate':
-            return self.intermediate_recombination(parents, lmbd, rho)
+            return self.intermediate_recombination(parents, lmbd, rho, use_mutation_vector)
         elif recombination_type == 'discrete':
-            return self.discrete_recombination(parents, lmbd, rho)
+            return self.discrete_recombination(parents, lmbd, rho, use_mutation_vector)
         else:
             return [deepcopy(Random().random.choice(parents))]
 
 
-    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int):
+    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int, use_mutation_vector: bool):
         children = []
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
             boundaries_avg = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
-            sigmas_avg = np.mean([p.sigmas for p in candidates], axis=0)
+            if use_mutation_vector:
+                sigmas_avg = np.mean([p.sigmas for p in candidates], axis=0)
+                copy_sigmas = sigmas_avg.copy()
+            else:
+                copy_sigmas = None
             copy_avg = boundaries_avg.copy()
-            copy_sigmas = sigmas_avg.copy()
             children.append(Classifier(copy_avg[0], copy_avg[1],
                                             LinearRegression(), 1, copy_sigmas))  # Reminder: LinearRegression might change in the future
         return children
 
 
-    def discrete_recombination(self, parents: np.ndarray, lmbd: int, rho: int):
+    def discrete_recombination(self, parents: np.ndarray, lmbd: int, rho: int, use_mutation_vector: bool):
         children = []
         Xdim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
             lowerBounds = np.empty(Xdim)
             upperBounds = np.empty(Xdim)
-            sigmas = np.empty(Xdim)
+            sigmas = np.empty(Xdim) if use_mutation_vector else None
             for i_dim in range(Xdim):
-                sigmas[i_dim] = Random().random.choice([ c.sigmas[i_dim] for c in candidates ])
+                if use_mutation_vector:
+                    sigmas[i_dim] = Random().random.choice([ c.sigmas[i_dim] for c in candidates ])
 
                 lower = Random().random.choice([ c.lowerBounds[i_dim] for c in candidates ])
                 upper = Random().random.choice([ c.upperBounds[i_dim] for c in candidates ])
