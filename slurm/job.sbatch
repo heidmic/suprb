@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --time=00:30:00
 #SBATCH --partition=cpu
-#SBATCH --output=/data/oc-compute03/heidermi/suprb-2/output/output-%A-%a.txt
+#SBATCH --output=/data/oc-compute02/heidermi/suprb2/output/output-%A-%a.txt
 #SBATCH --array=0-19
 #SBATCH --cpus-per-task=5
 #SBATCH --mem-per-cpu=1000
