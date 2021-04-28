@@ -8,13 +8,13 @@ from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, local_model, degree, error=None):
+    def __init__(self, lowers, uppers, local_model, degree):
         self.lowerBounds = lowers
         self.upperBounds = uppers
         self.model = local_model
         # TODO make this part of local model (as a class)
         self.degree = degree
-        self.error = error
+        self.error = None
         # TODO expand this int into remember which was matched (to reduce
         # retraining when mutate didnt change the matched data)
         self.experience = None
@@ -28,7 +28,7 @@ class Classifier:
         u = np.reshape(np.tile(self.upperBounds, X.shape[0]), (X.shape[0],
                                                                X.shape[1]))
         # Test if greater lower and smaller upper and return True for each line
-        m = ((l < X) & (X < u)).all(1)
+        m = ((l <= X) & (X <= u)).all(1)
         return m
 
     def predict(self, X: np.ndarray) -> float:
@@ -80,6 +80,8 @@ class Classifier:
             #  We need the score to estimate performance of the whole individual. using validation data would cause an additional loop
             #  using validation data might cause it to bleed over, we should avoid it. in XCS train is used here
             self.error = self.score(X, y, metric=mean_squared_error)
+            if self.error <= 1e-4:
+                self.error = 1e-4
         self.experience = len(y)
 
     def score(self, X: np.ndarray, y: np.ndarray, metric=None) -> float:

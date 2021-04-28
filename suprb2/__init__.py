@@ -32,7 +32,7 @@ class LCS:
             self.config = Config()
             self.perf_recording = PerfRecorder()
         self.sol_opt = None
-        self.mu_lambd_es = None
+        self.rule_disc = None
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
 
@@ -56,9 +56,9 @@ class LCS:
     def run_inital_step(self, X, y):
         start_time = datetime.now()
 
-        self.mu_lambd_es = ES_MuLambd()
+        self.rule_disc = ES_MuLambd()
         while len(ClassifierPool().classifiers) < Config().initial_pool_size:
-            self.mu_lambd_es(X, y)
+            self.rule_disc.step(X, y)
         discover_rules_time = datetime.now()
 
         self.sol_opt = ES_1plus1(X, y)
@@ -91,7 +91,7 @@ class LCS:
         for step in range(Config().steps):
             start_time = datetime.now()
 
-            self.mu_lambd_es.step(X, y)
+            self.rule_disc.step(X, y)
             discover_rules_time = datetime.now()
 
             self.sol_opt.step(X, y)
@@ -110,6 +110,10 @@ class LCS:
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
                       .fitness, step)
+        mf.log_metric("error elite", self.sol_opt.get_elitist()
+                      .error, step)
+        mf.log_metric("complexity elite", self.sol_opt.get_elitist()
+                      .parameters(), step)
         mf.log_metric("classifier pool size", len(ClassifierPool().classifiers))
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
