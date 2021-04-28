@@ -70,7 +70,7 @@ class Individual:
             np.put(tausum, (tausum == 0).nonzero(), 1)
 
             y_pred = y_preds / tausum
-            np.put(out, np.nonzero(y_pred), y_pred)
+            np.putmask(out, y_pred, y_pred)
         # TODO is this shape still needed?
         return out.reshape((-1, 1))
 

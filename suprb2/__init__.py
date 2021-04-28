@@ -110,6 +110,10 @@ class LCS:
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
                       .fitness, step)
+        mf.log_metric("error elite", self.sol_opt.get_elitist()
+                      .error, step)
+        mf.log_metric("complexity elite", self.sol_opt.get_elitist()
+                      .parameters(), step)
         mf.log_metric("classifier pool size", len(ClassifierPool().classifiers))
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
