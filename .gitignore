@@ -6,7 +6,7 @@ figs/*
 */figs/*
 venv/*
 .coverage
-htmlcov
+htmlcov/
 
 .python-version
 .vscode
