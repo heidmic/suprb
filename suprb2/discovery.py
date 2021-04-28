@@ -80,11 +80,6 @@ class ES_MuLambd(RuleDiscoverer):
                         taken randomly from one of the 'rho' parents
                         for each Xdim.
 
-    'mutation'      ->  Defines which mutation will be used on the
-                        children. Acceptable values are:
-                        'isotropic': lower and upper boundaries are
-                        slightly deformed using a gaussian distribution.
-
     'sigma'         ->  Represents the size of the step we are taking
                         to a direction in the mutation process. In other
                         words, it shows us how big is the pertubation.
@@ -102,16 +97,16 @@ class ES_MuLambd(RuleDiscoverer):
     def step(self, X: np.ndarray, y: np.ndarray):
         generation = []
         mu = Config().rule_discovery['mu']
-        idxs = Random().random.choice(np.arange(len(X)), mu, False)
 
-        for x in X[idxs]:
-            cl = Classifier.random_cl(x)
-            cl.fit(X, y)
-            ClassifierPool().classifiers.append(cl)
-
-        # evolutionary search
         for i in range(Config().rule_discovery['steps_per_step']):
-            parents = deepcopy(Random().random.choice(ClassifierPool().classifiers, mu, False))
+            parents = []
+            idxs = Random().random.choice(np.arange(len(X)), mu, False)
+            for x in X[idxs]:
+                cl = Classifier.random_cl(x)
+                cl.fit(X, y)
+                parents.append(cl)
+
+            # evolutionary search
             recombined_classifiers = self.recombine(parents)
             children = self.mutate_and_fit(recombined_classifiers, X, y)
             generation.extend(self.replace(parents, children))
