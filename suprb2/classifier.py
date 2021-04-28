@@ -145,6 +145,3 @@ class Classifier:
             weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
 
         return weighted_error
-
-    def random_mutation_vector(self):
-        pass
