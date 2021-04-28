@@ -23,6 +23,13 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         Config().__init__()
 
 
+    def assertAlmostIn(self, member, container):
+        for element in container:
+            if np.isclose(member, element):
+                return
+        raise AssertionError(f'{member} is not in {container}')
+
+
     # ------------- step() --------------
 
 
@@ -141,16 +148,40 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         Tests the method ES_MuLambd.recombine().
 
-        Checks if the average of the classifiers' boundaries
-        is propperly calculated.
+        Checks if the average of the all classifiers'
+        boundaries is propperly calculated.
 
         child_1.lowerBound = average(random_vater.lowerBound, random_mother.lowerBound)
         child_1.upperBound = average(random_vater.upperBound, random_mother.upperBound)
+        child_1.sigmas = average(random_vater.sigmas, random_mother.sigmas)
         """
-        TestsSupport.set_rule_discovery_configs(recombination='intermediate')
-        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [2, 2], [4, 2], [2, 4], [4, 4] ]))[0]
+        TestsSupport.set_rule_discovery_configs(recombination='intermediate', rho=4)
+        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [2, 2, [0.1]],
+                                                                                [4, 2, [0.2]],
+                                                                                [2, 4, [0.4]],
+                                                                                [4, 4, [0.1]]
+                                                                            ]))[0]
         self.assertIn(child.lowerBounds, [2, 3, 4])
         self.assertIn(child.upperBounds, [2, 3, 4])
+        self.assertEqual(child.sigmas, np.array([0.2], dtype=np.float64))
+
+
+    def test_recombine_rho_average(self):
+        """
+        Tests the method ES_MuLambd.recombine().
+
+        Checks if the average of the rho classifiers'
+        boundaries is propperly calculated.
+        """
+        TestsSupport.set_rule_discovery_configs(recombination='intermediate', rho=2)
+        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [2, 2, [0.1]],
+                                                                                [4, 2, [0.2]],
+                                                                                [2, 4, [0.2]],
+                                                                                [4, 4, [0.1]]
+                                                                            ]))[0]
+        self.assertIn(child.lowerBounds, [2, 3, 4])
+        self.assertIn(child.upperBounds, [2, 3, 4])
+        self.assertAlmostIn(child.sigmas[0], [0.1, 0.15, 0.2])
 
 
     def test_recombine_discrete_random_values(self):
@@ -162,11 +193,17 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
 
         child_1.lowerBound = one_random(parents.lowerBounds)
         child_1.upperBound = one_random(parents.upperBounds)
+        child_1.sigmas = one_random(parents.sigmas)
         """
         TestsSupport.set_rule_discovery_configs(recombination='discrete')
-        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[1], [40]], [[2], [30]], [[3], [20]], [[4], [10]] ]))[0]
+        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[1], [40], [0.1]],
+                                                                                [[2], [30], [0.2]],
+                                                                                [[3], [20], [0.3]],
+                                                                                [[4], [10], [0.4]]
+                                                                            ]))[0]
         self.assertIn(child.lowerBounds, [1, 2, 3, 4])
         self.assertIn(child.upperBounds, [10, 20, 30, 40])
+        self.assertAlmostIn(child.sigmas[0], [0.1, 0.2, 0.3, 0.4])
 
 
     def test_recombine_discrete_flip_is_working(self):
@@ -178,7 +215,11 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         recombination will flip them back.
         """
         TestsSupport.set_rule_discovery_configs(recombination='discrete')
-        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[10], [4]], [[20], [3]], [[30], [2]], [[40], [1]] ]))[0]
+        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[10], [4], [0.1]],
+                                                                                [[20], [3], [0.2]],
+                                                                                [[30], [2], [0.3]],
+                                                                                [[40], [1], [0.4]]
+                                                                                ]))[0]
         self.assertIn(child.lowerBounds, [1, 2, 3, 4])
         self.assertIn(child.upperBounds, [10, 20, 30, 40])
 
@@ -210,7 +251,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         error present.
         """
         n = 2
-        classifiers = TestsSupport.mock_specific_classifiers([ [[5], [10]], [[10], [5]] ])
+        classifiers = TestsSupport.mock_specific_classifiers([ [[5], [10], [0.2]], [[10], [5], [0.2]] ])
         X, y = TestsSupport.generate_input(n)
         ES_MuLambd().mutate_and_fit(classifiers, X, y)
         self.assertLessEqual(classifiers[0].lowerBounds, 5 + (10 - 5 / 10))

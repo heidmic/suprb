@@ -141,10 +141,12 @@ class ES_MuLambd(RuleDiscoverer):
         children = []
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
-            averages = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
-            copy_avg = averages.copy()
+            boundaries_avg = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
+            sigmas_avg = np.mean([p.sigmas for p in candidates], axis=0)
+            copy_avg = boundaries_avg.copy()
+            copy_sigmas = sigmas_avg.copy()
             children.append(Classifier(copy_avg[0], copy_avg[1],
-                                            LinearRegression(), 1))  # Reminder: LinearRegression might change in the future
+                                            LinearRegression(), 1, copy_sigmas))  # Reminder: LinearRegression might change in the future
         return children
 
 
@@ -155,16 +157,20 @@ class ES_MuLambd(RuleDiscoverer):
             candidates = Random().random.choice(parents, rho, False)
             lowerBounds = np.empty(Xdim)
             upperBounds = np.empty(Xdim)
+            sigmas = np.empty(Xdim)
             for i_dim in range(Xdim):
+                sigmas[i_dim] = Random().random.choice([ c.sigmas[i_dim] for c in candidates ])
+
                 lower = Random().random.choice([ c.lowerBounds[i_dim] for c in candidates ])
                 upper = Random().random.choice([ c.upperBounds[i_dim] for c in candidates ])
+                # flip if boundaries are inverted
                 if lower > upper:
                     lowerBounds[i_dim] = upper
                     upperBounds[i_dim] = lower
                 else:
                     lowerBounds[i_dim] = lower
                     upperBounds[i_dim] = upper
-            children.append(Classifier(lowerBounds, upperBounds, LinearRegression(), 1))
+            children.append(Classifier(lowerBounds, upperBounds, LinearRegression(), 1, sigmas))
         return np.array(children)
 
 

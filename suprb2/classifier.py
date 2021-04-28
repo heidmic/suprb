@@ -8,7 +8,7 @@ from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, local_model, degree):
+    def __init__(self, lowers, uppers, local_model, degree, sigmas):
         self.lowerBounds = lowers
         self.upperBounds = uppers
         self.model = local_model
@@ -21,6 +21,7 @@ class Classifier:
         # if set this overrides local_model and outputs constant for all prediction requests
         self.constant = None
         self.last_training_match = None
+        self.sigmas = sigmas  # mutation vector
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -120,7 +121,9 @@ class Classifier:
             lu[0] -= diff/2
             lu[1] += diff/2
             lu = np.clip(lu, a_max=1, a_min=-1)
-        return Classifier(lu[0], lu[1], LinearRegression(), 1)
+
+        sigmas = Random().random.standard_normal(Config().xdim)
+        return Classifier(lu[0], lu[1], LinearRegression(), 1, sigmas)
 
     def params(self):
         if self.model is LinearRegression:
@@ -138,3 +141,6 @@ class Classifier:
             weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
 
         return weighted_error
+
+    def random_mutation_vector(self):
+        pass
