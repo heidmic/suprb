@@ -34,9 +34,7 @@ class Individual:
             experience = np.array(classifiers[i].experience)
             error = np.array(classifiers[i].error)
 
-            if experience == 0:
-                tau[i] = 0
-            else:
+            if experience != 0:
                 with np.errstate(divide='ignore'):
                     tau[i] = 1 / ((1 / experience) * error)
 
