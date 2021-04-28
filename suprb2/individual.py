@@ -27,8 +27,7 @@ class Individual:
         # keep in line with sklearn syntax is kept in for the moment.
         raise NotImplementedError()
 
-    def calculate_mixing_weights(self):
-        classifiers = self.get_classifiers()
+    def calculate_mixing_weights(self, classifiers):
         tau = np.zeros(len(classifiers))
 
         for i in range(len(classifiers)):
@@ -47,7 +46,7 @@ class Individual:
             classifiers = self.get_classifiers()
             y_preds = np.zeros(len(X))
             tausum = np.zeros(len(X))
-            t_ = self.calculate_mixing_weights()
+            t_ = self.calculate_mixing_weights(classifiers)
             was_inf = np.inf in t_
             for i in range(len(classifiers)):
                 cl = classifiers[i]

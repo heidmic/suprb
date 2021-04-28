@@ -45,7 +45,7 @@ def test_simple(classifiers):
     individual = get_sample_individual()
 
     # When
-    result = individual.calculate_mixing_weights()
+    result = individual.calculate_mixing_weights(ClassifierPool().classifiers)
 
     # Then
     # TODO Not sure how to test this
