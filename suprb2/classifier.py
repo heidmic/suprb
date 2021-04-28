@@ -104,8 +104,12 @@ class Classifier:
         changed to x' ~ N(x, (u - l) / 10) (Gaussian with standard deviation a
         10th of the interval's width).
         """
-        lowers = Random().random.normal(loc=self.lowerBounds, scale=sigma, size=len(self.lowerBounds))
-        uppers = Random().random.normal(loc=self.upperBounds, scale=sigma, size=len(self.upperBounds))
+        if self.sigmas is not None:
+            lowers = Random().random.normal(loc=self.lowerBounds, scale=self.sigmas, size=len(self.lowerBounds))
+            uppers = Random().random.normal(loc=self.upperBounds, scale=self.sigmas, size=len(self.upperBounds))
+        else:
+            lowers = Random().random.normal(loc=self.lowerBounds, scale=sigma, size=len(self.lowerBounds))
+            uppers = Random().random.normal(loc=self.upperBounds, scale=sigma, size=len(self.upperBounds))
         lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
         self.lowerBounds = lu[0]
         self.upperBounds = lu[1]
@@ -122,7 +126,7 @@ class Classifier:
             lu[1] += diff/2
             lu = np.clip(lu, a_max=1, a_min=-1)
 
-        sigmas = Random().random.standard_normal(Config().xdim)
+        sigmas = Random().random.standard_normal(Config().xdim) if Config().rule_discovery['sigma'] == 'vector' else None
         return Classifier(lu[0], lu[1], LinearRegression(), 1, sigmas)
 
     def params(self):

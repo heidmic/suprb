@@ -80,14 +80,12 @@ class ES_MuLambd(RuleDiscoverer):
                         taken randomly from one of the 'rho' parents
                         for each Xdim.
 
-    'mutation'      ->  Defines which mutation will be used on the
-                        children. Acceptable values are:
-                        'isotropic': lower and upper boundaries are
-                        slightly deformed using a gaussian distribution.
-
     'sigma'         ->  Represents the size of the step we are taking
                         to a direction in the mutation process. In other
                         words, it shows us how big is the pertubation.
+                        If sigma == 'vector', then the i-th element of
+                        the vector self.sigmas will be used on the i-th
+                        boundaries of the classifier for the pertubation.
 
     'replacement'   ->  This hyper parameter defines if we are also adding
                         the copies of the parents to the pool ('+'), or if

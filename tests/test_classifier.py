@@ -57,5 +57,12 @@ class TestClassifier(unittest.TestCase):
             self.assertAlmostEqual(cl.sigmas[i_dim], 0, delta=1)
 
 
+    # ------------- mutate() --------------
+
+
+    def test_mutate_uses_vector(self):
+        pass
+
+
 if __name__ == '__main__':
     unittest.main()
