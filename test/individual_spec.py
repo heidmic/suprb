@@ -1,52 +1,53 @@
-from hypothesis import given, settings, strategies as st
-from suprb2 import Individual, Classifier, ClassifierPool
 import numpy as np
+
+from hypothesis import given, settings, strategies as st
+from hypothesis.strategies import lists, integers, decimals, tuples
 from sklearn.linear_model import LinearRegression
-from hypothesis.strategies import lists, integers, decimals
+from suprb2 import Individual, Classifier
 
 
-def add_classifiers_to_pool(X, y, lower, upper):
-    cl = Classifier(lower, upper, LinearRegression(), 1)
-    cl.fit(X, y)
-    ClassifierPool().classifiers.append(cl)
+def create_classifier(experience, error):
+    classifier = Classifier(-1, 1, LinearRegression(), 1)
+    classifier.error = error
+    classifier.experience = experience
+
+    return classifier
 
 
-def get_sample_individual():
-    classifier_count = len(ClassifierPool().classifiers)
-    individual = Individual.random_individual(classifier_count)
-
-    for i in range(classifier_count):
-        individual.genome[i] = True
-
-    return individual
-
-
-def create_data(lower, upper, step):
-    data = np.arange(lower, upper, step)
-    return np.reshape(data, (len(data), 1))
-
-
-@given(lists(lists(decimals(min_value=-1, max_value=1),  min_size=2, max_size=2), min_size=2, max_size=2))
+@given(
+    lists(
+        st.tuples(
+            integers(min_value=0),                     # experience
+            decimals(min_value=0, allow_nan=False))))  # error
 @settings(max_examples=100)
-def test_simple(classifiers):
+def test_calculate_mixing_weights(input_parameter):
+    '''
+    Test calculate_mixing_weights function given
+    - experience in range [0, inf]
+    - error      in range [0, inf]
+    '''
 
     # Given
-    ClassifierPool().classifiers = list()
-    X = create_data(-0.9, 1.0, 0.01)
-    y = X
+    classifier_list = list()
+    individual = Individual.random_individual(len(classifier_list))
+    expected_result = np.zeros(len(input_parameter))
 
-    for classifier in classifiers:
-        classifier = sorted(classifier, key=float)
-        lower_bound = classifier[0]
-        upper_bound = classifier[1]
+    for i in range(len(input_parameter)):
+        experience = float(input_parameter[i][0])
+        error = float(input_parameter[i][1])
 
-        add_classifiers_to_pool(X, y, lower_bound, upper_bound)
+        classifier_list.append(create_classifier(experience, error))
 
-    individual = get_sample_individual()
+        if experience == 0:
+            expected_result[i] = 0
+        elif error == 0:
+            expected_result[i] = np.inf
+        else:
+            expected_result[i] = experience/error
 
     # When
-    result = individual.calculate_mixing_weights(ClassifierPool().classifiers)
+    result = individual.calculate_mixing_weights(classifier_list)
 
     # Then
-    # TODO Not sure how to test this
-    print(result)
+    assert len(result) == len(expected_result)
+    assert np.isclose(result, expected_result).all()
