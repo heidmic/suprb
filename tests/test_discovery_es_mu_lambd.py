@@ -163,8 +163,8 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         child_1.lowerBound = one_random(parents.lowerBounds)
         child_1.upperBound = one_random(parents.upperBounds)
         """
-        TestSupport.set_rule_discovery_configs(recombination='discrete')
-        child = ES_MuLambd().recombine(TestSupport.mock_specific_classifiers([ [[1], [40], 0], [[2], [30], 0], [[3], [20], 0], [[4], [10], 0] ]))[0]
+        TestsSupport.set_rule_discovery_configs(recombination='discrete')
+        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[1], [40]], [[2], [30]], [[3], [20]], [[4], [10]] ]))[0]
         self.assertIn(child.lowerBounds, [1, 2, 3, 4])
         self.assertIn(child.upperBounds, [10, 20, 30, 40])
 
@@ -177,8 +177,8 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         is flipped (upperBound < lowerBound), that the
         recombination will flip them back.
         """
-        TestSupport.set_rule_discovery_configs(recombination='discrete')
-        child = ES_MuLambd().recombine(TestSupport.mock_specific_classifiers([ [[10], [4], 0], [[20], [3], 0], [[30], [2], 0], [[40], [1], 0] ]))[0]
+        TestsSupport.set_rule_discovery_configs(recombination='discrete')
+        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[10], [4]], [[20], [3]], [[30], [2]], [[40], [1]] ]))[0]
         self.assertIn(child.lowerBounds, [1, 2, 3, 4])
         self.assertIn(child.upperBounds, [10, 20, 30, 40])
 

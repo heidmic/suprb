@@ -137,7 +137,7 @@ class ES_MuLambd(RuleDiscoverer):
             return [deepcopy(Random().random.choice(parents))]
 
 
-    def intermediate_recombination(self, parents: List[Classifier], lmbd: int):
+    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int):
         children = []
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
@@ -146,6 +146,26 @@ class ES_MuLambd(RuleDiscoverer):
             children.append(Classifier(copy_avg[0], copy_avg[1],
                                             LinearRegression(), 1))  # Reminder: LinearRegression might change in the future
         return children
+
+
+    def discrete_recombination(self, parents: np.ndarray, lmbd: int, rho: int):
+        children = []
+        Xdim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
+        for i in range(lmbd):
+            candidates = Random().random.choice(parents, rho, False)
+            lowerBounds = np.empty(Xdim)
+            upperBounds = np.empty(Xdim)
+            for i_dim in range(Xdim):
+                lower = Random().random.choice([ c.lowerBounds[i_dim] for c in candidates ])
+                upper = Random().random.choice([ c.upperBounds[i_dim] for c in candidates ])
+                if lower > upper:
+                    lowerBounds[i_dim] = upper
+                    upperBounds[i_dim] = lower
+                else:
+                    lowerBounds[i_dim] = lower
+                    upperBounds[i_dim] = upper
+            children.append(Classifier(lowerBounds, upperBounds, LinearRegression(), 1))
+        return np.array(children)
 
 
     def mutate_and_fit(self, classifiers: List[Classifier], X: np.ndarray, y:np.ndarray):
