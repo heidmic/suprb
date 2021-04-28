@@ -29,15 +29,15 @@ class Individual:
 
     def calculate_mixing_weights(self):
         classifiers = self.get_classifiers()
-        tau = np.full(len(classifiers), np.inf)
+        tau = np.zeros(len(classifiers))
 
         for i in range(len(classifiers)):
             experience = np.array(classifiers[i].experience)
             error = np.array(classifiers[i].error)
 
             if experience and error:
-                if (experience != 0) and (error != 0):
-                    tau[i] = 1 / ((1 / experience) * error)
+                with np.errstate(divide='ignore'):
+                    tau = 1 / ((1 / experience) * error)
 
         return tau
 
