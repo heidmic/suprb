@@ -10,11 +10,11 @@ class Config:
         "rule_discovery": {
             "name": '(1+lambda)-ES',
             "cl_min_range": 0.2,
-            "nrules": 50,
+            "nrules": 100,
             "lmbd": 20,  # not allowed to use lambda
             "sigma": 0.2,
             "steps_per_step": 10,
-            "weighted_error_constant": 100
+            "weighted_error_constant": 1000
         },
         "solution_creation": {
             "name": '(1+1)-ES',
@@ -22,11 +22,11 @@ class Config:
             # "crossover_type": None,
             "mutation_rate": 0.2,
             "fitness": "pseudo-BIC",
-            "steps_per_step": 500
+            "steps_per_step": 1000
         },
         "initial_pool_size": 50,
         "initial_genome_length": 100000,
-        "steps": 50,
+        "steps": 500,
         "xdim": None,
         "use_validation": False,
         "default_prediction": None,
