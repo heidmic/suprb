@@ -32,7 +32,7 @@ def f_n(X):
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=1000)
 @click.option("-k", "--dimensions", type=click.IntRange(min=1), default=1)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
-def run_exp(seed, sample_size, xdim, data_seed):
+def run_exp(seed, sample_size, dimensions, data_seed):
     print(f"Starting at {datetime.now().time()}")
     n = sample_size
 
@@ -46,7 +46,7 @@ def run_exp(seed, sample_size, xdim, data_seed):
 
     Random().reseed(data_seed)
 
-    X = Random().random.uniform(-2.5, 7, (n, xdim))
+    X = Random().random.uniform(-2.5, 7, (n, dimensions))
     y = f_n(X)
 
     scale_X = MinMaxScaler(feature_range=(-1, 1))
@@ -66,13 +66,13 @@ def run_exp(seed, sample_size, xdim, data_seed):
     with mf.start_run():
         mf.log_param("data_seed", data_seed)
         mf.log_param("sample_size", sample_size)
-        mf.log_param("sample_dim", xdim)
+        mf.log_param("sample_dim", dimensions)
         mf.log_param("function", "f_n, cubic")
 
         # we reset the seed here
         Random().reseed(seed)
 
-        lcs = LCS(xdim)
+        lcs = LCS(dimensions)
 
         lcs.fit(X_train, y_train)
 
