@@ -28,9 +28,10 @@ def test_calculate_mixing_weights(input_parameter):
     '''
 
     # Given
-    classifier_list = list()
-    individual = Individual.random_individual(len(classifier_list))
+    # We don't need the individuals genomes for this test, so we can leave the genome length as 0
+    individual = Individual.random_individual(0)
     expected_result = np.zeros(len(input_parameter))
+    classifier_list = list()
 
     for i in range(len(input_parameter)):
         experience = float(input_parameter[i][0])
