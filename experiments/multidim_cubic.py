@@ -1,4 +1,3 @@
-from problems import amgauss, make_problem
 from suprb2 import LCS
 from suprb2.config import Config
 from suprb2.random_gen import Random
@@ -8,7 +7,6 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from datetime import datetime
 import numpy as np
 
-import matplotlib.pyplot as plt
 import mlflow as mf
 import click
 

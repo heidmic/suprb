@@ -14,7 +14,7 @@ mkShell {
     ++ (import ./system-dependencies.nix { inherit pkgs; });
   postShellHook = ''
     unset SOURCE_DATE_EPOCH
-    pip install -r requirements.txt
+    pip install -r suprb2/requirements.txt
   '';
 
 }
