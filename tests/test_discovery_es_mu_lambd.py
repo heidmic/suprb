@@ -28,32 +28,34 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
     @patch.object(Utilities, 'default_error', return_value=0.5)
-    def test_step_mu_equals_lambda(self, mock_error, mock_default_error):
+    def test_step_multiple_steps_plus(self, mock_error, mock_default_error):
         """
         Tests the method ES_MuLambd.step().
 
-        Each step, we add 15 classifiers (errors are mocked).
-        After 1 step, our population should have mu + lmbd
+        Each step, we add 15 classifiers (before the first step,
+        we add mu classifiers).
+        After 4 steps, our population should have mu + (lmbd * 4)
         classifiers.
         """
         mu, lmbd = (15, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=1, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), mu + lmbd)
+        self.assertEqual(len(ClassifierPool().classifiers), mu + (lmbd * 4))
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
     @patch.object(Utilities, 'default_error', return_value=0.5)
-    def test_step_multiple_steps(self, mock_error, mock_default_error):
+    def test_step_multiple_steps_comma(self, mock_error, mock_default_error):
         """
         Tests the method ES_MuLambd.step().
 
-        Each step, we add 15 classifiers (errors are mocked).
-        After 4 steps, our population should have mu + (lmbd * 4)
-        classifiers.
+        We create only lmbd (from the initial mu classifiers)
+        and each step, we change these classifiers.
+        In the end of 4 steps_per_step, we will have lmbd
+        classifiers in the pool.
         """
         mu, lmbd = (15, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
@@ -61,7 +63,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), mu + (lmbd * 4))
+        self.assertEqual(len(ClassifierPool().classifiers), lmbd)
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
@@ -83,15 +85,34 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
     @patch.object(Utilities, 'default_error', return_value=0.5)
-    def test_step_lambd_zero(self, mock_error, mock_default_error):
+    def test_step_lambd_zero_comma(self, mock_error, mock_default_error):
         """
         Tests the method ES_MuLambd.step().
 
-        When lmbd is zero, then nothing is added to the
-        population.
+        When lmbd is zero and replacement is ',',
+        then no classifier is added to the pool.
         """
         mu, lmbd = (15, 0)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        X, y = TestsSupport.generate_input(mu)
+
+        optimizer = ES_MuLambd()
+        optimizer.step(X, y)
+        self.assertEqual(len(ClassifierPool().classifiers), 0)
+
+
+    @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
+    @patch.object(Utilities, 'default_error', return_value=0.5)
+    def test_step_lambd_zero_plus(self, mock_error, mock_default_error):
+        """
+        Tests the method ES_MuLambd.step().
+
+        When lmbd is zero and replacement is '+',
+        then only the initial mu classifiers are
+        added to the pool.
+        """
+        mu, lmbd = (15, 0)
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd()
@@ -105,7 +126,8 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         Tests the method ES_MuLambd.step().
 
-        When mu is zero, then no classifier is added to the pool.
+        When mu is zero, then no classifier is added to the pool
+        (independent of the replacement).
         """
         mu, lmbd = (0, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
@@ -113,7 +135,12 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
 
         optimizer = ES_MuLambd()
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), mu)
+        self.assertEqual(len(ClassifierPool().classifiers), 0)
+
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
+        optimizer.step(X, y)
+        self.assertEqual(len(ClassifierPool().classifiers), 0)
+
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
