@@ -1,4 +1,3 @@
-import math
 import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
@@ -111,15 +110,18 @@ class Classifier:
 
     @staticmethod
     def random_cl(point=None):
-        if point is not None:
-            lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, Config().xdim)) * 2 - 1, axis=0)
-        else:
-            lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
-        if Config().rule_discovery['cl_min_range']:
+        while True:
+            if point is not None:
+                lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, Config().xdim)) * 2 - 1, axis=0)
+            else:
+                lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
             diff = lu[1] - lu[0]
-            lu[0] -= diff/2
-            lu[1] += diff/2
-            lu = np.clip(lu, a_max=1, a_min=-1)
+            # if volume to max volume ratio is smaller than the target ratio
+            # we just re-roll new bounds
+            if np.prod(diff) / (2 ** Config().xdim) >= \
+                    Config().rule_discovery['cl_init_volume_ratio']:
+                # this emulates a do-while loop
+                break
         return Classifier(lu[0], lu[1], LinearRegression(), 1)
 
     def params(self):
@@ -131,7 +133,7 @@ class Classifier:
         Calculates the weighted error of the classifier, depending on its error, volume and a constant. 
         -inf is the best possible value for the weighted error
         '''
-        weighted_error = math.inf
+        weighted_error = np.inf
         volume = np.prod(self.upperBounds - self.lowerBounds)
 
         if volume != 0:
