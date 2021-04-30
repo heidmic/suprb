@@ -80,12 +80,8 @@ class ES_MuLambd(RuleDiscoverer):
                         taken randomly from one of the 'rho' parents
                         for each Xdim.
 
-    'sigma'         ->  Represents the size of the step we are taking
-                        to a direction in the mutation process. In other
-                        words, it shows us how big is the pertubation.
-                        If sigma == 'vector', then the i-th element of
-                        the vector self.sigmas will be used on the i-th
-                        boundaries of the classifier for the pertubation.
+    'sigma'         ->  Positive scale factor for the mutation on the
+                        classifiers' mutation vector (cl.sigmas).
 
     'replacement'   ->  This hyper parameter defines if we are also adding
                         the copies of the parents to the pool ('+'), or if
@@ -125,54 +121,45 @@ class ES_MuLambd(RuleDiscoverer):
 
         lmbd = Config().rule_discovery['lmbd']
         rho = Config().rule_discovery['rho']
-        use_mutation_vector = Config().rule_discovery['sigma'] == 'vector'
         recombination_type = Config().rule_discovery['recombination']
 
         if recombination_type == 'intermediate':
-            return self.intermediate_recombination(parents, lmbd, rho, use_mutation_vector)
+            return self.intermediate_recombination(parents, lmbd, rho)
         elif recombination_type == 'discrete':
-            return self.discrete_recombination(parents, lmbd, rho, use_mutation_vector)
+            return self.discrete_recombination(parents, lmbd, rho)
         else:
             return [deepcopy(Random().random.choice(parents))]
 
 
-    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int, use_mutation_vector: bool):
+    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int):
         children = []
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
             boundaries_avg = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
-            if use_mutation_vector:
-                sigmas_avg = np.mean([p.sigmas for p in candidates], axis=0)
-                copy_sigmas = sigmas_avg.copy()
-            else:
-                copy_sigmas = None
+            sigmas_avg = np.mean([p.sigmas for p in candidates], axis=0)
+            copy_sigmas = sigmas_avg.copy()
             copy_avg = boundaries_avg.copy()
             children.append(Classifier(copy_avg[0], copy_avg[1],
                                             LinearRegression(), 1, copy_sigmas))  # Reminder: LinearRegression might change in the future
         return children
 
 
-    def discrete_recombination(self, parents: np.ndarray, lmbd: int, rho: int, use_mutation_vector: bool):
+    def discrete_recombination(self, parents: np.ndarray, lmbd: int, rho: int):
         children = []
         Xdim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
             lowerBounds = np.empty(Xdim)
             upperBounds = np.empty(Xdim)
-            sigmas = np.empty(Xdim) if use_mutation_vector else None
-            for i_dim in range(Xdim):
-                if use_mutation_vector:
-                    sigmas[i_dim] = Random().random.choice([ c.sigmas[i_dim] for c in candidates ])
+            sigmas = np.empty(Xdim)
 
+            for i_dim in range(Xdim):
+                sigmas[i_dim] = Random().random.choice([ c.sigmas[i_dim] for c in candidates ])
                 lower = Random().random.choice([ c.lowerBounds[i_dim] for c in candidates ])
                 upper = Random().random.choice([ c.upperBounds[i_dim] for c in candidates ])
                 # flip if boundaries are inverted
-                if lower > upper:
-                    lowerBounds[i_dim] = upper
-                    upperBounds[i_dim] = lower
-                else:
-                    lowerBounds[i_dim] = lower
-                    upperBounds[i_dim] = upper
+                lowerBounds[i_dim], upperBounds[i_dim] = sorted((lower, upper))
+
             children.append(Classifier(lowerBounds, upperBounds, LinearRegression(), 1, sigmas))
         return np.array(children)
 

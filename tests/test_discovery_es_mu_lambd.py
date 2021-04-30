@@ -190,7 +190,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
                                                                             ]))[0]
         self.assertIn(child.lowerBounds, [2, 3, 4])
         self.assertIn(child.upperBounds, [2, 3, 4])
-        self.assertEqual(child.sigmas, np.array([0.2], dtype=np.float64))
+        self.assertAlmostEqual(child.sigmas[0], 0.2)
 
 
     def test_recombine_rho_average(self):

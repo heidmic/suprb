@@ -29,7 +29,6 @@ class TestClassifier(unittest.TestCase):
         with type np.ndarray
         """
         X, y = TestsSupport.generate_input(10)
-        TestsSupport.set_rule_discovery_configs(sigma='vector')
         cl = Classifier.random_cl(X[0])
         self.assertEqual(type(cl.sigmas), np.ndarray)
 
@@ -41,7 +40,6 @@ class TestClassifier(unittest.TestCase):
         The mutation vector type should be np.float64
         """
         X, y = TestsSupport.generate_input(10)
-        TestsSupport.set_rule_discovery_configs(sigma='vector')
         cl = Classifier.random_cl(X[0])
         self.assertEqual(cl.sigmas.dtype, np.float64)
 
@@ -54,7 +52,6 @@ class TestClassifier(unittest.TestCase):
         with values in [-1, 1].
         """
         X, y = TestsSupport.generate_input(10)
-        TestsSupport.set_rule_discovery_configs(sigma='vector')
         cl = Classifier.random_cl(X[0])
         for i_dim in range(Config().xdim):
             self.assertAlmostEqual(cl.sigmas[i_dim], 0, delta=1)
