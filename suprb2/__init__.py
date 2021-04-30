@@ -113,7 +113,8 @@ class LCS:
                       .error, step)
         mf.log_metric("complexity elite", self.sol_opt.get_elitist()
                       .parameters(), step)
-        mf.log_metric("classifier pool size", len(ClassifierPool().classifiers))
+        mf.log_metric("classifier pool size", len(ClassifierPool().classifiers),
+                      step)
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
         PerfRecorder().elitist_val_error.append(
@@ -162,7 +163,8 @@ class LCS:
     @staticmethod
     def default_error(y):
         # for standardised data this should be equivalent to np.var(y)
-        return np.sum(y**2)/len(y)
+        with np.errstate(invalid='ignore'):
+            return np.sum(y**2)/np.array(len(y))
 
     # place classifiers around those examples
     # test if classifiers overlap
