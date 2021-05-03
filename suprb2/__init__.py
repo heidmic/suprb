@@ -15,11 +15,10 @@ import itertools
 
 
 class LCS:
-    def __init__(self, xdim,
+    def __init__(self,
                  # pop_size=30, ind_size=50, generations=50,
                  # fitness="pseudo-BIC",
                  logging=True):
-        Config().xdim = xdim
         # Config().pop_size = pop_size
         # Config().ind_size = ind_size
         # Config().generations = generations
@@ -69,9 +68,6 @@ class LCS:
             self.log_solution_creation_duration(discover_rules_time, solution_creation_time, 0)
 
     def fit(self, X, y):
-        Config().default_prediction = 0.0  # np.mean(y)
-        Config().var = np.var(y)
-
         # if Config().use_validation:
         #     X_train, X_val, y_train, y_val = train_test_split(X, y,
         #                                                       random_state=Random().split_seed())
@@ -144,7 +140,7 @@ class LCS:
                                       Config().rule_discovery['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(x)
+            cl = Classifier.random_cl(x, np.var(y))
             cl.fit(X, y)
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()

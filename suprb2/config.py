@@ -27,10 +27,9 @@ class Config:
         "initial_pool_size": 50,
         "initial_genome_length": 100000,
         "steps": 500,
-        "xdim": None,
+        "xdim": 5,
         "use_validation": False,
-        "default_prediction": None,
-        "var": None,
+        "default_prediction": 0.0,
         "logging": True
     }
 
