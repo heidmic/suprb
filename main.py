@@ -16,6 +16,16 @@ def f(X):
     return 0.75*X**3-5*X**2+4*X+12
 
 
+def f_n(X):
+    """
+    Version of f() taking n dimensional inputs
+    :param X:
+    :return:
+    """
+    return np.sum((0.75*X**3-5*X**2+4*X+12).reshape((len(X), -1)),
+                  axis=1).reshape((-1, 1))
+
+
 def plot_results(X, y_test, y_pred, elitist=None, saveas=None):
     fig, ax = plt.subplots()
     plt.scatter(X, y_test, marker='^', c='red', label='test')
@@ -109,9 +119,9 @@ if __name__ == '__main__':
 
     Random().reseed(0)
 
-    X = Random().random.uniform(-2.5, 7, (n, 1))
-    y = f(X)
-    xdim = 1
+    xdim = 5
+    X = Random().random.uniform(-2.5, 7, (n, xdim))
+    y = f_n(X)
 
     scale_X = MinMaxScaler(feature_range=(-1, 1))
     scale_X.fit(X)
@@ -125,7 +135,7 @@ if __name__ == '__main__':
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
-    mf.set_experiment("Test Experiment 5")
+    mf.set_experiment("Tests with f_n")
     for seed in range(0, 1):
         with mf.start_run():
 
@@ -140,7 +150,7 @@ if __name__ == '__main__':
 
             error = mean_squared_error(y_test, y_pred)
 
-            if True:
+            if False:
                 plot_results(X_test, y_test, y_pred, lcs.get_elitist(), saveas=seed)
                 plot_perfrecords(lcs.perf_recording.__dict__,
                                  ["elitist_complexity", "elitist_val_error"], saveas=seed)
