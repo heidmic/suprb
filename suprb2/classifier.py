@@ -104,7 +104,7 @@ class Classifier:
         changed to x' ~ N(x, (u - l) / 10) (Gaussian with standard deviation a
         10th of the interval's width).
         """
-        self.sigmas = np.clip(Random().random.normal(loc=self.sigmas, scale=sigma, size=len(self.sigmas)), a_min=0.0001, a_max=None)
+        self.sigmas = np.clip(Random().random.normal(loc=self.sigmas, scale=sigma, size=len(self.sigmas)), a_min=0.0001, a_max=2)
         lowers = Random().random.normal(loc=self.lowerBounds, scale=self.sigmas, size=len(self.lowerBounds))
         uppers = Random().random.normal(loc=self.upperBounds, scale=self.sigmas, size=len(self.upperBounds))
         lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)

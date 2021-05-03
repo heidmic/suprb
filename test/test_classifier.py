@@ -1,6 +1,6 @@
 from suprb2.config import Config
 from suprb2.classifier import Classifier
-from tests.tests_support import TestsSupport
+from test.tests_support import TestsSupport
 
 import unittest
 import numpy as np

@@ -3,7 +3,7 @@ from suprb2.pool import ClassifierPool
 from suprb2.utilities import Utilities
 from suprb2.discovery import ES_MuLambd
 from suprb2.classifier import Classifier
-from tests.tests_support import TestsSupport
+from test.tests_support import TestsSupport
 
 import unittest
 import numpy as np
