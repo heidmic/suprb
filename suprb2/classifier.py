@@ -8,7 +8,7 @@ from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, local_model, degree, var):
+    def __init__(self, lowers, uppers, local_model, degree):
         self.lowerBounds = lowers
         self.upperBounds = uppers
         self.model = local_model
@@ -21,7 +21,7 @@ class Classifier:
         # if set this overrides local_model and outputs constant for all prediction requests
         self.constant = None
         self.last_training_match = None
-        self.var = var
+        self.default_prediction = 0.0
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -71,10 +71,10 @@ class Classifier:
             if len(X) == 1:
                 self.constant = y[0]
             else:
-                self.constant = Config().default_prediction
+                self.constant = self.default_prediction
             # TODO is this a good default error? should we use the std?
             #  Equivalent with standardised data?
-            self.error = self.var
+            self.error = Config().default_error
         else:
             self.model.fit(X, y)
             # TODO should this be on validation data?
@@ -111,17 +111,17 @@ class Classifier:
         self.upperBounds = lu[1]
 
     @staticmethod
-    def random_cl(point, var):
+    def random_cl(point, xdim):
         if point is not None:
-            lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, Config().xdim)) * 2 - 1, axis=0)
+            lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, xdim)) * 2 - 1, axis=0)
         else:
-            lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
+            lu = np.sort(Random().random.random((2, xdim)) * 2 - 1, axis=0)
         if Config().rule_discovery['cl_min_range']:
             diff = lu[1] - lu[0]
             lu[0] -= diff/2
             lu[1] += diff/2
             lu = np.clip(lu, a_max=1, a_min=-1)
-        return Classifier(lu[0], lu[1], LinearRegression(), 1, var)
+        return Classifier(lu[0], lu[1], LinearRegression(), 1)
 
     def params(self):
         if self.model is LinearRegression:

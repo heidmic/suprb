@@ -15,10 +15,11 @@ import itertools
 
 
 class LCS:
-    def __init__(self,
+    def __init__(self, xdim,
                  # pop_size=30, ind_size=50, generations=50,
                  # fitness="pseudo-BIC",
                  logging=True):
+        self.xdim = xdim
         # Config().pop_size = pop_size
         # Config().ind_size = ind_size
         # Config().generations = generations
@@ -140,7 +141,7 @@ class LCS:
                                       Config().rule_discovery['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(x, np.var(y))
+            cl = Classifier.random_cl(x, self.xdim)
             cl.fit(X, y)
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()

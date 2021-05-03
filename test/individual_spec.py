@@ -7,7 +7,7 @@ from suprb2 import Individual, Classifier
 
 
 def create_classifier(experience, error):
-    classifier = Classifier(-1, 1, LinearRegression(), 1, 1)
+    classifier = Classifier(-1, 1, LinearRegression(), 1)
     classifier.error = error
     classifier.experience = experience
 

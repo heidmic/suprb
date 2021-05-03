@@ -119,7 +119,8 @@ if __name__ == '__main__':
 
     Random().reseed(0)
 
-    X = Random().random.uniform(-2.5, 7, (n, Config().xdim))
+    xdim = 5
+    X = Random().random.uniform(-2.5, 7, (n, xdim))
     y = f_n(X)
 
     scale_X = MinMaxScaler(feature_range=(-1, 1))
@@ -141,7 +142,7 @@ if __name__ == '__main__':
             # we reset the seed here
             Random().reseed(seed)
 
-            lcs = LCS()
+            lcs = LCS(xdim)
 
             lcs.fit(X_train, y_train)
 

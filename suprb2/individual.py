@@ -12,6 +12,7 @@ class Individual:
         self.genome = genome
         self.fitness = None
         self.error = None
+        self.default_prediction = 0.0
 
     @staticmethod
     def random_individual(genome_length):
@@ -41,7 +42,7 @@ class Individual:
         return tau
 
     def predict(self, X):
-        out = np.repeat(Config().default_prediction, len(X))
+        out = np.repeat(self.default_prediction, len(X))
         if X.ndim == 2:
             classifiers = self.get_classifiers()
             y_preds = np.zeros(len(X))
