@@ -21,7 +21,6 @@ class Classifier:
         # if set this overrides local_model and outputs constant for all prediction requests
         self.constant = None
         self.last_training_match = None
-        self.default_prediction = 0.0
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -71,7 +70,7 @@ class Classifier:
             if len(X) == 1:
                 self.constant = y[0]
             else:
-                self.constant = self.default_prediction
+                self.constant = Classifier.get_default_prediction()
             # TODO is this a good default error? should we use the std?
             #  Equivalent with standardised data?
             self.error = Config().default_error
@@ -139,3 +138,7 @@ class Classifier:
             weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
 
         return weighted_error
+
+    @staticmethod
+    def get_default_prediction():
+        return 0.0
