@@ -98,13 +98,31 @@ class Classifier:
         """
         Mutates this matching function.
 
+        This function starts with the mutation of the classifier's mutation
+        vector (self.sigmas), and after that it mutates the classifier's
+        intervals [l, u), using the classifier's mutation vector.
+
         This is done similar to how the first XCSF iteration used mutation
         (Wilson, 2002) but using a Gaussian distribution instead of a uniform
         one (as done by Drugowitsch, 2007): Each interval [l, u)'s bound x is
-        changed to x' ~ N(x, (u - l) / 10) (Gaussian with standard deviation a
-        10th of the interval's width).
+        changed to x' ~ N(x, sigmas(x)).
+        A Gaussian distribution using values from the classifier's mutation
+        vector as standard deviation.
+
+        The values in the classifier mutation vector (sigmas(x)) lies within
+        range from the the hyper parameters: [min_sigma, max_sigma]
+        Where:
+            min_sigma = Config().rule_discovery['min_sigma']
+            max_sigma = Config().rule_discovery['max_sigma']
+        This interval should be symetric, centered in 1.0, so that this mutation
+        remains unbiased.
+        Default values are:
+            min_sigma = 0.8
+            min_sigma = 1.2
         """
-        self.sigmas = np.clip(Random().random.normal(loc=self.sigmas, scale=sigma, size=len(self.sigmas)), a_min=0.0001, a_max=2)
+        min_sigma = Config().rule_discovery['min_sigma']
+        max_sigma = Config().rule_discovery['max_sigma']
+        self.sigmas = np.clip(Random().random.normal(loc=self.sigmas, scale=sigma, size=len(self.sigmas)), a_min=min_sigma, a_max=max_sigma)
         lowers = Random().random.normal(loc=self.lowerBounds, scale=self.sigmas, size=len(self.lowerBounds))
         uppers = Random().random.normal(loc=self.upperBounds, scale=self.sigmas, size=len(self.upperBounds))
         lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)

@@ -18,6 +18,8 @@ class Config:
             "steps_per_step": 10,
             "recombination": None,
             "replacement": '+',
+            "min_sigma": 0.8,
+            "max_sigma": 1.2,
             "weighted_error_constant": 1000
         },
         "solution_creation": {
