@@ -41,7 +41,7 @@ class Individual:
         return tau
 
     def predict(self, X):
-        out = np.repeat(Config().default_prediction, len(X))
+        out = np.repeat(Classifier.get_default_prediction(), len(X))
         if X.ndim == 2:
             classifiers = self.get_classifiers()
             y_preds = np.zeros(len(X))
