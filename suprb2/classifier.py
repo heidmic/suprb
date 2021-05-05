@@ -70,10 +70,10 @@ class Classifier:
             if len(X) == 1:
                 self.constant = y[0]
             else:
-                self.constant = Config().default_prediction
+                self.constant = Classifier.get_default_prediction()
             # TODO is this a good default error? should we use the std?
             #  Equivalent with standardised data?
-            self.error = Config().var
+            self.error = Config().default_error
         else:
             self.model.fit(X, y)
             # TODO should this be on validation data?
@@ -110,11 +110,11 @@ class Classifier:
         self.upperBounds = lu[1]
 
     @staticmethod
-    def random_cl(point=None):
+    def random_cl(point, xdim):
         if point is not None:
-            lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, Config().xdim)) * 2 - 1, axis=0)
+            lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, xdim)) * 2 - 1, axis=0)
         else:
-            lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
+            lu = np.sort(Random().random.random((2, xdim)) * 2 - 1, axis=0)
         if Config().rule_discovery['cl_min_range']:
             diff = lu[1] - lu[0]
             lu[0] -= diff/2
@@ -138,3 +138,7 @@ class Classifier:
             weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
 
         return weighted_error
+
+    @staticmethod
+    def get_default_prediction():
+        return 0.0
