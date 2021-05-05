@@ -20,19 +20,33 @@ class RuleDiscoverer(ABC):
         pass
 
 
+    def create_start_points(self, X: np.ndarray):
+        start_point_technique = Config().rule_discovery['start_points']
+        if start_point_technique == 'elitist_compliment':
+            return self.elitist_compliment()
+
+    def elitist_compliment(self):
+        pass
+
+
+    def draw_mu_examples_from_data(self, X: np.ndarray):
+        start_points = []
+        idxs = Random().random.choice(np.arange(len(X)),
+								  Config().rule_discovery['mu'], False)
+        for x in X[idxs]:
+            cl = Classifier.random_cl(x)
+            cl.fit(X, y)
+            start_points.append(cl)
+        return start_points
+
+
 class ES_OnePlusLambd(RuleDiscoverer):
     def __init__(self):
         pass
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        # draw n examples from data
-        idxs = Random().random.choice(np.arange(len(X)),
-                                      Config().rule_discovery['nrules'], False)
-
-        for x in X[idxs]:
-            cl = Classifier.random_cl(x)
-            cl.fit(X, y)
+        for cl in self.create_start_points(X):
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
                 for j in range(Config().rule_discovery['lmbd']):
@@ -94,15 +108,8 @@ class ES_MuLambd(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        generation = []
-
         # create start points for evolutionary search
-        idxs = Random().random.choice(np.arange(len(X)),
-								  Config().rule_discovery['mu'], False)
-        for x in X[idxs]:
-            cl = Classifier.random_cl(x)
-            cl.fit(X, y)
-            generation.append(cl)
+        generation = self.create_start_points(X)
 
         # steps forward in the evolutionary search
         for i in range(Config().rule_discovery['steps_per_step']):
