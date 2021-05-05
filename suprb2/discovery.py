@@ -21,32 +21,53 @@ class RuleDiscoverer(ABC):
         pass
 
 
-    def create_start_points(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+    def create_start_points(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+        """
+        This method creates classifier as starting points for
+        an evolutionary search.
+        There are 3 different strategies:
+            - 'draw_examples_from_data'
+            - 'elitist_unmatched'
+            - 'elitist_compliment'
+        """
         technique = Config().rule_discovery['start_points']
 
         if technique == 'elitist_compliment':
             return self.elitist_compliment(solution_opt)
         elif technique == 'elitist_unmatched':
-            return self.elitist_unmatched(solution_opt)
+            return self.elitist_unmatched(n, solution_opt)
         else:
-            return self.draw_mu_examples_from_data(X, y)
+            return self.draw_examples_from_data(n, X, y)
 
 
-    def elitist_compliment(self, solution_opt: SolutionOptimizer=None):
+    def elitist_compliment(self, solution_opt: SolutionOptimizer):
+        """
+        This method takes the classifiers from the elitist Individual
+        and extract the compliment of their matching intervals [l, u).
+        after that, we distribute the intervals compliments throughout
+        the starting point classifiers.
+        """
         start_points = deepcopy(solution_opt.get_elitist().get_classifiers())
         for cl in start_points:
             pass
 
 
-    def elitist_unmatched(self, solution_opt: SolutionOptimizer=None):
+    def elitist_unmatched(self, n: int, solution_opt: SolutionOptimizer):
+        """
+        This method takes 'n' examples out of the inputs that were
+        not matched by the elitist individual.
+        """
         classifiers = solution_opt.get_elitist().get_classifiers()
         # start_points = classifiers.
 
 
-    def draw_mu_examples_from_data(self, X: np.ndarray, y: np.ndarray):
+    def draw_examples_from_data(self, n: int, X: np.ndarray, y: np.ndarray):
+        """
+        This method takes 'n' random examples out of the inputs and
+        creates one classifier for each example taken.
+        """
         start_points = []
-        idxs = Random().random.choice(np.arange(len(X)),
-								  Config().rule_discovery['mu'], False)
+        idxs = Random().random.choice(np.arange(len(X)), n, False)
         for x in X[idxs]:
             cl = Classifier.random_cl(x)
             cl.fit(X, y)
@@ -60,7 +81,9 @@ class ES_OnePlusLambd(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
-        for cl in self.create_start_points(X, y, solution_opt):
+        mu = Config().rule_discovery['mu']
+
+        for cl in self.create_start_points(mu, X, y, solution_opt):
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
                 for j in range(Config().rule_discovery['lmbd']):
@@ -123,7 +146,8 @@ class ES_MuLambd(RuleDiscoverer):
 
     def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
         # create start points for evolutionary search
-        generation = self.create_start_points(X, y, solution_opt)
+        mu = Config().rule_discovery['mu']
+        generation = self.create_start_points(mu, X, y, solution_opt)
 
         # steps forward in the evolutionary search
         for i in range(Config().rule_discovery['steps_per_step']):
