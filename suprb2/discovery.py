@@ -31,7 +31,7 @@ class ES_OnePlusLambd(RuleDiscoverer):
                                       Config().rule_discovery['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(x)
+            cl = Classifier.random_cl(x, X.shape[1])
             cl.fit(X, y)
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
@@ -101,7 +101,7 @@ class ES_MuLambd(RuleDiscoverer):
         idxs = Random().random.choice(np.arange(len(X)),
 								  Config().rule_discovery['mu'], False)
         for x in X[idxs]:
-            cl = Classifier.random_cl(x)
+            cl = Classifier.random_cl(x, X.shape[1])
             cl.fit(X, y)
             generation.append(cl)
 
