@@ -30,14 +30,32 @@ class TestRuleDiscoverer(unittest.TestCase):
         return RuleDiscoverer().create_start_points(n, X, y, solution_opt)
 
 
-    def test_draw_mu_examples_from_data(self):
-        """
-        Tests the method RuleDiscoverer.draw_mu_examples_from_data().
+    # ------------- step() --------------
 
-        Checks that exactly mu classifiers are returned by this function.
+
+    def test_step_not_implemented(self):
+        """
+        Tests the method RuleDiscoverer.step().
+
+        Verifies that NotImplementedError is raised (independent of the parameters).
+        """
+        self.assertRaises(NotImplementedError, self.step, X=None, y=None, solution_opt=None)
+
+
+    # ------------- draw_examples_from_data() --------------
+
+
+    def test_draw_examples_from_data(self):
+        """
+        Tests the method RuleDiscoverer.draw_examples_from_data().
+
+        Checks that exactly n classifiers are returned by this function.
         """
         x_len, n = (10, 5)
         self.assertEqual(n, len(self.setup_test(x_len=x_len, n=n, start_points=None, solution_opt=None)))
+
+
+    # ------------- elitist_unmatched() --------------
 
 
     def test_elitist_unmatched_raise_error(self):
@@ -50,6 +68,9 @@ class TestRuleDiscoverer(unittest.TestCase):
         """
         x_len, n = (10, 5)
         self.assertRaises(AttributeError, self.setup_test, x_len=x_len, n=n, start_points='elitist_unmatched', solution_opt=None)
+
+
+    # ------------- elitist_compliment() --------------
 
 
     def test_elitist_compliment_raise_error(self):
