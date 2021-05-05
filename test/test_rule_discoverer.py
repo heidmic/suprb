@@ -39,7 +39,7 @@ class TestRuleDiscoverer(unittest.TestCase):
 
         Verifies that NotImplementedError is raised (independent of the parameters).
         """
-        self.assertRaises(NotImplementedError, self.step, X=None, y=None, solution_opt=None)
+        self.assertRaises(NotImplementedError, RuleDiscoverer().step, X=None, y=None, solution_opt=None)
 
 
     # ------------- draw_examples_from_data() --------------

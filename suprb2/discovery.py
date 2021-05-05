@@ -18,7 +18,7 @@ class RuleDiscoverer(ABC):
 
 
     def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
-        pass
+        raise NotImplementedError()
 
 
     def create_start_points(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
@@ -69,7 +69,7 @@ class RuleDiscoverer(ABC):
         start_points = []
         idxs = Random().random.choice(np.arange(len(X)), n, False)
         for x in X[idxs]:
-            cl = Classifier.random_cl(x)
+            cl = Classifier.random_cl(x, X.shape[1])
             cl.fit(X, y)
             start_points.append(cl)
         return start_points
