@@ -1,6 +1,7 @@
 from suprb2.config import Config
 from suprb2.pool import ClassifierPool
 from suprb2.utilities import Utilities
+from suprb2.solutions import ES_1plus1
 from suprb2.discovery import ES_MuLambd
 from suprb2.classifier import Classifier
 from test.tests_support import TestsSupport
@@ -30,6 +31,13 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         raise AssertionError(f'{member} is not in {container}')
 
 
+    def step_test(self, mu):
+        X, y = TestsSupport.generate_input(mu)
+        # sol_opt = ES_1plus1(X, y)
+        rule_disc = ES_MuLambd()
+        rule_disc.step(X, y)
+
+
     # ------------- step() --------------
 
 
@@ -46,10 +54,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate', sigma=0.2)
-        X, y = TestsSupport.generate_input(mu)
-
-        optimizer = ES_MuLambd()
-        optimizer.step(X, y)
+        self.step_test(mu)
         self.assertEqual(len(ClassifierPool().classifiers), mu + (lmbd * 4))
 
 
@@ -66,10 +71,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', sigma=0.2)
-        X, y = TestsSupport.generate_input(mu)
-
-        optimizer = ES_MuLambd()
-        optimizer.step(X, y)
+        self.step_test(mu)
         self.assertEqual(len(ClassifierPool().classifiers), lmbd)
 
 
@@ -84,10 +86,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', sigma=0.2)
-        X, y = TestsSupport.generate_input(mu - 5)
-
-        optimizer = ES_MuLambd()
-        self.assertRaises(ValueError, optimizer.step, X, y)
+        self.assertRaises(ValueError, self.step_test, (mu - 5))
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
@@ -101,10 +100,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 0)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', sigma=0.2)
-        X, y = TestsSupport.generate_input(mu)
-
-        optimizer = ES_MuLambd()
-        optimizer.step(X, y)
+        self.step_test(mu)
         self.assertEqual(len(ClassifierPool().classifiers), 0)
 
 
@@ -120,10 +116,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (15, 0)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate', sigma=0.2)
-        X, y = TestsSupport.generate_input(mu)
-
-        optimizer = ES_MuLambd()
-        optimizer.step(X, y)
+        self.step_test(mu)
         self.assertEqual(len(ClassifierPool().classifiers), mu)
 
 
@@ -138,14 +131,11 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (0, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', sigma=0.2)
-        X, y = TestsSupport.generate_input(mu)
-
-        optimizer = ES_MuLambd()
-        optimizer.step(X, y)
+        self.step_test(mu)
         self.assertEqual(len(ClassifierPool().classifiers), 0)
 
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate', sigma=0.2)
-        optimizer.step(X, y)
+        self.step_test(mu)
         self.assertEqual(len(ClassifierPool().classifiers), 0)
 
 
@@ -161,10 +151,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         mu, lmbd = (0, 15)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', simga=0.2)
-        X, y = TestsSupport.generate_input(0)
-
-        optimizer = ES_MuLambd()
-        optimizer.step(X, y)
+        self.step_test(mu)
         self.assertEqual(len(ClassifierPool().classifiers), 0)
 
 

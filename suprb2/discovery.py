@@ -4,6 +4,7 @@ from suprb2.random_gen import Random
 from suprb2.pool import ClassifierPool
 from suprb2.utilities import Utilities
 from suprb2.classifier import Classifier
+from suprb2.solutions import SolutionOptimizer
 from sklearn.linear_model import LinearRegression
 
 import numpy as np  # type: ignore
@@ -16,20 +17,33 @@ class RuleDiscoverer(ABC):
         pass
 
 
-    def step(self, X: np.ndarray, y: np.ndarray):
+    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
         pass
 
 
-    def create_start_points(self, X: np.ndarray):
-        start_point_technique = Config().rule_discovery['start_points']
-        if start_point_technique == 'elitist_compliment':
-            return self.elitist_compliment()
+    def create_start_points(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+        technique = Config().rule_discovery['start_points']
 
-    def elitist_compliment(self):
-        pass
+        if technique == 'elitist_compliment':
+            return self.elitist_compliment(solution_opt)
+        elif technique == 'elitist_unmatched':
+            return self.elitist_unmatched(solution_opt)
+        else:
+            return self.draw_mu_examples_from_data(X, y)
 
 
-    def draw_mu_examples_from_data(self, X: np.ndarray):
+    def elitist_compliment(self, solution_opt: SolutionOptimizer=None):
+        start_points = deepcopy(solution_opt.get_elitist().get_classifiers())
+        for cl in start_points:
+            pass
+
+
+    def elitist_unmatched(self, solution_opt: SolutionOptimizer=None):
+        classifiers = solution_opt.get_elitist().get_classifiers()
+        # start_points = classifiers.
+
+
+    def draw_mu_examples_from_data(self, X: np.ndarray, y: np.ndarray):
         start_points = []
         idxs = Random().random.choice(np.arange(len(X)),
 								  Config().rule_discovery['mu'], False)
@@ -45,8 +59,8 @@ class ES_OnePlusLambd(RuleDiscoverer):
         pass
 
 
-    def step(self, X: np.ndarray, y: np.ndarray):
-        for cl in self.create_start_points(X):
+    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+        for cl in self.create_start_points(X, y, solution_opt):
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
                 for j in range(Config().rule_discovery['lmbd']):
@@ -107,9 +121,9 @@ class ES_MuLambd(RuleDiscoverer):
         pass
 
 
-    def step(self, X: np.ndarray, y: np.ndarray):
+    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
         # create start points for evolutionary search
-        generation = self.create_start_points(X)
+        generation = self.create_start_points(X, y, solution_opt)
 
         # steps forward in the evolutionary search
         for i in range(Config().rule_discovery['steps_per_step']):

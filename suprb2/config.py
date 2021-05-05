@@ -15,6 +15,7 @@ class Config:
             "mu": 10,
             "rho": 2,
             "sigma": 0.2,
+            "start_points": None,
             "steps_per_step": 10,
             "recombination": None,
             "replacement": '+',
