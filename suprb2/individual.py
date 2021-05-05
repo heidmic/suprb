@@ -81,11 +81,15 @@ class Individual:
         # TODO is this shape still needed?
         return out.reshape((-1, 1))
 
-    def get_classifiers(self):
+    def get_classifiers(self, unmatched=False):
         # TODO for some reason returns tuple here, although this should
         #  only happen for matrizes, see below
-        return [ClassifierPool().classifiers[i] for i in np.nonzero(
-            self.genome)[0]]
+        if unmatched == True:
+            return [ClassifierPool().classifiers[i] for i in np.where(
+                self.genome == 0)[0]]
+        else:
+            return [ClassifierPool().classifiers[i] for i in np.nonzero(
+                    self.genome)[0]]
 
     def determine_fitness(self, X_val, y_val):
         if Config().solution_creation['fitness'] == "pseudo-BIC":

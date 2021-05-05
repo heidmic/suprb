@@ -141,7 +141,7 @@ class Classifier:
             lu[1] += diff/2
             lu = np.clip(lu, a_max=1, a_min=-1)
 
-        sigmas = Random().random.normal(loc=1, scale=1, size=Config().xdim)
+        sigmas = Random().random.normal(loc=1, scale=1, size=xdim)
         return Classifier(lu[0], lu[1], LinearRegression(), 1, sigmas)
 
     def params(self):
