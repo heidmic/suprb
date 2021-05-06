@@ -29,7 +29,10 @@ class Config:
         "steps": 500,
         "use_validation": False,
         "logging": True,
-        "default_error": 1000
+        "default_error": 1000,
+        "save_model": False,
+        "load_model": False,
+        "model_name": "saved_models/model_name.joblib"
     }
 
     def __init__(self):

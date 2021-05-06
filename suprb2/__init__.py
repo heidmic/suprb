@@ -10,6 +10,7 @@ from suprb2.pool import ClassifierPool
 from sklearn.model_selection import train_test_split
 from datetime import datetime
 from copy import deepcopy
+from joblib import dump, load
 import mlflow as mf
 import itertools
 
@@ -30,9 +31,21 @@ class LCS:
             mf.log_param("seed", Random()._seed)
             self.config = Config()
             self.perf_recording = PerfRecorder()
-        self.sol_opt = None
+        self.sol_opt = ES_1plus1()
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
+
+    def save_model(self):
+        if Config().save_model:
+            saved_model = {"classifiers": ClassifierPool().classifiers,
+                           "elitist": self.sol_opt.get_elitist()}
+            dump(saved_model, Config().model_name)
+
+    def load_model(self):
+        if Config().load_model:
+            loaded_model = load(Config().model_name)
+            ClassifierPool().classifiers = loaded_model["classifiers"]
+            self.sol_opt.set_elitist(loaded_model["elitist"])
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -58,7 +71,7 @@ class LCS:
 
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(X, y)
+        self.sol_opt.init(X, y)
         # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
@@ -123,6 +136,9 @@ class LCS:
                  self.sol_opt.get_elitist().genome)[0]]]).any(axis=0)))
         PerfRecorder().elitist_complexity.append(
             self.sol_opt.get_elitist().parameters())
+
+    def set_elitist(self, elitist):
+        self.sol_opt.set_elitist(elitist)
 
     def get_elitist(self):
         return self.sol_opt.get_elitist()
