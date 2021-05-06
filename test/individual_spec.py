@@ -1,3 +1,4 @@
+import time
 import numpy as np
 
 from hypothesis import given, settings, strategies as st
@@ -98,8 +99,11 @@ def test_predict_classifier(input_parameter):
     bounds_check = False
 
     for i in range(len(input_parameter)):
-        bounds_check = bounds_check | ((individual.genome[i] == True) & (test_y >= float(input_parameter[i][0])) & (
-            test_y <= float(input_parameter[i][1])))
+        genome_check = (individual.genome[i] == True)
+        lower_check = (test_y >= input_parameter[i][0])
+        upper_check = (test_y <= input_parameter[i][1])
+
+        bounds_check = bounds_check | (genome_check & lower_check & upper_check)
 
     expected_result = np.where(bounds_check, test_y, 0.0)
 
