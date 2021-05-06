@@ -128,7 +128,7 @@ class Classifier:
 
     def get_weighted_error(self):
         '''
-        Calculates the weighted error of the classifier, depending on its error, volume and a constant. 
+        Calculates the weighted error of the classifier, depending on its error, volume and a constant.
         -inf is the best possible value for the weighted error
         '''
         weighted_error = math.inf

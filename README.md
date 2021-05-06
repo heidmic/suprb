@@ -52,3 +52,25 @@ The commit messages of all the commits in your PR should be properly formatted:
   [this](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
 
 Avoid merge commits by using rebase rather than merge when combining branches
+
+## Testing
+
+We use `unittest` to test our application and `coverage` to extract the results.
+`unittest` is a default library from python, there is no need to install it.
+`coverage` can be installed via pip.
+
+To run the tests, use the following program
+```bash
+coverage run -m --source=suprb2 unittest discover
+````
+
+And to view the coverage run:
+```bash
+coverage report
+```
+or
+```bash
+coverage html
+open htmlcov/index.html
+```
+for a nicer presentation.
