@@ -180,6 +180,36 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         self.assertIn(child.upperBounds, [2, 3, 4])
 
 
+    def test_recombine_discrete_random_values(self):
+        """
+        Tests the method ES_MuLambd.recombine().
+
+        Checks if the discrete recombination of the classifiers' boundaries
+        is propperly calculated.
+
+        child_1.lowerBound = one_random(parents.lowerBounds)
+        child_1.upperBound = one_random(parents.upperBounds)
+        """
+        TestsSupport.set_rule_discovery_configs(recombination='discrete')
+        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[1], [40]], [[2], [30]], [[3], [20]], [[4], [10]] ]))[0]
+        self.assertIn(child.lowerBounds, [1, 2, 3, 4])
+        self.assertIn(child.upperBounds, [10, 20, 30, 40])
+
+
+    def test_recombine_discrete_flip_is_working(self):
+        """
+        Tests the method ES_MuLambd.recombine().
+
+        Checks if the random interval for one boundary
+        is flipped (upperBound < lowerBound), that the
+        recombination will flip them back.
+        """
+        TestsSupport.set_rule_discovery_configs(recombination='discrete')
+        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[10], [4]], [[20], [3]], [[30], [2]], [[40], [1]] ]))[0]
+        self.assertIn(child.lowerBounds, [1, 2, 3, 4])
+        self.assertIn(child.upperBounds, [10, 20, 30, 40])
+
+
     def test_recombine_default_strategy(self):
         """
         Tests the method ES_MuLambd.recombine().
