@@ -28,37 +28,88 @@ class RuleDiscoverer(ABC):
         There are 3 different strategies:
             - 'draw_examples_from_data'
             - 'elitist_unmatched'
-            - 'elitist_compliment'
+            - 'elitist_complement'
         """
         technique = Config().rule_discovery['start_points']
 
-        if technique == 'elitist_compliment':
-            return self.elitist_compliment(solution_opt)
+        if technique == 'elitist_complement':
+            # second return value is the array of intervals (for test)
+            classifiers, _ = self.elitist_complement(n, X, y, solution_opt)
+            return classifiers
         elif technique == 'elitist_unmatched':
-            return self.elitist_unmatched(n, solution_opt)
+            return self.elitist_unmatched(n, X, y, solution_opt)
         else:
             return self.draw_examples_from_data(n, X, y)
 
 
-    def elitist_compliment(self, solution_opt: SolutionOptimizer):
+    def elitist_complement(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer):
         """
         This method takes the classifiers from the elitist Individual
-        and extract the compliment of their matching intervals [l, u).
-        after that, we distribute the intervals compliments throughout
-        the starting point classifiers.
+        and extract the complement of their matching intervals [l, u).
+        after that, we distribute 1/nth of the intervals' complement
+        among the starting point classifiers.
+
+        It calculates the complements/intervals in an array with
+        shape = (cl_num, Xdim, n * 2, 2).
+        'cl_num' is the number of classifiers matched by the elitist
+        individual.
+        'Xdim' is the dimension of the input; 'n' is the number of
+        intervals created pro complement.
+        The third dimension in the calculated array (n * 2) is the
+        number of parts the complement will be sliced into.
+        'n' is multiplied by 2, because each complement generates 2
+        intervals ([-1, l] and [u, 1]) (one or both of theses intervals
+        might be empty, for example: [-1, -1] and [0, 1]).
+        The last dimension is 2, because of the interval representation,
+        which is a two elements array.
         """
-        start_points = deepcopy(solution_opt.get_elitist().get_classifiers())
-        for cl in start_points:
-            pass
+        start_points = []
+        elitist_classifiers = solution_opt.get_elitist().get_classifiers()
+        cl_num, xdim = (len(elitist_classifiers), X.shape[1])
+        intervals = np.zeros((cl_num, xdim, n * 2, 2), dtype=float)
+        for i in range(cl_num):
+            cl = elitist_classifiers[i]
+
+            # Split all the complements in all xdim of the i-th classifier,
+            # and save it in the i-th line of the array
+            for j in range(xdim):
+                lower = [ -1, cl.lowerBounds[j]]
+                upper = [cl.upperBounds[j], 1]
+                np.concatenate((self.split_interval(lower, n),
+                                self.split_interval(upper, n)),
+                                axis=0, out=intervals[i, j])
+
+            # with the i-th line, create n * 2 classifiers
+            for k in range(n * 2):
+                new_classifier = Classifier(lowers=intervals[i,:,k,0], uppers=intervals[i,:,k,1],
+                                            local_model=LinearRegression(), degree=1, sigmas=np.ones(xdim, dtype=float))
+                                            # Reminder: LinearRegression might change in the future
+                new_classifier.fit(X, y)
+                start_points.append(new_classifier)
+
+        return (start_points, intervals)
 
 
-    def elitist_unmatched(self, n: int, solution_opt: SolutionOptimizer):
+
+    def split_interval(self, l: np.ndarray, n: int):
         """
-        This method takes 'n' examples out of the inputs that were
-        not matched by the elitist individual.
+        This method splits an interval 'l' into 'n' new ones.
+        For example:
+            interval([10, 30], 2) => [[10, 20], [20, 30]]
+            interval([10, 30], 4) => [[10, 15], [15, 20], [20, 25], [25, 30]]
         """
-        classifiers = solution_opt.get_elitist().get_classifiers()
-        # start_points = classifiers.
+        w = (l[1] - l[0]) / n
+        return np.array([ [l[0]+i*w, l[0]+(i+1)*w] for i in range(n) ], dtype=float)
+
+
+    def elitist_unmatched(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer):
+        """
+        This method copies 'n' classifiers that are not used by the
+        elitist individual.
+        """
+        classifiers = deepcopy(solution_opt.get_elitist().get_classifiers(unmatched=True))
+
+        return Random().random.choice(classifiers, n, False)
 
 
     def draw_examples_from_data(self, n: int, X: np.ndarray, y: np.ndarray):
