@@ -229,10 +229,10 @@ class ES_MuLambd(RuleDiscoverer):
 
     def get_classifier_sigmas(self, cl: Classifier, sigmas: np.ndarray=None):
         """
-        Returns the mutation vector associated with this classifier,
-        or it creates a new one.
+        Returns the mutation vector associated with 'cl',
+        or it creates a new vector and saves it.
 
-        If sigmas i
+        Todo: Maybe delete entries when object is destroyed?
         """
         cl_id = str(id(cl))
         if sigmas is not None:
