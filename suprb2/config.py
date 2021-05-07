@@ -26,12 +26,10 @@ class Config:
         },
         "initial_pool_size": 50,
         "initial_genome_length": 100000,
-        "steps": 50,
-        "xdim": None,
+        "steps": 500,
         "use_validation": False,
-        "default_prediction": None,
-        "var": None,
-        "logging": True
+        "logging": True,
+        "default_error": 1000
     }
 
     def __init__(self):

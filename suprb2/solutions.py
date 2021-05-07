@@ -25,17 +25,19 @@ class SolutionOptimizer(ABC):
 
 
 class ES_1plus1(SolutionOptimizer):
-    def __init__(self, X_val, y_val, individual=None):
+    def __init__(self, X_val, y_val, classifier_pool, individual=None):
+        self.mutation_rate = Config().solution_creation['mutation_rate']
+        self.steps = Config().solution_creation['steps_per_step']
+        self.classifier_pool = classifier_pool
+        
         if individual is not None:
             self.individual = individual
         else:
             # This makes most sense when the optimizer is initialised at the
             # start. If a later init is desired, adjust accordingly
             self.individual = Individual.random_individual(
-                Config().initial_genome_length)
+                Config().initial_genome_length, self.classifier_pool)
             self.individual.determine_fitness(X_val, y_val)
-        self.mutation_rate = Config().solution_creation['mutation_rate']
-        self.steps = Config().solution_creation['steps_per_step']
 
     def step(self, X_val, y_val):
         """
@@ -45,7 +47,7 @@ class ES_1plus1(SolutionOptimizer):
         """
         success = 0
         for i in range(self.steps):
-            candidate = Individual(np.copy(self.individual.genome))
+            candidate = Individual(np.copy(self.individual.genome), self.classifier_pool)
             candidate.mutate(self.mutation_rate)
             candidate.determine_fitness(X_val, y_val)
             if self.individual.fitness < candidate.fitness:
@@ -59,4 +61,3 @@ class ES_1plus1(SolutionOptimizer):
         :return: the current solution
         """
         return self.individual
-

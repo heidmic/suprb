@@ -5,7 +5,6 @@ from suprb2.perf_recorder import PerfRecorder
 from suprb2.classifier import Classifier
 from suprb2.individual import Individual
 from suprb2.solutions import ES_1plus1
-from suprb2.pool import ClassifierPool
 
 from sklearn.model_selection import train_test_split
 from datetime import datetime
@@ -19,7 +18,7 @@ class LCS:
                  # pop_size=30, ind_size=50, generations=50,
                  # fitness="pseudo-BIC",
                  logging=True):
-        Config().xdim = xdim
+        self.xdim = xdim
         # Config().pop_size = pop_size
         # Config().ind_size = ind_size
         # Config().generations = generations
@@ -33,6 +32,7 @@ class LCS:
         self.sol_opt = None
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
+        self.classifier_pool = list()
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -53,12 +53,12 @@ class LCS:
 
     def run_inital_step(self, X, y):
         start_time = datetime.now()
-        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
+        while len(self.classifier_pool) < Config().initial_pool_size:
             self.discover_rules(X, y)
 
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(X, y)
+        self.sol_opt = ES_1plus1(X, y, self.classifier_pool)
         # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
@@ -69,9 +69,6 @@ class LCS:
             self.log_solution_creation_duration(discover_rules_time, solution_creation_time, 0)
 
     def fit(self, X, y):
-        Config().default_prediction = 0.0  # np.mean(y)
-        Config().var = np.var(y)
-
         # if Config().use_validation:
         #     X_train, X_val, y_train, y_val = train_test_split(X, y,
         #                                                       random_state=Random().split_seed())
@@ -113,7 +110,8 @@ class LCS:
                       .error, step)
         mf.log_metric("complexity elite", self.sol_opt.get_elitist()
                       .parameters(), step)
-        mf.log_metric("classifier pool size", len(ClassifierPool().classifiers))
+        mf.log_metric("classifier pool size", len(self.classifier_pool),
+                      step)
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
         PerfRecorder().elitist_val_error.append(
@@ -121,7 +119,7 @@ class LCS:
         PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_matched.append(np.sum(np.array(
             [cl.matches(X_val) for cl in
-             [ClassifierPool().classifiers[i] for i in np.nonzero(
+             [self.classifier_pool[i] for i in np.nonzero(
                  self.sol_opt.get_elitist().genome)[0]]]).any(axis=0)))
         PerfRecorder().elitist_complexity.append(
             self.sol_opt.get_elitist().parameters())
@@ -143,7 +141,7 @@ class LCS:
                                       Config().rule_discovery['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(x)
+            cl = Classifier.random_cl(x, self.xdim)
             cl.fit(X, y)
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
@@ -157,12 +155,13 @@ class LCS:
                 cl = children[np.argmin([child.get_weighted_error() for child in children])]
 
             if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
-                ClassifierPool().classifiers.append(cl)
+                self.classifier_pool.append(cl)
 
     @staticmethod
     def default_error(y):
         # for standardised data this should be equivalent to np.var(y)
-        return np.sum(y**2)/len(y)
+        with np.errstate(invalid='ignore'):
+            return np.sum(y**2)/np.array(len(y))
 
     # place classifiers around those examples
     # test if classifiers overlap
