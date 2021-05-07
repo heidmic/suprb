@@ -52,7 +52,7 @@ class ES_MuLambd(RuleDiscoverer):
     """
     This class represents the optimizer for rule generation.
 
-    It uses Evolutionary Strategy generate an initial population
+    It uses Evolution Strategies generate an initial population
     with focus on diversity.
 
     Relevant hyper parameters for this class:
@@ -80,8 +80,11 @@ class ES_MuLambd(RuleDiscoverer):
                         taken randomly from one of the 'rho' parents
                         for each Xdim.
 
-    'sigma'         ->  Positive scale factor for the mutation on the
-                        classifiers' mutation vector (cl.sigmas).
+    'local_tau'     ->  Scale used to calculate the local learning rate
+                        for the classifier's mutation.
+
+    'global_tau'    ->  Scale used to calculate the global learning rate
+                        for the classifier's mutation.
 
     'replacement'   ->  This hyper parameter defines if we are also adding
                         the copies of the parents to the pool ('+'), or if
