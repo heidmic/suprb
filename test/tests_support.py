@@ -20,7 +20,7 @@ class TestsSupport:
                                 local_model= None, degree=1,
                                 sigmas=np.array([1], dtype=np.float64)
         """
-        return [Classifier(i, i, None, 1, np.array([i], dtype=np.float64)) for i in range(1, n)]
+        return [Classifier(i, i, None, 1) for i in range(1, n)]
 
 
     def mock_specific_classifiers(values: list):
@@ -31,18 +31,14 @@ class TestsSupport:
         Example:
         value = [
             [1, 1, [1]],  # Classifier(lowerBounds=1, upperBounds=1,
-                                    local_model=None, degree=1,
-                                    sigmas=np.array([1], dtype=np.float64))
+                                    local_model=None, degree=1)
             [2, 1, [2]]   # Classifier(lowerBounds=2, upperBounds=1,
-                                    local_model=None, degree=1,
-                                    sigmas=np.array([2], dtype=np.float64))
+                                    local_model=None, degree=1)
         ]
         """
         classifiers = []
         for i in range(len(values)):
-            classifiers.append(Classifier(values[i][0], values[i][1],
-                                            None, 1,
-                                            np.array(values[i][2], dtype=np.float64)) if values[i][2] is not None else None)
+            classifiers.append(Classifier(values[i][0], values[i][1], None, 1))
         return classifiers
 
 

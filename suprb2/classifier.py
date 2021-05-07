@@ -8,7 +8,7 @@ from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, local_model, degree, sigmas):
+    def __init__(self, lowers, uppers, local_model, degree):
         self.lowerBounds = lowers
         self.upperBounds = uppers
         self.model = local_model
@@ -21,7 +21,7 @@ class Classifier:
         # if set this overrides local_model and outputs constant for all prediction requests
         self.constant = None
         self.last_training_match = None
-        self.sigmas = sigmas  # mutation vector
+
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -97,34 +97,14 @@ class Classifier:
     def mutate(self, sigma=0.2):
         """
         Mutates this matching function.
-
-        This function starts with the mutation of the classifier's mutation
-        vector (self.sigmas), and after that it mutates the classifier's
-        intervals [l, u), using the classifier's mutation vector.
-
         This is done similar to how the first XCSF iteration used mutation
         (Wilson, 2002) but using a Gaussian distribution instead of a uniform
         one (as done by Drugowitsch, 2007): Each interval [l, u)'s bound x is
-        changed to x' ~ N(x, sigmas(x)).
-        A Gaussian distribution using values from the classifier's mutation
-        vector as standard deviation.
-
-        The values in the classifier mutation vector (sigmas(x)) lies within
-        range from the the hyper parameters: [min_sigma, max_sigma]
-        Where:
-            min_sigma = Config().rule_discovery['min_sigma']
-            max_sigma = Config().rule_discovery['max_sigma']
-        This interval should be symetric, centered in 1.0, so that this mutation
-        remains unbiased.
-        Default values are:
-            min_sigma = 0.8
-            min_sigma = 1.2
+        changed to x' ~ N(x, (u - l) / 10) (Gaussian with standard deviation a
+        10th of the interval's width).
         """
-        min_sigma = Config().rule_discovery['min_sigma']
-        max_sigma = Config().rule_discovery['max_sigma']
-        self.sigmas = np.clip(Random().random.normal(loc=self.sigmas, scale=sigma, size=len(self.sigmas)), a_min=min_sigma, a_max=max_sigma)
-        lowers = Random().random.normal(loc=self.lowerBounds, scale=self.sigmas, size=len(self.lowerBounds))
-        uppers = Random().random.normal(loc=self.upperBounds, scale=self.sigmas, size=len(self.upperBounds))
+        lowers = Random().random.normal(loc=self.lowerBounds, scale=sigma, size=len(self.lowerBounds))
+        uppers = Random().random.normal(loc=self.upperBounds, scale=sigma, size=len(self.upperBounds))
         lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
         self.lowerBounds = lu[0]
         self.upperBounds = lu[1]
@@ -140,9 +120,7 @@ class Classifier:
             lu[0] -= diff/2
             lu[1] += diff/2
             lu = np.clip(lu, a_max=1, a_min=-1)
-
-        sigmas = Random().random.normal(loc=1, scale=1, size=Config().xdim)
-        return Classifier(lu[0], lu[1], LinearRegression(), 1, sigmas)
+        return Classifier(lu[0], lu[1], LinearRegression(), 1)
 
     def params(self):
         if self.model is LinearRegression:

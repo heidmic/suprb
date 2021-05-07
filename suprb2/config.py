@@ -15,11 +15,11 @@ class Config:
             "mu": 10,
             "rho": 2,
             "sigma": 0.2,
+            "local_tau": 1.1,
+            "global_tau": 1.2,
             "steps_per_step": 10,
             "recombination": None,
             "replacement": '+',
-            "min_sigma": 0.8,
-            "max_sigma": 1.2,
             "weighted_error_constant": 1000
         },
         "solution_creation": {
