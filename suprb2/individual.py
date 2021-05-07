@@ -2,25 +2,25 @@ import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
 from suprb2.classifier import Classifier
-from suprb2.pool import ClassifierPool
 
 from sklearn.metrics import *
 
 
 class Individual:
-    def __init__(self, genome):
+    def __init__(self, genome, classifier_pool):
         self.genome = genome
         self.fitness = None
         self.error = None
+        self.classifier_pool = classifier_pool
 
     @staticmethod
-    def random_individual(genome_length):
-        pool_length = len(ClassifierPool().classifiers)
+    def random_individual(genome_length, classifier_pool):
+        pool_length = len(classifier_pool)
         # from interval [low, high)
-        return Individual(np.concatenate((
-            Random().random.integers(low=0, high=2, size=pool_length,
-                                     dtype=bool),
-            np.zeros(genome_length-pool_length))))
+        random_integers = Random().random.integers(low=0, high=2, size=pool_length, dtype=bool)
+        random_genome = np.concatenate((random_integers, np.zeros(genome_length-pool_length)))
+
+        return Individual(random_genome, classifier_pool)
 
     def fit(self, X, y):
         # Classifiers are already fitted, this should thus do nothing. But to
@@ -84,8 +84,7 @@ class Individual:
     def get_classifiers(self):
         # TODO for some reason returns tuple here, although this should
         #  only happen for matrizes, see below
-        return [ClassifierPool().classifiers[i] for i in np.nonzero(
-            self.genome)[0]]
+        return [self.classifier_pool[i] for i in np.nonzero(self.genome)[0]]
 
     def determine_fitness(self, X_val, y_val):
         if Config().solution_creation['fitness'] == "pseudo-BIC":
@@ -132,8 +131,8 @@ class Individual:
             # return np.sum([cl.params() for cl in self.classifiers])
 
     def mutate(self, rate=0.2):
-        pool_length = len(ClassifierPool().classifiers)
-        mutations = np.concatenate((Random().random.random(pool_length) < rate,
-                                    np.zeros(len(self.genome)-pool_length, dtype='bool')),
-                                   dtype='bool')
+        pool_length = len(self.classifier_pool)
+        random_value = Random().random.random(pool_length)
+        random_genome = np.zeros((len(self.genome)-pool_length), dtype='bool')
+        mutations = np.concatenate((random_value < rate, random_genome), dtype='bool')
         self.genome = np.logical_xor(self.genome, mutations)
