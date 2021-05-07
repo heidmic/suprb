@@ -1,5 +1,4 @@
 from suprb2 import LCS
-from suprb2.config import Config
 from suprb2.random_gen import Random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error

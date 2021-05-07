@@ -1,14 +1,13 @@
 import math
 import numpy as np
 from suprb2.random_gen import Random
-from suprb2.config import Config
 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, local_model, degree):
+    def __init__(self, lowers, uppers, local_model, degree, default_error, weighted_error_constant):
         self.lowerBounds = lowers
         self.upperBounds = uppers
         self.model = local_model
@@ -21,6 +20,8 @@ class Classifier:
         # if set this overrides local_model and outputs constant for all prediction requests
         self.constant = None
         self.last_training_match = None
+        self.default_error = default_error
+        self.weighted_error_constant = weighted_error_constant
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -73,7 +74,7 @@ class Classifier:
                 self.constant = Classifier.get_default_prediction()
             # TODO is this a good default error? should we use the std?
             #  Equivalent with standardised data?
-            self.error = Config().default_error
+            self.error = self.default_error
         else:
             self.model.fit(X, y)
             # TODO should this be on validation data?
@@ -110,17 +111,17 @@ class Classifier:
         self.upperBounds = lu[1]
 
     @staticmethod
-    def random_cl(point, xdim):
+    def random_cl(point, xdim, cl_min_range, default_error, weighted_error_constant):
         if point is not None:
             lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, xdim)) * 2 - 1, axis=0)
         else:
             lu = np.sort(Random().random.random((2, xdim)) * 2 - 1, axis=0)
-        if Config().rule_discovery['cl_min_range']:
+        if cl_min_range:
             diff = lu[1] - lu[0]
             lu[0] -= diff/2
             lu[1] += diff/2
             lu = np.clip(lu, a_max=1, a_min=-1)
-        return Classifier(lu[0], lu[1], LinearRegression(), 1)
+        return Classifier(lu[0], lu[1], LinearRegression(), 1, default_error, weighted_error_constant)
 
     def params(self):
         if self.model is LinearRegression:
@@ -135,7 +136,7 @@ class Classifier:
         volume = np.prod(self.upperBounds - self.lowerBounds)
 
         if volume != 0:
-            weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
+            weighted_error = self.error / (volume * self.weighted_error_constant)
 
         return weighted_error
 

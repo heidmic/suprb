@@ -1,26 +1,26 @@
 import numpy as np
 from suprb2.random_gen import Random
-from suprb2.config import Config
 from suprb2.classifier import Classifier
 
 from sklearn.metrics import *
 
 
 class Individual:
-    def __init__(self, genome, classifier_pool):
+    def __init__(self, genome, classifier_pool, fitness_function_name):
         self.genome = genome
         self.fitness = None
         self.error = None
         self.classifier_pool = classifier_pool
+        self.fitness_function_name = fitness_function_name
 
     @staticmethod
-    def random_individual(genome_length, classifier_pool):
+    def random_individual(genome_length, classifier_pool, fitness_function_name):
         pool_length = len(classifier_pool)
         # from interval [low, high)
         random_integers = Random().random.integers(low=0, high=2, size=pool_length, dtype=bool)
         random_genome = np.concatenate((random_integers, np.zeros(genome_length-pool_length)))
 
-        return Individual(random_genome, classifier_pool)
+        return Individual(random_genome, classifier_pool, fitness_function_name)
 
     def fit(self, X, y):
         # Classifiers are already fitted, this should thus do nothing. But to
@@ -87,7 +87,7 @@ class Individual:
         return [self.classifier_pool[i] for i in np.nonzero(self.genome)[0]]
 
     def determine_fitness(self, X_val, y_val):
-        if Config().solution_creation['fitness'] == "pseudo-BIC":
+        if self.fitness_function_name == "pseudo-BIC":
             n = len(X_val)
             # mse = ResidualSumOfSquares / NumberOfSamples
             mse = np.sum(np.square(y_val - self.predict(X_val))) / n
@@ -96,7 +96,7 @@ class Individual:
             # BIC -(n * np.log(rss / n) + complexity * np.log(n))
             self.fitness = - (n * np.log(mse) + self.parameters() * np.log(n))
 
-        elif Config().solution_creation['fitness'] == "BIC_matching_punishment":
+        elif self.fitness_function_name == "BIC_matching_punishment":
             n = len(X_val)
             # mse = ResidualSumOfSquares / NumberOfSamples
             mse = np.sum(np.square(y_val - self.predict(X_val))) / n
@@ -112,14 +112,13 @@ class Individual:
                                                  + matching_pun
                                                  ) * np.log(n))
 
-        elif Config().solution_creation['fitness'] == "MSE":
+        elif self.fitness_function_name == "MSE":
             self.error = mean_squared_error(y_val, self.predict(X_val))
-            self.fitness = - self.error
+            self.fitness = -self.error
 
-        elif Config().solution_creation['fitness'] == "simplified_compl":
+        elif self.fitness_function_name == "simplified_compl":
             self.error = mean_squared_error(y_val, self.predict(X_val))
-            self.fitness = -self.error - (len(self.classifiers) - Config().ind_size
-                                          if len(self.classifiers) > Config().ind_size else 0)
+            self.fitness = -self.error - np.sum(self.genome)
 
     def parameters(self, simple=True) -> float:
         if simple:

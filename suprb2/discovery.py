@@ -1,6 +1,5 @@
 # from suprb2.perf_recorder import PerfRecorder
 from suprb2.random_gen import Random
-from suprb2.config import Config
 from suprb2.classifier import Classifier
 
 import numpy as np  # type: ignore

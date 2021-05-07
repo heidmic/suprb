@@ -1,6 +1,5 @@
 from problems import amgauss, make_problem
 from suprb2 import LCS
-from suprb2.config import Config
 from suprb2.random_gen import Random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
@@ -105,6 +104,34 @@ def plot_error_complexity(recorder, saveas=None):
                     dpi=600)
 
 
+def get_default_config():
+    rule_discovery_config = {"name": '(1+lambda)-ES',
+                             "cl_min_range": 0.2,
+                             "nrules": 100,
+                             "lmbd": 20,  # not allowed to use lambda
+                             "sigma": 0.2,
+                             "steps_per_step": 10,
+                             "weighted_error_constant": 1000}
+
+    solution_creation_config = {"name": '(1+1)-ES',
+                                "mutation_rate": 0.2,
+                                "fitness_function_name": "pseudo-BIC",
+                                "initial_genome_length": 100000,
+                                "steps_per_step": 1000
+                                }
+
+    default_config = {"rule_discovery": rule_discovery_config,
+                      "solution_creation": solution_creation_config,
+                      "n_elitists": 1,
+                      "initial_pool_size": 50,
+                      "steps": 500,
+                      "use_validation": False,
+                      "logging_enabled": True,
+                      "default_error": 1000}
+
+    return default_config
+
+
 if __name__ == '__main__':
     print(f"Starting at {datetime.now().time()}")
     n = 1000
@@ -142,7 +169,7 @@ if __name__ == '__main__':
             # we reset the seed here
             Random().reseed(seed)
 
-            lcs = LCS(xdim)
+            lcs = LCS(xdim, get_default_config())
 
             lcs.fit(X_train, y_train)
 

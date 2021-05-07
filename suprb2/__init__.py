@@ -1,6 +1,5 @@
 import numpy as np
 from suprb2.random_gen import Random
-from suprb2.config import Config
 from suprb2.perf_recorder import PerfRecorder
 from suprb2.classifier import Classifier
 from suprb2.individual import Individual
@@ -14,25 +13,18 @@ import itertools
 
 
 class LCS:
-    def __init__(self, xdim,
-                 # pop_size=30, ind_size=50, generations=50,
-                 # fitness="pseudo-BIC",
-                 logging=True):
+    def __init__(self, xdim, config):
         self.xdim = xdim
-        # Config().pop_size = pop_size
-        # Config().ind_size = ind_size
-        # Config().generations = generations
-        # Config().fitness = fitness
-        Config().logging = logging
-        if Config().logging:
-            mf.log_params(Config().__dict__)
-            mf.log_param("seed", Random()._seed)
-            self.config = Config()
-            self.perf_recording = PerfRecorder()
         self.sol_opt = None
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
         self.classifier_pool = list()
+        self.config = config
+
+        if self.config["logging_enabled"]:
+            mf.log_params(self.config)
+            mf.log_param("seed", Random()._seed)
+            self.perf_recording = PerfRecorder()
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -53,16 +45,16 @@ class LCS:
 
     def run_inital_step(self, X, y):
         start_time = datetime.now()
-        while len(self.classifier_pool) < Config().initial_pool_size:
+        while len(self.classifier_pool) < self.config["initial_pool_size"]:
             self.discover_rules(X, y)
 
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(X, y, self.classifier_pool)
+        self.sol_opt = ES_1plus1(X, y, self.classifier_pool, self.config["solution_creation"])
         # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
-        if Config().logging:
+        if self.config["logging_enabled"]:
             self.log(0, X)
             # self.log(0, X_val)
             self.log_discover_rules_duration(start_time, discover_rules_time, 0)
@@ -83,7 +75,7 @@ class LCS:
         self.run_inital_step(X, y)
 
         # TODO allow other termination criteria. Early Stopping?
-        for step in range(Config().steps):
+        for step in range(self.config["steps"]):
             start_time = datetime.now()
 
             self.discover_rules(X, y)
@@ -93,7 +85,7 @@ class LCS:
             # self.sol_opt.step(X_val, y_val)
             solution_creation_time = datetime.now()
 
-            if Config().logging:
+            if self.config["logging_enabled"]:
                 self.log(step+1, X)
                 # self.log(0, X_val)
                 self.log_discover_rules_duration(start_time, discover_rules_time, step+1)
@@ -137,17 +129,19 @@ class LCS:
 
     def discover_rules(self, X, y):
         # draw n examples from data
-        idxs = Random().random.choice(np.arange(len(X)),
-                                      Config().rule_discovery['nrules'], False)
+        rule_discovery_config = self.config["rule_discovery"]
+        idxs = Random().random.choice(np.arange(len(X)), rule_discovery_config['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(x, self.xdim)
+            cl = Classifier.random_cl(x, self.xdim, rule_discovery_config["cl_min_range"],
+                                      self.config["default_error"],
+                                      rule_discovery_config["weighted_error_constant"])
             cl.fit(X, y)
-            for i in range(Config().rule_discovery['steps_per_step']):
+            for i in range(rule_discovery_config["steps_per_step"]):
                 children = list()
-                for j in range(Config().rule_discovery['lmbd']):
+                for j in range(rule_discovery_config["lmbd"]):
                     child = deepcopy(cl)
-                    child.mutate(Config().rule_discovery['sigma'])
+                    child.mutate(rule_discovery_config["sigma"])
                     child.fit(X, y)
                     children.append(child)
                 # ToDo instead of greedily taking the minimum, treating all
