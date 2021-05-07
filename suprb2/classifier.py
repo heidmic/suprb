@@ -110,19 +110,26 @@ class Classifier:
 
     @staticmethod
     def random_cl(point=None):
+        """
+        Returns a randomly placed classifier within [-1, 1]
+        If point is given, the classifier bounds will be point +- N(r, r/2)
+        with r being defined by Config().rule_discovery['cl_expected_radius']
+        Classifiers width is always > 0 in all dimensions
+        :param point: center of the classifier
+        :return: a new Classifier instance
+        """
+        if point is None:
+            point = Random().random.random(Config().xdim) * 2 - 1
+        exp_radius = Config().rule_discovery['cl_expected_radius']
         while True:
-            if point is not None:
-                lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, Config().xdim)) * 2 - 1, axis=0)
-            else:
-                lu = np.sort(Random().random.random((2, Config().xdim)) * 2 - 1, axis=0)
-            diff = lu[1] - lu[0]
-            # if volume to max volume ratio is smaller than the target ratio
-            # we just re-roll new bounds
-            if np.prod(diff) / (2 ** Config().xdim) >= \
-                    Config().rule_discovery['cl_init_volume_ratio']:
-                # this emulates a do-while loop
+            radius = Random().random.normal(loc=exp_radius, scale=exp_radius/2,
+                                            size=Config().xdim)
+            # emulate do-while loop
+            if (radius > 0).all():
                 break
-        return Classifier(lu[0], lu[1], LinearRegression(), 1)
+        l = np.clip(point - radius, a_min=-1, a_max=1)
+        u = np.clip(point + radius, a_min=-1, a_max=1)
+        return Classifier(l, u, LinearRegression(), 1)
 
     def params(self):
         if self.model is LinearRegression:
