@@ -1,6 +1,5 @@
 from suprb2.config import Config
 from suprb2.random_gen import Random
-from suprb2.pool import ClassifierPool
 from suprb2.classifier import Classifier
 from suprb2.discovery import RuleDiscoverer
 
@@ -16,11 +15,12 @@ class TestsSupport:
         """
         Creates n classifiers without relevant attributes.
         Example:
-        child_1 = Classifier(lowerBoundary=1, upperBoundary=1,
-                                local_model= None, degree=1,
-                                sigmas=np.array([1], dtype=np.float64)
+        child_1 = Classifier(lowerBoundary=[1], upperBoundary=[1],
+                                local_model= None, degree=1)
         """
-        return [Classifier(i, i, None, 1) for i in range(1, n)]
+        return [ Classifier(np.array([1], dtype=np.float64),
+                            np.array([1], dtype=np.float64),
+                            None, 1) for i in range(1, n) ]
 
 
     def mock_specific_classifiers(values: list):
@@ -43,7 +43,6 @@ class TestsSupport:
 
 
     def generate_input(n):
-        Config().xdim = 1
         X = np.random.uniform(-2.5, 7, (n, 1))
         y = 0.75*X**3-5*X**2+4*X+12
         return (X, y)
