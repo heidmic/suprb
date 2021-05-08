@@ -177,3 +177,17 @@ class ES_MuLambd(RuleDiscoverer):
         if Config().rule_discovery['replacement'] == '+':
             next_generation = children + parents
         return next_generation
+
+
+class ES_CSA(RuleDiscoverer):
+    """
+    …
+    """
+
+
+    def __init__(self, pool: List[Classifier]):
+        super().__init__(pool)
+
+
+    def step(self, X: np.ndarray, y: np.ndarray):
+        pass
