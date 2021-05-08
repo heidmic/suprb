@@ -1,8 +1,7 @@
-import time
 import numpy as np
 
 from hypothesis import given, settings, strategies as st
-from hypothesis.strategies import lists, integers, decimals, tuples, booleans
+from hypothesis.strategies import lists, integers, tuples, booleans, floats
 from sklearn.linear_model import LinearRegression
 from suprb2 import Individual, Classifier
 
@@ -20,18 +19,14 @@ def create_data(lower, upper, step):
     return np.reshape(data, (len(data), 1))
 
 
-train_X = create_data(-1, 1, 0.01)
-train_y = train_X
-
-test_X = create_data(-1, 1, 0.1)
-test_y = test_X
+input_data = create_data(-1, 1, 0.1)
 
 
 @given(
     lists(
         st.tuples(
             integers(min_value=0),                     # experience
-            decimals(min_value=0, allow_nan=False))))  # error
+            floats(min_value=0, allow_nan=False))))  # error
 @settings(max_examples=100)
 def test_calculate_mixing_weights(input_parameter):
     '''
@@ -46,8 +41,8 @@ def test_calculate_mixing_weights(input_parameter):
     classifier_pool = list()
 
     for i in range(len(input_parameter)):
-        experience = float(input_parameter[i][0])
-        error = float(input_parameter[i][1])
+        experience = input_parameter[i][0]
+        error = input_parameter[i][1]
 
         classifier_pool.append(create_classifier(experience, error, -1, 1))
 
@@ -71,9 +66,9 @@ def test_calculate_mixing_weights(input_parameter):
 @given(
     lists(
         st.tuples(
-            decimals(min_value=-1, max_value=1, allow_nan=False),   # lower bound
-            decimals(min_value=-1, max_value=1, allow_nan=False),   # upper bound
-            booleans())))                                           # genome
+            floats(min_value=-1, max_value=1, allow_nan=False),   # lower bound
+            floats(min_value=-1, max_value=1, allow_nan=False),   # upper bound
+            booleans())))                                         # genome
 @settings(max_examples=100)
 def test_predict_classifier(input_parameter):
     """
@@ -83,12 +78,12 @@ def test_predict_classifier(input_parameter):
     classifier_pool = list()
 
     for i in range(len(input_parameter)):
-        lower = float(input_parameter[i][0])
-        upper = float(input_parameter[i][1])
+        lower = input_parameter[i][0]
+        upper = input_parameter[i][1]
         genome = input_parameter[i][2]
 
         classifier = create_classifier(1, 1e-4, lower, upper)
-        classifier.fit(train_X, train_y)
+        classifier.fit(input_data, input_data)
         classifier_pool.append(classifier)
 
     individual = Individual.random_individual(len(classifier_pool), classifier_pool)
@@ -97,18 +92,18 @@ def test_predict_classifier(input_parameter):
         individual.genome[i] = genome
 
     # When
-    result = individual.predict(test_X)
+    result = individual.predict(input_data)
 
     bounds_check = False
 
     for i in range(len(input_parameter)):
         genome_check = (individual.genome[i] == True)
-        lower_check = (test_y >= input_parameter[i][0])
-        upper_check = (test_y <= input_parameter[i][1])
+        lower_check = (input_data >= input_parameter[i][0])
+        upper_check = (input_data <= input_parameter[i][1])
 
         bounds_check = bounds_check | (genome_check & lower_check & upper_check)
 
-    expected_result = np.where(bounds_check, test_y, 0.0)
+    expected_result = np.where(bounds_check, input_data, 0.0)
 
     # Then
     np.testing.assert_array_almost_equal(expected_result, result)
