@@ -109,7 +109,7 @@ class Classifier:
         self.upperBounds = lu[1]
 
     @staticmethod
-    def random_cl(point=None):
+    def random_cl(xdim, *, point=None):
         """
         Returns a randomly placed classifier within [-1, 1]
         If point is given, the classifier bounds will be point +- N(r, r/2)
@@ -119,11 +119,11 @@ class Classifier:
         :return: a new Classifier instance
         """
         if point is None:
-            point = Random().random.random(Config().xdim) * 2 - 1
+            point = Random().random.random(xdim) * 2 - 1
         exp_radius = Config().rule_discovery['cl_expected_radius']
         while True:
             radius = Random().random.normal(loc=exp_radius, scale=exp_radius/2,
-                                            size=Config().xdim)
+                                            size=xdim)
             # emulate do-while loop
             if (radius > 0).all():
                 break

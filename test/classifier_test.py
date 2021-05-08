@@ -16,9 +16,8 @@ def test_random_cl_with_point(point):
     :param point:
     :return:
     """
-    Config().xdim = len(point)
     point = np.array(point, dtype=np.float64)
-    cl = Classifier.random_cl(point)
+    cl = Classifier.random_cl(len(point), point=point)
     assert len(cl.upperBounds) == len(cl.lowerBounds) == len(point)
     assert (cl.upperBounds - cl.lowerBounds > 0).all()
     assert (cl.upperBounds <= 1).all()
@@ -36,8 +35,7 @@ def test_random_cl(xdim):
     :param point:
     :return:
     """
-    Config().xdim = xdim
-    cl = Classifier.random_cl()
+    cl = Classifier.random_cl(xdim)
     assert len(cl.upperBounds) == len(cl.lowerBounds) == xdim
     assert (cl.upperBounds - cl.lowerBounds > 0).all()
     assert (cl.upperBounds <= 1).all()
