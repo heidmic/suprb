@@ -5,7 +5,6 @@ from suprb2.perf_recorder import PerfRecorder
 from suprb2.classifier import Classifier
 from suprb2.individual import Individual
 from suprb2.solutions import ES_1plus1
-from suprb2.pool import ClassifierPool
 from suprb2.discovery import ES_MuLambd
 
 from sklearn.model_selection import train_test_split
@@ -35,6 +34,7 @@ class LCS:
         self.rule_disc = None
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
+        self.classifier_pool = list()
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -56,12 +56,13 @@ class LCS:
     def run_inital_step(self, X, y):
         start_time = datetime.now()
 
-        self.rule_disc = ES_MuLambd()
-        while len(ClassifierPool().classifiers) < Config().initial_pool_size:
+        self.rule_disc = ES_MuLambd(self.classifier_pool)
+        while len(self.classifier_pool) < Config().initial_pool_size:
             self.rule_disc.step(X, y)
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(X, y)
+        self.sol_opt = ES_1plus1(X, y, self.classifier_pool)
+        # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
         if Config().logging:
@@ -111,7 +112,7 @@ class LCS:
                       .error, step)
         mf.log_metric("complexity elite", self.sol_opt.get_elitist()
                       .parameters(), step)
-        mf.log_metric("classifier pool size", len(ClassifierPool().classifiers),
+        mf.log_metric("classifier pool size", len(self.classifier_pool),
                       step)
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
@@ -120,7 +121,7 @@ class LCS:
         PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_matched.append(np.sum(np.array(
             [cl.matches(X_val) for cl in
-             [ClassifierPool().classifiers[i] for i in np.nonzero(
+             [self.classifier_pool[i] for i in np.nonzero(
                  self.sol_opt.get_elitist().genome)[0]]]).any(axis=0)))
         PerfRecorder().elitist_complexity.append(
             self.sol_opt.get_elitist().parameters())

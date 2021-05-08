@@ -1,5 +1,4 @@
 from suprb2.config import Config
-from suprb2.pool import ClassifierPool
 from suprb2.utilities import Utilities
 from suprb2.discovery import ES_MuLambd
 from suprb2.classifier import Classifier
@@ -13,14 +12,6 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
     """
     This module test all methods from ES_MuLambd
     """
-
-
-    def setUp(self):
-        """
-        Resets the Classifier Pool for the next test.
-        """
-        ClassifierPool().classifiers = list()
-        Config().__init__()
 
 
     # ------------- step() --------------
@@ -41,9 +32,9 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(mu)
 
-        optimizer = ES_MuLambd()
+        optimizer = ES_MuLambd(pool=[])
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), mu + (lmbd * 4))
+        self.assertEqual(len(optimizer.pool), mu + (lmbd * 4))
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
@@ -61,9 +52,9 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(mu)
 
-        optimizer = ES_MuLambd()
+        optimizer = ES_MuLambd(pool=[])
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), lmbd)
+        self.assertEqual(len(optimizer.pool), lmbd)
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
@@ -79,7 +70,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(mu - 5)
 
-        optimizer = ES_MuLambd()
+        optimizer = ES_MuLambd(pool=[])
         self.assertRaises(ValueError, optimizer.step, X, y)
 
 
@@ -96,9 +87,9 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(mu)
 
-        optimizer = ES_MuLambd()
+        optimizer = ES_MuLambd(pool=[])
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 0)
+        self.assertEqual(len(optimizer.pool), 0)
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
@@ -115,9 +106,9 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(mu)
 
-        optimizer = ES_MuLambd()
+        optimizer = ES_MuLambd(pool=[])
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), mu)
+        self.assertEqual(len(optimizer.pool), mu)
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
@@ -133,13 +124,13 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(mu)
 
-        optimizer = ES_MuLambd()
+        optimizer = ES_MuLambd(pool=[])
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 0)
+        self.assertEqual(len(optimizer.pool), 0)
 
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 0)
+        self.assertEqual(len(optimizer.pool), 0)
 
 
 
@@ -156,9 +147,9 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(0)
 
-        optimizer = ES_MuLambd()
+        optimizer = ES_MuLambd(pool=[])
         optimizer.step(X, y)
-        self.assertEqual(len(ClassifierPool().classifiers), 0)
+        self.assertEqual(len(optimizer.pool), 0)
 
 
     # ------------- recombine() --------------
@@ -175,7 +166,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         child_1.upperBound = average(random_vater.upperBound, random_mother.upperBound)
         """
         TestsSupport.set_rule_discovery_configs(recombination='intermediate')
-        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [2, 2], [4, 2], [2, 4], [4, 4] ]))[0]
+        child = ES_MuLambd(pool=[]).recombine(TestsSupport.mock_specific_classifiers([ [2, 2], [4, 2], [2, 4], [4, 4] ]))[0]
         self.assertIn(child.lowerBounds, [2, 3, 4])
         self.assertIn(child.upperBounds, [2, 3, 4])
 
@@ -191,7 +182,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         child_1.upperBound = one_random(parents.upperBounds)
         """
         TestsSupport.set_rule_discovery_configs(recombination='discrete')
-        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[1], [40]], [[2], [30]], [[3], [20]], [[4], [10]] ]))[0]
+        child = ES_MuLambd(pool=[]).recombine(TestsSupport.mock_specific_classifiers([ [[1], [40]], [[2], [30]], [[3], [20]], [[4], [10]] ]))[0]
         self.assertIn(child.lowerBounds, [1, 2, 3, 4])
         self.assertIn(child.upperBounds, [10, 20, 30, 40])
 
@@ -205,7 +196,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         recombination will flip them back.
         """
         TestsSupport.set_rule_discovery_configs(recombination='discrete')
-        child = ES_MuLambd().recombine(TestsSupport.mock_specific_classifiers([ [[10], [4]], [[20], [3]], [[30], [2]], [[40], [1]] ]))[0]
+        child = ES_MuLambd(pool=[]).recombine(TestsSupport.mock_specific_classifiers([ [[10], [4]], [[20], [3]], [[30], [2]], [[40], [1]] ]))[0]
         self.assertIn(child.lowerBounds, [1, 2, 3, 4])
         self.assertIn(child.upperBounds, [10, 20, 30, 40])
 
@@ -221,7 +212,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         Classifier.
         """
         parents = TestsSupport.mock_classifiers(10)
-        child = ES_MuLambd().recombine(parents)[0]
+        child = ES_MuLambd(pool=[]).recombine(parents)[0]
         self.assertIsInstance(child, Classifier)
 
 
@@ -239,7 +230,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         n = 2
         classifiers = TestsSupport.mock_specific_classifiers([ [[5], [10]], [[10], [5]] ])
         X, y = TestsSupport.generate_input(n)
-        ES_MuLambd().mutate_and_fit(classifiers, X, y)
+        ES_MuLambd(pool=[]).mutate_and_fit(classifiers, X, y)
         self.assertLessEqual(classifiers[0].lowerBounds, 5 + (10 - 5 / 10))
 
 
@@ -259,7 +250,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         children = TestsSupport.mock_classifiers(3)
 
         array_concatenation = np.concatenate((children, parents))
-        replacement_array = ES_MuLambd().replace(parents, children)
+        replacement_array = ES_MuLambd(pool=[]).replace(parents, children)
         self.assertIsNone(np.testing.assert_array_equal(replacement_array, array_concatenation))
 
 

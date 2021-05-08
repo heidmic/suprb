@@ -1,7 +1,6 @@
 # from suprb2.perf_recorder import PerfRecorder
 from suprb2.config import Config
 from suprb2.random_gen import Random
-from suprb2.pool import ClassifierPool
 from suprb2.utilities import Utilities
 from suprb2.classifier import Classifier
 from sklearn.linear_model import LinearRegression
@@ -12,8 +11,8 @@ from abc import *
 from typing import List
 
 class RuleDiscoverer(ABC):
-    def __init__(self):
-        pass
+    def __init__(self, pool: List[Classifier]):
+        self.pool = pool
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
@@ -21,8 +20,8 @@ class RuleDiscoverer(ABC):
 
 
 class ES_OnePlusLambd(RuleDiscoverer):
-    def __init__(self):
-        pass
+    def __init__(self, pool: List[Classifier]):
+        super().__init__(pool)
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
@@ -45,7 +44,7 @@ class ES_OnePlusLambd(RuleDiscoverer):
                 cl = children[np.argmin([child.get_weighted_error() for child in children])]
 
             if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
-                ClassifierPool().classifiers.append(cl)
+                self.pool.append(cl)
 
 
 class ES_MuLambd(RuleDiscoverer):
@@ -90,8 +89,8 @@ class ES_MuLambd(RuleDiscoverer):
     """
 
 
-    def __init__(self):
-        pass
+    def __init__(self, pool: List[Classifier]):
+        super().__init__(pool)
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
@@ -113,7 +112,7 @@ class ES_MuLambd(RuleDiscoverer):
 
         # add search results to pool
         mask = np.array([cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]) for cl in generation], dtype='bool')
-        ClassifierPool().classifiers.extend(np.array(generation, dtype='object')[mask])
+        self.pool.extend(np.array(generation, dtype='object')[mask])
 
 
     def recombine(self, parents: List[Classifier]):
@@ -143,7 +142,7 @@ class ES_MuLambd(RuleDiscoverer):
         return children
 
 
-    def discrete_recombination(self, parents: np.ndarray, lmbd: int, rho: int):
+    def discrete_recombination(self, parents: List[Classifier], lmbd: int, rho: int):
         children = []
         Xdim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):

@@ -1,6 +1,5 @@
 from suprb2.config import Config
 from suprb2.random_gen import Random
-from suprb2.pool import ClassifierPool
 from suprb2.classifier import Classifier
 from suprb2.discovery import RuleDiscoverer
 
@@ -40,7 +39,6 @@ class TestsSupport:
 
 
     def generate_input(n):
-        Config().xdim = 1
         X = np.random.uniform(-2.5, 7, (n, 1))
         y = 0.75*X**3-5*X**2+4*X+12
         return (X, y)
