@@ -151,7 +151,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         remain empty.
         """
         mu, lmbd = (0, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate', simga=0.2)
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
         X, y = TestsSupport.generate_input(0)
 
         optimizer = ES_MuLambd(pool=[])
