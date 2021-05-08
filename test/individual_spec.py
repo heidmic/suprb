@@ -4,7 +4,7 @@ import numpy as np
 from hypothesis import given, settings, strategies as st
 from hypothesis.strategies import lists, integers, decimals, tuples, booleans
 from sklearn.linear_model import LinearRegression
-from suprb2 import Individual, Classifier, ClassifierPool
+from suprb2 import Individual, Classifier
 
 
 def create_classifier(experience, error, lower, upper):
@@ -42,15 +42,14 @@ def test_calculate_mixing_weights(input_parameter):
 
     # Given
     # We don't need the individuals genomes for this test, so we can leave the genome length as 0
-    individual = Individual.random_individual(0)
     expected_result = np.zeros(len(input_parameter))
-    classifier_list = list()
+    classifier_pool = list()
 
     for i in range(len(input_parameter)):
         experience = float(input_parameter[i][0])
         error = float(input_parameter[i][1])
 
-        classifier_list.append(create_classifier(experience, error, -1, 1))
+        classifier_pool.append(create_classifier(experience, error, -1, 1))
 
         if experience == 0:
             expected_result[i] = 0
@@ -59,8 +58,10 @@ def test_calculate_mixing_weights(input_parameter):
         else:
             expected_result[i] = experience/error
 
+    individual = Individual.random_individual(10000, classifier_pool)
+
     # When
-    result = individual.calculate_mixing_weights(classifier_list)
+    result = individual.calculate_mixing_weights(classifier_pool)
 
     # Then
     assert len(result) == len(expected_result)
@@ -79,8 +80,7 @@ def test_predict_classifier(input_parameter):
     Tests predict for the function f(x) = x
     """
 
-    ClassifierPool().classifiers = list()
-    individual = Individual.random_individual(1000000)
+    classifier_pool = list()
 
     for i in range(len(input_parameter)):
         lower = float(input_parameter[i][0])
@@ -89,8 +89,11 @@ def test_predict_classifier(input_parameter):
 
         classifier = create_classifier(1, 1e-4, lower, upper)
         classifier.fit(train_X, train_y)
-        ClassifierPool().classifiers.append(classifier)
+        classifier_pool.append(classifier)
 
+    individual = Individual.random_individual(len(classifier_pool), classifier_pool)
+
+    for i in range(len(classifier_pool)):
         individual.genome[i] = genome
 
     # When
