@@ -15,10 +15,12 @@ class TestsSupport:
         """
         Creates n classifiers without relevant attributes.
         Example:
-        child_1 = Classifier(lowerBoundary=1, upperBoundary=1,
+        child_1 = Classifier(lowerBoundary=[1], upperBoundary=[1],
                                 local_model= None, degree=1)
         """
-        return [Classifier(i, i, None, 1) for i in range(1, n)]
+        return [ Classifier(np.array([1], dtype=np.float64),
+                            np.array([1], dtype=np.float64),
+                            None, 1) for i in range(1, n) ]
 
 
     def mock_specific_classifiers(values: list):
