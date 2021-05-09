@@ -366,10 +366,6 @@ class ES_CSA(RuleDiscoverer):
                         for the new classifier.
                         Recommended value: 'lmbd'/4
 
-        'sigma':        Scale factor (positive) used in the new
-                        classifiers mutation.
-                        Recommended value: positive float
-
     'steps_per_step':   'steps_per_step'->  How many times we are going
                         to repeat the evolutionary search , when step()
                         is called. For instance, if steps_per_step
@@ -385,12 +381,11 @@ class ES_CSA(RuleDiscoverer):
     def step(self, X: np.ndarray, y: np.ndarray):
         lmbd            = Config().rule_discovery['lmbd']
         mu              = Config().rule_discovery['mu']
-        sigma           = Config().rule_discovery['sigma']
         x_dim           = X.shape[1]
-        c_sigma         = np.sqrt(mu / (x_dim + mu))
+        sigma_coef      = np.sqrt(mu / (x_dim + mu))
         dist_global     = 1 + np.sqrt(mu / x_dim)
         dist_local      = 3 * x_dim
-        cl_sigmas       = self.create_sigmas(x_dim)
+        step_sizes      = self.create_sigmas(x_dim)
         new_classifier  = Classifier.random_cl(None, x_dim)
         search_path     = 0
 
@@ -398,23 +393,31 @@ class ES_CSA(RuleDiscoverer):
             rnd_classifiers = list()
             rnd_sigmas = np.zeros((lmbd, x_dim))
 
+            # generating parents with sigmas
             for j in range(lmbd):
                 cl = deepcopy(new_classifier)
                 cl.fit(X, y)
                 rnd_classifiers.append(cl)
                 rnd_sigmas[j] = self.create_sigmas(x_dim)
-
             parents, parents_sigmas = self.select_best_classifiers(rnd_classifiers, rnd_sigmas, mu=mu)
 
-            # recombination and parent update
-            search_path = (1 - c_sigma) * search_path + np.sqrt(c_sigma * (2 - c_sigma)) * (np.sqrt(mu) / mu) * np.sum(parents_sigmas)
-            # E = np.abs(Random.random().normal())
-            # E_vector = np.linalg.norm(self.create_sigmas(x_dim))
-            # sigma = sigma * np.power( np.exp( (np.abs(search_path) / E) - 1),  (1 / di) ) *
-            #                 np.power( np.exp( (np.absolute(search_path) / E_vector) - 1), (c_sigma / d))
-            # new_classifiers.append(Classifier(lowers=?, uppers=?, LinearRegression(), degree=1))
+            # updating search_path and step-sizes vector
+            search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(parents_sigmas)
+            # local changes
+            E = np.abs(Random().random.normal())
+            local_factor = np.power(( np.exp((np.abs(search_path) / E) - 1) ),  (1 / dist_local))
+            # global changes
+            E_vector = np.linalg.norm(self.create_sigmas(x_dim))
+            global_factor = np.power(( np.exp((np.absolute(search_path) / E_vector) - 1) ), (sigma_coef / dist_global))
+            # step-size changes
+            step_sizes = step_sizes * local_factor * global_factor
 
-        return new_classifier, cl_sigmas
+            # recombining parents attributes
+            parents_attr = self.extract_classifier_attributes(parents, x_dim)
+            new_classifier.lowerBounds = (1/mu) * np.sum(parents_attr[0])
+            new_classifier.upperBounds = (1/mu) * np.sum(parents_attr[1])
+
+        return new_classifier, step_sizes
 
 
     def select_best_classifiers(self, classifiers: List[Classifier], cls_sigmas: np.ndarray, mu: int):
