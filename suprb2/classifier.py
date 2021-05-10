@@ -1,4 +1,3 @@
-import math
 import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
@@ -21,6 +20,7 @@ class Classifier:
         # if set this overrides local_model and outputs constant for all prediction requests
         self.constant = None
         self.last_training_match = None
+
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -96,7 +96,6 @@ class Classifier:
     def mutate(self, sigma=0.2):
         """
         Mutates this matching function.
-
         This is done similar to how the first XCSF iteration used mutation
         (Wilson, 2002) but using a Gaussian distribution instead of a uniform
         one (as done by Drugowitsch, 2007): Each interval [l, u)'s bound x is
@@ -110,17 +109,27 @@ class Classifier:
         self.upperBounds = lu[1]
 
     @staticmethod
-    def random_cl(point, xdim):
-        if point is not None:
-            lu = np.sort(Random().random.normal(loc=point, scale=2/10, size=(2, xdim)) * 2 - 1, axis=0)
-        else:
-            lu = np.sort(Random().random.random((2, xdim)) * 2 - 1, axis=0)
-        if Config().rule_discovery['cl_min_range']:
-            diff = lu[1] - lu[0]
-            lu[0] -= diff/2
-            lu[1] += diff/2
-            lu = np.clip(lu, a_max=1, a_min=-1)
-        return Classifier(lu[0], lu[1], LinearRegression(), 1)
+    def random_cl(xdim, *, point=None):
+        """
+        Returns a randomly placed classifier within [-1, 1]
+        If point is given, the classifier bounds will be point +- N(r, r/2)
+        with r being defined by Config().rule_discovery['cl_expected_radius']
+        Classifiers width is always > 0 in all dimensions
+        :param point: center of the classifier
+        :return: a new Classifier instance
+        """
+        if point is None:
+            point = Random().random.random(xdim) * 2 - 1
+        exp_radius = Config().rule_discovery['cl_expected_radius']
+        while True:
+            radius = Random().random.normal(loc=exp_radius, scale=exp_radius/2,
+                                            size=xdim)
+            # emulate do-while loop
+            if (radius > 0).all():
+                break
+        l = np.clip(point - radius, a_min=-1, a_max=1)
+        u = np.clip(point + radius, a_min=-1, a_max=1)
+        return Classifier(l, u, LinearRegression(), 1)
 
     def params(self):
         if self.model is LinearRegression:
@@ -131,7 +140,7 @@ class Classifier:
         Calculates the weighted error of the classifier, depending on its error, volume and a constant.
         -inf is the best possible value for the weighted error
         '''
-        weighted_error = math.inf
+        weighted_error = np.inf
         volume = np.prod(self.upperBounds - self.lowerBounds)
 
         if volume != 0:

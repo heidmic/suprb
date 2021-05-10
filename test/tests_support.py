@@ -26,12 +26,14 @@ class TestsSupport:
     def mock_specific_classifiers(values: list):
         """
         'value' is an array, where each line is represents:
-        [ classifier.lowerBounds, classifier.upperBounds ]
+        [ classifier.lowerBounds, classifier.upperBounds, classifier.sigmas ]
 
         Example:
         value = [
-            [1, 1],  # Classifier(lowerBounds=1, upperBounds=1, local_model=None, degree=1)
-            [2, 1]   # Classifier(lowerBounds=2, upperBounds=1, local_model=None, degree=1)
+            [1, 1, [1]],  # Classifier(lowerBounds=1, upperBounds=1,
+                                    local_model=None, degree=1)
+            [2, 1, [2]]   # Classifier(lowerBounds=2, upperBounds=1,
+                                    local_model=None, degree=1)
         ]
         """
         classifiers = []
