@@ -150,12 +150,56 @@ class LCS:
                     child.mutate(Config().rule_discovery['sigma'])
                     child.fit(X, y)
                     children.append(child)
-                # ToDo instead of greedily taking the minimum, treating all
-                #  below a certain threshhold as equal might yield better models
-                cl = children[np.argmin([child.get_weighted_error() for child in children])]
+                ## ToDo instead of greedily taking the minimum, treating all
+                ##  below a certain threshhold as equal might yield better  models
+                #cl = children[np.argmin([child.get_weighted_error() for child in children])]
+                cl = Random().random.choice(self.nondominated_sort(children))
 
             if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
                 self.classifier_pool.append(cl)
+
+    def nondominated_sort(self, classifiers):
+        """
+        Takes a list of classifiers and returns all classifiers that were not
+            dominated by any other in regard to error AND volume. This is
+            equivalent to searching the pareto front
+
+        Inspired by A Fast Elitist Non-Dominated Sorting GeneticAlgorithm for
+            Multi-Objective Optimization: NSGA-II
+            http://repository.ias.ac.in/83498/1/2-a.pdf
+
+        :param classifiers:
+        :return:
+        """
+        candidates = list()
+        candidates.append(classifiers[0])
+        for cl in classifiers[1:]:
+            volume = np.prod(cl.upperBounds - cl.lowerBounds)
+            volume_share_cl = volume / 2 ** self.xdim
+            to_be_added = False
+            for can in candidates:
+                volume = np.prod(can.upperBounds - can.lowerBounds)
+                volume_share_can = volume / 2 ** self.xdim
+
+                if can.error < cl.error and volume_share_can > volume_share_cl:
+                    # classifier is dominated by this candidate and should not
+                    # become a new candidate
+                    to_be_added = False
+                    break
+
+                elif can.error > cl.error and volume_share_can < volume_share_cl:
+                    # classifier dominates candidate
+                    candidates.remove(can)
+                    to_be_added = True
+
+                else:
+                    to_be_added = True
+
+            if to_be_added:
+                candidates.append(cl)
+
+        return candidates
+
 
     @staticmethod
     def default_error(y):
