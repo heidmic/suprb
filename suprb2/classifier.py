@@ -139,15 +139,17 @@ class Classifier:
             return self.model.coef_
 
     def get_weighted_error(self):
-        '''
+        """
         Calculates the weighted error of the classifier, depending on its error, volume and a constant. 
         -inf is the best possible value for the weighted error
-        '''
+        """
         weighted_error = np.inf
         volume = np.prod(self.upperBounds - self.lowerBounds)
+        volume_share = volume / 2 ** len(self.lowerBounds)
 
         if volume != 0:
-            weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
+            weighted_error = np.log(self.error) - np.log(volume_share) * \
+                             Config().rule_discovery["weighted_error_constant"]
 
         return weighted_error
 
