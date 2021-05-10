@@ -141,7 +141,7 @@ class LCS:
                                       Config().rule_discovery['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(x, self.xdim)
+            cl = Classifier.random_cl(self.xdim, point=x)
             cl.fit(X, y)
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
