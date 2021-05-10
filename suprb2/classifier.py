@@ -126,6 +126,9 @@ class Classifier:
                                             size=xdim)
             # emulate do-while loop
             if (radius > 0).all():
+                # the probability of a value being below zero is 2.1% as 2.1%
+                # of samples fall left of two standard deviations of a normal
+                # distribution
                 break
         l = np.clip(point - radius, a_min=-1, a_max=1)
         u = np.clip(point + radius, a_min=-1, a_max=1)
