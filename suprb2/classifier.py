@@ -22,6 +22,7 @@ class Classifier:
         self.constant = None
         self.last_training_match = None
 
+
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
                                                                X.shape[1]))
@@ -96,7 +97,6 @@ class Classifier:
     def mutate(self, sigma=0.2):
         """
         Mutates this matching function.
-
         This is done similar to how the first XCSF iteration used mutation
         (Wilson, 2002) but using a Gaussian distribution instead of a uniform
         one (as done by Drugowitsch, 2007): Each interval [l, u)'s bound x is

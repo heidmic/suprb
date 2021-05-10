@@ -51,7 +51,7 @@ class ES_MuLambd(RuleDiscoverer):
     """
     This class represents the optimizer for rule generation.
 
-    It uses Evolutionary Strategy generate an initial population
+    It uses Evolution Strategies generate an initial population
     with focus on diversity.
 
     Relevant hyper parameters for this class:
@@ -79,9 +79,11 @@ class ES_MuLambd(RuleDiscoverer):
                         taken randomly from one of the 'rho' parents
                         for each Xdim.
 
-    'sigma'         ->  Represents the size of the step we are taking
-                        to a direction in the mutation process. In other
-                        words, it shows us how big is the pertubation.
+    'local_tau'     ->  Scale used to calculate the local learning rate
+                        for the classifier's mutation.
+
+    'global_tau'    ->  Scale used to calculate the global learning rate
+                        for the classifier's mutation.
 
     'replacement'   ->  This hyper parameter defines if we are also adding
                         the copies of the parents to the pool ('+'), or if
@@ -91,89 +93,247 @@ class ES_MuLambd(RuleDiscoverer):
 
     def __init__(self, pool: List[Classifier]):
         super().__init__(pool)
+        self.sigmas_dict = {}
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
         generation = []
+        mu = Config().rule_discovery['mu']
 
-        # create start points for evolutionary search
-        idxs = Random().random.choice(np.arange(len(X)),
-								  Config().rule_discovery['mu'], False)
+        # create start points for evolutionary search (with mutation vectors)
+        idxs = Random().random.choice(np.arange(len(X)), mu, False)
         for x in X[idxs]:
             cl = Classifier.random_cl(x, X.shape[1])
             cl.fit(X, y)
             generation.append(cl)
 
+        gen_sigmas = self.extract_classifier_attributes(generation, rho=mu, x_dim=X.shape[1], row=2)
         # steps forward in the evolutionary search
         for i in range(Config().rule_discovery['steps_per_step']):
-            recombined_classifiers = self.recombine(generation)
-            children = self.mutate_and_fit(recombined_classifiers, X, y)
-            generation = self.replace(generation, children)
+            recmb_classifiers, recmb_sigmas = self.recombine(generation, gen_sigmas)
+            children, children_sigmas = self.mutate_and_fit(recmb_classifiers, X, y, recmb_sigmas)
+            generation, gen_sigmas = self.replace(generation, gen_sigmas, children, children_sigmas)
 
         # add search results to pool
         mask = np.array([cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]) for cl in generation], dtype='bool')
-        self.pool.extend(np.array(generation, dtype='object')[mask])
+        new_classifiers = np.array(generation, dtype='object')[mask]
+        new_sigmas = np.array(gen_sigmas, dtype=float)[mask]
+        self.pool.extend(new_classifiers)
+        # after adding classifiers to the pool, register them with the correspondent sigmas vector
+        self.register_classifier_sigmas(new_classifiers, new_sigmas)
 
 
-    def recombine(self, parents: List[Classifier]):
+    def recombine(self, parents: List[Classifier], sigmas: np.ndarray):
+        """
+        This method decides which kind of recombination will be done,
+        according to the rule discovery hyper parameter: 'recombination'
+        If 'recombination' == 'intermediate', then new 'lmbd' classifiers
+        will be created out of the mean of 'rho' parents attributes.
+        If 'recombination' == 'discrete', then the new classifiers are
+        created randomly from the attributes from the parents
+        (attributes do not cross values).
+        If 'recombination' is somethin else, then only one classifier
+        will be created and it will be a copy from one of the parents.
+
+        This function returns the recombined children and their sigmas:
+        children, children_sigmas = ES_MuLambd().recombine(parents, parents_sigmas)
+        """
         if len(parents) == 0:
-            return []
+            return ([], np.array([], dtype=float))
 
         lmbd = Config().rule_discovery['lmbd']
         rho = Config().rule_discovery['rho']
         recombination_type = Config().rule_discovery['recombination']
 
         if recombination_type == 'intermediate':
-            return self.intermediate_recombination(parents, lmbd, rho)
+            return self.intermediate_recombination(parents, lmbd, rho, sigmas)
         elif recombination_type == 'discrete':
-            return self.discrete_recombination(parents, lmbd, rho)
+            return self.discrete_recombination(parents, lmbd, rho, sigmas)
         else:
-            return [deepcopy(Random().random.choice(parents))]
+            cl_index = Random().random.choice(range(len(parents)))
+            copied_cl, copied_sigmas = deepcopy((parents[cl_index], sigmas[cl_index]))
+            return [copied_cl], copied_sigmas
 
 
-    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int):
-        children = []
+    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int, sigmas: np.ndarray):
+        """
+        This methods creates 'lmbd' classifiers from the average
+        of 'rho' classifiers in parents.
+        So, the new classifier look like this:
+        Classifier( lowers=average(rho_candidates.lowerBounds),
+                    uppers=average(rho_candidates.upperBounds),
+                    sigmas=average(rho_candidates.sigmas),
+                    LinearRegression(), degree=1 )
+
+        The return values are a tuple of the new generated classifiers
+        and their respective sigmas:
+        children, children_sigmas = ES_MuLambd().intermediate_recombination(parents, parents_sigmas)
+        """
+        children_cls, children_sigmas = [], []
+        x_dim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
-            averages = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
-            copy_avg = averages.copy()
-            children.append(Classifier(copy_avg[0], copy_avg[1],
-                                            LinearRegression(), 1))  # Reminder: LinearRegression might change in the future
-        return children
+            classifier_attrs = self.extract_classifier_attributes(candidates, x_dim=x_dim, rho=rho)
+
+            avg_attrs = np.array([[np.mean(classifier_attrs[0].flatten())],
+                                  [np.mean(classifier_attrs[1].flatten())],
+                                  [np.mean(classifier_attrs[2].flatten())]])
+
+            classifier = Classifier(avg_attrs[0], avg_attrs[1], LinearRegression(), 1) # Reminder: LinearRegression might change in the future
+            children_sigmas = np.append(children_sigmas, avg_attrs[2])
+            children_cls.append(classifier)
+
+        return children_cls, children_sigmas
 
 
-    def discrete_recombination(self, parents: List[Classifier], lmbd: int, rho: int):
-        children = []
-        Xdim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
+    def discrete_recombination(self, parents: List[Classifier], lmbd: int, rho: int, sigmas: np.ndarray):
+        """
+        This method creates 'lmbd' classifiers picking randomly
+        the attributes from 'rho' parents. The values do not cross
+        types (so, values used for upperBounds, can only be used for
+        one classifier's upperBounds).
+        If the values are flipped (lowerBounds > upperBounds), then
+        unflip it and save.
+
+        The return values are a tuple of the new generated classifiers
+        and their respective sigmas:
+        children, children_sigmas = ES_MuLambd().discrete_recombination(parents, parents_sigmas)
+        """
+        children_cls, children_sigmas = [], []
+        x_dim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):
             candidates = Random().random.choice(parents, rho, False)
-            lowerBounds = np.empty(Xdim)
-            upperBounds = np.empty(Xdim)
-            for i_dim in range(Xdim):
-                lower = Random().random.choice([ c.lowerBounds[i_dim] for c in candidates ])
-                upper = Random().random.choice([ c.upperBounds[i_dim] for c in candidates ])
-                if lower > upper:
-                    lowerBounds[i_dim] = upper
-                    upperBounds[i_dim] = lower
-                else:
-                    lowerBounds[i_dim] = lower
-                    upperBounds[i_dim] = upper
-            children.append(Classifier(lowerBounds, upperBounds, LinearRegression(), 1))
-        return np.array(children)
+            classifier_attrs = self.extract_classifier_attributes(candidates, x_dim=x_dim, rho=rho)
+            # select 'x_dim' values for each attribute (values are not crossed)
+            selected_attr = np.array((Random().random.choice(classifier_attrs[0].flatten(), size=x_dim),
+                                      Random().random.choice(classifier_attrs[1].flatten(), size=x_dim),
+                                      Random().random.choice(classifier_attrs[2].flatten(), size=x_dim)), dtype=float)
+            # flip if boundaries are inverted
+            bounds = np.delete(selected_attr, -1, axis=0)
+            sidx = bounds[:2].argsort(axis=0)
+            bounds = bounds[sidx, np.arange(sidx.shape[1])]
+
+            # create new classifier, and save sigmas
+            classifier = Classifier(bounds[0], bounds[1], LinearRegression(), 1)
+            children_sigmas = np.append(children_sigmas, selected_attr[2])
+            children_cls.append(classifier)
+
+        return children_cls, children_sigmas
 
 
-    def mutate_and_fit(self, classifiers: List[Classifier], X: np.ndarray, y:np.ndarray):
-        children = []
-        for cl in classifiers:
-            cl.mutate(Config().rule_discovery['sigma'])
+    def mutate_and_fit(self, classifiers: List[Classifier], X: np.ndarray, y:np.ndarray, classifiers_sigmas: np.ndarray):
+        """
+        This method uses the traditional self-adapting ES mutation algortihm
+        to mutate the classifiers.
+
+        First, the classifier's mutation vector undergoes a mutation itself,
+        influenced by two hyper parameters:
+            'local_tau':  -> Scale used to calculate the local learning rate
+                             (default value: 1.1)
+            'global_tau': -> Scale used to calculate the global learning rate
+                             (default value: 1.2)
+        With the global and local learning rates calculated, the sigmas can be
+        modified using the following formula:
+            mutated_sigma = classifier_sigma * exp(N(1, tau_local) + N(1, tau_global))
+
+        Each interval [l, u)'s bound x is changed to x' ~ N(x, mutated_sigmas(x)).
+        A Gaussian distribution using values from the classifier's mutation
+        vector as standard deviation.
+
+        The return values are a tuple of the new generated classifiers
+        and their respective sigmas:
+        children, children_sigmas = ES_MuLambd().mutate_and_fit(parents, parents_sigmas)
+        """
+        children_cls, children_sigmas = [], []
+        global_learning_rate = Random().random.normal(loc=1.0, scale=Config().rule_discovery['global_tau'])
+        cls_len = len(classifiers)
+
+        for i in range(cls_len):
+            cl = classifiers[i]
+
+            # Apply global and local learning factors to the classifier's mutation vector
+            sigmas = classifiers_sigmas[i]
+            local_learning_rate = Random().random.normal(loc=1.0, scale=Config().rule_discovery['local_tau'])
+            mutated_sigmas = sigmas * np.exp(local_learning_rate + global_learning_rate)
+
+            # Mutate classifier's matching function
+            lowers = Random().random.normal(loc=cl.lowerBounds, scale=mutated_sigmas, size=len(cl.lowerBounds))
+            uppers = Random().random.normal(loc=cl.upperBounds, scale=mutated_sigmas, size=len(cl.upperBounds))
+            lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
+            cl.lowerBounds = lu[0]
+            cl.upperBounds = lu[1]
+            # cl.mutate(Config().rule_discovery['sigma'])
             cl.fit(X, y)
             if cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
-                children.append(cl)
-        return children
+                children_cls.append(cl)
+                children_sigmas = np.append(children_sigmas, mutated_sigmas)
+        return children_cls, np.array(children_sigmas, ndmin=1)
 
 
-    def replace(self, parents: List[Classifier], children: List[Classifier]):
-        next_generation = children
+    def replace(self, parents: List[Classifier], parents_sigmas: np.ndarray, children: List[Classifier], children_sigmas: np.ndarray):
         if Config().rule_discovery['replacement'] == '+':
-            next_generation = children + parents
-        return next_generation
+            return (parents + children), np.append(parents_sigmas, children_sigmas)
+        else:
+            return children, children_sigmas
+
+
+    # -------------- Auxiliary methods --------------
+
+
+    def extract_classifier_attributes(self, classifiers: List[Classifier], x_dim: int, rho: int=None, row: int=None):
+        """
+        Creates an array with shape (3, rho, x_dim),
+        where 3 is the number of relevant attributes (lowers, uppers and sigmas).
+
+        If 'rho' is None, then 'rho = len(classifiers)' will be used
+
+        'row' is an optional parameter. If not None it returns
+        only one row (attribute) from the final array.
+        """
+        rho = rho if rho is not None else len(classifiers)
+        classifier_attrs = np.zeros((3, rho, x_dim), dtype=float)
+        for i in range(rho):
+            cl = classifiers[i]
+            classifier_attrs[0][i] = cl.lowerBounds
+            classifier_attrs[1][i] = cl.upperBounds
+            classifier_attrs[2][i] = self.get_classifier_sigmas(cl)
+        return classifier_attrs if row is None else classifier_attrs[row]
+
+
+    def get_classifier_sigmas(self, cl: Classifier):
+        """
+        Returns the mutation vector associated with the
+        given classifier ('cl').
+        If 'cl' is not in this optimzer's pool, then return
+        x_dim random values from a Guassian distribution:
+        cl.sigmas[x_dim] ~ N(1, 0.3).
+
+        IMPORTANT: The values for new classifiers are not
+        persistent. If you need it, then ensure that it is
+        saved in an array.
+        """
+        try:
+            cl_idx = self.pool.index(cl)
+            return self.sigmas_dict[cl_idx]
+        except ValueError:
+            return np.array(Random().random.normal(loc=1, scale=0.3, size=len(cl.lowerBounds)), dtype=float)
+
+
+    def register_classifier_sigmas(self, classifiers: List[Classifier], sigmas: np.ndarray):
+        """
+        Saves the given classifier's sigmas vector in this ES_MuLambd
+        instance dictionary.
+
+        It only registers the classifier, if the same is in the
+        ES_MuLambd's pool. After registration True is returned.
+
+        If the classifier is not in the pool, then return False.
+        """
+        try:
+            cls_len = len(classifiers)
+            for i in range(cls_len):
+                index = self.pool.index(classifiers[i])
+                self.sigmas_dict.update([(index, sigmas[i])])
+            return True
+        except ValueError:
+            return False
