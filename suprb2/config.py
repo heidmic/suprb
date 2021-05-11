@@ -24,9 +24,9 @@ class Config:
             "fitness": "pseudo-BIC",
             "steps_per_step": 100
         },
-        "initial_pool_size": 50,
+        "initial_pool_size": 200,
         "initial_genome_length": 100000,
-        "steps": 500,
+        "steps": 250,
         "use_validation": False,
         "logging": True,
         "default_error": 1000
