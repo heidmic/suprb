@@ -13,7 +13,7 @@ class Config:
             "nrules": 50,
             "lmbd": 20,  # not allowed to use lambda
             "sigma": 0.2,
-            "steps_per_step": 50,
+            "steps_per_step": 10,
             "weighted_error_constant": 0.5
         },
         "solution_creation": {
