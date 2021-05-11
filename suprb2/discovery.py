@@ -29,7 +29,8 @@ class RuleDiscoverer(ABC):
         for i in range(rho):
             classifier_attrs[:,i] = np.array([  classifiers_tuples[i][0].lowerBounds,
                                                 classifiers_tuples[i][0].upperBounds,
-                                                classifiers_tuples[i][1] ]).reshape((3, 1))
+                                                classifiers_tuples[i][1] ],
+                                            dtype=object).reshape((3, 1))
 
         return classifier_attrs
 
@@ -39,6 +40,8 @@ class RuleDiscoverer(ABC):
         Creates an array with size 'x_dim' with positive
         values from a normal distribution.
         x ~ abs(N(0, 1))
+
+        https://en.wikipedia.org/wiki/Half-normal_distribution
         """
         return np.abs(Random().random.normal(size=x_dim))
 
@@ -144,7 +147,7 @@ class ES_MuLambd(RuleDiscoverer):
 
         # add search results to pool
         mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
-        self.pool.extend( list(np.array(generation_tuples)[mask]) )
+        self.pool.extend( list(np.array(generation_tuples, dtype=object)[mask]) )
 
 
     def recombine(self, parents_tuples: List[Tuple[Classifier, np.ndarray]]) -> List[Tuple[Classifier, np.ndarray]]:
@@ -322,6 +325,12 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
                             is called. For instance, if steps_per_step
                             is 2, then run 2 steps in the evolutionary
                             search started by step().
+
+    Implementation based on paper ES Overview 2015 by Hansen, Arnold & Auger.
+    Page 13, Algorithm 4 - The (μ/μ, λ)-ES with Search Path)
+    Links:
+    - PDF download: https://hal.inria.fr/hal-01155533/file/es-overview-2015.pdf
+    - Refence: https://scholar.google.com/citations?user=NsIbm80AAAAJ&hl=en#
     """
 
 
@@ -332,44 +341,51 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
     def step(self, X: np.ndarray, y: np.ndarray) -> None:
         lmbd            = Config().rule_discovery['lmbd']
         mu              = Config().rule_discovery['mu']
+        sigma           = Config().rule_discovery['sigma']
         x_dim           = X.shape[1]
         sigma_coef      = np.sqrt(mu / (x_dim + mu))
         dist_global     = 1 + np.sqrt(mu / x_dim)
         dist_local      = 3 * x_dim
-        new_cl_tuple    = [Classifier.random_cl(x_dim), self.create_sigmas(x_dim)]
+        start_point    = [Classifier.random_cl(x_dim), self.create_sigmas(x_dim)]
+        tuples_for_pool = list()
         search_path     = 0
 
         for i in range(Config().rule_discovery['steps_per_step']):
             rnd_tuple_list = list()
 
-            # generating parents with sigmas
+            # generating children with sigmas
             for j in range(lmbd):
-                cl = deepcopy(new_cl_tuple[0])
+                cl = deepcopy(start_point[0])
                 cl.fit(X, y)
-                rnd_tuple_list.append([cl, self.create_sigmas(x_dim)])
-            parent_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu))
+                rnd_tuple_list.append( [cl, (start_point[1] * self.create_sigmas(x_dim))] )
+            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu))
+            tuples_for_pool.extend( children_tuple_list )
 
-            # updating search_path and step-sizes vector
-            search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(parent_tuple_list[:,1])
+            # recombination and parent update
+            search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(children_tuple_list[:,1])
             # local changes
-            E = np.abs(Random().random.normal())
-            local_factor = np.power(( np.exp((np.abs(search_path) / E) - 1) ),  (1 / dist_local))
+            local_expected_value = (sigma * np.sqrt(2) / np.sqrt(np.pi))
+            local_factor = np.power(( np.exp((np.abs(search_path) / local_expected_value) - 1) ),  (1 / dist_local))
             # global changes
-            E_vector = np.linalg.norm(self.create_sigmas(x_dim))
-            global_factor = np.power(( np.exp((np.absolute(search_path) / E_vector) - 1) ), (sigma_coef / dist_global))
+            global_expected_value = self.create_sigmas(x_dim=x_dim)
+            global_factor = np.power(( np.exp((np.absolute(search_path) / global_expected_value) - 1) ), (sigma_coef / dist_global))
             # step-size changes
-            new_cl_tuple[1] = new_cl_tuple[1] * local_factor * global_factor
+            start_point[1] = start_point[1] * local_factor * global_factor
 
             # recombining parents attributes
-            parents_attr = self.extract_classifier_attributes(parent_tuple_list, x_dim)
-            new_cl_tuple[0].lowerBounds = (1/mu) * np.sum(parents_attr[0])
-            new_cl_tuple[0].upperBounds = (1/mu) * np.sum(parents_attr[1])
+            parents_attr = self.extract_classifier_attributes(children_tuple_list, x_dim)
+            start_point[0].lowerBounds = (1/mu) * np.sum(parents_attr[0])
+            start_point[0].upperBounds = (1/mu) * np.sum(parents_attr[1])
 
         # add tuple to pool
-        self.pool.append( new_cl_tuple )
+        self.pool.extend( tuples_for_pool )
 
 
     def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int) -> List[Tuple[Classifier, np.ndarray]]:
+        """
+        Return the 'mu' best classifiers (according to their weighted error)
+        from the 'tuple_list'. If mu <= len(tuple_list), then ValueError is raised.
+        """
         tuple_array = np.array(tuple_list, dtype=object)
         idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu).astype(int)[:mu]
         return list(tuple_array[idx])

@@ -273,10 +273,10 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         classifiers = TestsSupport.mock_classifiers(10)
         pool = [ (cl, optimizer.create_sigmas(1)) for cl in classifiers ]
 
-        children_tuples = np.array(optimizer.recombine(pool))
+        children_tuples = np.array(optimizer.recombine(pool), dtype=object)
 
         self.assertEqual(children_tuples.shape, (2,))
-        self.assertIn(children_tuples[1], np.array(pool)[:,1])
+        self.assertIn(children_tuples[1], np.array(pool, dtype=object)[:,1])
 
 
     # ------------- mutate_and_fit() --------------
