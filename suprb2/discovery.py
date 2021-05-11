@@ -349,28 +349,28 @@ class ES_MuLambd(RuleDiscoverer):
         return super().extract_classifier_attributes(classifiers, x_dim, rho, row, sigmas=True)
 
 
-class ES_CSA(RuleDiscoverer):
+class ES_MuLambdSearchPath(RuleDiscoverer):
     """
     This optimizer uses the Evolutio Strategy
     Cumullative Step-Size Adaptation in order
     to promote diversity in the population.
     Relevant hyper parameters are:
-        'lmbd':         Number of new classifier generated.
-                        After the 'lmbd' classifiers are
-                        generated, only 'mu' will be selected
-                        (according to the fitness/error).
-                        Recommended value: positive int
+        'lmbd':             Number of new classifier generated.
+                            After the 'lmbd' classifiers are
+                            generated, only 'mu' will be selected
+                            (according to the fitness/error).
+                            Recommended value: positive int
 
-        'mu':           Number of the best 'mu' new classifiers
-                        that are going to be selected as parents
-                        for the new classifier.
-                        Recommended value: 'lmbd'/4
+        'mu':               Number of the best 'mu' new classifiers
+                            that are going to be selected as parents
+                            for the new classifier.
+                            Recommended value: 'lmbd'/4
 
-    'steps_per_step':   'steps_per_step'->  How many times we are going
-                        to repeat the evolutionary search , when step()
-                        is called. For instance, if steps_per_step
-                        is 2, then run 2 steps in the evolutionary
-                        search started by step().
+        'steps_per_step':   'steps_per_step'->  How many times we are going
+                            to repeat the evolutionary search , when step()
+                            is called. For instance, if steps_per_step
+                            is 2, then run 2 steps in the evolutionary
+                            search started by step().
     """
 
 
@@ -418,10 +418,10 @@ class ES_CSA(RuleDiscoverer):
         self.pool.append( new_cl_tuple )
 
 
-    def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int):
-        classifiers, cls_sigmas = list(zip(*tuple_list))
-        idx = np.argpartition([ cl.get_weighted_error() for cl in classifiers ], mu).astype(int)[:mu]
-        return list(zip(*[np.array(classifiers)[idx], np.array(cls_sigmas)[idx]]))
+    def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int) -> List[Tuple[Classifier, np.ndarray]]:
+        tuple_array = np.array(tuple_list, dtype=object)
+        idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu).astype(int)[:mu]
+        return list(tuple_array[idx])
 
     def extract_classifier_attributes(self, classifiers: List[Classifier], x_dim: int, rho: int=None, row: int=None):
         return super().extract_classifier_attributes(classifiers, x_dim, rho, row, sigmas=True)

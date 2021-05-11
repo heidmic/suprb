@@ -1,6 +1,4 @@
-from suprb2.config import Config
-from suprb2.discovery import ES_CSA
-from suprb2.utilities import Utilities
+from suprb2.discovery import ES_MuLambdSearchPath
 from suprb2.classifier import Classifier
 from test.tests_support import TestsSupport
 
@@ -8,19 +6,20 @@ import unittest
 import numpy as np
 from mock import patch, Mock
 
-class TestDiscoveryES_CSA(unittest.TestCase):
+class TestDiscoveryES_MuLambdSearchPath(unittest.TestCase):
     """
-    This module test all methods from ES_CSA
+    This module test all methods from ES_MuLambdSearchPath
     """
 
     # ------------- step() --------------
 
 
     def test_step(self):
+        TestsSupport.set_rule_discovery_configs(steps_per_step=5, mu=5, lmbd=10)
         X, y = TestsSupport.generate_input(10)
-        optimizer = ES_CSA(pool=[])
+        optimizer = ES_MuLambdSearchPath(pool=[])
         optimizer.step(X, y)
-        self.assertGreater(len(optimizer.pool), 0)
+        self.assertEqual(len(optimizer.pool), 1)
 
 
     # ------------- select_best_classifiers() --------------
@@ -28,7 +27,7 @@ class TestDiscoveryES_CSA(unittest.TestCase):
 
     def test_select_best_classifiers(self):
         n, mu = (10, 5)
-        optimizer = ES_CSA(pool=[])
+        optimizer = ES_MuLambdSearchPath(pool=[])
         X, y = TestsSupport.generate_input(n)
         pool = list()
         for i in range(n):
