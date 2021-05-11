@@ -19,32 +19,28 @@ class RuleDiscoverer(ABC):
         pass
 
 
-    def extract_classifier_attributes(self, classifiers: List[Classifier], x_dim: int, rho: int=None, row: int=None, sigmas: bool=False):
+    def extract_classifier_attributes(self, classifiers_tuples: List[Tuple[Classifier, np.ndarray]], x_dim: int, rho: int=None):
         """
-        Creates an array with shape (2, rho, x_dim),
-        where 2 is the number of relevant attributes (lowers and uppers).
-        If 'sigmas' == True, then sigmas is also added to the relevant
-        attributes (lowers, uppers, sigmas).
+        Creates an array with shape (3, rho, x_dim),
+        where 3 is the number of relevant attributes (lowers, uppers and sigmas).
         """
-        rho = rho if rho is not None else len(classifiers)
-        rows = 3 if sigmas is True else 2
-        classifier_attrs = np.zeros((rows, rho, x_dim), dtype=float)
+        rho = rho if rho is not None else len(classifiers_tuples)
+        classifier_attrs = np.zeros((3, rho, x_dim), dtype=float)
         for i in range(rho):
-            cl = classifiers[i]
-            classifier_attrs[0][i] = cl.lowerBounds
-            classifier_attrs[1][i] = cl.upperBounds
-            if sigmas:
-                classifier_attrs[2][i] = self.create_sigmas(x_dim, cl)
+            classifier_attrs[:,i] = np.array([  classifiers_tuples[i][0].lowerBounds,
+                                                classifiers_tuples[i][0].upperBounds,
+                                                classifiers_tuples[i][1] ]).reshape((3, 1))
 
-        return classifier_attrs if row is None else classifier_attrs[row]
+        return classifier_attrs
 
 
-    def create_sigmas(self, x_dim: int, cl: Classifier=None):
+    def create_sigmas(self, x_dim: int):
         """
-        Creates an array with size 'x_dim' with values
-        from a normal distribution.
+        Creates an array with size 'x_dim' with positive
+        values from a normal distribution.
+        x ~ abs(N(0, 1))
         """
-        return Random().random.normal(size=x_dim)
+        return np.abs(Random().random.normal(size=x_dim))
 
 
 class ES_OnePlusLambd(RuleDiscoverer):
@@ -82,6 +78,9 @@ class ES_MuLambd(RuleDiscoverer):
     It uses Evolution Strategies generate an initial population
     with focus on diversity.
 
+    It's pool is a list of tuple, where each tuple
+    has an classifier and a mutation vector (sigmas)
+    associated with that classifier.
 
     Relevant hyper parameters for this class:
     'mu'            ->  Defines how many classifiers will be copied from the
@@ -120,39 +119,35 @@ class ES_MuLambd(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: List[Classifier]):
+    def __init__(self, pool: List[Tuple[Classifier, np.ndarray]]) -> None:
         super().__init__(pool)
         self.sigmas_dict = {}
 
 
-    def step(self, X: np.ndarray, y: np.ndarray):
-        generation = []
+    def step(self, X: np.ndarray, y: np.ndarray) -> None:
+        generation_tuples = list()
         mu = Config().rule_discovery['mu']
+        x_dim = X.shape[1]
 
         # create start points for evolutionary search (with mutation vectors)
         idxs = Random().random.choice(np.arange(len(X)), mu, False)
         for x in X[idxs]:
-            cl = Classifier.random_cl(x, X.shape[1])
+            cl = Classifier.random_cl(xdim=x_dim, point=x)
             cl.fit(X, y)
-            generation.append(cl)
+            generation_tuples.append( (cl, self.create_sigmas(x_dim)) )
 
-        gen_sigmas = self.extract_classifier_attributes(generation, rho=mu, x_dim=X.shape[1], row=2)
         # steps forward in the evolutionary search
         for i in range(Config().rule_discovery['steps_per_step']):
-            recmb_classifiers, recmb_sigmas = self.recombine(generation, gen_sigmas)
-            children, children_sigmas = self.mutate_and_fit(recmb_classifiers, X, y, recmb_sigmas)
-            generation, gen_sigmas = self.replace(generation, gen_sigmas, children, children_sigmas)
+            recmb_tuples      = self.recombine(generation_tuples)
+            children_tuples   = self.mutate_and_fit(recmb_tuples, X, y)
+            generation_tuples = self.replace(generation_tuples, children_tuples)
 
         # add search results to pool
-        mask = np.array([cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]) for cl in generation], dtype='bool')
-        new_classifiers = np.array(generation, dtype='object')[mask]
-        new_sigmas = np.array(gen_sigmas, dtype=float)[mask]
-        self.pool.extend(new_classifiers)
-        # after adding classifiers to the pool, register them with the correspondent sigmas vector
-        self.register_classifier_sigmas(new_classifiers, new_sigmas)
+        mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
+        self.pool.extend( list(np.array(generation_tuples)[mask]) )
 
 
-    def recombine(self, parents: List[Classifier], sigmas: np.ndarray):
+    def recombine(self, parents_tuples: List[Tuple[Classifier, np.ndarray]]) -> List[Tuple[Classifier, np.ndarray]]:
         """
         This method decides which kind of recombination will be done,
         according to the rule discovery hyper parameter: 'recombination'
@@ -163,59 +158,52 @@ class ES_MuLambd(RuleDiscoverer):
         (attributes do not cross values).
         If 'recombination' is somethin else, then only one classifier
         will be created and it will be a copy from one of the parents.
-
-        This function returns the recombined children and their sigmas:
-        children, children_sigmas = ES_MuLambd().recombine(parents, parents_sigmas)
         """
-        if len(parents) == 0:
-            return ([], np.array([], dtype=float))
+        if len(parents_tuples) == 0:
+            return None
 
         lmbd = Config().rule_discovery['lmbd']
         rho = Config().rule_discovery['rho']
         recombination_type = Config().rule_discovery['recombination']
 
         if recombination_type == 'intermediate':
-            return self.intermediate_recombination(parents, lmbd, rho, sigmas)
+            return self.intermediate_recombination(parents_tuples, lmbd, rho)
         elif recombination_type == 'discrete':
-            return self.discrete_recombination(parents, lmbd, rho, sigmas)
+            return self.discrete_recombination(parents_tuples, lmbd, rho)
         else:
-            cl_index = Random().random.choice(range(len(parents)))
-            copied_cl, copied_sigmas = deepcopy((parents[cl_index], sigmas[cl_index]))
-            return [copied_cl], copied_sigmas
+            cl_index = Random().random.choice(range(len(parents_tuples)))
+            copied_tuple = deepcopy(parents_tuples[cl_index])
+            return copied_tuple
 
 
-    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int, sigmas: np.ndarray):
+    def intermediate_recombination(self, parents_tuples: List[Tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> List[Tuple[Classifier, np.ndarray]]:
         """
         This methods creates 'lmbd' classifiers from the average
         of 'rho' classifiers in parents.
         So, the new classifier look like this:
         Classifier( lowers=average(rho_candidates.lowerBounds),
                     uppers=average(rho_candidates.upperBounds),
-                    sigmas=average(rho_candidates.sigmas),
                     LinearRegression(), degree=1 )
-
-        The return values are a tuple of the new generated classifiers
-        and their respective sigmas:
-        children, children_sigmas = ES_MuLambd().intermediate_recombination(parents, parents_sigmas)
+        Classifier's sigmas = average(rho_candidates.sigmas)
         """
-        children_cls, children_sigmas = [], []
-        x_dim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
+        children_tuples = list()
+        parents_array = np.array(parents_tuples, dtype=object)
+        x_dim = parents_array[0,0].lowerBounds.size if type(parents_array[0,0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):
-            candidates = Random().random.choice(parents, rho, False)
-            classifier_attrs = self.extract_classifier_attributes(candidates, x_dim=x_dim, rho=rho)
+            candidates_tuples = Random().random.choice(parents_array, rho, False)
+            classifier_attrs = self.extract_classifier_attributes(candidates_tuples, x_dim=x_dim, rho=rho)
 
             avg_attrs = np.array([[np.mean(classifier_attrs[0].flatten())],
                                   [np.mean(classifier_attrs[1].flatten())],
                                   [np.mean(classifier_attrs[2].flatten())]])
 
             classifier = Classifier(avg_attrs[0], avg_attrs[1], LinearRegression(), 1) # Reminder: LinearRegression might change in the future
-            children_sigmas = np.append(children_sigmas, avg_attrs[2])
-            children_cls.append(classifier)
+            children_tuples.append((classifier, avg_attrs[2]))
 
-        return children_cls, children_sigmas
+        return children_tuples
 
 
-    def discrete_recombination(self, parents: List[Classifier], lmbd: int, rho: int, sigmas: np.ndarray):
+    def discrete_recombination(self, parents_tuples: List[Tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> List[Tuple[Classifier, np.ndarray]]:
         """
         This method creates 'lmbd' classifiers picking randomly
         the attributes from 'rho' parents. The values do not cross
@@ -223,16 +211,13 @@ class ES_MuLambd(RuleDiscoverer):
         one classifier's upperBounds).
         If the values are flipped (lowerBounds > upperBounds), then
         unflip it and save.
-
-        The return values are a tuple of the new generated classifiers
-        and their respective sigmas:
-        children, children_sigmas = ES_MuLambd().discrete_recombination(parents, parents_sigmas)
         """
-        children_cls, children_sigmas = [], []
-        x_dim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
+        children_tuples = list()
+        parents_array = np.array(parents_tuples, dtype=object)
+        x_dim = parents_array[0,0].lowerBounds.size if type(parents_array[0,0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):
-            candidates = Random().random.choice(parents, rho, False)
-            classifier_attrs = self.extract_classifier_attributes(candidates, x_dim=x_dim, rho=rho)
+            candidates_tuples = Random().random.choice(parents_array, rho, False)
+            classifier_attrs = self.extract_classifier_attributes(candidates_tuples, x_dim=x_dim, rho=rho)
             # select 'x_dim' values for each attribute (values are not crossed)
             selected_attr = np.array((Random().random.choice(classifier_attrs[0].flatten(), size=x_dim),
                                       Random().random.choice(classifier_attrs[1].flatten(), size=x_dim),
@@ -244,13 +229,12 @@ class ES_MuLambd(RuleDiscoverer):
 
             # create new classifier, and save sigmas
             classifier = Classifier(bounds[0], bounds[1], LinearRegression(), 1)
-            children_sigmas = np.append(children_sigmas, selected_attr[2])
-            children_cls.append(classifier)
+            children_tuples.append( (classifier, selected_attr[2]) )
 
-        return children_cls, children_sigmas
+        return children_tuples
 
 
-    def mutate_and_fit(self, classifiers: List[Classifier], X: np.ndarray, y:np.ndarray, classifiers_sigmas: np.ndarray):
+    def mutate_and_fit(self, cls_tuples: List[Tuple[Classifier, np.ndarray]], X: np.ndarray, y:np.ndarray) -> List[Tuple[Classifier, np.ndarray]]:
         """
         This method uses the traditional self-adapting ES mutation algortihm
         to mutate the classifiers.
@@ -268,22 +252,20 @@ class ES_MuLambd(RuleDiscoverer):
         Each interval [l, u)'s bound x is changed to x' ~ N(x, mutated_sigmas(x)).
         A Gaussian distribution using values from the classifier's mutation
         vector as standard deviation.
-
-        The return values are a tuple of the new generated classifiers
-        and their respective sigmas:
-        children, children_sigmas = ES_MuLambd().mutate_and_fit(parents, parents_sigmas)
         """
-        children_cls, children_sigmas = [], []
+        children_tuples = list()
         global_learning_rate = Random().random.normal(scale=Config().rule_discovery['global_tau'])
-        cls_len = len(classifiers)
+        if cls_tuples is None:
+            return children_tuples
+
+        cls_len = len(cls_tuples)
 
         for i in range(cls_len):
-            cl = classifiers[i]
+            cl, cl_sigmas = cls_tuples[i]
 
             # Apply global and local learning factors to the classifier's mutation vector
             local_learning_rate = Config().rule_discovery['local_tau'] * Random().random.normal(size=X.shape[1])
-            sigmas = classifiers_sigmas[i]
-            mutated_sigmas = sigmas * np.exp(local_learning_rate + global_learning_rate)
+            mutated_sigmas = cl_sigmas * np.exp(local_learning_rate + global_learning_rate)
 
             # Mutate classifier's matching function
             lowers = Random().random.normal(loc=cl.lowerBounds, scale=mutated_sigmas, size=X.shape[1])
@@ -294,66 +276,35 @@ class ES_MuLambd(RuleDiscoverer):
             # cl.mutate(Config().rule_discovery['sigma'])
             cl.fit(X, y)
             if cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
-                children_cls.append(cl)
-                children_sigmas = np.append(children_sigmas, mutated_sigmas)
-        return children_cls, np.array(children_sigmas, ndmin=1)
+                children_tuples.append((cl, cl_sigmas))
+
+        return children_tuples
 
 
-    def replace(self, parents: List[Classifier], parents_sigmas: np.ndarray, children: List[Classifier], children_sigmas: np.ndarray):
+    def replace(self, parents_tuples: List[Tuple[Classifier, np.ndarray]], children_tuples: List[Tuple[Classifier, np.ndarray]]) -> List[Tuple[Classifier, np.ndarray]]:
+        """
+        This method uses the hyper parameter to define if
+        in the next generation, there will be only the
+        children ('replacement' == ','), or if the parents
+        will also be included ('replacement' == '+').
+        Default value for 'replacement' is '+'.
+        """
         if Config().rule_discovery['replacement'] == '+':
-            return (parents + children), np.append(parents_sigmas, children_sigmas)
+            return parents_tuples + children_tuples
         else:
-            return children, children_sigmas
-
-
-    def create_sigmas(self, x_dim: int, cl: Classifier=None):
-        """
-        Returns the mutation vector associated with the
-        given classifier ('cl').
-        If 'cl' is not in this optimzer's pool, then return
-        x_dim random values from a Guassian distribution:
-        cl.sigmas[x_dim] ~ N(0, 1).
-
-        IMPORTANT: The values for new classifiers are not
-        persistent. If you need it, then ensure that it is
-        saved in an array.
-        """
-        try:
-            cl_idx = self.pool.index(cl)
-            return self.sigmas_dict[cl_idx]
-        except ValueError:
-            return np.abs(Random().random.normal(size=x_dim))
-
-
-    def register_classifier_sigmas(self, classifiers: List[Classifier], sigmas: np.ndarray):
-        """
-        Saves the given classifier's sigmas vector in this optimzer
-        instance dictionary (if there is one).
-
-        It only registers the classifier, if the same is in the
-        optimizer's pool. After registration True is returned.
-
-        If the classifier is not in the pool, then return False.
-        """
-        try:
-            cls_len = len(classifiers)
-            for i in range(cls_len):
-                index = self.pool.index(classifiers[i])
-                self.sigmas_dict.update([(index, sigmas[i])])
-            return True
-        except ValueError:
-            return False
-
-
-    def extract_classifier_attributes(self, classifiers: List[Classifier], x_dim: int, rho: int=None, row: int=None):
-        return super().extract_classifier_attributes(classifiers, x_dim, rho, row, sigmas=True)
+            return children_tuples
 
 
 class ES_MuLambdSearchPath(RuleDiscoverer):
     """
-    This optimizer uses the Evolutio Strategy
+    This optimizer uses the Evolution Strategy
     Cumullative Step-Size Adaptation in order
     to promote diversity in the population.
+
+    It's pool is a list of tuple, where each tuple
+    has an classifier and a mutation vector (sigmas)
+    associated with that classifier.
+
     Relevant hyper parameters are:
         'lmbd':             Number of new classifier generated.
                             After the 'lmbd' classifiers are
@@ -374,11 +325,11 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: List[Classifier]):
+    def __init__(self, pool: List[Tuple[Classifier, np.ndarray]]) -> None:
         super().__init__(pool)
 
 
-    def step(self, X: np.ndarray, y: np.ndarray):
+    def step(self, X: np.ndarray, y: np.ndarray) -> None:
         lmbd            = Config().rule_discovery['lmbd']
         mu              = Config().rule_discovery['mu']
         x_dim           = X.shape[1]
@@ -410,7 +361,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             new_cl_tuple[1] = new_cl_tuple[1] * local_factor * global_factor
 
             # recombining parents attributes
-            parents_attr = self.extract_classifier_attributes(parent_tuple_list[:,0], x_dim)
+            parents_attr = self.extract_classifier_attributes(parent_tuple_list, x_dim)
             new_cl_tuple[0].lowerBounds = (1/mu) * np.sum(parents_attr[0])
             new_cl_tuple[0].upperBounds = (1/mu) * np.sum(parents_attr[1])
 
@@ -422,6 +373,3 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         tuple_array = np.array(tuple_list, dtype=object)
         idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu).astype(int)[:mu]
         return list(tuple_array[idx])
-
-    def extract_classifier_attributes(self, classifiers: List[Classifier], x_dim: int, rho: int=None, row: int=None):
-        return super().extract_classifier_attributes(classifiers, x_dim, rho, row, sigmas=True)
