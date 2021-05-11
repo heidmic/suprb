@@ -81,7 +81,7 @@ class ES_MuLambd(RuleDiscoverer):
     It uses Evolution Strategies generate an initial population
     with focus on diversity.
 
-    It's pool is a list of tuple, where each tuple
+    Its pool is a list of tuple, where each tuple
     has an classifier and a mutation vector (sigmas)
     associated with that classifier.
 
@@ -304,7 +304,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
     Cumullative Step-Size Adaptation in order
     to promote diversity in the population.
 
-    It's pool is a list of tuple, where each tuple
+    Its pool is a list of tuple, where each tuple
     has an classifier and a mutation vector (sigmas)
     associated with that classifier.
 
