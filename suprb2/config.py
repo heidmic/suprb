@@ -12,7 +12,7 @@ class Config:
             "cl_expected_radius": 0.5,
             "nrules": 50,
             "lmbd": 20,  # not allowed to use lambda
-            "sigma": 0.2,
+            "sigma": 0.1,
             "steps_per_step": 10,
             "weighted_error_constant": 0.5
         },
