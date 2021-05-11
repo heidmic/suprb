@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 import numpy as np  # type: ignore
 from copy import deepcopy
 from abc import *
-from typing import List
+from typing import List, Tuple
 
 class RuleDiscoverer(ABC):
     def __init__(self, pool: List[Classifier]):
@@ -385,24 +385,21 @@ class ES_CSA(RuleDiscoverer):
         sigma_coef      = np.sqrt(mu / (x_dim + mu))
         dist_global     = 1 + np.sqrt(mu / x_dim)
         dist_local      = 3 * x_dim
-        step_sizes      = self.create_sigmas(x_dim)
-        new_classifier  = Classifier.random_cl(None, x_dim)
+        new_cl_tuple    = [Classifier.random_cl(x_dim), self.create_sigmas(x_dim)]
         search_path     = 0
 
         for i in range(Config().rule_discovery['steps_per_step']):
-            rnd_classifiers = list()
-            rnd_sigmas = np.zeros((lmbd, x_dim))
+            rnd_tuple_list = list()
 
             # generating parents with sigmas
             for j in range(lmbd):
-                cl = deepcopy(new_classifier)
+                cl = deepcopy(new_cl_tuple[0])
                 cl.fit(X, y)
-                rnd_classifiers.append(cl)
-                rnd_sigmas[j] = self.create_sigmas(x_dim)
-            parents, parents_sigmas = self.select_best_classifiers(rnd_classifiers, rnd_sigmas, mu=mu)
+                rnd_tuple_list.append([cl, self.create_sigmas(x_dim)])
+            parent_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu))
 
             # updating search_path and step-sizes vector
-            search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(parents_sigmas)
+            search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(parent_tuple_list[:,1])
             # local changes
             E = np.abs(Random().random.normal())
             local_factor = np.power(( np.exp((np.abs(search_path) / E) - 1) ),  (1 / dist_local))
@@ -410,20 +407,21 @@ class ES_CSA(RuleDiscoverer):
             E_vector = np.linalg.norm(self.create_sigmas(x_dim))
             global_factor = np.power(( np.exp((np.absolute(search_path) / E_vector) - 1) ), (sigma_coef / dist_global))
             # step-size changes
-            step_sizes = step_sizes * local_factor * global_factor
+            new_cl_tuple[1] = new_cl_tuple[1] * local_factor * global_factor
 
             # recombining parents attributes
-            parents_attr = self.extract_classifier_attributes(parents, x_dim)
-            new_classifier.lowerBounds = (1/mu) * np.sum(parents_attr[0])
-            new_classifier.upperBounds = (1/mu) * np.sum(parents_attr[1])
+            parents_attr = self.extract_classifier_attributes(parent_tuple_list[:,0], x_dim)
+            new_cl_tuple[0].lowerBounds = (1/mu) * np.sum(parents_attr[0])
+            new_cl_tuple[0].upperBounds = (1/mu) * np.sum(parents_attr[1])
 
-        return new_classifier, step_sizes
+        # add tuple to pool
+        self.pool.append( new_cl_tuple )
 
 
-    def select_best_classifiers(self, classifiers: List[Classifier], cls_sigmas: np.ndarray, mu: int):
-        idx = np.argpartition([ cl.error for cl in classifiers ], mu).astype(int)[:mu]
-        return np.array(classifiers)[idx].tolist(), cls_sigmas[idx]
-
+    def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int):
+        classifiers, cls_sigmas = list(zip(*tuple_list))
+        idx = np.argpartition([ cl.get_weighted_error() for cl in classifiers ], mu).astype(int)[:mu]
+        return list(zip(*[np.array(classifiers)[idx], np.array(cls_sigmas)[idx]]))
 
     def extract_classifier_attributes(self, classifiers: List[Classifier], x_dim: int, rho: int=None, row: int=None):
         return super().extract_classifier_attributes(classifiers, x_dim, rho, row, sigmas=True)
