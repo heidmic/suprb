@@ -9,7 +9,7 @@ class Config:
         "n_elitists": 1,
         "rule_discovery": {
             "name": '(1+lambda)-ES',
-            "cl_expected_radius": 0.2,
+            "cl_expected_radius": 0.5,
             "nrules": 50,
             "lmbd": 20,  # not allowed to use lambda
             "sigma": 0.2,
