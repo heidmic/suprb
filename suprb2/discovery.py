@@ -11,15 +11,15 @@ from abc import *
 from typing import List, Tuple
 
 class RuleDiscoverer(ABC):
-    def __init__(self, pool: List[Classifier]):
+    def __init__(self, pool: List[Classifier]) -> None:
         self.pool = pool
 
 
-    def step(self, X: np.ndarray, y: np.ndarray):
+    def step(self, X: np.ndarray, y: np.ndarray) -> None:
         pass
 
 
-    def extract_classifier_attributes(self, classifiers_tuples: List[Tuple[Classifier, np.ndarray]], x_dim: int, rho: int=None):
+    def extract_classifier_attributes(self, classifiers_tuples: List[Tuple[Classifier, np.ndarray]], x_dim: int, rho: int=None) -> np.ndarray:
         """
         Creates an array with shape (3, rho, x_dim),
         where 3 is the number of relevant attributes (lowers, uppers and sigmas).
@@ -34,7 +34,7 @@ class RuleDiscoverer(ABC):
         return classifier_attrs
 
 
-    def create_sigmas(self, x_dim: int):
+    def create_sigmas(self, x_dim: int) -> np.ndarray:
         """
         Creates an array with size 'x_dim' with positive
         values from a normal distribution.
