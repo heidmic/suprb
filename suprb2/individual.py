@@ -116,6 +116,20 @@ class Individual:
             self.error = mean_squared_error(y_val, self.predict(X_val))
             self.fitness = - self.error
 
+        elif Config().solution_creation['fitness'] == "MSE_matching_pun":
+            matching_matrix = np.array([cl.matches(X_val) for cl in
+                                        self.get_classifiers()])
+            cl_number_per_sample = np.sum(matching_matrix, 1)
+            # fraction of samples that are matched by more than
+            # fitness_factor classifiers
+            matching_pun = np.sum(cl_number_per_sample >
+                                  Config().solution_creation[
+                                      'fitness_factor']) / len(X_val)
+
+            self.error = mean_squared_error(y_val, self.predict(X_val))
+
+            self.fitness = - self.error * matching_pun
+
         elif Config().solution_creation['fitness'] == "simplified_compl":
             self.error = mean_squared_error(y_val, self.predict(X_val))
             self.fitness = -self.error - (len(self.classifiers) - Config().ind_size

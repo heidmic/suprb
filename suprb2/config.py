@@ -22,6 +22,7 @@ class Config:
             # "crossover_type": None,
             "mutation_rate": 0.2,
             "fitness": "pseudo-BIC",
+            "fitness_factor": 5,
             "steps_per_step": 100
         },
         "initial_pool_size": 500,
