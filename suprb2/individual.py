@@ -86,6 +86,58 @@ class Individual:
         #  only happen for matrizes, see below
         return [self.classifier_pool[i] for i in np.nonzero(self.genome)[0]]
 
+<<<<<<< HEAD
+=======
+    def determine_fitness(self, X_val, y_val):
+        if Config().solution_creation['fitness'] == "pseudo-BIC":
+            n = len(X_val)
+            # mse = ResidualSumOfSquares / NumberOfSamples
+            mse = np.sum(np.square(y_val - self.predict(X_val))) / n
+            # for debugging
+            self.error = mse
+            # BIC -(n * np.log(rss / n) + complexity * np.log(n))
+            self.fitness = - (n * np.log(mse) + self.parameters() * np.log(n))
+
+        elif Config().solution_creation['fitness'] == "BIC_matching_punishment":
+            n = len(X_val)
+            # mse = ResidualSumOfSquares / NumberOfSamples
+            mse = np.sum(np.square(y_val - self.predict(X_val))) / n
+            # for debugging
+            self.error = mse
+            matching_pun = np.sum(np.nonzero(np.sum(np.array([cl.matches(X_val)
+                                                              for cl
+                                                              in
+                                                              self.classifiers]),
+                                                    1) > 1))
+            # BIC -(n * np.log(rss / n) + complexity * np.log(n))
+            self.fitness = - (n * np.log(mse) + (self.parameters()
+                                                 + matching_pun
+                                                 ) * np.log(n))
+
+        elif Config().solution_creation['fitness'] == "MSE":
+            self.error = mean_squared_error(y_val, self.predict(X_val))
+            self.fitness = - self.error
+
+        elif Config().solution_creation['fitness'] == "MSE_matching_pun":
+            matching_matrix = np.array([cl.matches(X_val) for cl in
+                                        self.get_classifiers()])
+            cl_number_per_sample = np.sum(matching_matrix, 1)
+            # fraction of samples that are matched by more than
+            # fitness_factor classifiers
+            matching_pun = np.sum(cl_number_per_sample >
+                                  Config().solution_creation[
+                                      'fitness_factor']) / len(X_val)
+
+            self.error = mean_squared_error(y_val, self.predict(X_val))
+
+            self.fitness = - self.error * matching_pun
+
+        elif Config().solution_creation['fitness'] == "simplified_compl":
+            self.error = mean_squared_error(y_val, self.predict(X_val))
+            self.fitness = -self.error - (len(self.classifiers) - Config().ind_size
+                                          if len(self.classifiers) > Config().ind_size else 0)
+
+>>>>>>> Add a fitness function that utilises MSE and punishes if too many classifiers match the same sample
     def parameters(self, simple=True) -> float:
         if simple:
             return np.count_nonzero(self.genome)
