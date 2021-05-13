@@ -85,9 +85,10 @@ class TestDiscoveryES_MuLambdSearchPath(unittest.TestCase):
         X, y = TestsSupport.generate_input(0)
 
         optimizer = ES_MuLambdSearchPath(pool=[])
-        optimizer.step(X, y)
-        self.assertEqual(len(optimizer.pool), mu * steps_per_step)
 
+        with self.assertWarns(RuntimeWarning):
+            optimizer.step(X, y)
+        self.assertEqual(len(optimizer.pool), mu * steps_per_step)
 
 
 
