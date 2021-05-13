@@ -38,7 +38,7 @@ class RuleDiscoverer(ABC):
     def create_sigmas(self, x_dim: int) -> np.ndarray:
         """
         Creates an array with size 'x_dim' with positive
-        values from a normal distribution.
+        values from a half normal distribution.
         x ~ abs(N(0, 1))
 
         https://en.wikipedia.org/wiki/Half-normal_distribution
@@ -341,7 +341,6 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
     def step(self, X: np.ndarray, y: np.ndarray) -> None:
         lmbd            = Config().rule_discovery['lmbd']
         mu              = Config().rule_discovery['mu']
-        sigma           = Config().rule_discovery['sigma']
         x_dim           = X.shape[1]
         sigma_coef      = np.sqrt(mu / (x_dim + mu))
         dist_global     = 1 + np.sqrt(mu / x_dim)
@@ -364,11 +363,11 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             # recombination and parent update
             search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(children_tuple_list[:,1])
             # local changes
-            local_expected_value = (sigma * np.sqrt(2) / np.sqrt(np.pi))
+            local_expected_value = np.sqrt(2 / np.pi)
             local_factor = np.power(( np.exp((np.abs(search_path) / local_expected_value) - 1) ),  (1 / dist_local))
             # global changes
-            global_expected_value = self.create_sigmas(x_dim=x_dim)
-            global_factor = np.power(( np.exp((np.absolute(search_path) / global_expected_value) - 1) ), (sigma_coef / dist_global))
+            global_expected_value = np.linalg.norm(Random().random.normal(scale=np.identity(x_dim)))
+            global_factor = np.power(( np.exp((np.linalg.norm(search_path) / global_expected_value) - 1) ), (sigma_coef / dist_global))
             # step-size changes
             start_point[1] = start_point[1] * local_factor * global_factor
 
@@ -377,7 +376,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             start_point[0].lowerBounds = (1/mu) * np.sum(parents_attr[0])
             start_point[0].upperBounds = (1/mu) * np.sum(parents_attr[1])
 
-        # add tuple to pool
+        # add children to pool
         self.pool.extend( tuples_for_pool )
 
 
