@@ -128,7 +128,7 @@ class Individual:
 
             self.error = mean_squared_error(y_val, self.predict(X_val))
 
-            self.fitness = - self.error * matching_pun
+            self.fitness = - self.error * (1 + matching_pun)
 
         elif Config().solution_creation['fitness'] == "simplified_compl":
             self.error = mean_squared_error(y_val, self.predict(X_val))
