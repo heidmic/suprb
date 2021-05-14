@@ -10,10 +10,10 @@ class Config:
         "rule_discovery": {
             "name": '(1+lambda)-ES',
             "cl_expected_radius": 0.5,
-            "nrules": 200,
-            "lmbd": 20,  # not allowed to use lambda
-            "sigma": 0.01,
-            "steps_per_step": 0,
+            "nrules": 100,
+            "lmbd": 40,  # not allowed to use lambda
+            "sigma": 0.1,
+            "steps_per_step": 10,
             "weighted_error_constant": 0.5
         },
         "solution_creation": {
@@ -26,7 +26,7 @@ class Config:
         },
         "initial_pool_size": 500,
         "initial_genome_length": 100000,
-        "steps": 250,
+        "steps": 150,
         "use_validation": False,
         "logging": True,
         "default_error": 1000
