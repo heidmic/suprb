@@ -360,17 +360,15 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             # recombination and parent update
             search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(children_tuple_list[:,1])
 
-            # Local changes:
             # Instead of using the expected value of a zero mean unit variance normal
             # distribution (Algorthm 4: line 8b), we are going to use the expected
-            # value of the half normal distribution, which is equivalent to the previous
-            # expeted value.
+            # value of the half normal distribution, which is equivalent.
             # E[Y] = mu = 1 * sqrt(2) / sqrt(pi)
             local_expected_value = np.sqrt(2) / np.sqrt(np.pi)
             local_factor = np.power(( np.exp((np.abs(search_path) / local_expected_value) - 1) ),  (1 / dist_local))
 
             # Global changes:
-            global_expected_value = np.linalg.norm(Random().random.normal(scale=np.identity(x_dim)))
+            global_expected_value = np.linalg.norm(Random().random.multivariate_normal(np.zeros(x_dim), np.identity(x_dim)))
             global_factor = np.power(( np.exp((np.linalg.norm(search_path) / global_expected_value) - 1) ), (sigma_coef / dist_global))
 
             # step-size changes
