@@ -17,13 +17,12 @@ class Config:
             "weighted_error_constant": 0.5
         },
         "solution_creation": {
-            "name": '(1+1)-ES',
-            # "pop_size": 1,
-            # "crossover_type": None,
-            "mutation_rate": 0.2,
-            "fitness": "MSE_matching_pun",
-            "fitness_factor": 5,
-            "steps_per_step": 100
+            "name": "NSGA-II",
+            "steps_per_step": 100,
+            "pop_size": 40,
+            "recom_prob": 0.5,
+            "recom_rate": 0.2,
+            "mut_rate": 0.2
         },
         "initial_pool_size": 500,
         "initial_genome_length": 100000,

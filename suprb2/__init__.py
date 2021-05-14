@@ -4,7 +4,7 @@ from suprb2.config import Config
 from suprb2.perf_recorder import PerfRecorder
 from suprb2.classifier import Classifier
 from suprb2.individual import Individual
-from suprb2.solutions import ES_1plus1
+from suprb2.solutions import ES_1plus1, NSGA_II
 
 from sklearn.model_selection import train_test_split
 from datetime import datetime
@@ -58,7 +58,9 @@ class LCS:
 
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(X, y, self.classifier_pool)
+        # TODO switch case here
+        self.sol_opt = NSGA_II(X, y, self.classifier_pool)
+        # self.sol_opt = ES_1plus1(X, y, self.classifier_pool)
         # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
