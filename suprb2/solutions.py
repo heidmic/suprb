@@ -104,10 +104,12 @@ class NSGA_II(SolutionOptimizer):
         creator.create("Genotype", list, fitness=creator.FitnessMin)
 
         def _random_genome(pool_length):
+            classifiers_on_init = Random().random.normal(loc=NSGA_II._config[
+                "initial_solution_size"],
+                scale=NSGA_II._config["initial_solution_size"]/2)
             # from interval [low, high)
             ones = Random().random.integers(low=0, high=pool_length,
-                                            size=NSGA_II._config[
-                                                "initial_solution_size"])
+                                            size=classifiers_on_init)
             genome = np.zeros(pool_length)
             genome[ones] = 1
             return creator.Genotype(genome)
