@@ -87,7 +87,8 @@ class NSGA_II(SolutionOptimizer):
                "pop_size": 40,
                "recom_prob": 0.5,
                "recom_rate": 0.2,  # TODO what is a good value here?
-               "mut_rate": 0.2}
+               "mut_rate": 0.2,
+               "initial_solution_size": 10}
 
     def __init__(self, X_val, y_val, classifier_pool):
         self.X = X_val
@@ -104,9 +105,12 @@ class NSGA_II(SolutionOptimizer):
 
         def _random_genome(pool_length):
             # from interval [low, high)
-            return creator.Genotype(Random().random.integers(low=0, high=2,
-                                                             size=pool_length,
-                                                             dtype=bool))
+            ones = Random().random.integers(low=0, high=pool_length,
+                                            size=NSGA_II._config[
+                                                "initial_solution_size"])
+            genome = np.zeros(pool_length)
+            genome[ones] = 1
+            return creator.Genotype(genome)
 
         self.toolbox.register("genotype", _random_genome,
                               pool_length=len(self.classifier_pool))

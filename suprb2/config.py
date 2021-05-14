@@ -9,10 +9,10 @@ class Config:
         "n_elitists": 1,
         "rule_discovery": {
             "name": '(1+lambda)-ES',
-            "cl_expected_radius": 0.5,
+            "cl_expected_radius": 0.3,
             "nrules": 100,
             "lmbd": 40,  # not allowed to use lambda
-            "sigma": 0.1,
+            "sigma": 0.05,
             "steps_per_step": 10,
             "weighted_error_constant": 0.5
         },
@@ -22,7 +22,8 @@ class Config:
             "pop_size": 40,
             "recom_prob": 0.5,
             "recom_rate": 0.2,
-            "mut_rate": 0.2
+            "mut_rate": 0.2,
+            "initial_solution_size": 10
         },
         "initial_pool_size": 500,
         "initial_genome_length": 100000,
