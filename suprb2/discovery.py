@@ -364,18 +364,8 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             local_expected_value = np.sqrt(2 / np.pi)
             local_factor = np.power(( np.exp((np.abs(search_path) / local_expected_value) - 1) ),  (1 / dist_local))
 
-            # $ \boldsymbol{X} \sim N(\boldsymbol{m}, \boldsymbol{C}) $,
-            # where $ \boldsymbol{m} \in \mathbb{R}^N $ and $ \boldsymbol{C} \in \mathbb{R}^{N \times N} $.
-            # In our case we have: $ \boldsymbol{m} = \boldsymbol{0} $ and $ \boldsymbol{C} = \boldsymbol{I} $.
-
-            # The following link says that our Y is (by definition) distributed according to a chi-squared
-            # distribution.
-            # https://math.stackexchange.com/questions/2723181/distribution-of-squared-euclidean-norm-of-gaussian-vector
-            # And according to the following link, we can use the mean of the chi-squared function for our
-            # expected value.
-            # https://en.wikipedia.org/wiki/Chi-square_distribution
-            global_expected_value = np.identity(x_dim) * x_dim
-            global_factor = np.power(( np.exp((np.linalg.norm(search_path) / global_expected_value) - 1) ), (sigma_coef / dist_global))
+            # There is an elegant way to replace Line 8b proposed by this articles at page 15.
+            global_factor = np.power(( np.exp(( np.power(np.linalg.norm(search_path), 2) / x_dim ) - 1) ), (sigma_coef / dist_global) / 2)
 
             # step-size changes
             start_point[1] = start_point[1] * local_factor * global_factor
