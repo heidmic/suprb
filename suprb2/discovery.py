@@ -368,8 +368,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             local_factor = np.power(( np.exp((np.abs(search_path) / local_expected_value) - 1) ),  (1 / dist_local))
 
             # There is an elegant way to replace Line 8b proposed by this articles at page 15.
-            global_expected_value = np.identity(x_dim) * x_dim
-            global_factor = np.power(( np.exp(( np.power(np.linalg.norm(search_path), 2) / global_expected_value ) - 1) ), (sigma_coef / dist_global) / 2)
+            global_factor = np.power(( np.exp(( np.power(np.linalg.norm(search_path), 2) / x_dim ) - 1) ), (sigma_coef / dist_global) / 2)
 
             # step-size changes
             start_point[1] = start_point[1] * local_factor * global_factor
