@@ -104,9 +104,9 @@ class NSGA_II(SolutionOptimizer):
         creator.create("Genotype", list, fitness=creator.FitnessMin)
 
         def _random_genome(pool_length):
-            classifiers_on_init = Random().random.normal(loc=NSGA_II._config[
-                "initial_solution_size"],
-                scale=NSGA_II._config["initial_solution_size"]/2)
+            isz = NSGA_II._config["initial_solution_size"]
+            classifiers_on_init = Random().random.normal(loc=isz, scale=isz/2)
+            classifiers_on_init = int(np.clip(classifiers_on_init, 0, isz*2))
             # from interval [low, high)
             ones = Random().random.integers(low=0, high=pool_length,
                                             size=classifiers_on_init)
