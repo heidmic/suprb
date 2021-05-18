@@ -1,7 +1,5 @@
 from suprb2.config import Config
-from suprb2.random_gen import Random
 from suprb2.classifier import Classifier
-from suprb2.discovery import RuleDiscoverer
 
 import numpy as np
 
@@ -30,10 +28,10 @@ class TestsSupport:
 
         Example:
         value = [
-            [1, 1, [1]],  # Classifier(lowerBounds=1, upperBounds=1,
-                                    local_model=None, degree=1)
-            [2, 1, [2]]   # Classifier(lowerBounds=2, upperBounds=1,
-                                    local_model=None, degree=1)
+            [1, 1],  # Classifier(lowerBounds=1, upperBounds=1,
+                                  local_model=None, degree=1)
+            [2, 1]   # Classifier(lowerBounds=2, upperBounds=1,
+                                  local_model=None, degree=1)
         ]
         """
         classifiers = []
