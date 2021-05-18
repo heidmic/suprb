@@ -1,14 +1,18 @@
 # from suprb2.perf_recorder import PerfRecorder
+from abc import *
+from copy import deepcopy
+from typing import List, Tuple
+
+import numpy as np
+from numpy import linalg
+from numpy.lib.function_base import cov
+from sklearn.linear_model import LinearRegression
+
+from suprb2.classifier import Classifier
 from suprb2.config import Config
 from suprb2.random_gen import Random
 from suprb2.utilities import Utilities
-from suprb2.classifier import Classifier
-from sklearn.linear_model import LinearRegression
 
-import numpy as np  # type: ignore
-from copy import deepcopy
-from abc import *
-from typing import List, Tuple
 
 class RuleDiscoverer(ABC):
     def __init__(self, pool: List[Classifier]) -> None:
@@ -388,6 +392,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu).astype(int)[:mu]
         return list(tuple_array[idx])
 
+
 class ES_CMA(RuleDiscoverer):
     """
     This optimizer uses the Evolution Strategy
@@ -403,12 +408,12 @@ class ES_CMA(RuleDiscoverer):
                             After the 'lmbd' classifiers are
                             generated, only 'mu' will be selected
                             (according to the fitness/error).
-                            Recommended value: positive int
+                            Recommended value: 'lmbd' >= 5
 
         'mu':               Number of the best 'mu' new classifiers
                             that are going to be selected as parents
                             for the new classifier.
-                            Recommended value: 'lmbd'/4
+                            Recommended value: 'mu' = 'lmbd'/2
 
         'steps_per_step':   'steps_per_step'->  How many times we are going
                             to repeat the evolutionary search , when step()
@@ -429,24 +434,55 @@ class ES_CMA(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray) -> None:
-        # < initialize variables for components >
         lmbd            = Config().rule_discovery['lmbd']
         mu              = Config().rule_discovery['mu']
         x_dim           = X.shape[1]
-        start_point    = [Classifier.random_cl(x_dim), self.create_sigmas(x_dim)]
+        sigmas          = self.create_sigmas(x_dim)
+        sp_isotropic    = np.zeros(x_dim, dtype=float)
+        sp_cov          = np.zeros(x_dim, dtype=float)
+        C               = np.identity(x_dim)
+        start_point     = [Classifier.random_cl(x_dim), self.create_sigmas(x_dim)]
         tuples_for_pool = list()
 
         for i in range(Config().rule_discovery['steps_per_step']):
             # generating children with sigmas
             rnd_tuple_list = list()
+            C_sqrt = np.sqrt(C)
             for j in range(lmbd):
                 cl = deepcopy(start_point[0])
                 cl.fit(X, y)
-                rnd_tuple_list.append( [cl, (start_point[1] * self.create_sigmas(x_dim))] )
+                cl_sigmas = self.create_sigmas(x_dim)
+                cl.lowerBounds = cl.lowerBounds * sigmas * np.cross(C_sqrt, cl_sigmas)
+                cl.upperBounds = cl.upperBounds * sigmas * np.cross(C_sqrt, cl_sigmas)
+                rnd_tuple_list.append( [cl, cl_sigmas] )
             children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu))
             tuples_for_pool.extend( children_tuple_list )
 
-            # < update on vital components >
+            # Initializing factors according to the children's weights
+            children_weights = self.calculate_weights(children_tuple_list, lmbd)
+            mu_weights = 1 / np.sum(children_weights)
+            cov_isotropic = mu_weights / (x_dim + mu_weights)
+            dist = 1 + np.sqrt(mu_weights / x_dim)
+            cov_coef = (4 + mu_weights / x_dim)
+            cov_one = 2 / (x_dim^2 + mu_weights)
+            cov_mu = mu_weights / (x_dim^2 + mu_weights)
+            cov_m = 1
+            weighted_sigmas = np.sum(children_tuple_list[:,1] * children_weights)
+
+            # start_point update
+            start_point[0] = start_point[0] + cov_m * sigmas * C_sqrt * weighted_sigmas
+            # search path isotropic update
+            sp_isotropic = (1 - cov_isotropic) * sp_isotropic + np.sqrt(cov_isotropic * (2 - cov_isotropic)) * np.sqrt(mu_weights) * weighted_sigmas
+            # search path with covariances update
+            h_isotropic = 1 if (np.power(np.linalg.norm(sp_isotropic), 2) / x_dim) < 2 + 4 / (x_dim + 1) else 0
+            sp_cov *= (1 - cov_coef) + h_isotropic * (np.sqrt(cov_coef * (2 - cov_coef)) * np.sqrt(mu_weights) * np.sum(children_tuple_list[:,1] * C_sqrt * children_weights))
+            # sigmas update
+            sigmas *= np.power( np.exp( np.power( (np.linalg.norm(sp_isotropic), 2) / x_dim) - 1 ), ((cov_isotropic / dist) / 2) )
+            # covariance matrix update
+            cov_h = cov_one * (1 - h_isotropic^2) * cov_coef * (2 - cov_coef)
+            tmp_vector = C_sqrt * children_tuple_list[:,1]
+            C = (1 - cov_one + cov_h - cov_isotropic) * C + cov_one * np.dot(sp_cov, sp_cov.T) + cov_mu * np.sum( children_weights * np.dot(tmp_vector, tmp_vector.T) )
+
 
         # add children to pool
         self.pool.extend( tuples_for_pool )
@@ -460,3 +496,7 @@ class ES_CMA(RuleDiscoverer):
         tuple_array = np.array(tuple_list, dtype=object)
         idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu).astype(int)[:mu]
         return list(tuple_array[idx])
+
+
+    def calculate_weights(self, cls_tuples: List[Tuple[Classifier, np.ndarray]], lmbd: int) -> np.ndarray:
+        return np.array([ np.log(lmbd/2 + 0.5) - log_rank(cl.get_weighted_error) for cl in cls_tuples[:,0] ], dtype=float)
