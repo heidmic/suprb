@@ -126,6 +126,8 @@ class NSGA_II(SolutionOptimizer):
         def _evaluate(genotype, classifier_pool):
             phenotype = Individual(genotype, classifier_pool)
             mse = mean_squared_error(y_val, phenotype.predict(X_val))
+            # TODO if complexity is zero, we probably would not want to use
+            #  that solution
             return mse, phenotype.parameters()
 
         self.toolbox.register("evaluate", _evaluate)
