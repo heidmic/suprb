@@ -104,6 +104,7 @@ class LCS:
             # add verbosity option
             if step % 25 == 0:
                 print(f"Finished step {step + 1} at {datetime.now().time()}\n")
+        print([ind.fitness for ind in self.sol_opt.pop])
 
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
@@ -112,6 +113,10 @@ class LCS:
                       .error, step)
         mf.log_metric("complexity elite", self.sol_opt.get_elitist()
                       .parameters(), step)
+        complexities = [np.sum(ind) for ind in self.sol_opt.pop]
+        mf.log_metric("complexity mean pop", np.mean(complexities))
+        mf.log_metric("complexity med pop", np.median(complexities))
+        mf.log_metric("complexity var pop", np.var(complexities))
         mf.log_metric("classifier pool size", len(self.classifier_pool),
                       step)
         PerfRecorder().elitist_fitness.append(
