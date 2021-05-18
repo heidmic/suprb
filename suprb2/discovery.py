@@ -20,7 +20,7 @@ class RuleDiscoverer(ABC):
 
 
     def step(self, X: np.ndarray, y: np.ndarray) -> None:
-        pass
+        raise NotImplementedError
 
 
     def extract_classifier_attributes(self, classifiers_tuples: List[Tuple[Classifier, np.ndarray]], x_dim: int, rho: int=None) -> np.ndarray:
@@ -45,6 +45,19 @@ class RuleDiscoverer(ABC):
         uniformly distributed values from [0, 1]
         """
         return Random().random.uniform(size=x_dim)
+
+
+    def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int) -> List[Tuple[Classifier, np.ndarray]]:
+        """
+        Return the 'mu' best classifiers (according to their weighted error)
+        from the 'tuple_list'. If mu < len(tuple_list), then ValueError is raised.
+        """
+        if mu == len(tuple_list):
+            return tuple_list
+        else:
+            tuple_array = np.array(tuple_list, dtype=object)
+            idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu-1).astype(int)[:(mu)]
+            return list(tuple_array[idx])
 
 
 class ES_OnePlusLambd(RuleDiscoverer):
@@ -358,7 +371,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
                 cl = deepcopy(start_point[0])
                 cl.fit(X, y)
                 rnd_tuple_list.append( [cl, (start_point[1] * self.create_sigmas(x_dim))] )
-            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu))
+            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu), dtype=object)
             tuples_for_pool.extend( children_tuple_list )
 
             # recombination and parent update
@@ -381,16 +394,6 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
 
         # add children to pool
         self.pool.extend( tuples_for_pool )
-
-
-    def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int) -> List[Tuple[Classifier, np.ndarray]]:
-        """
-        Return the 'mu' best classifiers (according to their weighted error)
-        from the 'tuple_list'. If mu <= len(tuple_list), then ValueError is raised.
-        """
-        tuple_array = np.array(tuple_list, dtype=object)
-        idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu).astype(int)[:mu]
-        return list(tuple_array[idx])
 
 
 class ES_CMA(RuleDiscoverer):
@@ -452,8 +455,8 @@ class ES_CMA(RuleDiscoverer):
                 cl = deepcopy(start_point[0])
                 cl.fit(X, y)
                 cl_sigmas = self.create_sigmas(x_dim)
-                cl.lowerBounds = cl.lowerBounds * sigmas * np.cross(C_sqrt, cl_sigmas)
-                cl.upperBounds = cl.upperBounds * sigmas * np.cross(C_sqrt, cl_sigmas)
+                cl.lowerBounds = cl.lowerBounds + (np.cross(sigmas * C_sqrt, np.diag(cl_sigmas)) if x_dim > 1 else sigmas * C_sqrt * cl_sigmas)
+                cl.upperBounds = cl.upperBounds + (np.cross(sigmas * C_sqrt, np.diag(cl_sigmas)) if x_dim > 1 else sigmas * C_sqrt * cl_sigmas)
                 rnd_tuple_list.append( [cl, cl_sigmas] )
             children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu))
             tuples_for_pool.extend( children_tuple_list )
@@ -486,16 +489,6 @@ class ES_CMA(RuleDiscoverer):
 
         # add children to pool
         self.pool.extend( tuples_for_pool )
-
-
-    def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int) -> List[Tuple[Classifier, np.ndarray]]:
-        """
-        Return the 'mu' best classifiers (according to their weighted error)
-        from the 'tuple_list'. If mu <= len(tuple_list), then ValueError is raised.
-        """
-        tuple_array = np.array(tuple_list, dtype=object)
-        idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu).astype(int)[:mu]
-        return list(tuple_array[idx])
 
 
     def calculate_weights(self, cls_tuples: List[Tuple[Classifier, np.ndarray]], lmbd: int) -> np.ndarray:
