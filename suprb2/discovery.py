@@ -30,7 +30,7 @@ class RuleDiscoverer(ABC):
             classifier_attrs[:,i] = np.array([  classifiers_tuples[i][0].lowerBounds,
                                                 classifiers_tuples[i][0].upperBounds,
                                                 classifiers_tuples[i][1] ],
-                                            dtype=object).reshape((3, 1))
+                                            dtype=object).reshape((3, x_dim))
 
         return classifier_attrs
 
@@ -54,7 +54,7 @@ class ES_OnePlusLambd(RuleDiscoverer):
                                       Config().rule_discovery['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(x, X.shape[1])
+            cl = Classifier.random_cl(X.shape[1], point=x)
             cl.fit(X, y)
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
@@ -67,7 +67,7 @@ class ES_OnePlusLambd(RuleDiscoverer):
                 #  below a certain threshhold as equal might yield better models
                 cl = children[np.argmin([child.get_weighted_error() for child in children])]
 
-            if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
+            if cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
                 self.pool.append(cl)
 
 
@@ -119,9 +119,9 @@ class ES_MuLambd(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: List[Tuple[Classifier, np.ndarray]]) -> None:
+    def __init__(self, pool: List[Classifier]) -> None:
         super().__init__(pool)
-        self.sigmas_dict = {}
+        self.sigmas = list()
 
 
     def step(self, X: np.ndarray, y: np.ndarray) -> None:
@@ -144,16 +144,18 @@ class ES_MuLambd(RuleDiscoverer):
 
         # add search results to pool
         mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
-        self.pool.extend( list(np.array(generation_tuples, dtype=object)[mask]) )
+        filtered_tuples = np.array(generation_tuples, dtype=object)[mask]
+        self.pool.extend( list(filtered_tuples[:,0]) )
+        self.sigmas.extend( list(filtered_tuples[:,1]) )
 
 
     def recombine(self, parents_tuples: List[Tuple[Classifier, np.ndarray]]) -> List[Tuple[Classifier, np.ndarray]]:
         """
         This method decides which kind of recombination will be done,
         according to the rule discovery hyper parameter: 'recombination'
-        If 'recombination' == 'intermediate', then new 'lmbd' classifiers
+        If 'recombination' == 'i', then new 'lmbd' classifiers
         will be created out of the mean of 'rho' parents attributes.
-        If 'recombination' == 'discrete', then the new classifiers are
+        If 'recombination' == 'd', then the new classifiers are
         created randomly from the attributes from the parents
         (attributes do not cross values).
         If 'recombination' is somethin else, then only one classifier
@@ -166,14 +168,14 @@ class ES_MuLambd(RuleDiscoverer):
         rho = Config().rule_discovery['rho']
         recombination_type = Config().rule_discovery['recombination']
 
-        if recombination_type == 'intermediate':
+        if recombination_type == 'i':
             return self.intermediate_recombination(parents_tuples, lmbd, rho)
-        elif recombination_type == 'discrete':
+        elif recombination_type == 'd':
             return self.discrete_recombination(parents_tuples, lmbd, rho)
         else:
             cl_index = Random().random.choice(range(len(parents_tuples)))
             copied_tuple = deepcopy(parents_tuples[cl_index])
-            return copied_tuple
+            return [copied_tuple]
 
 
     def intermediate_recombination(self, parents_tuples: List[Tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> List[Tuple[Classifier, np.ndarray]]:
@@ -333,6 +335,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
 
     def __init__(self, pool: List[Tuple[Classifier, np.ndarray]]) -> None:
         super().__init__(pool)
+        self.sigmas = list()
 
 
     def step(self, X: np.ndarray, y: np.ndarray) -> None:
@@ -375,11 +378,13 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
 
             # recombining parents attributes
             parents_attr = self.extract_classifier_attributes(children_tuple_list, x_dim)
-            start_point[0].lowerBounds = (1/mu) * np.sum(parents_attr[0])
-            start_point[0].upperBounds = (1/mu) * np.sum(parents_attr[1])
+            start_point[0].lowerBounds = (1/mu) * np.sum(parents_attr[0], axis=0)
+            start_point[0].upperBounds = (1/mu) * np.sum(parents_attr[1], axis=0)
 
         # add children to pool
-        self.pool.extend( tuples_for_pool )
+        tuples_array = np.array(tuples_for_pool, dtype=object)
+        self.pool.extend( list(tuples_array[:,0]) )
+        self.sigmas.extend( list(tuples_array[:,1]) )
 
 
     def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int) -> List[Tuple[Classifier, np.ndarray]]:
