@@ -8,7 +8,7 @@ class Config:
     __shared_state = {
         "n_elitists": 1,
         "rule_discovery": {
-            "name": '(mu_+c_lambd)-ES',
+            "name": 'ES_OPL',
             "cl_expected_radius": 0.2,
             "nrules": 50,
             "lmbd": 20,  # not allowed to use lambda

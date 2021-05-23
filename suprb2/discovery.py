@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # from suprb2.perf_recorder import PerfRecorder
 from suprb2.config import Config
 from suprb2.random_gen import Random
@@ -8,10 +10,9 @@ from sklearn.linear_model import LinearRegression
 import numpy as np  # type: ignore
 from copy import deepcopy
 from abc import *
-from typing import List, Tuple
 
 class RuleDiscoverer(ABC):
-    def __init__(self, pool: List[Classifier]) -> None:
+    def __init__(self, pool: list[Classifier]) -> None:
         self.pool = pool
 
 
@@ -19,7 +20,7 @@ class RuleDiscoverer(ABC):
         pass
 
 
-    def extract_classifier_attributes(self, classifiers_tuples: List[Tuple[Classifier, np.ndarray]], x_dim: int, rho: int=None) -> np.ndarray:
+    def extract_classifier_attributes(self, classifiers_tuples: list[tuple[Classifier, np.ndarray]], x_dim: int, rho: int=None) -> np.ndarray:
         """
         Creates an array with shape (3, rho, x_dim),
         where 3 is the number of relevant attributes (lowers, uppers and sigmas).
@@ -43,8 +44,20 @@ class RuleDiscoverer(ABC):
         return Random().random.uniform(size=x_dim)
 
 
+    def get_rule_disc(pool: list[Classifier]) -> RuleDiscoverer:
+        optimizer = Config().rule_discovery['name']
+        if optimizer == 'ES_OPL':
+            return ES_OnePlusLambd(pool)
+        elif optimizer == 'ES_ML':
+            return ES_MuLambd(pool)
+        elif optimizer == 'ES_MLSP':
+            return ES_MuLambdSearchPath(pool)
+        else:
+            raise NotImplemented
+
+
 class ES_OnePlusLambd(RuleDiscoverer):
-    def __init__(self, pool: List[Classifier]):
+    def __init__(self, pool: list[Classifier]):
         super().__init__(pool)
 
 
@@ -119,7 +132,7 @@ class ES_MuLambd(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: List[Classifier]) -> None:
+    def __init__(self, pool: list[Classifier]) -> None:
         super().__init__(pool)
         self.sigmas = list()
 
@@ -149,7 +162,7 @@ class ES_MuLambd(RuleDiscoverer):
         self.sigmas.extend( list(filtered_tuples[:,1]) )
 
 
-    def recombine(self, parents_tuples: List[Tuple[Classifier, np.ndarray]]) -> List[Tuple[Classifier, np.ndarray]]:
+    def recombine(self, parents_tuples: list[tuple[Classifier, np.ndarray]]) -> list[tuple[Classifier, np.ndarray]]:
         """
         This method decides which kind of recombination will be done,
         according to the rule discovery hyper parameter: 'recombination'
@@ -178,7 +191,7 @@ class ES_MuLambd(RuleDiscoverer):
             return [copied_tuple]
 
 
-    def intermediate_recombination(self, parents_tuples: List[Tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> List[Tuple[Classifier, np.ndarray]]:
+    def intermediate_recombination(self, parents_tuples: list[tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> list[tuple[Classifier, np.ndarray]]:
         """
         This methods creates 'lmbd' classifiers from the average
         of 'rho' classifiers in parents.
@@ -205,7 +218,7 @@ class ES_MuLambd(RuleDiscoverer):
         return children_tuples
 
 
-    def discrete_recombination(self, parents_tuples: List[Tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> List[Tuple[Classifier, np.ndarray]]:
+    def discrete_recombination(self, parents_tuples: list[tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> list[tuple[Classifier, np.ndarray]]:
         """
         This method creates 'lmbd' classifiers picking randomly
         the attributes from 'rho' parents. The values do not cross
@@ -236,7 +249,7 @@ class ES_MuLambd(RuleDiscoverer):
         return children_tuples
 
 
-    def mutate_and_fit(self, cls_tuples: List[Tuple[Classifier, np.ndarray]], X: np.ndarray, y:np.ndarray) -> List[Tuple[Classifier, np.ndarray]]:
+    def mutate_and_fit(self, cls_tuples: list[tuple[Classifier, np.ndarray]], X: np.ndarray, y:np.ndarray) -> list[tuple[Classifier, np.ndarray]]:
         """
         This method uses the traditional self-adapting ES mutation algortihm
         to mutate the classifiers.
@@ -283,7 +296,7 @@ class ES_MuLambd(RuleDiscoverer):
         return children_tuples
 
 
-    def replace(self, parents_tuples: List[Tuple[Classifier, np.ndarray]], children_tuples: List[Tuple[Classifier, np.ndarray]]) -> List[Tuple[Classifier, np.ndarray]]:
+    def replace(self, parents_tuples: list[tuple[Classifier, np.ndarray]], children_tuples: list[tuple[Classifier, np.ndarray]]) -> list[tuple[Classifier, np.ndarray]]:
         """
         This method uses the hyper parameter to define if
         in the next generation, there will be only the
@@ -333,7 +346,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: List[Tuple[Classifier, np.ndarray]]) -> None:
+    def __init__(self, pool: list[tuple[Classifier, np.ndarray]]) -> None:
         super().__init__(pool)
         self.sigmas = list()
 
@@ -387,7 +400,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         self.sigmas.extend( list(tuples_array[:,1]) )
 
 
-    def select_best_classifiers(self, tuple_list: List[Tuple[Classifier, np.ndarray]], mu: int) -> List[Tuple[Classifier, np.ndarray]]:
+    def select_best_classifiers(self, tuple_list: list[tuple[Classifier, np.ndarray]], mu: int) -> list[tuple[Classifier, np.ndarray]]:
         """
         Return the 'mu' best classifiers (according to their weighted error)
         from the 'tuple_list'. If mu <= len(tuple_list), then ValueError is raised.

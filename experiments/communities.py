@@ -15,18 +15,39 @@ import click
 @click.command()
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=1000)
-@click.option("-k", "--dimensions", type=click.IntRange(min=77), default=77)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
-def run_exp(seed, sample_size, dimensions, data_seed):
+@click.option("-o", "--optimizer")
+@click.option('-m', "--mu", type=click.IntRange(min=1))
+@click.option('-l', "--lmbd", type=click.IntRange(min=1))
+@click.option('-r', "--rho", type=click.IntRange(min=1))
+@click.option('-sps', "--steps-per-step", type=click.IntRange(min=1))
+@click.option('-rec', "--recombination")
+@click.option('-lt', "--local-tau", type=float)
+@click.option('-gt', "--global-tau", type=float)
+@click.option('-rep', "--replacement")
+def run_exp(seed, optimizer, sample_size, data_seed, mu, lmbd, rho, steps_per_step, recombination, local_tau, global_tau, replacement):
     print(f"Starting at {datetime.now().time()}")
-    n = sample_size
+
+    n = sample_size # Probably a good idea to try different samples...
 
     """Communities and Crime Data Set
     https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime"""
 
+    # Setting relevant hyper parameters
+    Config().rule_discovery['name'] = optimizer
+    Config().rule_discovery['mu'] = mu
+    Config().rule_discovery['lmbd'] = lmbd
+    Config().rule_discovery['rho'] = rho
+    Config().rule_discovery['steps_per_step'] = steps_per_step
+    Config().rule_discovery['recombination'] = recombination
+    Config().rule_discovery['local_tau'] = local_tau
+    Config().rule_discovery['global_tau'] = global_tau
+    Config().rule_discovery['replacement'] = replacement
+
     Random().reseed(data_seed)
 
     data = pd.read_csv("datasets/communities/communities.data", sep=',', header=None, na_values=["?"]).values
+    dimensions = data.shape[1]
     X, y = data[:,4:-1], data[:,-1].reshape(-1, 1)
 
     scale_X = MinMaxScaler(feature_range=(-1, 1))
