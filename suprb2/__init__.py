@@ -5,7 +5,7 @@ from suprb2.perf_recorder import PerfRecorder
 from suprb2.classifier import Classifier
 from suprb2.individual import Individual
 from suprb2.solutions import ES_1plus1
-from suprb2.discovery import ES_MuLambd
+from suprb2.discovery import RuleDiscoverer
 
 from sklearn.model_selection import train_test_split
 from datetime import datetime
@@ -56,7 +56,7 @@ class LCS:
     def run_inital_step(self, X, y):
         start_time = datetime.now()
 
-        self.rule_disc = ES_MuLambd(self.classifier_pool)
+        self.rule_disc = RuleDiscoverer.get_rule_disc(self.classifier_pool)
         while len(self.classifier_pool) < Config().initial_pool_size:
             self.rule_disc.step(X, y)
         discover_rules_time = datetime.now()
