@@ -471,54 +471,55 @@ class ES_CMA(RuleDiscoverer):
         lmbd            = Config().rule_discovery['lmbd']
         mu              = Config().rule_discovery['mu']
         x_dim           = X.shape[1]
-        sigmas          = self.create_sigmas(x_dim)
+        # sigmas          = Random().random.uniform(low=0.25, high=1.25, size=x_dim)
+        sigmas          = Random().random.normal(size=x_dim)
         sp_isotropic    = np.zeros(x_dim, dtype=float)
         sp_cov          = np.zeros(x_dim, dtype=float)
         C               = np.identity(x_dim)
-        start_point     = [Classifier.random_cl(x_dim), self.create_sigmas(x_dim)]
         tuples_for_pool = list()
+        start_point     = Classifier.random_cl(x_dim)
+        start_point.fit(X, y)
 
         for i in range(Config().rule_discovery['steps_per_step']):
             # generating children with sigmas
             rnd_tuple_list = list()
-            C_sqrt = np.sqrt(C)
+            C_sqrt_diag = np.diag(np.sqrt(C))
             for j in range(lmbd):
-                cl = deepcopy(start_point[0])
+                cl = deepcopy(start_point)
+                # cl_sigmas = Random().random.uniform(low=0.25, high=1.25, size=x_dim)
+                cl_sigmas = Random().random.normal(size=x_dim)
+                cl.lowerBounds, cl.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + ( (sigmas * np.sqrt(C)) @ cl_sigmas ))
                 cl.fit(X, y)
-                cl_sigmas = self.create_sigmas(x_dim)
-                cl.lowerBounds = cl.lowerBounds + ( (sigmas * C_sqrt) @ np.diag(cl_sigmas) if x_dim > 1 else sigmas * C_sqrt * cl_sigmas )
-                cl.upperBounds = cl.upperBounds + ( (sigmas * C_sqrt) @ np.diag(cl_sigmas) if x_dim > 1 else sigmas * C_sqrt * cl_sigmas )
                 rnd_tuple_list.append( [cl, cl_sigmas] )
-            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu))
+            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu), dtype=object)
             tuples_for_pool.extend( children_tuple_list )
 
             # Initializing factors according to the children's weights
             children_weights = self.calculate_weights(children_tuple_list, lmbd)
-            mu_weights = 1 / np.sum(children_weights)
+            mu_weights = 1 / np.sum(children_weights**2)
             cov_isotropic = mu_weights / (x_dim + mu_weights)
             dist = 1 + np.sqrt(mu_weights / x_dim)
-            cov_coef = (4 + mu_weights / x_dim)
+            cov_coef = (4 + mu_weights / x_dim) / (x_dim + 4 + 2 * mu_weights / x_dim)
             cov_one = 2 / (x_dim**2 + mu_weights)
             cov_mu = mu_weights / (x_dim**2 + mu_weights)
             cov_m = 1
-            weighted_sigmas = np.sum(children_tuple_list[:,1] * children_weights)
+            weighted_sigma_sum = np.sum(children_tuple_list[:,1] * children_weights)
 
             # start_point's boundaries update
-            bounds_update = cov_m * sigmas * C_sqrt * weighted_sigmas
-            bounds_shape = start_point[0].lowerBounds.shape
-            start_point[0].lowerBounds += bounds_update.reshape(bounds_shape)
-            start_point[0].upperBounds += bounds_update.reshape(bounds_shape)
+            start_point.lowerBounds, start_point.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + cov_m * sigmas * C_sqrt_diag * weighted_sigma_sum)
+            start_point.fit(X, y)
             # search path isotropic update
-            sp_isotropic = (1 - cov_isotropic) * sp_isotropic + np.sqrt(cov_isotropic * (2 - cov_isotropic)) * np.sqrt(mu_weights) * weighted_sigmas
+            sp_isotropic = (1 - cov_isotropic) * sp_isotropic + np.sqrt(cov_isotropic * (2 - cov_isotropic)) * np.sqrt(mu_weights) * weighted_sigma_sum
             # search path with covariances update
             h_isotropic = 1 if (np.linalg.norm(sp_isotropic)**2 / x_dim) < 2 + 4 / (x_dim + 1) else 0
-            sp_cov = (1 - cov_coef) * sp_cov + h_isotropic * ( np.sqrt(cov_coef * (2 - cov_coef)) * np.sqrt(mu_weights) * np.sum(children_tuple_list[:,1] * C_sqrt * children_weights) )
+            weighted_cov_sigmas_sum = np.sum([ children_weights[i] * C_sqrt_diag * children_tuple_list[i,1] for i in range(mu) ])
+            sp_cov = (1 - cov_coef) * sp_cov + h_isotropic * ( cov_coef * np.sqrt(mu_weights) * weighted_cov_sigmas_sum )
             # sigmas update
             sigmas *= np.power( np.exp( (np.linalg.norm(sp_isotropic)**2 / x_dim) - 1 ), ((cov_isotropic / dist) / 2) )
             # covariance matrix update
             cov_h = cov_one * (1 - h_isotropic**2) * cov_coef * (2 - cov_coef)
-            tmp_vector = C_sqrt * children_tuple_list[:,1]
-            C = (1 - cov_one + cov_h - cov_isotropic) * C + cov_one * np.dot(sp_cov, sp_cov.T) + cov_mu * np.sum( children_weights * np.dot(tmp_vector, tmp_vector.T) )
+            weighted_cov_trans_sum = np.sum([ children_weights[i] * np.dot(C_sqrt_diag * children_tuple_list[i,1], (C_sqrt_diag * children_tuple_list[i,1]).T) for i in range(mu) ])
+            C = (1 - cov_one + cov_h - cov_isotropic) * C + cov_one * np.dot(sp_cov, sp_cov.T) + cov_mu * weighted_cov_trans_sum
 
         # add children to pool
         arrays_for_pool = np.array(tuples_for_pool, dtype=object)
@@ -527,8 +528,24 @@ class ES_CMA(RuleDiscoverer):
 
 
     def calculate_weights(self, cls_tuples: list[tuple[Classifier, np.ndarray]], lmbd: int) -> np.ndarray:
+        """
+        This method is designed to calculate the w_k
+        in the original algorithm. It is a function, that
+        returns the weights of the children, where
+        w_k = w(k) / Sum(w(k)) (from k to µ)
+        But, in order to avoid repeating this calculation,
+        the implemented method return an array from all
+        classifiers.
+
+        The selection enviroment is a truncation selection,
+        but instead of the rank directly, the log from it
+        is used.
+        """
         tuples_array = np.array(cls_tuples, dtype=object)
-        weighted_errors = np.array([ cl.get_weighted_error() for cl in tuples_array[:,0] ], dtype=float)
+        if tuples_array.ndim == 1:
+            weighted_errors = np.array([ cl_tuple[0].get_weighted_error() for cl_tuple in cls_tuples ], dtype=float)
+        else:
+            weighted_errors = np.array([ cl.get_weighted_error() for cl in tuples_array[:,0] ], dtype=float)
         ranked_indexes = np.argsort(weighted_errors)
         weights = np.ones(tuples_array.shape[0], dtype=float)
 
