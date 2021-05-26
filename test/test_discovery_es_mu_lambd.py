@@ -36,7 +36,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         classifiers.
         """
         mu, lmbd = (15, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='i')
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd(pool=[])
@@ -56,7 +56,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         classifiers in the pool.
         """
         mu, lmbd = (15, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='i')
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd(pool=[])
@@ -74,7 +74,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         Exception (ValueError).
         """
         mu, lmbd = (15, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='i')
         X, y = TestsSupport.generate_input(mu - 5)
 
         optimizer = ES_MuLambd(pool=[])
@@ -88,15 +88,14 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         Tests the method ES_MuLambd.step().
 
         When lmbd is zero and replacement is ',',
-        then no classifier is added to the pool.
+        then raise IndexError (it doesn't make any sense to allow this).
         """
         mu, lmbd = (15, 0)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='i')
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd(pool=[])
-        optimizer.step(X, y)
-        self.assertEqual(len(optimizer.pool), 0)
+        self.assertRaises(IndexError, optimizer.step, X, y)
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
@@ -110,7 +109,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         added to the pool.
         """
         mu, lmbd = (15, 0)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='i')
         X, y = TestsSupport.generate_input(mu)
 
         optimizer = ES_MuLambd(pool=[])
@@ -124,20 +123,17 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         Tests the method ES_MuLambd.step().
 
-        When mu is zero, then no classifier is added to the pool
-        (independent of the replacement).
+        When mu is zero, then raise IndexError.
         """
         mu, lmbd = (0, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='i')
         X, y = TestsSupport.generate_input(10)
 
         optimizer = ES_MuLambd(pool=[])
-        optimizer.step(X, y)
-        self.assertEqual(len(optimizer.pool), 0)
+        self.assertRaises(IndexError, optimizer.step, X, y)
 
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='intermediate')
-        optimizer.step(X, y)
-        self.assertEqual(len(optimizer.pool), 0)
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement='+', steps_per_step=4, recombination='d')
+        self.assertRaises(IndexError, optimizer.step, X, y)
 
 
     @patch.object(Classifier, 'get_weighted_error', return_value=float('-inf'))
@@ -146,16 +142,16 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         Tests the method ES_MuLambd.step().
 
-        If our X is empty (no data is given), then our population will
-        remain empty.
+        If our X is empty (no data is given), then raise
+        IndexError (indexing on empty array).
         """
         mu, lmbd = (0, 15)
-        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='intermediate')
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, replacement=',', steps_per_step=4, recombination='i')
         X, y = TestsSupport.generate_input(0)
 
         optimizer = ES_MuLambd(pool=[])
-        optimizer.step(X, y)
-        self.assertEqual(len(optimizer.pool), 0)
+
+        self.assertRaises(IndexError, optimizer.step, X, y)
 
 
     # ------------- recombine() --------------
@@ -172,7 +168,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         child_1.upperBound = average(random_vater.upperBound, random_mother.upperBound)
         child_1.sigmas = average(random_vater.sigmas, random_mother.sigmas)
         """
-        TestsSupport.set_rule_discovery_configs(recombination='intermediate', rho=4)
+        TestsSupport.set_rule_discovery_configs(recombination='i', rho=4)
 
         pool = [    (Classifier([2], [2], None, 1), [0.1]),
                     (Classifier([2], [4], None, 1), [0.2]),
@@ -195,7 +191,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         Checks if the average of the rho classifiers'
         boundaries is propperly calculated.
         """
-        TestsSupport.set_rule_discovery_configs(recombination='intermediate', rho=2)
+        TestsSupport.set_rule_discovery_configs(recombination='i', rho=2)
         pool = [    (Classifier([2], [2], None, 1), [0.1]),
                     (Classifier([2], [4], None, 1), [0.2]),
                     (Classifier([4], [2], None, 1), [0.2]),
@@ -221,7 +217,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         child_1.upperBound = one_random(parents.upperBounds)
         child_1.sigmas = one_random(parents.sigmas)
         """
-        TestsSupport.set_rule_discovery_configs(recombination='discrete')
+        TestsSupport.set_rule_discovery_configs(recombination='d')
         pool = [    (Classifier([1], [40], None, 1), [0.1]),
                     (Classifier([2], [30], None, 1), [0.2]),
                     (Classifier([3], [20], None, 1), [0.3]),
@@ -244,7 +240,7 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         is flipped (upperBound < lowerBound), that the
         recombination will flip them back.
         """
-        TestsSupport.set_rule_discovery_configs(recombination='discrete')
+        TestsSupport.set_rule_discovery_configs(recombination='d')
         pool = [    (Classifier([10], [4], None, 1), [0.1]),
                     (Classifier([20], [3], None, 1), [0.2]),
                     (Classifier([30], [2], None, 1), [0.3]),
@@ -275,8 +271,8 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
 
         children_tuples = np.array(optimizer.recombine(pool), dtype=object)
 
-        self.assertEqual(children_tuples.shape, (2,))
-        self.assertIn(children_tuples[1], np.array(pool, dtype=object)[:,1])
+        self.assertEqual(children_tuples.shape, (1, 2))
+        self.assertIn(children_tuples[0][1], np.array(pool, dtype=object)[:,1])
 
 
     # ------------- mutate_and_fit() --------------

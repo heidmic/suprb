@@ -18,7 +18,7 @@ class TestsSupport:
         """
         return [ Classifier(np.array([1], dtype=np.float64),
                             np.array([1], dtype=np.float64),
-                            None, 1) for i in range(1, n) ]
+                            None, 1) for i in range(n) ]
 
 
     def mock_specific_classifiers(values: list):
