@@ -48,6 +48,7 @@ class Fitness:
         self.error = mean_squared_error(y_val, predicted_X_val)
         self.fitness = -1 * self.error
 
+    # TODO: What is Config().ind_size?
     def simplified_compl(self, X_val, y_val, predicted_X_val, parameters, classifiers):
         self.mse(X_val, y_val, predicted_X_val, parameters, classifiers)
 
