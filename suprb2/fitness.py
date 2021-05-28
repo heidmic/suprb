@@ -1,20 +1,31 @@
 import numpy as np
 from sklearn.metrics import *
-from suprb2.config import Config
 
 
 class Fitness:
-    def __init__(self):
-        self.fitness_functions = {"pseudo-BIC": self.pseudo_bic,
-                                  "BIC_matching_punishment": self.bic_matching_punishment,
-                                  "mse": self.mse,
-                                  "simplified_compl": self.simplified_compl}
-
+    def __init__(self, config_fitness_function):
+        self.fitness_function = None
         self.error = None
         self.fitness = None
 
+        self.set_fitness_function(config_fitness_function)
+
+    def set_fitness_function(self, config_fitness_function):
+        if config_fitness_function == "pseudo-BIC":
+            self.fitness_function = self.pseudo_bic
+        elif config_fitness_function == "BIC_matching_punishment":
+            self.fitness_function = self.bic_matching_punishment
+        elif config_fitness_function == "mse":
+            self.fitness_function = self.mse
+        elif config_fitness_function == "simplified_compl":
+            self.fitness_function = self.simplified_compl
+        else:
+            print("Invalid fitness function specified! Exiting..")
+            self.fitness_function = None
+            exit()
+
     def determine_fitness(self, X_val, y_val, predicted_X_val, parameters, classifiers):
-        return self.fitness_functions[Config().solution_creation['fitness']](X_val, y_val, predicted_X_val, parameters, classifiers)
+        return self.fitness_function(X_val, y_val, predicted_X_val, parameters, classifiers)
 
     def pseudo_bic(self, X_val, y_val, predicted_X_val, parameters, classifiers):
         n = len(X_val)

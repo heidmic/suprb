@@ -10,7 +10,7 @@ from sklearn.metrics import *
 class Individual:
     def __init__(self, genome, classifier_pool):
         self.genome = genome
-        self.fitness = Fitness()
+        self.fitness = Fitness(Config().solution_creation['fitness'])
         self.classifier_pool = classifier_pool
 
     @staticmethod
