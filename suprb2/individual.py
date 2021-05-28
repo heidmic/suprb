@@ -2,6 +2,7 @@ import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
 from suprb2.classifier import Classifier
+from suprb2.fitness import Fitness
 
 from sklearn.metrics import *
 
@@ -87,40 +88,11 @@ class Individual:
         return [self.classifier_pool[i] for i in np.nonzero(self.genome)[0]]
 
     def determine_fitness(self, X_val, y_val):
-        if Config().solution_creation['fitness'] == "pseudo-BIC":
-            n = len(X_val)
-            # mse = ResidualSumOfSquares / NumberOfSamples
-            mse = np.sum(np.square(y_val - self.predict(X_val))) / n
-            # for debugging
-            self.error = mse
-            # BIC -(n * np.log(rss / n) + complexity * np.log(n))
-            self.fitness = - (n * np.log(mse) + self.parameters() * np.log(n))
-
-        elif Config().solution_creation['fitness'] == "BIC_matching_punishment":
-            n = len(X_val)
-            # mse = ResidualSumOfSquares / NumberOfSamples
-            mse = np.sum(np.square(y_val - self.predict(X_val))) / n
-            # for debugging
-            self.error = mse
-            matching_pun = np.sum(np.nonzero(np.sum(np.array([cl.matches(X_val)
-                                                              for cl
-                                                              in
-                                                              self.classifiers]),
-                                                    1) > 1))
-            # BIC -(n * np.log(rss / n) + complexity * np.log(n))
-            self.fitness = - (n * np.log(mse) + (self.parameters()
-                                                 + matching_pun
-                                                 ) * np.log(n))
-
-        elif Config().solution_creation['fitness'] == "MSE":
-            self.error = mean_squared_error(y_val, self.predict(X_val))
-            self.fitness = - self.error
-
-        elif Config().solution_creation['fitness'] == "simplified_compl":
-            self.error = mean_squared_error(y_val, self.predict(X_val))
-            self.fitness = -self.error - (len(self.classifiers) - Config().ind_size
-                                          if len(self.classifiers) > Config().ind_size else 0)
-
+        predicted_X_val = self.predict(X_val)
+        parameters = self.parameters()
+        self.error, self.fitness = Fitness().determine_fitness(
+            X_val, y_val, predicted_X_val, parameters, self.get_classifiers())
+        
     def parameters(self, simple=True) -> float:
         if simple:
             return np.count_nonzero(self.genome)
