@@ -105,17 +105,17 @@ class LCS:
 
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
-                      .fitness, step)
+                      .fitness.fitness, step)
         mf.log_metric("error elite", self.sol_opt.get_elitist()
-                      .error, step)
+                      .fitness.error, step)
         mf.log_metric("complexity elite", self.sol_opt.get_elitist()
                       .parameters(), step)
         mf.log_metric("classifier pool size", len(self.classifier_pool),
                       step)
         PerfRecorder().elitist_fitness.append(
-            self.sol_opt.get_elitist().fitness)
+            self.sol_opt.get_elitist().fitness.fitness)
         PerfRecorder().elitist_val_error.append(
-            self.sol_opt.get_elitist().error)
+            self.sol_opt.get_elitist().fitness.error)
         PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_matched.append(np.sum(np.array(
             [cl.matches(X_val) for cl in

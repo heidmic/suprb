@@ -10,8 +10,7 @@ from sklearn.metrics import *
 class Individual:
     def __init__(self, genome, classifier_pool):
         self.genome = genome
-        self.fitness = None
-        self.error = None
+        self.fitness = Fitness()
         self.classifier_pool = classifier_pool
 
     @staticmethod
@@ -90,9 +89,8 @@ class Individual:
     def determine_fitness(self, X_val, y_val):
         predicted_X_val = self.predict(X_val)
         parameters = self.parameters()
-        self.error, self.fitness = Fitness().determine_fitness(
-            X_val, y_val, predicted_X_val, parameters, self.get_classifiers())
-        
+        self.fitness.determine_fitness(X_val, y_val, predicted_X_val, parameters, self.get_classifiers())
+
     def parameters(self, simple=True) -> float:
         if simple:
             return np.count_nonzero(self.genome)

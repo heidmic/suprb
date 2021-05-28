@@ -29,7 +29,7 @@ class ES_1plus1(SolutionOptimizer):
         self.mutation_rate = Config().solution_creation['mutation_rate']
         self.steps = Config().solution_creation['steps_per_step']
         self.classifier_pool = classifier_pool
-        
+
         if individual is not None:
             self.individual = individual
         else:
@@ -50,7 +50,7 @@ class ES_1plus1(SolutionOptimizer):
             candidate = Individual(np.copy(self.individual.genome), self.classifier_pool)
             candidate.mutate(self.mutation_rate)
             candidate.determine_fitness(X_val, y_val)
-            if self.individual.fitness < candidate.fitness:
+            if self.individual.fitness.fitness < candidate.fitness.fitness:
                 self.individual = candidate
                 success += 1
         return success
