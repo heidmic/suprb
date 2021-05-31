@@ -9,7 +9,7 @@ class Config:
         "n_elitists": 1,
         "rule_discovery": {
             "name": 'ES_OPL',
-            "cl_expected_radius": 0.2,
+            "cl_radius": 0.1,
             "nrules": 50,
             "lmbd": 20,  # not allowed to use lambda
             "mu": 10,
@@ -20,7 +20,7 @@ class Config:
             "steps_per_step": 50,
             "recombination": 'd',
             "replacement": '+',
-            "weighted_error_constant": 100
+            "weighted_error_const": 100
         },
         "solution_creation": {
             "name": '(1+1)-ES',
