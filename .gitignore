@@ -1,14 +1,12 @@
-*/mlruns/*
-mlruns/*
-.idea/*
-*/__pycache__/*
-figs/*
-*/figs/*
-venv/*
+mlruns/
+.idea/
+__pycache__/
+figs/
+venv/
 .coverage
 htmlcov/
 .hypothesis
 
-datasets/*
+datasets/
 .python-version
 .vscode

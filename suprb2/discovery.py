@@ -185,8 +185,9 @@ class ES_MuLambd(RuleDiscoverer):
             generation_tuples = self.replace(generation_tuples, children_tuples)
 
         # add search results to pool
-        mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
-        filtered_tuples = np.array(generation_tuples, dtype=object)[mask]
+        # mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
+        # filtered_tuples = np.array(generation_tuples, dtype=object)[mask]
+        filtered_tuples = np.array(self.select_best_classifiers(generation_tuples, mu), dtype=object)
         self.pool.extend( list(filtered_tuples[:,0]) )
         self.sigmas.extend( list(filtered_tuples[:,1]) )
 
@@ -387,18 +388,23 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         sigma_coef      = np.sqrt(mu / (x_dim + mu))
         dist_global     = 1 + np.sqrt(mu / x_dim)
         dist_local      = 3 * x_dim
-        start_point    = [Classifier.random_cl(x_dim), self.create_sigmas(x_dim)]
+        start_sigma     = self.create_sigmas(x_dim)
+        start_point     = Classifier.random_cl(x_dim)
         tuples_for_pool = list()
         search_path     = 0
 
         for i in range(Config().rule_discovery['steps_per_step']):
             rnd_tuple_list = list()
+            start_point.fit(X, y)
+            print(f"start point weighted error: {start_point.get_weighted_error()}")
 
             # generating children with sigmas
             for j in range(lmbd):
-                cl = deepcopy(start_point[0])
+                cl_sigmas = self.create_sigmas(x_dim)
+                cl = deepcopy(start_point)
+                cl.lowerBounds, cl.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + (start_sigma * cl_sigmas))
                 cl.fit(X, y)
-                rnd_tuple_list.append( [cl, (start_point[1] * self.create_sigmas(x_dim))] )
+                rnd_tuple_list.append( [cl, cl_sigmas] )
             children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu), dtype=object)
             tuples_for_pool.extend( children_tuple_list )
 
@@ -410,15 +416,15 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             local_factor = np.power(( np.exp((np.abs(search_path) / local_expected_value) - 1) ),  (1 / dist_local))
 
             # There is an elegant way to replace Line 8b proposed by this articles at page 15.
-            global_factor = np.power(( np.exp(( np.power(np.linalg.norm(search_path), 2) / x_dim ) - 1) ), (sigma_coef / dist_global) / 2)
+            global_factor = np.power(( np.exp(( np.linalg.norm(search_path)**2 / x_dim ) - 1) ), (sigma_coef / dist_global) / 2)
 
             # step-size changes
-            start_point[1] = start_point[1] * local_factor * global_factor
+            start_sigma = start_sigma * local_factor * global_factor
 
             # recombining parents attributes
             parents_attr = self.extract_classifier_attributes(children_tuple_list, x_dim)
-            start_point[0].lowerBounds = (1/mu) * np.sum(parents_attr[0], axis=0)
-            start_point[0].upperBounds = (1/mu) * np.sum(parents_attr[1], axis=0)
+            start_point.lowerBounds = (1/mu) * np.sum(parents_attr[0], axis=0)
+            start_point.upperBounds = (1/mu) * np.sum(parents_attr[1], axis=0)
 
         # add children to pool
         tuples_array = np.array(tuples_for_pool, dtype=object)
@@ -478,9 +484,10 @@ class ES_CMA(RuleDiscoverer):
         C               = np.identity(x_dim)
         tuples_for_pool = list()
         start_point     = Classifier.random_cl(x_dim)
-        start_point.fit(X, y)
 
         for i in range(Config().rule_discovery['steps_per_step']):
+            start_point.fit(X, y)
+            print(f"start point weighted error: {start_point.get_weighted_error()}")
             # generating children with sigmas
             rnd_tuple_list = list()
             C_sqrt_diag = np.diag(np.sqrt(C))

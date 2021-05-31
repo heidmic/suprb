@@ -4,6 +4,7 @@ from suprb2.random_gen import Random
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 from datetime import datetime
@@ -16,33 +17,12 @@ import click
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=1000)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
-@click.option("-o", "--optimizer")
-@click.option('-m', "--mu", type=click.IntRange(min=1))
-@click.option('-l', "--lmbd", type=click.IntRange(min=1))
-@click.option('-r', "--rho", type=click.IntRange(min=1))
-@click.option('-sps', "--steps-per-step", type=click.IntRange(min=1))
-@click.option('-rec', "--recombination")
-@click.option('-lt', "--local-tau", type=float)
-@click.option('-gt', "--global-tau", type=float)
-@click.option('-rep', "--replacement")
-def run_exp(seed, optimizer, sample_size, data_seed, mu, lmbd, rho, steps_per_step, recombination, local_tau, global_tau, replacement):
+def run_exp(seed, sample_size, data_seed):
+    """
+    Communities and Crime Data Set
+    https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime
+    """
     print(f"Starting at {datetime.now().time()}")
-
-    n = sample_size # Probably a good idea to try different samples...
-
-    """Communities and Crime Data Set
-    https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime"""
-
-    # Setting relevant hyper parameters
-    Config().rule_discovery['name'] = optimizer
-    Config().rule_discovery['mu'] = mu
-    Config().rule_discovery['lmbd'] = lmbd
-    Config().rule_discovery['rho'] = rho
-    Config().rule_discovery['steps_per_step'] = steps_per_step
-    Config().rule_discovery['recombination'] = recombination
-    Config().rule_discovery['local_tau'] = local_tau
-    Config().rule_discovery['global_tau'] = global_tau
-    Config().rule_discovery['replacement'] = replacement
 
     Random().reseed(data_seed)
 
@@ -58,12 +38,10 @@ def run_exp(seed, optimizer, sample_size, data_seed, mu, lmbd, rho, steps_per_st
     scale_y.fit(y)
     y = scale_y.transform(y)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=Random().split_seed())
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=sample_size, random_state=Random().split_seed())
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
-
     mf.set_experiment("Tests with Communities and Crime Dataset")
-
     with mf.start_run():
         mf.log_param("data_seed", data_seed)
         mf.log_param("sample_size", sample_size)
@@ -72,19 +50,64 @@ def run_exp(seed, optimizer, sample_size, data_seed, mu, lmbd, rho, steps_per_st
 
         # we reset the seed here
         Random().reseed(seed)
+        configurations = create_configurations()
+        for hyperparameters in configurations:
+            Config().rule_discovery = { **Config().rule_discovery, **hyperparameters }
 
-        lcs = LCS(dimensions)
+            print(f"Starting experiment with hyperparameters: {hyperparameters}")
+            lcs = LCS(dimensions)
 
-        lcs.fit(X_train, y_train)
+            lcs.fit(X_train, y_train)
+            y_pred = lcs.predict(X_test)
+            error = mean_squared_error(y_test, y_pred)
 
-        y_pred = lcs.predict(X_test)
+            mf.log_metric("RMSE", np.sqrt(error))
+            print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
 
-        error = mean_squared_error(y_test, y_pred)
 
-        mf.log_metric("RMSE", np.sqrt(error))
-        print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
+def create_configurations():
+    configurations = list()
+    config = dict()
 
-    pass
+    for optimizer_type in ["ES_ML", "ES_OPL", "ES_MLSP","ES_CMA"]:
+        config["name"] = optimizer_type
+        for steps_per_step in [10, 50, 100, 200, 500, 1000]:
+            config["steps_per_step"] = steps_per_step
+            if optimizer_type == "ES_ML":
+                for recombination_type in ["i", "d"]:
+                    config["recombination"] = recombination_type
+                    for replacement_type in ["+", ","]:
+                        config["replacem‰ent"] = replacement_type
+                        for mu in [10, 50, 100, 150, 200, 500]:
+                            config["mu"] = mu
+                            for lmbd in [10, 50, 100, 150, 200, 500]:
+                                if lmbd > mu:
+                                    break
+                                else:
+                                    config["lmbd"] = lmbd
+                                    for rho in [10, 50, 100, 150, 200, 500]:
+                                        if rho > lmbd:
+                                            break
+                                        else:
+                                            config["rho"] = rho
+                                            for global_tau in [0.1, 0.25, 0.5]:
+                                                config["global_tau"] = global_tau
+                                                for local_tau in [0.1, 0.25, 0.5]:
+                                                    config["local_tau"] = local_tau
+                                                    configurations.append(config.copy())
+            elif optimizer_type == "ES_MLSP":
+                for lmbd in [20, 60, 100, 160, 200, 520]:
+                    config["lmbd"] = lmbd
+                    config["mu"] = lmbd // 4
+                    configurations.append(config.copy())
+            else:
+                for mu in [10, 50, 100, 150, 200, 500]:
+                    config["mu"] = mu
+                    for lmbd in [10, 50, 100, 150, 200, 500]:
+                        config["lmbd"] = lmbd
+                        configurations.append(config.copy())
+
+    return configurations
 
 
 if __name__ == '__main__':
