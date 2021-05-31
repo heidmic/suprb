@@ -7,6 +7,5 @@ venv/
 htmlcov/
 .hypothesis
 
-datasets/
 .python-version
 .vscode
