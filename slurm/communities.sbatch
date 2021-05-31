@@ -7,4 +7,4 @@
 #SBATCH --array=0-19
 job_dir=/data/oc-compute01/fischekl/suprb2/
 experiment=experiments/communities.py
-nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID -k 10 -d 2500 -o ES_ML -m 10 -l 20 -r 5 -sps 50 -rec d -lt 1.1 -gt 1.2 -rep +"
+nix-shell "srun $job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID -k 10 -d 2500 -o ES_ML -m 10 -l 20 -r 5 -sps 50 -rec d -lt 1.1 -gt 1.2 -rep +"
