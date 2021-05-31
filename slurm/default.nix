@@ -10,7 +10,7 @@ mkShell {
   venvDir = "./_venv";
   # Add dependencies that pip can't fetch here (or that we don't want to
   # install using pip).
-  buildInputs = (with pkgs.python38Packages; [ python venvShellHook wheel ])
+  buildInputs = (pkgs.python38Packages (ps: with ps; [ python numpy venvShellHook wheel ]))
     ++ (import ./system-dependencies.nix { inherit pkgs; });
   postShellHook = ''
     unset SOURCE_DATE_EPOCH
