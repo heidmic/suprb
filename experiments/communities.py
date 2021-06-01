@@ -24,12 +24,40 @@ def run_exp(seed, sample_size, data_seed):
     """
     print(f"Starting at {datetime.now().time()}")
 
+    X_train, X_test, y_train, y_test = import_data(sample_size, data_seed)
+    dimensions = X_train.shape[1]
+
+    print(f"Samples generated. Starting training at {datetime.now().time()}")
+
+    configurations = create_configurations()
+    for i in range(len(configurations)):
+        mf.set_experiment(f"Tests with Communities and Crime Dataset [{configurations[i]['name']}]")
+        Config().rule_discovery = { **Config().rule_discovery, **configurations[i] }
+
+        with mf.start_run():
+            mf.log_param("data_seed", data_seed)
+            mf.log_param("sample_size", sample_size)
+            mf.log_param("sample_dim", dimensions)
+            mf.log_param("dataset", "communities")
+
+            # we reset the seed here
+            Random().reseed(seed)
+
+            lcs = LCS(dimensions)
+            lcs.fit(X_train, y_train)
+            y_pred = lcs.predict(X_test)
+            error = mean_squared_error(y_test, y_pred)
+
+            mf.log_metric("RMSE", np.sqrt(error))
+            print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
+
+
+def import_data(sample_size, data_seed):
     Random().reseed(data_seed)
 
     data = pd.read_csv("datasets/communities/communities.data", sep=',', header=None, na_values=["?"]).values
-    dimensions = data.shape[1]
-    X, y = data[:,4:-1], data[:,-1].reshape(-1, 1)
 
+    X, y = data[:,4:-1], data[:,-1].reshape(-1, 1)
     scale_X = MinMaxScaler(feature_range=(-1, 1))
     scale_X.fit(X)
     X = scale_X.transform(X)
@@ -38,31 +66,7 @@ def run_exp(seed, sample_size, data_seed):
     scale_y.fit(y)
     y = scale_y.transform(y)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=sample_size, random_state=Random().split_seed())
-
-    print(f"Samples generated. Starting training at {datetime.now().time()}")
-    mf.set_experiment("Tests with Communities and Crime Dataset")
-    with mf.start_run():
-        mf.log_param("data_seed", data_seed)
-        mf.log_param("sample_size", sample_size)
-        mf.log_param("sample_dim", dimensions)
-        mf.log_param("dataset", "Communities and Crime Dataset")
-
-        # we reset the seed here
-        Random().reseed(seed)
-        configurations = create_configurations()
-        for hyperparameters in configurations:
-            Config().rule_discovery = { **Config().rule_discovery, **hyperparameters }
-
-            print(f"Starting experiment with hyperparameters: {hyperparameters}")
-            lcs = LCS(dimensions)
-
-            lcs.fit(X_train, y_train)
-            y_pred = lcs.predict(X_test)
-            error = mean_squared_error(y_test, y_pred)
-
-            mf.log_metric("RMSE", np.sqrt(error))
-            print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
+    return train_test_split(X, y, train_size=sample_size, random_state=Random().split_seed())
 
 
 def create_configurations():
@@ -77,7 +81,7 @@ def create_configurations():
                 for recombination_type in ["i", "d"]:
                     config["recombination"] = recombination_type
                     for replacement_type in ["+", ","]:
-                        config["replacem‰ent"] = replacement_type
+                        config["replacement"] = replacement_type
                         for mu in [10, 50, 100, 150, 200, 500]:
                             config["mu"] = mu
                             for lmbd in [10, 50, 100, 150, 200, 500]:
