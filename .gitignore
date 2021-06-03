@@ -2,7 +2,7 @@ mlruns/
 .idea/
 __pycache__/
 figs/
-venv/
+_venv/
 .coverage
 htmlcov/
 .hypothesis

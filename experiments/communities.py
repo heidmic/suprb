@@ -75,21 +75,21 @@ def create_configurations():
 
     for optimizer_type in ["ES_ML", "ES_OPL", "ES_MLSP","ES_CMA"]:
         config["name"] = optimizer_type
-        for steps_per_step in [10, 50, 100, 200, 500, 1000]:
+        for steps_per_step in [10, 100, 500, 1000]:
             config["steps_per_step"] = steps_per_step
             if optimizer_type == "ES_ML":
                 for recombination_type in ["i", "d"]:
                     config["recombination"] = recombination_type
                     for replacement_type in ["+", ","]:
                         config["replacement"] = replacement_type
-                        for mu in [10, 50, 100, 150, 200, 500]:
+                        for mu in [10, 50, 100, 200, 500]:
                             config["mu"] = mu
-                            for lmbd in [10, 50, 100, 150, 200, 500]:
+                            for lmbd in [10, 50, 100, 200, 500]:
                                 if lmbd > mu:
                                     break
                                 else:
                                     config["lmbd"] = lmbd
-                                    for rho in [10, 50, 100, 150, 200, 500]:
+                                    for rho in [10, 50, 100, 200, 500]:
                                         if rho > lmbd:
                                             break
                                         else:
@@ -100,14 +100,14 @@ def create_configurations():
                                                     config["local_tau"] = local_tau
                                                     configurations.append(config.copy())
             elif optimizer_type == "ES_MLSP":
-                for lmbd in [20, 60, 100, 160, 200, 520]:
+                for lmbd in [20, 60, 100, 200, 520]:
                     config["lmbd"] = lmbd
                     config["mu"] = lmbd // 4
                     configurations.append(config.copy())
             else:
-                for mu in [10, 50, 100, 150, 200, 500]:
+                for mu in [10, 50, 100, 200, 500]:
                     config["mu"] = mu
-                    for lmbd in [10, 50, 100, 150, 200, 500]:
+                    for lmbd in [10, 50, 100, 200, 500]:
                         config["lmbd"] = lmbd
                         configurations.append(config.copy())
 
