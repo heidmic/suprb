@@ -1,48 +1,119 @@
-# from suprb2.perf_recorder import PerfRecorder
-from suprb2.config import Config
-from suprb2.random_gen import Random
-from suprb2.pool import ClassifierPool
-from suprb2.utilities import Utilities
-from suprb2.classifier import Classifier
-from suprb2.solutions import SolutionOptimizer
-from sklearn.linear_model import LinearRegression
+from __future__ import annotations
 
 import numpy as np  # type: ignore
 from copy import deepcopy
 from abc import *
-from typing import List
+from sklearn.linear_model import LinearRegression
+
+# from suprb2.perf_recorder import PerfRecorder
+from suprb2.solutions import SolutionOptimizer
+from suprb2.classifier import Classifier
+from suprb2.utilities import Utilities
+from suprb2.random_gen import Random
+from suprb2.config import Config
 
 class RuleDiscoverer(ABC):
-    def __init__(self):
-        pass
+    """
+    Abstract class from which all optimizers inherit from.
+    Important hyperparameters:
+        'name': (method 'select_best_classifiers') determs
+                which optimizer to use. The reason for this is purely
+                based on the automatization of experiments which
+                different configurations.
+        'start_point': (method 'create_start_points') determs
+                        which strategy is used to create the initial
+                        classifiers. Acceptable values are:
+                        u -> (elitist) unmatched
+                        c -> (elitist) complement
+                        None or something else -> draw examples from data
+    """
 
 
-    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+    def __init__(self, pool: list[Classifier]) -> None:
+        self.pool = pool
+
+
+    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None) -> None:
         raise NotImplementedError()
 
 
-    def create_start_points(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+    def extract_classifier_attributes(self, classifiers_tuples: list[tuple[Classifier, np.ndarray]], x_dim: int, rho: int=None) -> np.ndarray:
+        """
+        Creates an array with shape (3, rho, x_dim),
+        where 3 is the number of relevant attributes (lowers, uppers and sigmas).
+        """
+        rho = rho if rho is not None else len(classifiers_tuples)
+        classifier_attrs = np.zeros((3, rho, x_dim), dtype=float)
+        for i in range(rho):
+            classifier_attrs[:,i] = np.array([  classifiers_tuples[i][0].lowerBounds,
+                                                classifiers_tuples[i][0].upperBounds,
+                                                classifiers_tuples[i][1] ],
+                                            dtype=object).reshape((3, x_dim))
+
+        return classifier_attrs
+
+
+    def create_sigmas(self, x_dim: int) -> np.ndarray:
+        """
+        Creates an array with size 'x_dim' with
+        uniformly distributed values from [0, 1]
+        """
+        return Random().random.uniform(size=x_dim)
+
+
+    def select_best_classifiers(self, tuple_list: list[tuple[Classifier, np.ndarray]], mu: int) -> list[tuple[Classifier, np.ndarray]]:
+        """
+        Return the 'mu' best classifiers (according to their weighted error)
+        from the 'tuple_list'. If mu < len(tuple_list), then ValueError is raised.
+        """
+        if mu == len(tuple_list):
+            return tuple_list
+        else:
+            tuple_array = np.array(tuple_list, dtype=object)
+            idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu-1).astype(int)[:(mu)]
+            return list(tuple_array[idx])
+
+
+    def get_rule_disc(pool: list[Classifier]) -> RuleDiscoverer:
+        """
+        Returns the optimizer pointed by the rule discovery
+        hyper-parameter 'name'.
+        """
+        optimizer = Config().rule_discovery['name']
+        if optimizer == 'ES_OPL':
+            return ES_OnePlusLambd(pool)
+        elif optimizer == 'ES_ML':
+            return ES_MuLambd(pool)
+        elif optimizer == 'ES_MLSP':
+            return ES_MuLambdSearchPath(pool)
+        elif optimizer == 'ES_CMA':
+            return ES_CMA(pool)
+        else:
+            raise NotImplemented
+
+
+    def create_start_points(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None) -> list(tuple(Classifier, np.ndarray)):
         """
         This method creates classifier as starting points for
         an evolutionary search.
         There are 3 different strategies:
-            - 'draw_examples_from_data'
-            - 'elitist_unmatched'
-            - 'elitist_complement'
+            - 'elitist_unmatched'       (Config().rule_discovery['start_point'] = 'u')
+            - 'elitist_complement'      (Config().rule_discovery['start_point'] = 'c')
+            - 'draw_examples_from_data' (Config().rule_discovery['start_point'] = None or something else)
         """
         technique = Config().rule_discovery['start_points']
 
-        if technique == 'elitist_complement':
+        if technique == 'c':
             # second return value is the array of intervals (for test)
             classifiers, _ = self.elitist_complement(n, X, y, solution_opt)
             return classifiers
-        elif technique == 'elitist_unmatched':
+        elif technique == 'u':
             return self.elitist_unmatched(n, X, y, solution_opt)
         else:
             return self.draw_examples_from_data(n, X, y)
 
 
-    def elitist_complement(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer):
+    def elitist_complement(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer) -> list(tuple(Classifier, np.ndarray)):
         """
         This method takes the classifiers from the elitist Individual
         and extract the complement of their matching intervals [l, u).
@@ -63,7 +134,7 @@ class RuleDiscoverer(ABC):
         The last dimension is 2, because of the interval representation,
         which is a two elements array.
         """
-        start_points = []
+        start_points = list()
         elitist_classifiers = solution_opt.get_elitist().get_classifiers()
         cl_num, xdim = (len(elitist_classifiers), X.shape[1])
         intervals = np.zeros((cl_num, xdim, n * 2, 2), dtype=float)
@@ -82,16 +153,15 @@ class RuleDiscoverer(ABC):
             # with the i-th line, create n * 2 classifiers
             for k in range(n * 2):
                 new_classifier = Classifier(lowers=intervals[i,:,k,0], uppers=intervals[i,:,k,1],
-                                            local_model=LinearRegression(), degree=1, sigmas=np.ones(xdim, dtype=float))
+                                            local_model=LinearRegression(), degree=1)
                                             # Reminder: LinearRegression might change in the future
                 new_classifier.fit(X, y)
-                start_points.append(new_classifier)
+                start_points.append( [new_classifier, self.create_sigmas(xdim)] )
 
         return (start_points, intervals)
 
 
-
-    def split_interval(self, l: np.ndarray, n: int):
+    def split_interval(self, l: np.ndarray, n: int) -> np.ndarray:
         """
         This method splits an interval 'l' into 'n' new ones.
         For example:
@@ -102,33 +172,33 @@ class RuleDiscoverer(ABC):
         return np.array([ [l[0]+i*w, l[0]+(i+1)*w] for i in range(n) ], dtype=float)
 
 
-    def elitist_unmatched(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer):
+    def elitist_unmatched(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer) -> list(tuple(Classifier, np.ndarray)):
         """
         This method copies 'n' classifiers that are not used by the
         elitist individual.
         """
         classifiers = deepcopy(solution_opt.get_elitist().get_classifiers(unmatched=True))
 
-        return Random().random.choice(classifiers, n, False)
+        return [ [cl, self.create_sigmas(X.shape[1])] for cl in Random().random.choice(classifiers, n, False) ]
 
 
-    def draw_examples_from_data(self, n: int, X: np.ndarray, y: np.ndarray):
+    def draw_examples_from_data(self, n: int, X: np.ndarray, y: np.ndarray) -> list(tuple(Classifier, np.ndarray)):
         """
         This method takes 'n' random examples out of the inputs and
         creates one classifier for each example taken.
         """
-        start_points = []
+        start_points = list()
         idxs = Random().random.choice(np.arange(len(X)), n, False)
         for x in X[idxs]:
-            cl = Classifier.random_cl(x, X.shape[1])
+            cl = Classifier.random_cl(X.shape[1], point=x)
             cl.fit(X, y)
-            start_points.append(cl)
+            start_points.append( [cl, self.create_sigmas(X.shape[1])] )
         return start_points
 
 
 class ES_OnePlusLambd(RuleDiscoverer):
-    def __init__(self):
-        pass
+    def __init__(self, pool: list[Classifier]):
+        super().__init__(pool)
 
 
     def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
@@ -146,16 +216,20 @@ class ES_OnePlusLambd(RuleDiscoverer):
                 #  below a certain threshhold as equal might yield better models
                 cl = children[np.argmin([child.get_weighted_error() for child in children])]
 
-            if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
-                ClassifierPool().classifiers.append(cl)
+            if cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
+                self.pool.append(cl)
 
 
 class ES_MuLambd(RuleDiscoverer):
     """
     This class represents the optimizer for rule generation.
 
-    It uses Evolutionary Strategy generate an initial population
+    It uses Evolution Strategies generate an initial population
     with focus on diversity.
+
+    Its pool is a list of tuple, where each tuple
+    has an classifier and a mutation vector (sigmas)
+    associated with that classifier.
 
     Relevant hyper parameters for this class:
     'mu'            ->  Defines how many classifiers will be copied from the
@@ -182,8 +256,11 @@ class ES_MuLambd(RuleDiscoverer):
                         taken randomly from one of the 'rho' parents
                         for each Xdim.
 
-    'sigma'         ->  Positive scale factor for the mutation on the
-                        classifiers' mutation vector (cl.sigmas).
+    'local_tau'     ->  Scale used to calculate the local learning rate
+                        for the classifier's mutation.
+
+    'global_tau'    ->  Scale used to calculate the global learning rate
+                        for the classifier's mutation.
 
     'replacement'   ->  This hyper parameter defines if we are also adding
                         the copies of the parents to the pool ('+'), or if
@@ -191,87 +268,396 @@ class ES_MuLambd(RuleDiscoverer):
     """
 
 
-    def __init__(self):
-        pass
+    def __init__(self, pool: list[Classifier]) -> None:
+        super().__init__(pool)
+        self.sigmas = list()
 
 
     def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
-        # create start points for evolutionary search
+        generation_tuples = list()
         mu = Config().rule_discovery['mu']
-        generation = self.create_start_points(mu, X, y, solution_opt)
+
+        # create start points for evolutionary search (with mutation vectors)
+        generation_tuples = self.create_start_points(mu, X, y, solution_opt)
 
         # steps forward in the evolutionary search
         for i in range(Config().rule_discovery['steps_per_step']):
-            recombined_classifiers = self.recombine(generation)
-            children = self.mutate_and_fit(recombined_classifiers, X, y)
-            generation = self.replace(generation, children)
+            recmb_tuples      = self.recombine(generation_tuples)
+            children_tuples   = self.mutate_and_fit(recmb_tuples, X, y)
+            generation_tuples = self.replace(generation_tuples, children_tuples)
 
         # add search results to pool
-        mask = np.array([cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]) for cl in generation], dtype='bool')
-        ClassifierPool().classifiers.extend(np.array(generation, dtype='object')[mask])
+        # mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
+        # filtered_tuples = np.array(generation_tuples, dtype=object)[mask]
+        filtered_tuples = np.array(self.select_best_classifiers(generation_tuples, mu), dtype=object)
+        self.pool.extend( list(filtered_tuples[:,0]) )
+        self.sigmas.extend( list(filtered_tuples[:,1]) )
 
 
-    def recombine(self, parents: List[Classifier]):
-        if len(parents) == 0:
-            return []
+    def recombine(self, parents_tuples: list[tuple[Classifier, np.ndarray]]) -> list[tuple[Classifier, np.ndarray]]:
+        """
+        This method decides which kind of recombination will be done,
+        according to the rule discovery hyper parameter: 'recombination'
+        If 'recombination' == 'i', then new 'lmbd' classifiers
+        will be created out of the mean of 'rho' parents attributes.
+        If 'recombination' == 'd', then the new classifiers are
+        created randomly from the attributes from the parents
+        (attributes do not cross values).
+        If 'recombination' is somethin else, then only one classifier
+        will be created and it will be a copy from one of the parents.
+        """
+        if len(parents_tuples) == 0:
+            return None
 
         lmbd = Config().rule_discovery['lmbd']
         rho = Config().rule_discovery['rho']
         recombination_type = Config().rule_discovery['recombination']
 
-        if recombination_type == 'intermediate':
-            return self.intermediate_recombination(parents, lmbd, rho)
-        elif recombination_type == 'discrete':
-            return self.discrete_recombination(parents, lmbd, rho)
+        if recombination_type == 'i':
+            return self.intermediate_recombination(parents_tuples, lmbd, rho)
+        elif recombination_type == 'd':
+            return self.discrete_recombination(parents_tuples, lmbd, rho)
         else:
-            return [deepcopy(Random().random.choice(parents))]
+            cl_index = Random().random.choice(range(len(parents_tuples)))
+            copied_tuple = deepcopy(parents_tuples[cl_index])
+            return [copied_tuple]
 
 
-    def intermediate_recombination(self, parents: List[Classifier], lmbd: int, rho: int):
-        children = []
+    def intermediate_recombination(self, parents_tuples: list[tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> list[tuple[Classifier, np.ndarray]]:
+        """
+        This methods creates 'lmbd' classifiers from the average
+        of 'rho' classifiers in parents.
+        So, the new classifier look like this:
+        Classifier( lowers=average(rho_candidates.lowerBounds),
+                    uppers=average(rho_candidates.upperBounds),
+                    LinearRegression(), degree=1 )
+        Classifier's sigmas = average(rho_candidates.sigmas)
+        """
+        children_tuples = list()
+        parents_array = np.array(parents_tuples, dtype=object)
+        x_dim = parents_array[0,0].lowerBounds.size if type(parents_array[0,0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):
-            candidates = Random().random.choice(parents, rho, False)
-            boundaries_avg = np.mean([[p.lowerBounds, p.upperBounds] for p in candidates], axis=0)
-            sigmas_avg = np.mean([p.sigmas for p in candidates], axis=0)
-            copy_sigmas = sigmas_avg.copy()
-            copy_avg = boundaries_avg.copy()
-            children.append(Classifier(copy_avg[0], copy_avg[1],
-                                            LinearRegression(), 1, copy_sigmas))  # Reminder: LinearRegression might change in the future
-        return children
+            candidates_tuples = Random().random.choice(parents_array, rho, False)
+            classifier_attrs = self.extract_classifier_attributes(candidates_tuples, x_dim=x_dim, rho=rho)
+
+            avg_attrs = np.array([[np.mean(classifier_attrs[0].flatten())],
+                                  [np.mean(classifier_attrs[1].flatten())],
+                                  [np.mean(classifier_attrs[2].flatten())]])
+
+            classifier = Classifier(avg_attrs[0], avg_attrs[1], LinearRegression(), 1) # Reminder: LinearRegression might change in the future
+            children_tuples.append((classifier, avg_attrs[2]))
+
+        return children_tuples
 
 
-    def discrete_recombination(self, parents: np.ndarray, lmbd: int, rho: int):
-        children = []
-        Xdim = parents[0].lowerBounds.size if type(parents[0].lowerBounds) == np.ndarray else 1
+    def discrete_recombination(self, parents_tuples: list[tuple[Classifier, np.ndarray]], lmbd: int, rho: int) -> list[tuple[Classifier, np.ndarray]]:
+        """
+        This method creates 'lmbd' classifiers picking randomly
+        the attributes from 'rho' parents. The values do not cross
+        types (so, values used for upperBounds, can only be used for
+        one classifier's upperBounds).
+        If the values are flipped (lowerBounds > upperBounds), then
+        unflip it and save.
+        """
+        children_tuples = list()
+        parents_array = np.array(parents_tuples, dtype=object)
+        x_dim = parents_array[0,0].lowerBounds.size if type(parents_array[0,0].lowerBounds) == np.ndarray else 1
         for i in range(lmbd):
-            candidates = Random().random.choice(parents, rho, False)
-            lowerBounds = np.empty(Xdim)
-            upperBounds = np.empty(Xdim)
-            sigmas = np.empty(Xdim)
+            candidates_tuples = Random().random.choice(parents_array, rho, False)
+            classifier_attrs = self.extract_classifier_attributes(candidates_tuples, x_dim=x_dim, rho=rho)
+            # select 'x_dim' values for each attribute (values are not crossed)
+            selected_attr = np.array((Random().random.choice(classifier_attrs[0].flatten(), size=x_dim),
+                                      Random().random.choice(classifier_attrs[1].flatten(), size=x_dim),
+                                      Random().random.choice(classifier_attrs[2].flatten(), size=x_dim)), dtype=float)
+            # flip if boundaries are inverted
+            bounds = np.delete(selected_attr, -1, axis=0)
+            sidx = bounds[:2].argsort(axis=0)
+            bounds = bounds[sidx, np.arange(sidx.shape[1])]
 
-            for i_dim in range(Xdim):
-                sigmas[i_dim] = Random().random.choice([ c.sigmas[i_dim] for c in candidates ])
-                lower = Random().random.choice([ c.lowerBounds[i_dim] for c in candidates ])
-                upper = Random().random.choice([ c.upperBounds[i_dim] for c in candidates ])
-                # flip if boundaries are inverted
-                lowerBounds[i_dim], upperBounds[i_dim] = sorted((lower, upper))
+            # create new classifier, and save sigmas
+            classifier = Classifier(bounds[0], bounds[1], LinearRegression(), 1)
+            children_tuples.append( (classifier, selected_attr[2]) )
 
-            children.append(Classifier(lowerBounds, upperBounds, LinearRegression(), 1, sigmas))
-        return np.array(children)
+        return children_tuples
 
 
-    def mutate_and_fit(self, classifiers: List[Classifier], X: np.ndarray, y:np.ndarray):
-        children = []
-        for cl in classifiers:
-            cl.mutate(Config().rule_discovery['sigma'])
+    def mutate_and_fit(self, cls_tuples: list[tuple[Classifier, np.ndarray]], X: np.ndarray, y:np.ndarray) -> list[tuple[Classifier, np.ndarray]]:
+        """
+        This method uses the traditional self-adapting ES mutation algortihm
+        to mutate the classifiers.
+
+        First, the classifier's mutation vector undergoes a mutation itself,
+        influenced by two hyper parameters:
+            'local_tau':  -> Scale used to calculate the local learning rate
+                             (default value: 1.1)
+            'global_tau': -> Scale used to calculate the global learning rate
+                             (default value: 1.2)
+        With the global and local learning rates calculated, the sigmas can be
+        modified using the following formula:
+            mutated_sigma = classifier_sigma * exp(N(1, tau_local) + N(1, tau_global))
+
+        Each interval [l, u)'s bound x is changed to x' ~ N(x, mutated_sigmas(x)).
+        A Gaussian distribution using values from the classifier's mutation
+        vector as standard deviation.
+        """
+        children_tuples = list()
+        global_learning_rate = Random().random.normal(scale=Config().rule_discovery['global_tau'])
+        if cls_tuples is None:
+            return children_tuples
+
+        cls_len = len(cls_tuples)
+
+        for i in range(cls_len):
+            cl, cl_sigmas = cls_tuples[i]
+
+            # Apply global and local learning factors to the classifier's mutation vector
+            local_learning_rate = Config().rule_discovery['local_tau'] * Random().random.normal(size=X.shape[1])
+            mutated_sigmas = cl_sigmas * np.exp(local_learning_rate + global_learning_rate)
+
+            # Mutate classifier's matching function
+            lowers = Random().random.normal(loc=cl.lowerBounds, scale=mutated_sigmas, size=X.shape[1])
+            uppers = Random().random.normal(loc=cl.upperBounds, scale=mutated_sigmas, size=X.shape[1])
+            lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
+            cl.lowerBounds = lu[0]
+            cl.upperBounds = lu[1]
+            # cl.mutate(Config().rule_discovery['sigma'])
             cl.fit(X, y)
             if cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
-                children.append(cl)
-        return children
+                children_tuples.append((cl, cl_sigmas))
+
+        return children_tuples
 
 
-    def replace(self, parents: List[Classifier], children: List[Classifier]):
-        next_generation = children
+    def replace(self, parents_tuples: list[tuple[Classifier, np.ndarray]], children_tuples: list[tuple[Classifier, np.ndarray]]) -> list[tuple[Classifier, np.ndarray]]:
+        """
+        This method uses the hyper parameter to define if
+        in the next generation, there will be only the
+        children ('replacement' == ','), or if the parents
+        will also be included ('replacement' == '+').
+        Default value for 'replacement' is '+'.
+        """
         if Config().rule_discovery['replacement'] == '+':
-            next_generation = children + parents
-        return next_generation
+            return parents_tuples + children_tuples
+        else:
+            return children_tuples
+
+
+class ES_MuLambdSearchPath(RuleDiscoverer):
+    """
+    This optimizer uses the Evolution Strategy
+    Cumullative Step-Size Adaptation in order
+    to promote diversity in the population.
+
+    Its pool is a list of tuple, where each tuple
+    has an classifier and a mutation vector (sigmas)
+    associated with that classifier.
+
+    Relevant hyper parameters are:
+        'lmbd':             Number of new classifier generated.
+                            After the 'lmbd' classifiers are
+                            generated, only 'mu' will be selected
+                            (according to the fitness/error).
+                            Recommended value: positive int
+
+        'mu':               Number of the best 'mu' new classifiers
+                            that are going to be selected as parents
+                            for the new classifier.
+                            Recommended value: 'lmbd'/4
+
+        'steps_per_step':   'steps_per_step'->  How many times we are going
+                            to repeat the evolutionary search , when step()
+                            is called. For instance, if steps_per_step
+                            is 2, then run 2 steps in the evolutionary
+                            search started by step().
+
+    Implementation based on paper ES Overview 2015 by Hansen, Arnold & Auger.
+    Page 13, Algorithm 4 - The (μ/μ, λ)-ES with Search Path
+    Links:
+    - PDF download: https://hal.inria.fr/hal-01155533/file/es-overview-2015.pdf
+    - Refence: https://scholar.google.com/citations?user=NsIbm80AAAAJ&hl=en#
+    """
+
+
+    def __init__(self, pool: list[tuple[Classifier, np.ndarray]]) -> None:
+        super().__init__(pool)
+        self.sigmas = list()
+
+
+    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+        lmbd            = Config().rule_discovery['lmbd']
+        mu              = Config().rule_discovery['mu']
+        x_dim           = X.shape[1]
+        sigma_coef      = np.sqrt(mu / (x_dim + mu))
+        dist_global     = 1 + np.sqrt(mu / x_dim)
+        dist_local      = 3 * x_dim
+        tuples_for_pool = list()
+        search_path     = 0
+        start_point, start_sigma = self.create_start_points(1, X, y, solution_opt)[0]
+
+        for i in range(Config().rule_discovery['steps_per_step']):
+            rnd_tuple_list = list()
+            start_point.fit(X, y)
+            print(f"start point weighted error: {start_point.get_weighted_error()}")
+
+            # generating children with sigmas
+            for j in range(lmbd):
+                cl_sigmas = self.create_sigmas(x_dim)
+                cl = deepcopy(start_point)
+                cl.lowerBounds, cl.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + (start_sigma * cl_sigmas))
+                cl.fit(X, y)
+                rnd_tuple_list.append( [cl, cl_sigmas] )
+            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu), dtype=object)
+            tuples_for_pool.extend( children_tuple_list )
+
+            # recombination and parent update
+            search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(children_tuple_list[:,1])
+
+            # expected value of a half normal distribution
+            local_expected_value = np.sqrt(2 / np.pi)
+            local_factor = np.power(( np.exp((np.abs(search_path) / local_expected_value) - 1) ),  (1 / dist_local))
+
+            # There is an elegant way to replace Line 8b proposed by this articles at page 15.
+            global_factor = np.power(( np.exp(( np.linalg.norm(search_path)**2 / x_dim ) - 1) ), (sigma_coef / dist_global) / 2)
+
+            # step-size changes
+            start_sigma = start_sigma * local_factor * global_factor
+
+            # recombining parents attributes
+            parents_attr = self.extract_classifier_attributes(children_tuple_list, x_dim)
+            start_point.lowerBounds = (1/mu) * np.sum(parents_attr[0], axis=0)
+            start_point.upperBounds = (1/mu) * np.sum(parents_attr[1], axis=0)
+
+        # add children to pool
+        tuples_array = np.array(tuples_for_pool, dtype=object)
+        self.pool.extend( list(tuples_array[:,0]) )
+        self.sigmas.extend( list(tuples_array[:,1]) )
+
+
+class ES_CMA(RuleDiscoverer):
+    """
+    This optimizer uses the Evolution Strategy
+    Correlation Matrix Adaptation in order
+    to promote diversity in the population.
+
+    Its pool is a list of tuple, where each tuple
+    has an classifier and a mutation vector (sigmas)
+    associated with that classifier.
+
+    Relevant hyper parameters are:
+        'lmbd':             Number of new classifier generated.
+                            After the 'lmbd' classifiers are
+                            generated, only 'mu' will be selected
+                            (according to the fitness/error).
+                            Recommended value: 'lmbd' >= 5
+
+        'mu':               Number of the best 'mu' new classifiers
+                            that are going to be selected as parents
+                            for the new classifier.
+                            Recommended value: 'mu' = 'lmbd'/2
+
+        'steps_per_step':   'steps_per_step'->  How many times we are going
+                            to repeat the evolutionary search , when step()
+                            is called. For instance, if steps_per_step
+                            is 2, then run 2 steps in the evolutionary
+                            search started by step().
+
+    Implementation based on paper ES Overview 2015 by Hansen, Arnold & Auger.
+    Page 15, Algorithm 5 - The (μ/μ_w, λ)-CMA-ES
+    Links:
+    - PDF download: https://hal.inria.fr/hal-01155533/file/es-overview-2015.pdf
+    - Refence: https://scholar.google.com/citations?user=NsIbm80AAAAJ&hl=en#
+    """
+
+
+    def __init__(self, pool: list[Classifier]) -> None:
+        super().__init__(pool)
+        self.sigmas = list()
+
+
+    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+        lmbd            = Config().rule_discovery['lmbd']
+        mu              = Config().rule_discovery['mu']
+        x_dim           = X.shape[1]
+        sigmas          = Random().random.normal(size=x_dim)
+        sp_isotropic    = np.zeros(x_dim, dtype=float)
+        sp_cov          = np.zeros(x_dim, dtype=float)
+        C               = np.identity(x_dim)
+        tuples_for_pool = list()
+        start_point, _ = self.create_start_points(1, X, y, solution_opt)[0]
+
+        for i in range(Config().rule_discovery['steps_per_step']):
+            start_point.fit(X, y)
+            print(f"start point weighted error: {start_point.get_weighted_error()}")
+            # generating children with sigmas
+            rnd_tuple_list = list()
+            C_sqrt_diag = np.diag(np.sqrt(C))
+            for j in range(lmbd):
+                cl = deepcopy(start_point)
+                # cl_sigmas = Random().random.uniform(low=0.25, high=1.25, size=x_dim)
+                cl_sigmas = Random().random.normal(size=x_dim)
+                cl.lowerBounds, cl.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + ( (sigmas * np.sqrt(C)) @ cl_sigmas ))
+                cl.fit(X, y)
+                rnd_tuple_list.append( [cl, cl_sigmas] )
+            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu), dtype=object)
+            tuples_for_pool.extend( children_tuple_list )
+
+            # Initializing factors according to the children's weights
+            children_weights = self.calculate_weights(children_tuple_list, lmbd)
+            mu_weights = 1 / np.sum(children_weights**2)
+            cov_isotropic = mu_weights / (x_dim + mu_weights)
+            dist = 1 + np.sqrt(mu_weights / x_dim)
+            cov_coef = (4 + mu_weights / x_dim) / (x_dim + 4 + 2 * mu_weights / x_dim)
+            cov_one = 2 / (x_dim**2 + mu_weights)
+            cov_mu = mu_weights / (x_dim**2 + mu_weights)
+            cov_m = 1
+            weighted_sigma_sum = np.sum(children_tuple_list[:,1] * children_weights)
+
+            # start_point's boundaries update
+            start_point.lowerBounds, start_point.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + cov_m * sigmas * C_sqrt_diag * weighted_sigma_sum)
+            start_point.fit(X, y)
+            # search path isotropic update
+            sp_isotropic = (1 - cov_isotropic) * sp_isotropic + np.sqrt(cov_isotropic * (2 - cov_isotropic)) * np.sqrt(mu_weights) * weighted_sigma_sum
+            # search path with covariances update
+            h_isotropic = 1 if (np.linalg.norm(sp_isotropic)**2 / x_dim) < 2 + 4 / (x_dim + 1) else 0
+            weighted_cov_sigmas_sum = np.sum([ children_weights[i] * C_sqrt_diag * children_tuple_list[i,1] for i in range(mu) ])
+            sp_cov = (1 - cov_coef) * sp_cov + h_isotropic * ( cov_coef * np.sqrt(mu_weights) * weighted_cov_sigmas_sum )
+            # sigmas update
+            sigmas *= np.power( np.exp( (np.linalg.norm(sp_isotropic)**2 / x_dim) - 1 ), ((cov_isotropic / dist) / 2) )
+            # covariance matrix update
+            cov_h = cov_one * (1 - h_isotropic**2) * cov_coef * (2 - cov_coef)
+            weighted_cov_trans_sum = np.sum([ children_weights[i] * np.dot(C_sqrt_diag * children_tuple_list[i,1], (C_sqrt_diag * children_tuple_list[i,1]).T) for i in range(mu) ])
+            C = (1 - cov_one + cov_h - cov_isotropic) * C + cov_one * np.dot(sp_cov, sp_cov.T) + cov_mu * weighted_cov_trans_sum
+
+        # add children to pool
+        arrays_for_pool = np.array(tuples_for_pool, dtype=object)
+        self.pool.extend( list(arrays_for_pool[:,0]) )
+        self.sigmas.extend( list(arrays_for_pool[:,1]) )
+
+
+    def calculate_weights(self, cls_tuples: list[tuple[Classifier, np.ndarray]], lmbd: int) -> np.ndarray:
+        """
+        This method is designed to calculate the w_k
+        in the original algorithm. It is a function, that
+        returns the weights of the children, where
+        w_k = w(k) / Sum(w(k)) (from k to µ)
+        But, in order to avoid repeating this calculation,
+        the implemented method return an array from all
+        classifiers.
+
+        The selection enviroment is a truncation selection,
+        but instead of the rank directly, the log from it
+        is used.
+        """
+        tuples_array = np.array(cls_tuples, dtype=object)
+        if tuples_array.ndim == 1:
+            weighted_errors = np.array([ cl_tuple[0].get_weighted_error() for cl_tuple in cls_tuples ], dtype=float)
+        else:
+            weighted_errors = np.array([ cl.get_weighted_error() for cl in tuples_array[:,0] ], dtype=float)
+        ranked_indexes = np.argsort(weighted_errors)
+        weights = np.ones(tuples_array.shape[0], dtype=float)
+
+        for i in range(tuples_array.shape[0]):
+            # Klaus: Research log
+            weights[i] = np.log(lmbd/2 + 0.5) - np.log(ranked_indexes[i] + 1)
+
+        return weights

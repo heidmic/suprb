@@ -1,11 +1,8 @@
 from suprb2.config import Config
-from suprb2.pool import ClassifierPool
 from suprb2.individual import Individual
 from suprb2.classifier import Classifier
-from test.tests_support import TestsSupport
 
 import unittest
-import numpy as np
 
 class TestIndividual(unittest.TestCase):
     """
@@ -33,10 +30,10 @@ class TestIndividual(unittest.TestCase):
         """
         # Start the ClassifierPool
         n = 10
-        ClassifierPool().classifiers = [Classifier.random_cl(None, 1) for i in range(n)]
+        pool = [Classifier.random_cl(1) for i in range(n)]
 
         # Get classifiers
-        ind = Individual.random_individual(n)
+        ind = Individual.random_individual(n, pool)
         classifiers_in_individual = ind.get_classifiers()
         classifiers_out_individual = ind.get_classifiers(unmatched=True)
 

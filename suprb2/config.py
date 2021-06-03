@@ -8,20 +8,20 @@ class Config:
     __shared_state = {
         "n_elitists": 1,
         "rule_discovery": {
-            "name": '(1+lambda)-ES',
-            "cl_min_range": 0.2,
-            "nrules": 100,
+            "name": 'ES_OPL',
+            "cl_radius": 0.1,
+            "nrules": 50,
             "lmbd": 20,  # not allowed to use lambda
             "mu": 10,
             "rho": 2,
             "sigma": 0.2,
-            "start_points": None,
-            "steps_per_step": 10,
-            "recombination": None,
+            "local_tau": 1.1,
+            "global_tau": 1.2,
+            "steps_per_step": 50,
+            "recombination": 'd',
             "replacement": '+',
-            "min_sigma": 0.8,
-            "max_sigma": 1.2,
-            "weighted_error_constant": 1000
+            "weighted_error_const": 100,
+            "start_points": None,
         },
         "solution_creation": {
             "name": '(1+1)-ES',
@@ -29,7 +29,7 @@ class Config:
             # "crossover_type": None,
             "mutation_rate": 0.2,
             "fitness": "pseudo-BIC",
-            "steps_per_step": 1000
+            "steps_per_step": 100
         },
         "initial_pool_size": 50,
         "initial_genome_length": 100000,

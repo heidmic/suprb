@@ -1,38 +1,26 @@
-from suprb2.config import Config
-from suprb2.pool import ClassifierPool
-from suprb2.utilities import Utilities
-from suprb2.solutions import ES_1plus1
-from suprb2.individual import Individual
-from suprb2.classifier import Classifier
 from test.tests_support import TestsSupport
 from suprb2.discovery import RuleDiscoverer
+from suprb2.individual import Individual
+from suprb2.classifier import Classifier
+from suprb2.solutions import ES_1plus1
 
-import unittest
 import numpy as np
-from mock import patch, Mock
+import unittest
 
-class TestRuleDiscoverer(unittest.TestCase):
+class TestDiscoveryRuleDiscoverer(unittest.TestCase):
     """
     This module test all methods from RuleDiscoverer
     """
-
-
-    def setUp(self):
-        """
-        Resets the Classifier Pool for the next test.
-        """
-        ClassifierPool().classifiers = list()
-        Config().__init__()
 
 
     def setup_test(self, x_len, n, start_points, elitist):
         TestsSupport.set_rule_discovery_configs(start_points=start_points)
         X, y = TestsSupport.generate_input(x_len)
         if elitist is not None:
-            solution_opt = ES_1plus1(X, y, elitist)
-            return RuleDiscoverer().create_start_points(n, X, y, solution_opt)
+            solution_opt = ES_1plus1(X, y, list(), elitist)
+            return RuleDiscoverer(pool=list()).create_start_points(n, X, y, solution_opt)
         else:
-            return RuleDiscoverer().create_start_points(n, X, y, None)
+            return RuleDiscoverer(pool=list()).create_start_points(n, X, y, None)
 
 
     # ------------- step() --------------
@@ -44,7 +32,7 @@ class TestRuleDiscoverer(unittest.TestCase):
 
         Verifies that NotImplementedError is raised (independent of the parameters).
         """
-        self.assertRaises(NotImplementedError, RuleDiscoverer().step, X=None, y=None, solution_opt=None)
+        self.assertRaises(NotImplementedError, RuleDiscoverer(pool=list()).step, X=None, y=None, solution_opt=None)
 
 
     # ------------- draw_examples_from_data() --------------
@@ -72,7 +60,7 @@ class TestRuleDiscoverer(unittest.TestCase):
         when start_point='elitist_unmatched', solution_opt=None
         """
         x_len, n = (10, 5)
-        self.assertRaises(AttributeError, self.setup_test, x_len=x_len, n=n, start_points='elitist_unmatched', elitist=None)
+        self.assertRaises(AttributeError, self.setup_test, x_len=x_len, n=n, start_points='u', elitist=None)
 
 
     def test_elitist_unmatched(self):
@@ -85,19 +73,20 @@ class TestRuleDiscoverer(unittest.TestCase):
         x_len, n = (10, 5)
 
         # Start the ClassifierPool
+        pool = list()
         for i in range(x_len):
-            classifier = Classifier.random_cl(None, 1)
+            classifier = Classifier.random_cl(1)
             classifier.error = 0.2
             classifier.experience = 0
-            ClassifierPool().classifiers.append(classifier)
+            pool.append(classifier)
 
         # Get classifiers' intervals
-        individual = Individual(np.array([1, 1, 1, 0, 0, 0, 0, 0, 0, 0], dtype='bool'))
+        individual = Individual(np.array([1, 1, 1, 0, 0, 0, 0, 0, 0, 0], dtype='bool'), pool)
         classifiers_intervals = [[cl.lowerBounds, cl.upperBounds] for cl in individual.get_classifiers(unmatched=True)]
 
-        classifiers = self.setup_test(x_len=x_len, n=n, start_points='elitist_unmatched', elitist=individual)
-        for cl in classifiers:
-            self.assertIn([cl.lowerBounds, cl.upperBounds], classifiers_intervals)
+        classifier_tuples = self.setup_test(x_len=x_len, n=n, start_points='u', elitist=individual)
+        for cl_tuple in classifier_tuples:
+            self.assertIn([cl_tuple[0].lowerBounds, cl_tuple[0].upperBounds], classifiers_intervals)
 
 
     def test_elitist_unmatched_n_too_big(self):
@@ -110,16 +99,17 @@ class TestRuleDiscoverer(unittest.TestCase):
         x_len, n = (10, 5)
 
         # Start the ClassifierPool
+        pool = list()
         for i in range(x_len):
-            classifier = Classifier.random_cl(None, 1)
+            classifier = Classifier.random_cl(1)
             classifier.error = 0.2
             classifier.experience = 0
-            ClassifierPool().classifiers.append(classifier)
+            pool.append(classifier)
 
         # Create Individual that matches all classifier but one
-        individual = Individual(np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 0], dtype='bool'))
+        individual = Individual(np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 0], dtype='bool'), pool)
 
-        self.assertRaises(ValueError, self.setup_test, x_len=x_len, n=n, start_points='elitist_unmatched', elitist=individual)
+        self.assertRaises(ValueError, self.setup_test, x_len=x_len, n=n, start_points='u', elitist=individual)
 
 
     # ------------- split_interval() --------------
@@ -131,7 +121,7 @@ class TestRuleDiscoverer(unittest.TestCase):
         Checks that the interval [10, 30] is correctly
         divided in 2
         """
-        self.assertTrue(np.allclose(RuleDiscoverer().split_interval([10, 30], n=2), [[10, 20], [20, 30]]))
+        self.assertTrue(np.allclose(RuleDiscoverer(pool=list()).split_interval([10, 30], n=2), [[10, 20], [20, 30]]))
 
 
     def test_split_interval_in_four(self):
@@ -141,7 +131,7 @@ class TestRuleDiscoverer(unittest.TestCase):
         Checks that the interval [10, 30] is correctly
         divided in 4
         """
-        self.assertTrue(np.allclose(RuleDiscoverer().split_interval([10, 30], n=4), [[10, 15], [15, 20], [20, 25], [25, 30]]))
+        self.assertTrue(np.allclose(RuleDiscoverer(pool=list()).split_interval([10, 30], n=4), [[10, 15], [15, 20], [20, 25], [25, 30]]))
 
 
     def test_split_interval_negative_numbers(self):
@@ -150,7 +140,7 @@ class TestRuleDiscoverer(unittest.TestCase):
 
         Checks the split with negative values.
         """
-        self.assertTrue(np.allclose(RuleDiscoverer().split_interval([-30, 0], n=3), [[-30, -20], [-20, -10], [-10, 0]]))
+        self.assertTrue(np.allclose(RuleDiscoverer(pool=list()).split_interval([-30, 0], n=3), [[-30, -20], [-20, -10], [-10, 0]]))
 
 
     def test_split_interval_round_zero(self):
@@ -159,7 +149,7 @@ class TestRuleDiscoverer(unittest.TestCase):
 
         Checks the split with both negative and positive values.
         """
-        self.assertTrue(np.allclose(RuleDiscoverer().split_interval([-20, 20], n=3), [  [-20, -6.66666667],
+        self.assertTrue(np.allclose(RuleDiscoverer(pool=list()).split_interval([-20, 20], n=3), [  [-20, -6.66666667],
                                                                                         [-6.66666667, 6.66666667],
                                                                                         [6.66666667, 20]
                                                                                      ]))
@@ -177,7 +167,7 @@ class TestRuleDiscoverer(unittest.TestCase):
         when start_point='elitist_complement', solution_opt=None
         """
         x_len, n = (10, 5)
-        self.assertRaises(AttributeError, self.setup_test, x_len=x_len, n=n, start_points='elitist_complement', elitist=None)
+        self.assertRaises(AttributeError, self.setup_test, x_len=x_len, n=n, start_points='c', elitist=None)
 
 
     def test_elitist_complement_right_configurations(self):
@@ -185,22 +175,23 @@ class TestRuleDiscoverer(unittest.TestCase):
         Tests the method RuleDiscoverer.create_start_points().
 
         Check that the method 'elitist_complement' is properly
-        called, when start_points='elitist_complement' and
+        called, when start_points='c' and
         elitist there is a solution optimizer.
         """
         x_len, n = (10, 4)
 
         # Start the ClassifierPool
+        pool = list()
         for i in range(x_len):
-            classifier = Classifier.random_cl(None, 1)
+            classifier = Classifier.random_cl(1)
             classifier.error = 0.2
             classifier.experience = 0
-            ClassifierPool().classifiers.append(classifier)
+            pool.append(classifier)
 
         # Create Individual that matches all classifier but one
-        individual = Individual(np.array([1, 1, 0, 1, 1, 1, 0, 1, 0, 0], dtype='bool'))
+        individual = Individual(np.array([1, 1, 0, 1, 1, 1, 0, 1, 0, 0], dtype='bool'), pool)
 
-        self.assertEqual(len(self.setup_test(x_len=x_len, n=n, start_points='elitist_complement', elitist=individual)),
+        self.assertEqual(len(self.setup_test(x_len=x_len, n=n, start_points='c', elitist=individual)),
                          (n * 2) * np.count_nonzero(individual.genome))
 
     def test_elitist_complement_array(self):
@@ -213,30 +204,116 @@ class TestRuleDiscoverer(unittest.TestCase):
         x_len, n = (2, 2)
 
         # Start the ClassifierPool
+        pool = list()
         for i in range(x_len):
-            classifier = Classifier.random_cl(None, 1)
+            classifier = Classifier.random_cl(1)
             classifier.error = 0.2
             classifier.experience = 0
-            ClassifierPool().classifiers.append(classifier)
+            pool.append(classifier)
 
         # Create SolutionOptimizer with elitist
         X, y = TestsSupport.generate_input(x_len)
-        elitist = Individual(np.array([1, 1], dtype='bool'))
-        solution_opt = ES_1plus1(X, y, elitist)
+        elitist = Individual(np.array([1, 1], dtype='bool'), pool)
+        solution_opt = ES_1plus1(X, y, list(), elitist)
 
         # Create expected result array
         expectations = np.ndarray((x_len, 1, 4, 2))
         for i in range(x_len):
-            cl = ClassifierPool().classifiers[i]
+            cl = pool[i]
             lower_interval = [-1, cl.lowerBounds[0]]
             upper_interval = [cl.upperBounds[0], 1]
 
-            np.concatenate((RuleDiscoverer().split_interval(lower_interval, n),
-                            RuleDiscoverer().split_interval(upper_interval, n)),
+            np.concatenate((RuleDiscoverer(pool=list()).split_interval(lower_interval, n),
+                            RuleDiscoverer(pool=list()).split_interval(upper_interval, n)),
                             out=expectations[i][0])
 
         # Create output from method (ignore the classfiers)
-        _, out = RuleDiscoverer().elitist_complement(n=n, X=X, y=y, solution_opt=solution_opt)
+        _, out = RuleDiscoverer(pool=list()).elitist_complement(n=n, X=X, y=y, solution_opt=solution_opt)
 
         # Compare
         self.assertTrue(np.allclose(expectations, out))
+        mu, lmbd = (15, 15)
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, steps_per_step=4)
+        X, y = TestsSupport.generate_input(mu)
+
+        optimizer = RuleDiscoverer(pool=[])
+        with self.assertRaises(NotImplementedError):
+            optimizer.step(X, y)
+
+
+    # ------------- extract_classifier_attributes() --------------
+
+
+    # ------------- create_sigmas() --------------
+
+
+    def test_create_sigmas_xdim_one(self):
+        optimizer = RuleDiscoverer(pool=[])
+        self.assertTrue(0 <= optimizer.create_sigmas(1) <= 1)
+
+
+    def test_create_sigmas_xdim_five(self):
+        x_dim = 5
+        optimizer = RuleDiscoverer(pool=[])
+        sigmas = optimizer.create_sigmas(x_dim)
+        self.assertTrue((sigmas >= 0).all() and (sigmas <= 1).all())
+
+
+    # ------------- select_best_classifiers() --------------
+
+
+    def test_select_best_classifiers(self):
+        mu, lmbd = (5, 15)
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, steps_per_step=4)
+        X, y = TestsSupport.generate_input(mu + 10)
+        cls = TestsSupport.mock_classifiers(mu + 10)
+        optimizer = RuleDiscoverer(pool=[])
+        cls_tuples = list()
+
+        for i in range(mu + 10):
+            cl = cls[i]
+            cl.fit(X, y)
+            cl.error = i
+            cls_tuples.append( [cl, optimizer.create_sigmas(1)] )
+
+        self.assertEqual(len(optimizer.select_best_classifiers(cls_tuples, mu)), mu)
+
+
+    def test_select_best_classifiers_mu_equal_len(self):
+        mu, lmbd = (15, 15)
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, steps_per_step=4)
+        X, y = TestsSupport.generate_input(mu)
+        cls = TestsSupport.mock_classifiers(mu)
+        optimizer = RuleDiscoverer(pool=[])
+        cls_tuples = list()
+
+        for i in range(mu):
+            cl = cls[i]
+            cl.fit(X, y)
+            cl.error = i
+            cls_tuples.append( [cl, optimizer.create_sigmas(1)] )
+
+        self.assertEqual(optimizer.select_best_classifiers(cls_tuples, mu), cls_tuples)
+
+
+    def test_select_best_classifiers_mu_greater_than_len(self):
+        mu, lmbd = (10, 15)
+        TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, steps_per_step=4)
+        X, y = TestsSupport.generate_input(mu)
+        cls = TestsSupport.mock_classifiers(mu)
+        optimizer = RuleDiscoverer(pool=[])
+        cls_tuples = list()
+
+        for i in range(mu):
+            cl = cls[i]
+            cl.fit(X, y)
+            cl.error = i
+            cls_tuples.append( [cl, optimizer.create_sigmas(1)] )
+
+        with self.assertRaises(ValueError) as cm:
+            optimizer.select_best_classifiers(cls_tuples, mu + 5)
+        self.assertEqual('kth(=14) out of bounds (10)', str(cm.exception))
+
+
+
+
