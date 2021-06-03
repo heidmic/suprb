@@ -77,7 +77,7 @@ def create_configurations():
         config["name"] = optimizer_type
         for steps_per_step in [10, 100, 500, 1000]:
             config["steps_per_step"] = steps_per_step
-            for start_points in ["u", "c", None]:
+            for start_points in ["c", "u", None]:
                 config["start_points"] = start_points
                 if optimizer_type == "ES_ML":
                     for recombination_type in ["i", "d"]:

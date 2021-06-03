@@ -45,22 +45,22 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
         Checks that exactly n classifiers are returned by this function.
         """
         x_len, n = (10, 5)
-        self.assertEqual(n, len(self.setup_test(x_len=x_len, n=n, start_points=None, elitist=None)))
+        self.assertEqual(n, len(self.setup_test(x_len=x_len, n=n, start_points='d', elitist=None)))
 
 
     # ------------- elitist_unmatched() --------------
 
 
-    def test_elitist_unmatched_raise_error(self):
+    def test_elitist_unmatched_no_solution_optimizer(self):
         """
         Tests the method RuleDiscoverer.elitist_unmatched().
 
-        Checks that this function raises AttributeError:
-        'NoneType' object has no attribute 'get_elitist'
-        when start_point='elitist_unmatched', solution_opt=None
+        Checks that this function uses the 'draw examples from data'
+        strategy if no solution optimizer is passed.
         """
         x_len, n = (10, 5)
-        self.assertRaises(AttributeError, self.setup_test, x_len=x_len, n=n, start_points='u', elitist=None)
+        pool = self.setup_test(x_len=x_len, n=n, start_points='u', elitist=None)
+        self.assertGreater(len(pool), 0)
 
 
     def test_elitist_unmatched(self):
@@ -158,16 +158,16 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
     # ------------- elitist_complement() --------------
 
 
-    def test_elitist_complement_raise_error(self):
+    def test_elitist_complement_no_solution_optimizer(self):
         """
         Tests the method RuleDiscoverer.elitist_complement().
 
-        Checks that this function raises AttributeError:
-        'NoneType' object has no attribute 'get_elitist'
-        when start_point='elitist_complement', solution_opt=None
+        Checks that this function uses the 'draw examples from data'
+        strategy instead of crashing.
         """
         x_len, n = (10, 5)
-        self.assertRaises(AttributeError, self.setup_test, x_len=x_len, n=n, start_points='c', elitist=None)
+        pool = self.setup_test(x_len=x_len, n=n, start_points='c', elitist=None)
+        self.assertGreater(len(pool), 0)
 
 
     def test_elitist_complement_right_configurations(self):

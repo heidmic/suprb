@@ -97,12 +97,14 @@ class RuleDiscoverer(ABC):
         This method creates classifier as starting points for
         an evolutionary search.
         There are 3 different strategies:
-            - 'elitist_unmatched'       (Config().rule_discovery['start_point'] = 'u')
+            - 'draw_examples_from_data' (Config().rule_discovery['start_point'] = 'd')
             - 'elitist_complement'      (Config().rule_discovery['start_point'] = 'c')
-            - 'draw_examples_from_data' (Config().rule_discovery['start_point'] = None or something else)
+            - 'elitist_unmatched'       (Config().rule_discovery['start_point'] = 'u')
         """
         technique = Config().rule_discovery['start_points']
 
+        if technique == 'd' or solution_opt is None:
+            return self.draw_examples_from_data(n, X, y)
         if technique == 'c':
             # second return value is the array of intervals (for test)
             classifiers, _ = self.elitist_complement(n, X, y, solution_opt)
@@ -110,7 +112,7 @@ class RuleDiscoverer(ABC):
         elif technique == 'u':
             return self.elitist_unmatched(n, X, y, solution_opt)
         else:
-            return self.draw_examples_from_data(n, X, y)
+            raise NotImplementedError
 
 
     def elitist_complement(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer) -> list(tuple(Classifier, np.ndarray)):
@@ -203,8 +205,9 @@ class ES_OnePlusLambd(RuleDiscoverer):
 
     def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
         mu = Config().rule_discovery['mu']
+        start_points, _ = self.create_start_points(mu, X, y, solution_opt)
 
-        for cl in self.create_start_points(mu, X, y, solution_opt):
+        for cl in start_points:
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
                 for j in range(Config().rule_discovery['lmbd']):

@@ -21,7 +21,7 @@ class Config:
             "recombination": 'd',
             "replacement": '+',
             "weighted_error_const": 100,
-            "start_points": None,
+            "start_points": 'd',
         },
         "solution_creation": {
             "name": '(1+1)-ES',
