@@ -1,11 +1,10 @@
-mlruns/
 .idea/
 __pycache__/
 figs/
-venv/
 .coverage
 htmlcov/
 .hypothesis
 
 .python-version
 .vscode
+_venv/
