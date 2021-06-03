@@ -82,14 +82,14 @@ def create_configurations():
                     config["recombination"] = recombination_type
                     for replacement_type in ["+", ","]:
                         config["replacement"] = replacement_type
-                        for mu in [10, 50, 100, 200, 500]:
+                        for mu in [10, 100, 200, 500]:
                             config["mu"] = mu
-                            for lmbd in [10, 50, 100, 200, 500]:
+                            for lmbd in [10, 100, 200, 500]:
                                 if lmbd > mu:
                                     break
                                 else:
                                     config["lmbd"] = lmbd
-                                    for rho in [10, 50, 100, 200, 500]:
+                                    for rho in [10, 100, 200, 500]:
                                         if rho > lmbd:
                                             break
                                         else:
@@ -105,9 +105,9 @@ def create_configurations():
                     config["mu"] = lmbd // 4
                     configurations.append(config.copy())
             else:
-                for mu in [10, 50, 100, 200, 500]:
+                for mu in [10, 100, 200, 500]:
                     config["mu"] = mu
-                    for lmbd in [10, 50, 100, 200, 500]:
+                    for lmbd in [10, 100, 200, 500]:
                         config["lmbd"] = lmbd
                         configurations.append(config.copy())
 
