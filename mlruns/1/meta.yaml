@@ -1,0 +1,4 @@
+artifact_location: file:///data/oc-compute01/fischekl/suprb2/mlruns/1
+experiment_id: '1'
+lifecycle_stage: active
+name: Tests with Communities and Crime Dataset

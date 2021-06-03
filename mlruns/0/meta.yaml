@@ -1,0 +1,4 @@
+artifact_location: file:///data/oc-compute01/fischekl/suprb2/mlruns/0
+experiment_id: '0'
+lifecycle_stage: active
+name: Default
