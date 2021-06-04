@@ -9,8 +9,8 @@ from sklearn.metrics import *
 class Individual:
     def __init__(self, genome, classifier_pool):
         self.genome = genome
-        self.error = None
         self.fitness = None
+        self.error = None
         self.classifier_pool = classifier_pool
 
     @staticmethod
