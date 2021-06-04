@@ -2,7 +2,6 @@ import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
 from suprb2.classifier import Classifier
-from suprb2.fitness import Fitness
 
 from sklearn.metrics import *
 
@@ -10,7 +9,8 @@ from sklearn.metrics import *
 class Individual:
     def __init__(self, genome, classifier_pool):
         self.genome = genome
-        self.fitness = Fitness(Config().solution_creation['fitness'])
+        self.error = None
+        self.fitness = None
         self.classifier_pool = classifier_pool
 
     @staticmethod
@@ -85,11 +85,6 @@ class Individual:
         # TODO for some reason returns tuple here, although this should
         #  only happen for matrizes, see below
         return [self.classifier_pool[i] for i in np.nonzero(self.genome)[0]]
-
-    def determine_fitness(self, X_val, y_val):
-        predicted_X_val = self.predict(X_val)
-        parameters = self.parameters()
-        self.fitness.determine_fitness(X_val, y_val, predicted_X_val, parameters, self.get_classifiers())
 
     def parameters(self, simple=True) -> float:
         if simple:
