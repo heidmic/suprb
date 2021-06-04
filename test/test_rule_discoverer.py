@@ -18,9 +18,9 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
         X, y = TestsSupport.generate_input(x_len)
         if elitist is not None:
             solution_opt = ES_1plus1(X, y, list(), elitist)
-            return RuleDiscoverer(pool=list()).create_start_points(n, X, y, solution_opt)
+            return RuleDiscoverer(pool=list(), solution_optimizer=solution_opt).create_start_tuples(n, X, y)
         else:
-            return RuleDiscoverer(pool=list()).create_start_points(n, X, y, None)
+            return RuleDiscoverer(pool=list()).create_start_tuples(n, X, y)
 
 
     # ------------- step() --------------
@@ -32,7 +32,7 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
 
         Verifies that NotImplementedError is raised (independent of the parameters).
         """
-        self.assertRaises(NotImplementedError, RuleDiscoverer(pool=list()).step, X=None, y=None, solution_opt=None)
+        self.assertRaises(NotImplementedError, RuleDiscoverer(pool=list()).step, X=None, y=None)
 
 
     # ------------- draw_examples_from_data() --------------
@@ -67,8 +67,9 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
         """
         Tests the method RuleDiscoverer.elitist_unmatched().
 
-        Checks that this function creates n copies from the
-        classifiers not used by the elitist individual.
+        Checks that this function creates n random
+        classifiers from the points unmatched by the
+        classifiers used by the elitist.
         """
         x_len, n = (10, 5)
 
@@ -82,21 +83,20 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
 
         # Get classifiers' intervals
         individual = Individual(np.array([1, 1, 1, 0, 0, 0, 0, 0, 0, 0], dtype='bool'), pool)
-        classifiers_intervals = [[cl.lowerBounds, cl.upperBounds] for cl in individual.get_classifiers(unmatched=True)]
-
         classifier_tuples = self.setup_test(x_len=x_len, n=n, start_points='u', elitist=individual)
-        for cl_tuple in classifier_tuples:
-            self.assertIn([cl_tuple[0].lowerBounds, cl_tuple[0].upperBounds], classifiers_intervals)
+
+        self.assertEqual(len(classifier_tuples), 5)
 
 
     def test_elitist_unmatched_n_too_big(self):
         """
         Tests the method RuleDiscoverer.elitist_unmatched().
 
-        Checks that this function raises error if 'n' is bigger
-        than the number of classifiers available.
+        If the 'n' is greater than the number of unmatched
+        samples, then return only 'len(unmatched_points)'
+        samples.
         """
-        x_len, n = (10, 5)
+        x_len, n = (10, 1000)
 
         # Start the ClassifierPool
         pool = list()
@@ -109,7 +109,8 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
         # Create Individual that matches all classifier but one
         individual = Individual(np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 0], dtype='bool'), pool)
 
-        self.assertRaises(ValueError, self.setup_test, x_len=x_len, n=n, start_points='u', elitist=individual)
+        pool = self.setup_test(x_len=x_len, n=n, start_points='u', elitist=individual)
+        self.assertEqual(len(pool), x_len)
 
 
     # ------------- split_interval() --------------
@@ -172,7 +173,7 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
 
     def test_elitist_complement_right_configurations(self):
         """
-        Tests the method RuleDiscoverer.create_start_points().
+        Tests the method RuleDiscoverer.create_start_tuples().
 
         Check that the method 'elitist_complement' is properly
         called, when start_points='c' and
@@ -228,7 +229,7 @@ class TestDiscoveryRuleDiscoverer(unittest.TestCase):
                             out=expectations[i][0])
 
         # Create output from method (ignore the classfiers)
-        _, out = RuleDiscoverer(pool=list()).elitist_complement(n=n, X=X, y=y, solution_opt=solution_opt)
+        _, out = RuleDiscoverer(pool=list(), solution_optimizer=solution_opt).elitist_complement(n=n, X=X, y=y)
 
         # Compare
         self.assertTrue(np.allclose(expectations, out))

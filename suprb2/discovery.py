@@ -20,7 +20,7 @@ class RuleDiscoverer(ABC):
                 which optimizer to use. The reason for this is purely
                 based on the automatization of experiments which
                 different configurations.
-        'start_point': (method 'create_start_points') determs
+        'start_point': (method 'create_start_tuples') determs
                         which strategy is used to create the initial
                         classifiers. Acceptable values are:
                         u -> (elitist) unmatched
@@ -29,11 +29,12 @@ class RuleDiscoverer(ABC):
     """
 
 
-    def __init__(self, pool: list[Classifier]) -> None:
+    def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None) -> None:
         self.pool = pool
+        self.sol_opt = solution_optimizer
 
 
-    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None) -> None:
+    def step(self, X: np.ndarray, y: np.ndarray) -> None:
         raise NotImplementedError()
 
 
@@ -92,7 +93,7 @@ class RuleDiscoverer(ABC):
             raise NotImplemented
 
 
-    def create_start_points(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None) -> list(tuple(Classifier, np.ndarray)):
+    def create_start_tuples(self, n: int, X: np.ndarray, y: np.ndarray) -> list(tuple(Classifier, np.ndarray)):
         """
         This method creates classifier as starting points for
         an evolutionary search.
@@ -103,19 +104,19 @@ class RuleDiscoverer(ABC):
         """
         technique = Config().rule_discovery['start_points']
 
-        if technique == 'd' or solution_opt is None:
+        if technique == 'd' or self.sol_opt is None:
             return self.draw_examples_from_data(n, X, y)
         if technique == 'c':
             # second return value is the array of intervals (for test)
-            classifiers, _ = self.elitist_complement(n, X, y, solution_opt)
+            classifiers, _ = self.elitist_complement(n, X, y)
             return classifiers
         elif technique == 'u':
-            return self.elitist_unmatched(n, X, y, solution_opt)
+            return self.elitist_unmatched(n, X, y)
         else:
             raise NotImplementedError
 
 
-    def elitist_complement(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer) -> list(tuple(Classifier, np.ndarray)):
+    def elitist_complement(self, n: int, X: np.ndarray, y: np.ndarray) -> list(tuple(Classifier, np.ndarray)):
         """
         This method takes the classifiers from the elitist Individual
         and extract the complement of their matching intervals [l, u).
@@ -136,8 +137,8 @@ class RuleDiscoverer(ABC):
         The last dimension is 2, because of the interval representation,
         which is a two elements array.
         """
-        start_points = list()
-        elitist_classifiers = solution_opt.get_elitist().get_classifiers()
+        start_tuples = list()
+        elitist_classifiers = self.sol_opt.get_elitist().get_classifiers()
         cl_num, xdim = (len(elitist_classifiers), X.shape[1])
         intervals = np.zeros((cl_num, xdim, n * 2, 2), dtype=float)
         for i in range(cl_num):
@@ -158,9 +159,9 @@ class RuleDiscoverer(ABC):
                                             local_model=LinearRegression(), degree=1)
                                             # Reminder: LinearRegression might change in the future
                 new_classifier.fit(X, y)
-                start_points.append( [new_classifier, self.create_sigmas(xdim)] )
+                start_tuples.append( [new_classifier, self.create_sigmas(xdim)] )
 
-        return (start_points, intervals)
+        return (start_tuples, intervals)
 
 
     def split_interval(self, l: np.ndarray, n: int) -> np.ndarray:
@@ -174,14 +175,28 @@ class RuleDiscoverer(ABC):
         return np.array([ [l[0]+i*w, l[0]+(i+1)*w] for i in range(n) ], dtype=float)
 
 
-    def elitist_unmatched(self, n: int, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer) -> list(tuple(Classifier, np.ndarray)):
+    def elitist_unmatched(self, n: int, X: np.ndarray, y: np.ndarray) -> list(tuple(Classifier, np.ndarray)):
         """
-        This method copies 'n' classifiers that are not used by the
-        elitist individual.
+        This method creates 'n' or less random classifiers with
+        the inputs that were not matched by the 'solution_opt'
+        elitist individual's active classifiers.
+        If there are not enough unmatched points, then return
+        only these points.
         """
-        classifiers = deepcopy(solution_opt.get_elitist().get_classifiers(unmatched=True))
+        unmatched_points = np.zeros(X.shape[0])
+        for cl in self.sol_opt.get_elitist().get_classifiers():
+            unmatches = np.invert(cl.matches(X))
+            unmatched_indices = np.logical_or(unmatched_points, unmatches)
+        unmatched_points = X[unmatched_indices]
 
-        return [ [cl, self.create_sigmas(X.shape[1])] for cl in Random().random.choice(classifiers, n, False) ]
+        classifiers = list()
+        for point in unmatched_points:
+            cl = Classifier.random_cl(X.shape[1], point=point)
+            cl.fit(X, y)
+            classifiers.append(cl)
+
+        number_of_samples = min([n, len(classifiers)])
+        return [ [cl, self.create_sigmas(X.shape[1])] for cl in Random().random.choice(classifiers, number_of_samples, False) ]
 
 
     def draw_examples_from_data(self, n: int, X: np.ndarray, y: np.ndarray) -> list(tuple(Classifier, np.ndarray)):
@@ -189,25 +204,25 @@ class RuleDiscoverer(ABC):
         This method takes 'n' random examples out of the inputs and
         creates one classifier for each example taken.
         """
-        start_points = list()
+        start_tuples = list()
         idxs = Random().random.choice(np.arange(len(X)), n, False)
         for x in X[idxs]:
             cl = Classifier.random_cl(X.shape[1], point=x)
             cl.fit(X, y)
-            start_points.append( [cl, self.create_sigmas(X.shape[1])] )
-        return start_points
+            start_tuples.append( [cl, self.create_sigmas(X.shape[1])] )
+        return start_tuples
 
 
 class ES_OnePlusLambd(RuleDiscoverer):
-    def __init__(self, pool: list[Classifier]):
-        super().__init__(pool)
+    def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None):
+        super().__init__(pool, solution_optimizer)
 
 
-    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+    def step(self, X: np.ndarray, y: np.ndarray):
         mu = Config().rule_discovery['mu']
-        start_points, _ = self.create_start_points(mu, X, y, solution_opt)
+        start_cls, _ = self.create_start_tuples(mu, X, y)
 
-        for cl in start_points:
+        for cl in start_cls:
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
                 for j in range(Config().rule_discovery['lmbd']):
@@ -271,17 +286,17 @@ class ES_MuLambd(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: list[Classifier]) -> None:
-        super().__init__(pool)
+    def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None) -> None:
+        super().__init__(pool, solution_optimizer)
         self.sigmas = list()
 
 
-    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+    def step(self, X: np.ndarray, y: np.ndarray):
         generation_tuples = list()
         mu = Config().rule_discovery['mu']
 
         # create start points for evolutionary search (with mutation vectors)
-        generation_tuples = self.create_start_points(mu, X, y, solution_opt)
+        generation_tuples = self.create_start_tuples(mu, X, y)
 
         # steps forward in the evolutionary search
         for i in range(Config().rule_discovery['steps_per_step']):
@@ -481,12 +496,12 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: list[tuple[Classifier, np.ndarray]]) -> None:
-        super().__init__(pool)
+    def __init__(self, pool: list[tuple[Classifier, np.ndarray]], solution_optimizer: SolutionOptimizer=None) -> None:
+        super().__init__(pool, solution_optimizer)
         self.sigmas = list()
 
 
-    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+    def step(self, X: np.ndarray, y: np.ndarray):
         lmbd            = Config().rule_discovery['lmbd']
         mu              = Config().rule_discovery['mu']
         x_dim           = X.shape[1]
@@ -495,7 +510,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         dist_local      = 3 * x_dim
         tuples_for_pool = list()
         search_path     = 0
-        start_point, start_sigma = self.create_start_points(1, X, y, solution_opt)[0]
+        start_point, start_sigma = self.create_start_tuples(1, X, y)[0]
 
         for i in range(Config().rule_discovery['steps_per_step']):
             rnd_tuple_list = list()
@@ -572,12 +587,12 @@ class ES_CMA(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: list[Classifier]) -> None:
-        super().__init__(pool)
+    def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None) -> None:
+        super().__init__(pool, solution_optimizer)
         self.sigmas = list()
 
 
-    def step(self, X: np.ndarray, y: np.ndarray, solution_opt: SolutionOptimizer=None):
+    def step(self, X: np.ndarray, y: np.ndarray):
         lmbd            = Config().rule_discovery['lmbd']
         mu              = Config().rule_discovery['mu']
         x_dim           = X.shape[1]
@@ -586,7 +601,7 @@ class ES_CMA(RuleDiscoverer):
         sp_cov          = np.zeros(x_dim, dtype=float)
         C               = np.identity(x_dim)
         tuples_for_pool = list()
-        start_point, _ = self.create_start_points(1, X, y, solution_opt)[0]
+        start_point, _ = self.create_start_tuples(1, X, y)[0]
 
         for i in range(Config().rule_discovery['steps_per_step']):
             start_point.fit(X, y)
