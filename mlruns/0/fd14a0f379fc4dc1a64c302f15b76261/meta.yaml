@@ -1,0 +1,15 @@
+artifact_uri: file:///data/oc-compute01/fischekl/suprb2/mlruns/0/fd14a0f379fc4dc1a64c302f15b76261/artifacts
+end_time: 1622762440627
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: fd14a0f379fc4dc1a64c302f15b76261
+run_uuid: fd14a0f379fc4dc1a64c302f15b76261
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1622757732820
+status: 3
+tags: []
+user_id: fischekl
