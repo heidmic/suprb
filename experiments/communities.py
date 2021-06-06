@@ -31,7 +31,7 @@ def run_exp(seed, sample_size, data_seed):
 
     configurations = create_configurations()
     for i in range(len(configurations)):
-        mf.set_experiment(f"communities-{configurations[i]['name']}-{i}")
+        mf.set_experiment(f"communities-{configurations[i]['name']}")
         Config().rule_discovery = { **Config().rule_discovery, **configurations[i] }
 
         with mf.start_run(run_name=f"{configurations[i]}"):
