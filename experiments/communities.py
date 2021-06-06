@@ -74,7 +74,7 @@ def create_configurations():
     configurations = list()
     config = dict()
 
-    for optimizer_type in ["ES_ML", "ES_OPL", "ES_MLSP", "ES_CMA"]:
+    for optimizer_type in ["ES_MLSP","ES_CMA", "ES_OPL", "ES_ML"]:
         config["name"] = optimizer_type
         for steps_per_step in [10, 100, 500, 1000]:
             config["steps_per_step"] = steps_per_step

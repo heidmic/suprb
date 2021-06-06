@@ -515,7 +515,6 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         for i in range(Config().rule_discovery['steps_per_step']):
             rnd_tuple_list = list()
             start_point.fit(X, y)
-            print(f"start point weighted error: {start_point.get_weighted_error()}")
 
             # generating children with sigmas
             for j in range(lmbd):
@@ -605,7 +604,7 @@ class ES_CMA(RuleDiscoverer):
 
         for i in range(Config().rule_discovery['steps_per_step']):
             start_point.fit(X, y)
-            print(f"start point weighted error: {start_point.get_weighted_error()}")
+
             # generating children with sigmas
             rnd_tuple_list = list()
             C_sqrt_diag = np.diag(np.sqrt(C))
