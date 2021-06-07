@@ -1,4 +1,5 @@
 import numpy as np
+import suprb2.fitness as fitness
 from suprb2.random_gen import Random
 from suprb2.config import Config
 from suprb2.perf_recorder import PerfRecorder
@@ -33,6 +34,7 @@ class LCS:
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
         self.classifier_pool = list()
+        self.fitness_function = fitness.set_fitness_function(Config().solution_creation["fitness"])
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -58,7 +60,7 @@ class LCS:
 
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(X, y, self.classifier_pool)
+        self.sol_opt = ES_1plus1(X, y, self.classifier_pool, self.fitness_function)
         # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
