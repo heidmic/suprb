@@ -2,7 +2,7 @@ import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
 
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import *
 
 
@@ -115,6 +115,10 @@ class Classifier:
         If point is given, the classifier bounds will be point +- N(r, r/2)
         with r being defined by Config().rule_discovery['cl_radius']
         Classifiers width is always > 0 in all dimensions
+        The local model of the generated classifier is defined
+        by Config().rule_discovery['local_model']
+        Use the value 'log' for sklearn.linear_model.LogisticRegression()
+        and something else for sklearn.linear_model.LinearRegression().
         :param point: center of the classifier
         :return: a new Classifier instance
         """
@@ -129,10 +133,15 @@ class Classifier:
                 break
         l = np.clip(point - radius, a_min=-1, a_max=1)
         u = np.clip(point + radius, a_min=-1, a_max=1)
-        return Classifier(l, u, LinearRegression(), 1)
+
+
+        if Config().rule_discovery['local_model'] == 'log':
+            return Classifier(l, u, LogisticRegression(), 1)
+        else:
+            return Classifier(l, u, LinearRegression(), 1)
 
     def params(self):
-        if self.model is LinearRegression:
+        if self.model is LinearRegression or self.model is LogisticRegression:
             return self.model.coef_
 
     def get_weighted_error(self):

@@ -2,9 +2,9 @@ from suprb2 import LCS
 from suprb2.config import Config
 from suprb2.random_gen import Random
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.utils import resample
+from sklearn.metrics import f1_score
+from sklearn.preprocessing import OneHotEncoder
 
 from datetime import datetime
 import numpy as np
@@ -18,8 +18,8 @@ import click
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
 def run_exp(seed, sample_size, data_seed):
     """
-    Communities and Crime Data Set
-    https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime
+    Poker Hand Dataset
+    https://archive.ics.uci.edu/ml/machine-learning-databases/poker/
     """
     print(f"Starting at {datetime.now().time()}")
 
@@ -28,9 +28,10 @@ def run_exp(seed, sample_size, data_seed):
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
+    Config().rule_discovery['local_model'] = 'log'
     configurations = create_configurations()
     for i in range(len(configurations)):
-        mf.set_experiment(f"communities-{configurations[i]['name']}")
+        mf.set_experiment(f"poker-{configurations[i]['name']}")
         opt_class_test_count = len([ d for d in configurations if d['name'] == configurations[i]['name'] ])
         Config().rule_discovery = { **Config().rule_discovery, **configurations[i] }
 
@@ -38,7 +39,7 @@ def run_exp(seed, sample_size, data_seed):
             mf.log_param("data_seed", data_seed)
             mf.log_param("sample_size", sample_size)
             mf.log_param("sample_dim", dimensions)
-            mf.log_param("dataset", "communities")
+            mf.log_param("dataset", "poker")
 
             # we reset the seed here
             Random().reseed(seed)
@@ -46,34 +47,36 @@ def run_exp(seed, sample_size, data_seed):
             lcs = LCS(dimensions)
             lcs.fit(X_train, y_train)
             y_pred = lcs.predict(X_test)
-            error = mean_squared_error(y_test, y_pred)
+            score = f1_score(y_test, y_pred)
 
-            mf.log_metric("RMSE", np.sqrt(error))
-            print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
+            mf.log_metric("F1-Score", score)
+            print(f"Finished at {datetime.now().time()}. F1-Score was {score}")
 
 
 def import_data(sample_size, data_seed):
     Random().reseed(data_seed)
+    encoder = OneHotEncoder()
 
-    data = pd.read_csv("datasets/communities/communities.data", sep=',', header=None, na_values=["?"]).values
+    data_train = pd.read_csv("datasets/poker/poker-hand-training-true.data", sep=',', header=None).values
+    encoder.fit(data_train)
+    encoded_data = encoder.transform(data_train).toarray()
+    X_train, y_train = encoded_data[:,:-10], encoded_data[:,-10:]
+    X_train, y_train = resample(X_train, y_train, n_samples=sample_size, random_state=Random().split_seed())
 
-    X, y = data[:,4:-1], data[:,-1].reshape(-1, 1)
-    scale_X = MinMaxScaler(feature_range=(-1, 1))
-    scale_X.fit(X)
-    X = scale_X.transform(X)
+    data_test = pd.read_csv("datasets/poker/poker-hand-testing.data", sep=',', header=None).values
+    encoder.fit(data_test)
+    encoded_data = encoder.transform(data_test).toarray()
+    X_test, y_test = encoded_data[:,:-10], encoded_data[:,-10:]
+    X_test, y_test = resample(X_test, y_test, n_samples=sample_size, random_state=Random().split_seed())
 
-    scale_y = StandardScaler()
-    scale_y.fit(y)
-    y = scale_y.transform(y)
-
-    return train_test_split(X, y, train_size=sample_size, random_state=Random().split_seed())
+    return (X_train, X_test, y_train, y_test)
 
 
 def create_configurations():
     configurations = list()
     config = dict()
 
-    for optimizer_type in ["ES_MLSP","ES_CMA", "ES_OPL", "ES_ML"]:
+    for optimizer_type in ["ES_ML", "ES_MLSP", "ES_CMA", "ES_OPL"]:
         config["name"] = optimizer_type
         for steps_per_step in [10, 100, 500, 1000]:
             config["steps_per_step"] = steps_per_step

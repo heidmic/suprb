@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np  # type: ignore
 from copy import deepcopy
 from abc import *
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
 # from suprb2.perf_recorder import PerfRecorder
 from suprb2.classifier import Classifier
@@ -242,7 +242,10 @@ class ES_MuLambd(RuleDiscoverer):
                                   [np.mean(classifier_attrs[1].flatten())],
                                   [np.mean(classifier_attrs[2].flatten())]])
 
-            classifier = Classifier(avg_attrs[0], avg_attrs[1], LinearRegression(), 1) # Reminder: LinearRegression might change in the future
+            classifier = Classifier(lowers=avg_attrs[0], uppers=avg_attrs[1], degree=1, \
+                                    local_model=LinearRegression() if Config().rule_discovery['local_model'] == 'log' \
+                                        else Classifier(avg_attrs[0], avg_attrs[1], LogisticRegression()))
+
             children_tuples.append((classifier, avg_attrs[2]))
 
         return children_tuples
@@ -273,7 +276,9 @@ class ES_MuLambd(RuleDiscoverer):
             bounds = bounds[sidx, np.arange(sidx.shape[1])]
 
             # create new classifier, and save sigmas
-            classifier = Classifier(bounds[0], bounds[1], LinearRegression(), 1)
+            classifier = Classifier(lowers=bounds[0], uppers=bounds[1], degree=1, \
+                                    local_model=LinearRegression() if Config().rule_discovery['local_model'] == 'log' \
+                                        else Classifier(bounds[0], bounds[1], LogisticRegression()))
             children_tuples.append( (classifier, selected_attr[2]) )
 
         return children_tuples
