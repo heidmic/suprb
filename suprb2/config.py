@@ -20,7 +20,8 @@ class Config:
             "steps_per_step": 50,
             "recombination": 'd',
             "replacement": '+',
-            "weighted_error_const": 100
+            "weighted_error_const": 100,
+            "local_model": 'lin'
         },
         "solution_creation": {
             "name": '(1+1)-ES',

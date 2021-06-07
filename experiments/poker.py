@@ -28,7 +28,7 @@ def run_exp(seed, sample_size, data_seed):
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
-    Config().rule_discovery['local_model'] = 'log'
+    Config().rule_discovery["local_model"] = "log"
     configurations = create_configurations()
     for i in range(len(configurations)):
         mf.set_experiment(f"poker-{configurations[i]['name']}")
@@ -47,7 +47,7 @@ def run_exp(seed, sample_size, data_seed):
             lcs = LCS(dimensions)
             lcs.fit(X_train, y_train)
             y_pred = lcs.predict(X_test)
-            score = f1_score(y_test, y_pred)
+            score = f1_score(y_test, y_pred, average="macro")
 
             mf.log_metric("F1-Score", score)
             print(f"Finished at {datetime.now().time()}. F1-Score was {score}")
@@ -55,18 +55,13 @@ def run_exp(seed, sample_size, data_seed):
 
 def import_data(sample_size, data_seed):
     Random().reseed(data_seed)
-    encoder = OneHotEncoder()
 
     data_train = pd.read_csv("datasets/poker/poker-hand-training-true.data", sep=',', header=None).values
-    encoder.fit(data_train)
-    encoded_data = encoder.transform(data_train).toarray()
-    X_train, y_train = encoded_data[:,:-10], encoded_data[:,-10:]
+    X_train, y_train = data_train[:,:-1], data_train[:,-1:]
     X_train, y_train = resample(X_train, y_train, n_samples=sample_size, random_state=Random().split_seed())
 
     data_test = pd.read_csv("datasets/poker/poker-hand-testing.data", sep=',', header=None).values
-    encoder.fit(data_test)
-    encoded_data = encoder.transform(data_test).toarray()
-    X_test, y_test = encoded_data[:,:-10], encoded_data[:,-10:]
+    X_test, y_test = data_test[:,:-1], data_test[:,-1:]
     X_test, y_test = resample(X_test, y_test, n_samples=sample_size, random_state=Random().split_seed())
 
     return (X_train, X_test, y_train, y_test)
@@ -76,7 +71,7 @@ def create_configurations():
     configurations = list()
     config = dict()
 
-    for optimizer_type in ["ES_ML", "ES_MLSP", "ES_CMA", "ES_OPL"]:
+    for optimizer_type in ["ES_MLSP", "ES_CMA", "ES_OPL", "ES_ML"]:
         config["name"] = optimizer_type
         for steps_per_step in [10, 100, 500, 1000]:
             config["steps_per_step"] = steps_per_step

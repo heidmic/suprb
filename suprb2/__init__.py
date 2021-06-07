@@ -108,17 +108,22 @@ class LCS:
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
                       .fitness, step)
-        mf.log_metric("error elite", self.sol_opt.get_elitist()
-                      .error, step)
+        mf.log_metric("macro f1 score elite", self.sol_opt.get_elitist()
+                      .f1_score, step)
         mf.log_metric("complexity elite", self.sol_opt.get_elitist()
                       .parameters(), step)
         mf.log_metric("classifier pool size", len(self.classifier_pool),
                       step)
+
+        if Config().rule_discovery["local_model"] == "log":
+            PerfRecorder().elitist_f1_score.append(
+                self.sol_opt.get_elitist().f1_score)
+        else:
+            PerfRecorder().elitist_val_error.append(
+                self.sol_opt.get_elitist().error)
+        PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
-        PerfRecorder().elitist_val_error.append(
-            self.sol_opt.get_elitist().error)
-        PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_matched.append(np.sum(np.array(
             [cl.matches(X_val) for cl in
              [self.classifier_pool[i] for i in np.nonzero(
