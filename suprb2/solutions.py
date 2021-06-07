@@ -56,9 +56,6 @@ class ES_1plus1(SolutionOptimizer):
                 success += 1
         return success
 
-    def determine_fitness(self, X_val, y_val):
-        self.fitness_function(X_val, y_val, self)
-
     def get_elitist(self):
         """
 
