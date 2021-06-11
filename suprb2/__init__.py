@@ -147,6 +147,7 @@ class LCS:
             cl.fit(X, y)
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
+                children.append(cl)
                 for j in range(Config().rule_discovery['lmbd']):
                     child = deepcopy(cl)
                     child.mutate(Config().rule_discovery['sigma'])
