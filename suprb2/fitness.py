@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn.metrics import *
+from suprb2.config import Config
 
+# Solution creation maximizes Fitness of Individuals
 
 def set_fitness_function(config_fitness_function):
     if config_fitness_function == "pseudo-BIC":
@@ -9,8 +11,10 @@ def set_fitness_function(config_fitness_function):
         fitness_function = bic_matching_punishment
     elif config_fitness_function == "mse":
         fitness_function = mse
-    elif config_fitness_function == "simplified_compl":
-        fitness_function = simplified_compl
+    elif config_fitness_function == "mse_times_C":
+        fitness_function = mse_times_C
+    elif config_fitness_function == "mse_times_root_C":
+        fitness_function = mse_times_root_C
     else:
         print("Invalid fitness function specified! Exiting..")
         fitness_function = None
@@ -48,10 +52,20 @@ def mse(X_val, y_val, individual):
     individual.fitness = -1 * individual.error
 
 
-def simplified_compl(X_val, y_val, individual):
-    mse(X_val, y_val, individual)
-    n = len(individual.get_classifiers())
+def mse_times_C(X_val, y_val, individual):
+    individual.error = mean_squared_error(y_val, individual.predict(X_val))
+    error = individual.error
+    if error < Config().solution_creation["fitness_target"]:
+        error = Config().solution_creation["fitness_target"]
+    individual.fitness = -1 * error * individual.parameters()
 
-    # TODO: What is Config().ind_size?
-    constant = n - Config().ind_size if n > Config().ind_size else 0
-    individual.fitness -= constant
+
+def mse_times_root_C(X_val, y_val, individual):
+    individual.error = mean_squared_error(y_val, individual.predict(X_val))
+    error = individual.error
+    if error < Config().solution_creation["fitness_target"]:
+        error = Config().solution_creation["fitness_target"]
+    individual.fitness = -1 * error * np.power(individual.parameters(),
+        1 / Config().solution_creation["fitness_factor"])
+
+
