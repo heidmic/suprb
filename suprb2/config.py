@@ -21,7 +21,9 @@ class Config:
             # "pop_size": 1,
             # "crossover_type": None,
             "mutation_rate": 0.2,
-            "fitness": "pseudo-BIC",
+            "fitness": "mse_times_root_C",
+            "fitness_target": 1e-3,
+            "fitness_factor": 2,
             "steps_per_step": 100
         },
         "initial_pool_size": 500,

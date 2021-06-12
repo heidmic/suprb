@@ -30,7 +30,8 @@ def f_n(X):
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=1000)
 @click.option("-k", "--dimensions", type=click.IntRange(min=1), default=1)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
-def run_exp(seed, sample_size, dimensions, data_seed):
+@click.option("-n", "--run-name", default="")
+def run_exp(seed, sample_size, dimensions, data_seed, run_name):
     print(f"Starting at {datetime.now().time()}")
     n = sample_size
 
@@ -61,7 +62,7 @@ def run_exp(seed, sample_size, dimensions, data_seed):
 
     mf.set_experiment("Tests with f_n")
 
-    with mf.start_run():
+    with mf.start_run(run_name=run_name):
         mf.log_param("data_seed", data_seed)
         mf.log_param("sample_size", sample_size)
         mf.log_param("sample_dim", dimensions)
