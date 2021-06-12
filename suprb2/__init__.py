@@ -176,12 +176,10 @@ class LCS:
         candidates = list()
         candidates.append(classifiers[0])
         for cl in classifiers[1:]:
-            volume = np.prod(cl.upperBounds - cl.lowerBounds)
-            volume_share_cl = volume / 2 ** self.xdim
+            volume_share_cl = cl.get_volume_share()
             to_be_added = False
             for can in candidates:
-                volume = np.prod(can.upperBounds - can.lowerBounds)
-                volume_share_can = volume / 2 ** self.xdim
+                volume_share_can = can.get_volume_share()
 
                 if can.error < cl.error and volume_share_can > volume_share_cl:
                     # classifier is dominated by this candidate and should not
