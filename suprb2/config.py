@@ -9,12 +9,12 @@ class Config:
         "n_elitists": 1,
         "rule_discovery": {
             "name": '(1+lambda)-ES',
-            "cl_expected_radius": 0.2,
-            "nrules": 50,
+            "cl_expected_radius": 0.5,
+            "nrules": 200,
             "lmbd": 20,  # not allowed to use lambda
-            "sigma": 0.2,
-            "steps_per_step": 50,
-            "weighted_error_constant": 100
+            "sigma": 0.01,
+            "steps_per_step": 0,
+            "weighted_error_constant": 0.5
         },
         "solution_creation": {
             "name": '(1+1)-ES',
@@ -26,9 +26,9 @@ class Config:
             "fitness_factor": 2,
             "steps_per_step": 100
         },
-        "initial_pool_size": 50,
+        "initial_pool_size": 500,
         "initial_genome_length": 100000,
-        "steps": 500,
+        "steps": 250,
         "use_validation": False,
         "logging": True,
         "default_error": 1000

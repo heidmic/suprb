@@ -126,6 +126,9 @@ class Classifier:
                                             size=xdim)
             # emulate do-while loop
             if (radius > 0).all():
+                # the probability of a value being below zero is 2.1% as 2.1%
+                # of samples fall left of two standard deviations of a normal
+                # distribution
                 break
         l = np.clip(point - radius, a_min=-1, a_max=1)
         u = np.clip(point + radius, a_min=-1, a_max=1)
@@ -136,17 +139,28 @@ class Classifier:
             return self.model.coef_
 
     def get_weighted_error(self):
-        '''
+        """
         Calculates the weighted error of the classifier, depending on its error, volume and a constant. 
         -inf is the best possible value for the weighted error
-        '''
+        """
         weighted_error = np.inf
-        volume = np.prod(self.upperBounds - self.lowerBounds)
+        volume_share = self.get_volume_share()
 
-        if volume != 0:
-            weighted_error = self.error / (volume * Config().rule_discovery["weighted_error_constant"])
+        if volume_share > 0:
+            weighted_error = np.log(self.error) - np.log(volume_share) * \
+                             Config().rule_discovery["weighted_error_constant"]
 
         return weighted_error
+
+    def get_volume_share(self):
+        """
+        Calculates the volume of the classifier in relation to the maximum
+        volume of the input space
+        :return:
+        """
+        volume = np.prod(self.upperBounds - self.lowerBounds)
+        volume_share = volume / 2 ** len(self.lowerBounds)
+        return volume_share
 
     @staticmethod
     def get_default_prediction():
