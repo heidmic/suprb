@@ -1,4 +1,5 @@
 mlruns/
+output/
 .idea/
 __pycache__/
 figs/
