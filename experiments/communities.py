@@ -77,39 +77,41 @@ def create_configurations():
         config["name"] = optimizer_type
         for steps_per_step in [10, 100, 500, 1000]:
             config["steps_per_step"] = steps_per_step
-            if optimizer_type == "ES_ML":
-                for recombination_type in ["i", "d"]:
-                    config["recombination"] = recombination_type
-                    for replacement_type in ["+", ","]:
-                        config["replacement"] = replacement_type
-                        for mu in [10, 50, 100, 200, 500]:
-                            config["mu"] = mu
-                            for lmbd in [10, 50, 100, 200, 500]:
-                                if lmbd > mu:
-                                    break
-                                else:
-                                    config["lmbd"] = lmbd
-                                    for rho in [10, 50, 100, 200, 500]:
-                                        if rho > lmbd:
-                                            break
-                                        else:
-                                            config["rho"] = rho
-                                            for global_tau in [0.1, 0.25, 0.5]:
-                                                config["global_tau"] = global_tau
-                                                for local_tau in [0.1, 0.25, 0.5]:
-                                                    config["local_tau"] = local_tau
-                                                    configurations.append(config.copy())
-            elif optimizer_type == "ES_MLSP":
-                for lmbd in [20, 60, 100, 200, 520]:
-                    config["lmbd"] = lmbd
-                    config["mu"] = lmbd // 4
-                    configurations.append(config.copy())
-            else:
-                for mu in [10, 50, 100, 200, 500]:
-                    config["mu"] = mu
-                    for lmbd in [10, 50, 100, 200, 500]:
+            for start_points in ["c", "u", None]:
+                config["start_points"] = start_points
+                if optimizer_type == "ES_ML":
+                    for recombination_type in ["i", "d"]:
+                        config["recombination"] = recombination_type
+                        for replacement_type in ["+", ","]:
+                            config["replacement"] = replacement_type
+                            for mu in [50, 100, 200, 500]:
+                                config["mu"] = mu
+                                for lmbd in [50, 100, 200, 500]:
+                                    if lmbd > mu:
+                                        break
+                                    else:
+                                        config["lmbd"] = lmbd
+                                        for rho in [10, 100, 200, 500]:
+                                            if rho > lmbd:
+                                                break
+                                            else:
+                                                config["rho"] = rho
+                                                for global_tau in [0.1, 0.5, 0.7]:
+                                                    config["global_tau"] = global_tau
+                                                    for local_tau in [0.1, 0.5, 0.7]:
+                                                        config["local_tau"] = local_tau
+                                                        configurations.append(config.copy())
+                elif optimizer_type == "ES_MLSP":
+                    for lmbd in [60, 100, 200, 520]:
                         config["lmbd"] = lmbd
+                        config["mu"] = lmbd // 4
                         configurations.append(config.copy())
+                else:
+                    for mu in [50, 100, 200, 500]:
+                        config["mu"] = mu
+                        for lmbd in [10, 100, 200, 500]:
+                            config["lmbd"] = lmbd
+                            configurations.append(config.copy())
 
     return configurations
 
