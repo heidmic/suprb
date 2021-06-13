@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np  # type: ignore
 from copy import deepcopy
 from abc import *
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
 # from suprb2.perf_recorder import PerfRecorder
 from suprb2.solutions import SolutionOptimizer
@@ -98,9 +98,9 @@ class RuleDiscoverer(ABC):
         This method creates classifier as starting points for
         an evolutionary search.
         There are 3 different strategies:
-            - 'draw_examples_from_data' (Config().rule_discovery['start_point'] = 'd')
-            - 'elitist_complement'      (Config().rule_discovery['start_point'] = 'c')
-            - 'elitist_unmatched'       (Config().rule_discovery['start_point'] = 'u')
+            - 'draw_examples_from_data' (Config().rule_discovery['start_points'] = 'd')
+            - 'elitist_complement'      (Config().rule_discovery['start_points'] = 'c')
+            - 'elitist_unmatched'       (Config().rule_discovery['start_points'] = 'u')
         """
         technique = Config().rule_discovery['start_points']
 
@@ -347,8 +347,7 @@ class ES_MuLambd(RuleDiscoverer):
         of 'rho' classifiers in parents.
         So, the new classifier look like this:
         Classifier( lowers=average(rho_candidates.lowerBounds),
-                    uppers=average(rho_candidates.upperBounds),
-                    LinearRegression(), degree=1 )
+                    uppers=average(rho_candidates.upperBounds), degree=1 )
         Classifier's sigmas = average(rho_candidates.sigmas)
         """
         children_tuples = list()
@@ -361,8 +360,8 @@ class ES_MuLambd(RuleDiscoverer):
             avg_attrs = np.array([[np.mean(classifier_attrs[0].flatten())],
                                   [np.mean(classifier_attrs[1].flatten())],
                                   [np.mean(classifier_attrs[2].flatten())]])
+            classifier = Classifier(lowers=avg_attrs[0], uppers=avg_attrs[1], degree=1)
 
-            classifier = Classifier(avg_attrs[0], avg_attrs[1], LinearRegression(), 1) # Reminder: LinearRegression might change in the future
             children_tuples.append((classifier, avg_attrs[2]))
 
         return children_tuples
@@ -393,7 +392,7 @@ class ES_MuLambd(RuleDiscoverer):
             bounds = bounds[sidx, np.arange(sidx.shape[1])]
 
             # create new classifier, and save sigmas
-            classifier = Classifier(bounds[0], bounds[1], LinearRegression(), 1)
+            classifier = Classifier(lowers=bounds[0], uppers=bounds[1], degree=1)
             children_tuples.append( (classifier, selected_attr[2]) )
 
         return children_tuples
@@ -515,6 +514,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         for i in range(Config().rule_discovery['steps_per_step']):
             rnd_tuple_list = list()
             start_point.fit(X, y)
+            print(f"reference weighted error: {start_point.get_weighted_error()}\tIn. step: {i}")
 
             # generating children with sigmas
             for j in range(lmbd):
@@ -541,8 +541,8 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
 
             # recombining parents attributes
             parents_attr = self.extract_classifier_attributes(children_tuple_list, x_dim)
-            start_point.lowerBounds = (1/mu) * np.sum(parents_attr[0], axis=0)
-            start_point.upperBounds = (1/mu) * np.sum(parents_attr[1], axis=0)
+            start_point.lowerBounds = np.mean(parents_attr[0], axis=0)
+            start_point.upperBounds = np.mean(parents_attr[1], axis=0)
 
         # add children to pool
         tuples_array = np.array(tuples_for_pool, dtype=object)
@@ -604,6 +604,7 @@ class ES_CMA(RuleDiscoverer):
 
         for i in range(Config().rule_discovery['steps_per_step']):
             start_point.fit(X, y)
+            print(f"reference weighted error: {start_point.get_weighted_error()}\tIn. step: {i}")
 
             # generating children with sigmas
             rnd_tuple_list = list()

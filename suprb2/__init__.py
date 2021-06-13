@@ -105,23 +105,33 @@ class LCS:
                 self.log_solution_creation_duration(discover_rules_time, solution_creation_time, step+1)
 
             # add verbosity option
-            if step % 25 == 0:
-                print(f"Finished step {step + 1} at {datetime.now().time()}\n")
+            # if step % 25 == 0:
+            print(f"Finished step {step + 1} at {datetime.now().time()}\n")
 
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
                       .fitness, step)
-        mf.log_metric("error elite", self.sol_opt.get_elitist()
-                      .error, step)
         mf.log_metric("complexity elite", self.sol_opt.get_elitist()
                       .parameters(), step)
         mf.log_metric("classifier pool size", len(self.classifier_pool),
                       step)
+
+        if Config().classifier["local_model"] == "logistic_regression":
+            PerfRecorder().elitist_f1_score.append(
+                self.sol_opt.get_elitist().f1_score)
+            mf.log_metric("macro f1 score elite", self.sol_opt.get_elitist()
+                      .f1_score, step)
+        elif Config().classifier["local_model"] == "linear_regression":
+            mf.log_metric("error elite", self.sol_opt.get_elitist()
+                      .error, step)
+            PerfRecorder().elitist_val_error.append(
+                self.sol_opt.get_elitist().error)
+        else:
+            raise NotImplementedError
+
+        PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
-        PerfRecorder().elitist_val_error.append(
-            self.sol_opt.get_elitist().error)
-        PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_matched.append(np.sum(np.array(
             [cl.matches(X_val) for cl in
              [self.classifier_pool[i] for i in np.nonzero(

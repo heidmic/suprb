@@ -11,6 +11,7 @@ class Individual:
         self.genome = genome
         self.fitness = None
         self.error = None
+        self.f1_score = None
         self.classifier_pool = classifier_pool
 
     @staticmethod
@@ -89,12 +90,20 @@ class Individual:
     def determine_fitness(self, X_val, y_val):
         if Config().solution_creation['fitness'] == "pseudo-BIC":
             n = len(X_val)
+            y_pred = self.predict(X_val)
             # mse = ResidualSumOfSquares / NumberOfSamples
-            mse = np.sum(np.square(y_val - self.predict(X_val))) / n
+            mse = np.sum(np.square(y_val - y_pred)) / n
+
             # for debugging
             self.error = mse
-            # BIC -(n * np.log(rss / n) + complexity * np.log(n))
-            self.fitness = - (n * np.log(mse) + self.parameters() * np.log(n))
+
+            if Config().classifier['local_model'] == 'logistic_regression':
+                macro_f1 = f1_score(y_val, y_pred, average="macro")
+                # for debugging
+                self.f1_score = macro_f1
+                self.error = 1 - macro_f1
+
+            self.fitness = - (n * np.log(self.error) + self.parameters() * np.log(n))
 
         elif Config().solution_creation['fitness'] == "BIC_matching_punishment":
             n = len(X_val)
