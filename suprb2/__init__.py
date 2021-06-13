@@ -85,6 +85,9 @@ class LCS:
 
         self.run_inital_step(X, y)
 
+        # Connect optimizers
+        self.rule_disc.sol_opt = self.sol_opt
+
         # TODO allow other termination criteria. Early Stopping?
         for step in range(Config().steps):
             start_time = datetime.now()

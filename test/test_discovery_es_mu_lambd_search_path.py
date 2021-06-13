@@ -99,16 +99,18 @@ class TestDiscoveryES_MuLambdSearchPath(unittest.TestCase):
         Tests the method ES_MuLambdSearchPath.step().
 
         If our X is empty (no data is given),
-        we can still create (unfit) classifiers
-        at the rate of mu * steps_per_step.
+        raise ValueError.
         """
         mu, lmbd, steps_per_step = (10, 15, 4)
         TestsSupport.set_rule_discovery_configs(mu=mu, lmbd=lmbd, steps_per_step=steps_per_step)
         X, y = TestsSupport.generate_input(0)
 
         optimizer = ES_MuLambdSearchPath(pool=[])
-        optimizer.step(X, y)
-        self.assertEqual(len(optimizer.pool), mu * steps_per_step)
+        with self.assertRaises(ValueError) as cm:
+            optimizer.step(X, y)
+        self.assertEqual('a cannot be empty unless no samples aretaken', str(cm.exception))
+        # optimizer.step(X, y)
+        # self.assertEqual(len(optimizer.pool), mu * steps_per_step)
 
 
 if __name__ == '__main__':
