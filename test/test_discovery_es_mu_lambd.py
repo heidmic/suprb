@@ -282,8 +282,8 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         n = 2
         optimizer = ES_MuLambd(pool=[])
-        classifiers_tuples = [  (Classifier(lowers=[0], uppers=[0.5], local_model=LinearRegression(), degree=1), optimizer.create_sigmas(1)),
-                                (Classifier(lowers=[-1], uppers=[0.5], local_model=LinearRegression(), degree=1), optimizer.create_sigmas(1)) ]
+        classifiers_tuples = [  (Classifier(lowers=[0], uppers=[0.5], degree=1), optimizer.create_sigmas(1)),
+                                (Classifier(lowers=[-1], uppers=[0.5], degree=1), optimizer.create_sigmas(1)) ]
         X, y = TestsSupport.generate_input(n)
         mutated_children_tuples = optimizer.mutate_and_fit(classifiers_tuples, X, y)
 
@@ -303,8 +303,8 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         TestsSupport.set_rule_discovery_configs(replacement='+')
         optimizer = ES_MuLambd(pool=[])
-        parents_tuples = [ (Classifier(lowers=[i], uppers=[i], local_model=None, degree=1), optimizer.create_sigmas(x_dim=1)) for i in range(5) ]
-        children_tuples = [ (Classifier(lowers=[i], uppers=[i], local_model=None, degree=1), optimizer.create_sigmas(x_dim=1)) for i in range(5) ]
+        parents_tuples = [ (Classifier(lowers=[i], uppers=[i], degree=1), optimizer.create_sigmas(x_dim=1)) for i in range(5) ]
+        children_tuples = [ (Classifier(lowers=[i], uppers=[i], degree=1), optimizer.create_sigmas(x_dim=1)) for i in range(5) ]
 
         array_concatenation = parents_tuples + children_tuples
         replacement_array = optimizer.replace(parents_tuples, children_tuples)
@@ -321,8 +321,8 @@ class TestDiscoveryES_MuLambd(unittest.TestCase):
         """
         TestsSupport.set_rule_discovery_configs(replacement=',')
         optimizer = ES_MuLambd(pool=[])
-        parents_tuples = [ (Classifier(lowers=[i], uppers=[i], local_model=None, degree=1), optimizer.create_sigmas(x_dim=1)) for i in range(5) ]
-        children_tuples = [ (Classifier(lowers=[i], uppers=[i], local_model=None, degree=1), optimizer.create_sigmas(x_dim=1)) for i in range(5) ]
+        parents_tuples = [ (Classifier(lowers=[i], uppers=[i], degree=1), optimizer.create_sigmas(x_dim=1)) for i in range(5) ]
+        children_tuples = [ (Classifier(lowers=[i], uppers=[i], degree=1), optimizer.create_sigmas(x_dim=1)) for i in range(5) ]
 
         replacement_array = optimizer.replace(parents_tuples, children_tuples)
 

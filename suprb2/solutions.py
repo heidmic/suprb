@@ -29,7 +29,7 @@ class ES_1plus1(SolutionOptimizer):
         self.mutation_rate = Config().solution_creation['mutation_rate']
         self.steps = Config().solution_creation['steps_per_step']
         self.classifier_pool = classifier_pool
-        
+
         if individual is not None:
             self.individual = individual
         else:
@@ -53,6 +53,7 @@ class ES_1plus1(SolutionOptimizer):
             if self.individual.fitness < candidate.fitness:
                 self.individual = candidate
                 success += 1
+                print(f"fitness improved to: {candidate.fitness}\tTotal: {success}\t Step: {i}")
         return success
 
     def get_elitist(self):

@@ -13,12 +13,10 @@ class TestsSupport:
         """
         Creates n classifiers without relevant attributes.
         Example:
-        child_1 = Classifier(lowerBoundary=[1], upperBoundary=[1],
-                                local_model= None, degree=1)
+        child_1 = Classifier(lowerBoundary=[1], upperBoundary=[1], degree=1)
         """
         return [ Classifier(np.array([1], dtype=np.float64),
-                            np.array([1], dtype=np.float64),
-                            None, 1) for i in range(n) ]
+                            np.array([1], dtype=np.float64), 1) for i in range(n) ]
 
 
     def mock_specific_classifiers(values: list):
@@ -28,15 +26,13 @@ class TestsSupport:
 
         Example:
         value = [
-            [1, 1],  # Classifier(lowerBounds=1, upperBounds=1,
-                                  local_model=None, degree=1)
-            [2, 1]   # Classifier(lowerBounds=2, upperBounds=1,
-                                  local_model=None, degree=1)
+            [1, 1],  # Classifier(lowerBounds=1, upperBounds=1, degree=1)
+            [2, 1]   # Classifier(lowerBounds=2, upperBounds=1, degree=1)
         ]
         """
         classifiers = []
         for i in range(len(values)):
-            classifiers.append(Classifier(values[i][0], values[i][1], None, 1))
+            classifiers.append(Classifier(values[i][0], values[i][1], 1))
         return classifiers
 
 

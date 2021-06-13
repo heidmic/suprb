@@ -93,13 +93,17 @@ class Individual:
             y_pred = self.predict(X_val)
             # mse = ResidualSumOfSquares / NumberOfSamples
             mse = np.sum(np.square(y_val - y_pred)) / n
-            # both metrics for debugging
+
+            # for debugging
             self.error = mse
-            self.f1_score = f1_score(y_val, y_pred, average="macro")
 
-            # BIC -(n * np.log(rss / n) + complexity * np.log(n))
-            self.fitness = - (n * np.log(mse) + self.parameters() * np.log(n))
+            if Config().classifier['local_model'] == 'logistic_regression':
+                macro_f1 = f1_score(y_val, y_pred, average="macro")
+                # for debugging
+                self.f1_score = macro_f1
+                self.error = 1 - macro_f1
 
+            self.fitness = - (n * np.log(self.error) + self.parameters() * np.log(n))
 
         elif Config().solution_creation['fitness'] == "BIC_matching_punishment":
             n = len(X_val)
