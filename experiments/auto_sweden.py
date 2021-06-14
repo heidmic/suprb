@@ -17,8 +17,8 @@ import click
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
 def run_exp(seed, data_seed):
     """
-    Communities and Crime Data Set
-    https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime
+    Swedish Auto Insurance Dataset
+    https://college.cengage.com/mathematics/brase/understandable_statistics/7e/students/datasets/slr/frames/slr06.html
     """
     print(f"Starting at {datetime.now().time()}")
 
