@@ -509,7 +509,8 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         dist_local      = 3 * x_dim
         tuples_for_pool = list()
         search_path     = 0
-        start_point, start_sigma = self.create_start_tuples(1, X, y)[0]
+        start_point, _  = self.create_start_tuples(1, X, y)[0]
+        start_sigma     = Random().random.normal(size=x_dim)
 
         for i in range(Config().rule_discovery['steps_per_step']):
             rnd_tuple_list = list()
@@ -518,7 +519,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
 
             # generating children with sigmas
             for j in range(lmbd):
-                cl_sigmas = self.create_sigmas(x_dim)
+                cl_sigmas = Random().random.normal(size=x_dim)
                 cl = deepcopy(start_point)
                 cl.lowerBounds, cl.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + (start_sigma * cl_sigmas))
                 cl.fit(X, y)
@@ -545,7 +546,8 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             start_point.upperBounds = np.mean(parents_attr[1], axis=0)
 
         # add children to pool
-        tuples_array = np.array(tuples_for_pool, dtype=object)
+        best_mu_cls = self.select_best_classifiers(tuples_for_pool, mu)
+        tuples_array = np.array(best_mu_cls, dtype=object)
         self.pool.extend( list(tuples_array[:,0]) )
         self.sigmas.extend( list(tuples_array[:,1]) )
 
