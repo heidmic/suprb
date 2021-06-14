@@ -321,7 +321,8 @@ class ES_MuLambd(RuleDiscoverer):
         If 'recombination' == 'd', then the new classifiers are
         created randomly from the attributes from the parents
         (attributes do not cross values).
-        If 'recombination' is somethin else, then only one classifier
+        If 'recombination' is None, then return the parents, and
+        If it is somethin else, then only one classifier
         will be created and it will be a copy from one of the parents.
         """
         if len(parents_tuples) == 0:
@@ -335,6 +336,8 @@ class ES_MuLambd(RuleDiscoverer):
             return self.intermediate_recombination(parents_tuples, lmbd, rho)
         elif recombination_type == 'd':
             return self.discrete_recombination(parents_tuples, lmbd, rho)
+        elif recombination_type is None:
+            return parents_tuples
         else:
             cl_index = Random().random.choice(range(len(parents_tuples)))
             copied_tuple = deepcopy(parents_tuples[cl_index])
