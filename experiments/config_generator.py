@@ -47,8 +47,8 @@ def fetch_value_ranges():
         'mu_denominator': [2, 4],       # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
         'rho_denominator': [1, 2, 4],   # for 'rho' we are going to use max('mu' // 'rho_denom', 2)
         'sigma': [0.01, 0.05, 0.1, 0.15],
-        'local_tau': [0.7, 0.9, 1.1, 1.3],
-        'global_tau': [0.7, 0.9, 1.1, 1.3],
+        'local_tau': [0.7, 0.9, 1.1, 1.2, 1.3],
+        'global_tau': [0.7, 0.9, 1.1, 1.2, 1.3],
         'rd_steps_per_step': [10, 50, 100, 200, 500],
         'recombination': ["None", "'i'", "'d'"],
         'replacement': ["'+'", "','"],
