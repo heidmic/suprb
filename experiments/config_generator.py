@@ -1,36 +1,47 @@
 import click
 import numpy as np
-import pandas as pd
 
 @click.command()
-@click.option("-c", "--config_path", type=click.IntRange(min=0, max=500), default=0)
-def rewrite_config(config_path):
+@click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
+@click.option("-c", "--config_path", type=str, default="suprb2/config.py")
+def rewrite_config(seed, config_path):
+    # Define a seed, so that we are always creating the same variations
+    np.random.seed(seed)
     used_configs = get_used_configs(config_path)
-    config = fetch_config_for_experiment(used_configs)
-
+    value_ranges = fetch_value_ranges()
+    config = fetch_config_for_experiment(value_ranges, used_configs)
+    # Write the new config
     with open(config_path, "w") as f:
-        f.write( get_file_content(config, used_configs) )
+        f.write( get_file_content(config) )
+    # Write used config as comment in the end of the file
+    with open(config_path, "a") as f:
+        for config in used_configs:
+            f.write( f"# -> {str(config)}\n" )
+
 
 def get_used_configs(config_path):
     used_configs = list()
     with open(config_path, "r") as f:
         for i, line in enumerate(f):
-            if i >= 46 and line.startswith("# config -> "):
-                used_configs << list( map(int, line[12:].split(" ")) )
+            if i >= 45 and line.startswith("# -> "):
+                used_configs.append( list( map(int, line[6:-2].split(", ")) ) )
     return used_configs
 
 
 def fetch_config_for_experiment(values_ranges, used_configs):
-    config_already_used = False
-    while not config_already_used:
-        indices = np.random.choice(np.arange(len(values_ranges.columns)), len(values_ranges), replace=True)
+    config_already_used = True
+    while config_already_used:
+        indices = [ np.random.choice(np.arange(len(hyperparam_range)), replace=False) for hyperparam_range in values_ranges.values() ]
         config_already_used = indices in used_configs
-    return values_ranges.to_numpy()[np.arange(len(values_ranges)), indices]
+        if not config_already_used:
+            used_configs.append(indices)
+    range_array = [ list(values_ranges[k]) for k in values_ranges ]
+    return [ range_array[i][indices[i]] for i in range(len(indices)) ]
 
 
 def fetch_value_ranges():
-    return pd.DataFrame({
-        'rl_name': ['ES_OPL', 'ES_ML', 'ES_MLSP', 'ES_CMA'],
+    return {
+        'rl_name': ["'ES_OPL'", "'ES_ML'", "'ES_MLSP'", "'ES_CMA'"],
         'nrules': [1, 5, 10],
         'lmbd': [10, 25, 35, 50],
         'mu_denominator': [2, 4],       # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
@@ -39,9 +50,9 @@ def fetch_value_ranges():
         'local_tau': [0.7, 0.9, 1.1, 1.3],
         'global_tau': [0.7, 0.9, 1.1, 1.3],
         'rd_steps_per_step': [10, 50, 100, 200, 500],
-        'recombination': [None, 'i', 'd'],
-        'replacement': ['+', ','],
-        'start_points': ['d', 'u', 'c'],
+        'recombination': ["None", "'i'", "'d'"],
+        'replacement': ["'+'", "','"],
+        'start_points': ["'d'", "'u'", "'c'"],
         'weighted_error_const': [10, 25, 50, 100, 150, 200],
         # local model is defined in the experiment itself
         'radius': [0.1, 0.2, 0.3, 0.4, 0.5],
@@ -50,10 +61,10 @@ def fetch_value_ranges():
         'initial_pool_size': [50, 75, 100, 150, 200],
         'steps': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         'default_error': [100, 500, 1000, 1500, 2000]
-    })
+    }
 
 
-def get_file_content(config, used_configs):
+def get_file_content(config):
     return \
 f'''class Config:
     """
@@ -102,8 +113,8 @@ f'''class Config:
     def __init__(self):
         self.__dict__ = self.__shared_state
 
-{[ f"# -> {config}" for config in used_configs ]}
 '''
+
 
 if __name__ == '__main__':
     rewrite_config()
