@@ -1,1 +1,0 @@
-{'name': 'ES_ML', 'cl_radius': 0.1, 'nrules': 50, 'lmbd': 10, 'mu': 100, 'rho': 10, 'sigma': 0.2, 'local_tau': 0.5, 'global_tau': 0.1, 'steps_per_step': 10, 'recombination': 'i', 'replacement': '+', 'weighted_error_const': 100}
