@@ -14,16 +14,15 @@ import click
 
 @click.command()
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
-@click.option("-d", "--sample-size", type=click.IntRange(min=1), default=1000)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
-def run_exp(seed, sample_size, data_seed):
+def run_exp(seed, data_seed):
     """
     Communities and Crime Data Set
     https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime
     """
     print(f"Starting at {datetime.now().time()}")
 
-    X_train, X_test, y_train, y_test = import_data(sample_size, data_seed)
+    X_train, X_test, y_train, y_test = import_data(data_seed)
     dimensions = X_train.shape[1]
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
@@ -31,7 +30,6 @@ def run_exp(seed, sample_size, data_seed):
     mf.set_experiment(f"Test with auto. sweden dataset")
     with mf.start_run():
         mf.log_param("data_seed", data_seed)
-        mf.log_param("sample_size", sample_size)
         mf.log_param("sample_dim", dimensions)
         mf.log_param("dataset", "auto ins sweden")
 
@@ -47,7 +45,7 @@ def run_exp(seed, sample_size, data_seed):
         print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
 
 
-def import_data(sample_size, data_seed):
+def import_data(data_seed):
     Random().reseed(data_seed)
 
     data = pd.read_csv("datasets/auto_sweden/AutoInsurSweden.csv", sep=',', header=None).values
