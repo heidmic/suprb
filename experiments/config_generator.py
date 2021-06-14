@@ -3,17 +3,29 @@ import numpy as np
 import pandas as pd
 
 @click.command()
-@click.option("-i", "--index", type=click.IntRange(min=0, max=500), default=0)
-def rewrite_config(index):
-    with open("suprb2/config.py", "w") as f:
-        config = fetch_config_for_experiment(index)
-        f.write( get_file_content(config) )
+@click.option("-c", "--config_path", type=click.IntRange(min=0, max=500), default=0)
+def rewrite_config(config_path):
+    used_configs = get_used_configs(config_path)
+    config = fetch_config_for_experiment(used_configs)
+
+    with open(config_path, "w") as f:
+        f.write( get_file_content(config, used_configs) )
+
+def get_used_configs(config_path):
+    used_configs = list()
+    with open(config_path, "r") as f:
+        for i, line in enumerate(f):
+            if i >= 46 and line.startswith("# config -> "):
+                used_configs << list( map(int, line[12:].split(" ")) )
+    return used_configs
 
 
-def fetch_config_for_experiment(index):
-    df = fetch_config_for_experiment()
-    indices = np.random.choice(np.arange(len(df.columns)), len(df), replace=True)
-    return df.to_numpy()[np.arange(len(df)), indices]
+def fetch_config_for_experiment(values_ranges, used_configs):
+    config_already_used = False
+    while not config_already_used:
+        indices = np.random.choice(np.arange(len(values_ranges.columns)), len(values_ranges), replace=True)
+        config_already_used = indices in used_configs
+    return values_ranges.to_numpy()[np.arange(len(values_ranges)), indices]
 
 
 def fetch_value_ranges():
@@ -21,12 +33,12 @@ def fetch_value_ranges():
         'rl_name': ['ES_OPL', 'ES_ML', 'ES_MLSP', 'ES_CMA'],
         'nrules': [1, 5, 10],
         'lmbd': [10, 25, 35, 50],
-        'mu_denominator': [2, 4],       # for 'mu' we are going to use lmbd // 'mu_denom'
-        'rho_denominator': [1, 2, 4],   # for 'rho' we are going to use 'mu' // 'rho_denom'
+        'mu_denominator': [2, 4],       # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
+        'rho_denominator': [1, 2, 4],   # for 'rho' we are going to use max('mu' // 'rho_denom', 2)
         'sigma': [0.01, 0.05, 0.1, 0.15],
-        'local_tau': [],
-        'global_tau': [],
-        'rd_steps_per_step': [],
+        'local_tau': [0.7, 0.9, 1.1, 1.3],
+        'global_tau': [0.7, 0.9, 1.1, 1.3],
+        'rd_steps_per_step': [10, 50, 100, 200, 500],
         'recombination': [None, 'i', 'd'],
         'replacement': ['+', ','],
         'start_points': ['d', 'u', 'c'],
@@ -34,14 +46,14 @@ def fetch_value_ranges():
         # local model is defined in the experiment itself
         'radius': [0.1, 0.2, 0.3, 0.4, 0.5],
         'mutation_rate': [0.1, 0.2, 0.3, 0.4],
-        'sc_steps_per_step': [],
+        'sc_steps_per_step': [10 , 50, 100, 200, 500],
         'initial_pool_size': [50, 75, 100, 150, 200],
         'steps': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         'default_error': [100, 500, 1000, 1500, 2000]
     })
 
 
-def get_file_content(config):
+def get_file_content(config, used_configs):
     return \
 f'''class Config:
     """
@@ -89,6 +101,8 @@ f'''class Config:
 
     def __init__(self):
         self.__dict__ = self.__shared_state
+
+{[ f"# -> {config}" for config in used_configs ]}
 '''
 
 if __name__ == '__main__':
