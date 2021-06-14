@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/kfischer/Projects/suprb2_klaus/mlruns/1/0ec98422bbcd4eb5ba5afda3a039db5f/artifacts
+end_time: 1623687964105
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: 0ec98422bbcd4eb5ba5afda3a039db5f
+run_uuid: 0ec98422bbcd4eb5ba5afda3a039db5f
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1623687935096
+status: 3
+tags: []
+user_id: kfischer

@@ -1,0 +1,4 @@
+artifact_location: file:///Users/kfischer/Projects/suprb2_klaus/mlruns/2
+experiment_id: '2'
+lifecycle_stage: active
+name: Test with communities dataset
