@@ -13,7 +13,7 @@ class Config:
             "lmbd": 20,  # not allowed to use lambda
             "mu": 5,
             "rho": 2,
-            "sigma": 0.2,
+            "sigma": 0.01,
             "local_tau": 1.1,
             "global_tau": 1.2,
             "steps_per_step": 50,
@@ -22,7 +22,7 @@ class Config:
             "start_points": 'u'
         },
         "classifier": {
-            "weighted_error_const": 100,
+            "weighted_error_const": 0.5,
             "local_model": 'linear_regression',
             "radius": 0.1,
         },
@@ -31,10 +31,12 @@ class Config:
             # "pop_size": 1,
             # "crossover_type": None,
             "mutation_rate": 0.2,
-            "fitness": "pseudo-BIC",
-            "steps_per_step": 50
+            "fitness": "mse_times_root_C",
+            "fitness_target": 1e-3,
+            "fitness_factor": 2,
+            "steps_per_step": 100
         },
-        "initial_pool_size": 50,
+        "initial_pool_size": 500,
         "initial_genome_length": 100000,
         "steps": 5,
         "use_validation": False,
