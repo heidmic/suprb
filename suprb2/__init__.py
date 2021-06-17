@@ -1,4 +1,5 @@
 import numpy as np
+import suprb2.fitness as fitness
 from suprb2.random_gen import Random
 from suprb2.config import Config
 from suprb2.perf_recorder import PerfRecorder
@@ -33,6 +34,7 @@ class LCS:
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
         self.classifier_pool = list()
+        self.fitness_function = fitness.set_fitness_function(Config().solution_creation["fitness"])
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -183,12 +185,10 @@ class LCS:
         candidates = list()
         candidates.append(classifiers[0])
         for cl in classifiers[1:]:
-            volume = np.prod(cl.upperBounds - cl.lowerBounds)
-            volume_share_cl = volume / 2 ** self.xdim
+            volume_share_cl = cl.get_volume_share()
             to_be_added = False
             for can in candidates:
-                volume = np.prod(can.upperBounds - can.lowerBounds)
-                volume_share_can = volume / 2 ** self.xdim
+                volume_share_can = can.get_volume_share()
 
                 if can.error < cl.error and volume_share_can > volume_share_cl:
                     # classifier is dominated by this candidate and should not

@@ -144,14 +144,24 @@ class Classifier:
         -inf is the best possible value for the weighted error
         """
         weighted_error = np.inf
-        volume = np.prod(self.upperBounds - self.lowerBounds)
-        volume_share = volume / 2 ** len(self.lowerBounds)
+        
+        volume_share = self.get_volume_share()
 
-        if volume != 0:
+        if volume_share > 0:
             weighted_error = np.log(self.error) - np.log(volume_share) * \
                              Config().rule_discovery["weighted_error_constant"]
 
         return weighted_error
+
+    def get_volume_share(self):
+        """
+        Calculates the volume of the classifier in relation to the maximum
+        volume of the input space
+        :return:
+        """
+        volume = np.prod(self.upperBounds - self.lowerBounds)
+        volume_share = volume / 2 ** len(self.lowerBounds)
+        return volume_share
 
     @staticmethod
     def get_default_prediction():
