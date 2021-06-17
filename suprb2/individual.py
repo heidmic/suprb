@@ -10,6 +10,7 @@ class Individual:
     def __init__(self, genome, classifier_pool):
         self.genome = genome
         self.fitness = None
+        # TODO determine if this error is used anywhere
         self.error = None
         self.classifier_pool = classifier_pool
 
