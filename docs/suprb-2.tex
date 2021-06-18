@@ -18,7 +18,7 @@
 \begin{page}
 
 %pic 1
-\begin{tikzpicture}[remember picture,->,>=stealth',shorten >=1pt,auto,node distance=4cm,semithick,initial text=${n=0}$]
+\begin{tikzpicture}[remember picture,->,>=stealth',shorten >=1pt,auto,node distance=4cm,semithick,initial text=${n\leftarrow0}$]
   \tikzstyle{every state}=[fill=none,draw=black,text=black,align=center]
   
 
@@ -27,8 +27,8 @@
   \node[state,accepting,yshift=2cm,minimum size=0.1cm](T)[below of=C]		  {};
 
   \path (D) edge[loop above] node {$-$ / $n++$}	(D)
-            edge[bend left]	node[align=right] {$n==n_{RD}$ / put rules into pool, $n=0$}	(C)
-		(C) edge[bend left] node[align=right] {$n==n_{SC}$ / $n=0$}	  	(D)
+            edge[bend left]	node[align=right] {$n=n_{RD}$ / put rules into pool, $n\leftarrow0$}	(C)
+		(C) edge[bend left] node[align=right] {$n=n_{SC}$ / $n\leftarrow0$}	  	(D)
 			edge[loop right] node {$-$ / $n++$}		(C)
 			edge			  node[align=center] {termination criterion / $-$}		(T);
 \end{tikzpicture}
