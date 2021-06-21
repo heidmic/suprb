@@ -182,7 +182,6 @@ class LCS:
             to_be_added = False
             for can in candidates:
                 volume_share_can = can.get_volume_share()
-
                 if can.error < cl.error and volume_share_can > volume_share_cl:
                     # classifier is dominated by this candidate and should not
                     # become a new candidate
