@@ -213,6 +213,53 @@ class RuleDiscoverer(ABC):
         return start_tuples
 
 
+    def nondominated_sort(self, classifiers: list[Classifier], indexes: bool=True):
+        """
+        Takes a list of classifiers and returns all classifiers that were not
+            dominated by any other in regard to error AND volume. This is
+            equivalent to searching the pareto front
+
+        Inspired by A Fast Elitist Non-Dominated Sorting GeneticAlgorithm for
+            Multi-Objective Optimization: NSGA-II
+            http://repository.ias.ac.in/83498/1/2-a.pdf
+
+        If indexes is true, then the indexes of the nondominated classifiers
+        in the list are return (instead of a new list)
+
+        :param classifiers:
+        :param indexes:
+        :return:
+        """
+        candidates = list()
+        candidates.append(classifiers[0] if not indexes else 0)
+        for i in range(1, len(classifiers[1:])):
+            cl = classifiers[i]
+            volume_share_cl = cl.get_volume_share()
+            to_be_added = False
+            for j in range(len(candidates)):
+                can = candidates[j] if not indexes else classifiers[candidates[j]]
+                volume_share_can = can.get_volume_share()
+
+                if can.error < cl.error and volume_share_can > volume_share_cl:
+                    # classifier is dominated by this candidate and should not
+                    # become a new candidate
+                    to_be_added = False
+                    break
+
+                elif can.error > cl.error and volume_share_can < volume_share_cl:
+                    # classifier dominates candidate
+                    candidates.remove(can)
+                    to_be_added = True
+
+                else:
+                    to_be_added = True
+
+            if to_be_added:
+                candidates.append(cl if not indexes else i)
+
+        return candidates
+
+
 class ES_OnePlusLambd(RuleDiscoverer):
     def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None):
         super().__init__(pool, solution_optimizer)
@@ -230,9 +277,10 @@ class ES_OnePlusLambd(RuleDiscoverer):
                     child.mutate(Config().rule_discovery['sigma'])
                     child.fit(X, y)
                     children.append(child)
-                # ToDo instead of greedily taking the minimum, treating all
-                #  below a certain threshhold as equal might yield better models
-                cl = children[np.argmin([child.get_weighted_error() for child in children])]
+                ## ToDo instead of greedily taking the minimum, treating all
+                ##  below a certain threshhold as equal might yield better  models
+                #cl = children[np.argmin([child.get_weighted_error() for child in children])]
+                cl = Random().random.choice(self.nondominated_sort(children))
 
             if cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
                 self.pool.append(cl)
@@ -307,7 +355,12 @@ class ES_MuLambd(RuleDiscoverer):
         # add search results to pool
         # mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
         # filtered_tuples = np.array(generation_tuples, dtype=object)[mask]
-        filtered_tuples = np.array(self.select_best_classifiers(generation_tuples, mu), dtype=object)
+        tuples_array = np.array(generation_tuples, dtype='object')
+        nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
+        best_nondominated_tuples = tuples_array[nondominated_indexes]
+
+        nondominated_classifiers_available = min(mu, len(nondominated_indexes))
+        filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
         self.pool.extend( list(filtered_tuples[:,0]) )
         self.sigmas.extend( list(filtered_tuples[:,1]) )
 
@@ -546,10 +599,14 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             start_point.upperBounds = np.mean(parents_attr[1], axis=0)
 
         # add children to pool
-        best_mu_cls = self.select_best_classifiers(tuples_for_pool, mu)
-        tuples_array = np.array(best_mu_cls, dtype=object)
-        self.pool.extend( list(tuples_array[:,0]) )
-        self.sigmas.extend( list(tuples_array[:,1]) )
+        tuples_array = np.array(tuples_for_pool, dtype='object')
+        nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
+        best_nondominated_tuples = tuples_array[nondominated_indexes]
+
+        nondominated_classifiers_available = min(mu, len(nondominated_indexes))
+        filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
+        self.pool.extend( list(filtered_tuples[:,0]) )
+        self.sigmas.extend( list(filtered_tuples[:,1]) )
 
 
 class ES_CMA(RuleDiscoverer):
@@ -649,9 +706,14 @@ class ES_CMA(RuleDiscoverer):
             C = (1 - cov_one + cov_h - cov_isotropic) * C + cov_one * np.dot(sp_cov, sp_cov.T) + cov_mu * weighted_cov_trans_sum
 
         # add children to pool
-        arrays_for_pool = np.array(tuples_for_pool, dtype=object)
-        self.pool.extend( list(arrays_for_pool[:,0]) )
-        self.sigmas.extend( list(arrays_for_pool[:,1]) )
+        tuples_array = np.array(tuples_for_pool, dtype='object')
+        nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
+        best_nondominated_tuples = tuples_array[nondominated_indexes]
+
+        nondominated_classifiers_available = min(mu, len(nondominated_indexes))
+        filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
+        self.pool.extend( list(filtered_tuples[:,0]) )
+        self.sigmas.extend( list(filtered_tuples[:,1]) )
 
 
     def calculate_weights(self, cls_tuples: list[tuple[Classifier, np.ndarray]], lmbd: int) -> np.ndarray:

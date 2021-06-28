@@ -16,7 +16,8 @@ import click
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=1000)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
-def run_exp(seed, sample_size, data_seed):
+@click.option("-n", "--run-name", default="")
+def run_exp(seed, sample_size, data_seed, run_name):
     """
     Communities and Crime Data Set
     https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime
@@ -29,7 +30,7 @@ def run_exp(seed, sample_size, data_seed):
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
     mf.set_experiment(f"Test with auto. sweden dataset")
-    with mf.start_run():
+    with mf.start_run(run_name=run_name):
         mf.log_param("data_seed", data_seed)
         mf.log_param("sample_size", sample_size)
         mf.log_param("sample_dim", dimensions)

@@ -168,7 +168,7 @@ class Classifier:
 
         if volume_share > 0:
             weighted_error = np.log(self.error) - np.log(volume_share) * \
-                             Config().rule_discovery["weighted_error_constant"]
+                             Config().classifier["weighted_error_const"]
 
         return weighted_error
 

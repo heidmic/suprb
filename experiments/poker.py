@@ -15,7 +15,8 @@ import click
 @click.command()
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
-def run_exp(seed, data_seed):
+@click.option("-n", "--run-name", default="")
+def run_exp(seed, data_seed, run_name):
     """
     Poker Hand Dataset
     https://archive.ics.uci.edu/ml/machine-learning-databases/poker/
@@ -28,9 +29,11 @@ def run_exp(seed, data_seed):
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
     Config().classifier["local_model"] = "logistic_regression"
+    Config().solution_creation["fitness"] = "pseudo-BIC"
+    Config()["default_error"] = 0.9
 
     mf.set_experiment("Test with poker dataset")
-    with mf.start_run():
+    with mf.start_run(run_name=run_name):
         mf.log_param("data_seed", data_seed)
         mf.log_param("sample_size", X_train.shape[0])
         mf.log_param("sample_dim", dimensions)
