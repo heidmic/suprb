@@ -54,6 +54,7 @@ class ES_1plus1(SolutionOptimizer):
             if self.individual.fitness < candidate.fitness:
                 self.individual = candidate
                 success += 1
+                print(f"fitness improved to: {candidate.fitness}\tTotal: {success}\t Step: {i}")
         return success
 
     def get_elitist(self):

@@ -8,11 +8,10 @@ class Config:
     __shared_state = {
         "n_elitists": 1,
         "rule_discovery": {
-            "name": 'ES_OPL',
-            "cl_radius": 0.5,
+            "name": 'ES_ML',
             "nrules": 50,
             "lmbd": 20,  # not allowed to use lambda
-            "mu": 10,
+            "mu": 5,
             "rho": 2,
             "sigma": 0.01,
             "local_tau": 1.1,
@@ -20,8 +19,12 @@ class Config:
             "steps_per_step": 50,
             "recombination": 'd',
             "replacement": '+',
+            "start_points": 'u'
+        },
+        "classifier": {
             "weighted_error_const": 0.5,
-            "start_points": 'd',
+            "local_model": 'linear_regression',
+            "radius": 0.1,
         },
         "solution_creation": {
             "name": '(1+1)-ES',
@@ -33,9 +36,9 @@ class Config:
             "fitness_factor": 2,
             "steps_per_step": 100
         },
-        "initial_pool_size": 500,
+        "initial_pool_size": 50,
         "initial_genome_length": 100000,
-        "steps": 250,
+        "steps": 5,
         "use_validation": False,
         "logging": True,
         "default_error": 1000

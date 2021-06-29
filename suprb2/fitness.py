@@ -23,8 +23,14 @@ def set_fitness_function(config_fitness_function):
 
 
 def calculate_bic_error(n, y_val, predicted_X_val):
-    # mse = ResidualSumOfSquares / NumberOfSamples
-    return np.sum(np.square(y_val - predicted_X_val)) / n
+    if Config().classifier['local_model'] ==  'logistic_regression':
+        # Inverted Macro F1 Score
+        return 1 - f1_score(y_true=y_val, y_pred=predicted_X_val, average='macro')
+    elif Config().classifier['local_model'] == 'linear_regression':
+        # mse = ResidualSumOfSquares / NumberOfSamples
+        return np.sum(np.square(y_val - predicted_X_val)) / n
+    else:
+        raise NotImplementedError
 
 
 def calculate_bic_fitness(n, parameters, error):
