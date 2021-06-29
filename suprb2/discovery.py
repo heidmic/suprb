@@ -264,8 +264,8 @@ class ES_OnePlusLambd(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        mu = Config().rule_discovery['mu']
-        start_cls, _ = self.create_start_tuples(mu, X, y)
+        nrules = Config().rule_discovery['nrules']
+        start_cls, _ = self.create_start_tuples(nrules, X, y)
 
         for cl in start_cls:
             for i in range(Config().rule_discovery['steps_per_step']):
