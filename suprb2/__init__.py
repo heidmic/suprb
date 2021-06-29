@@ -1,4 +1,5 @@
 import numpy as np
+import suprb2.fitness as fitness
 from suprb2.random_gen import Random
 from suprb2.config import Config
 from suprb2.perf_recorder import PerfRecorder
@@ -35,6 +36,7 @@ class LCS:
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
         self.classifier_pool = list()
+        self.fitness_function = fitness.set_fitness_function(Config().solution_creation["fitness"])
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -61,7 +63,7 @@ class LCS:
             self.rule_disc.step(X, y)
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(X, y, self.classifier_pool)
+        self.sol_opt = ES_1plus1(X, y, self.classifier_pool, self.fitness_function)
         # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
@@ -115,20 +117,10 @@ class LCS:
                       .parameters(), step)
         mf.log_metric("classifier pool size", len(self.classifier_pool),
                       step)
-
-        if Config().classifier["local_model"] == "logistic_regression":
-            PerfRecorder().elitist_f1_score.append(
-                self.sol_opt.get_elitist().f1_score)
-            mf.log_metric("macro f1 score elite", self.sol_opt.get_elitist()
-                      .f1_score, step)
-        elif Config().classifier["local_model"] == "linear_regression":
-            mf.log_metric("error elite", self.sol_opt.get_elitist()
-                      .error, step)
-            PerfRecorder().elitist_val_error.append(
-                self.sol_opt.get_elitist().error)
-        else:
-            raise NotImplementedError
-
+        mf.log_metric("error elite", self.sol_opt.get_elitist()
+                    .error, step)
+        PerfRecorder().elitist_val_error.append(
+            self.sol_opt.get_elitist().error)
         PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
@@ -150,6 +142,77 @@ class LCS:
         #  likely R2
         raise NotImplementedError()
 
+    def discover_rules(self, X, y):
+        # draw n examples from data
+        idxs = Random().random.choice(np.arange(len(X)),
+                                      Config().rule_discovery['nrules'], False)
+
+        for x in X[idxs]:
+            cl = Classifier.random_cl(self.xdim, point=x)
+            cl.fit(X, y)
+            for i in range(Config().rule_discovery['steps_per_step']):
+                children = list()
+                # make it 1+lambda instead of 1,lambda
+                children.append(cl)
+                for j in range(Config().rule_discovery['lmbd']):
+                    child = deepcopy(cl)
+                    child.mutate(Config().rule_discovery['sigma'])
+                    child.fit(X, y)
+                    children.append(child)
+                ## ToDo instead of greedily taking the minimum, treating all
+                ##  below a certain threshhold as equal might yield better  models
+                #cl = children[np.argmin([child.get_weighted_error() for child in children])]
+                cl = Random().random.choice(self.nondominated_sort(children))
+
+            if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
+                self.classifier_pool.append(cl)
+
+    def nondominated_sort(self, classifiers):
+        """
+        Takes a list of classifiers and returns all classifiers that were not
+            dominated by any other in regard to error AND volume. This is
+            equivalent to searching the pareto front
+
+        Inspired by A Fast Elitist Non-Dominated Sorting GeneticAlgorithm for
+            Multi-Objective Optimization: NSGA-II
+            http://repository.ias.ac.in/83498/1/2-a.pdf
+
+        :param classifiers:
+        :return:
+        """
+        candidates = list()
+        candidates.append(classifiers[0])
+        for cl in classifiers[1:]:
+            volume_share_cl = cl.get_volume_share()
+            to_be_added = False
+            for can in candidates:
+                volume_share_can = can.get_volume_share()
+
+                if can.error < cl.error and volume_share_can > volume_share_cl:
+                    # classifier is dominated by this candidate and should not
+                    # become a new candidate
+                    to_be_added = False
+                    break
+
+                elif can.error > cl.error and volume_share_can < volume_share_cl:
+                    # classifier dominates candidate
+                    candidates.remove(can)
+                    to_be_added = True
+
+                else:
+                    to_be_added = True
+
+            if to_be_added:
+                candidates.append(cl)
+
+        return candidates
+
+
+    @staticmethod
+    def default_error(y):
+        # for standardised data this should be equivalent to np.var(y)
+        with np.errstate(invalid='ignore'):
+            return np.sum(y**2)/np.array(len(y))
 
     # place classifiers around those examples
     # test if classifiers overlap

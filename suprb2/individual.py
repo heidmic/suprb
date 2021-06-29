@@ -11,7 +11,6 @@ class Individual:
         self.genome = genome
         self.fitness = None
         self.error = None
-        self.f1_score = None
         self.classifier_pool = classifier_pool
 
     @staticmethod
@@ -86,49 +85,6 @@ class Individual:
         # TODO for some reason returns tuple here, although this should
         #  only happen for matrizes, see below
         return [self.classifier_pool[i] for i in np.nonzero(self.genome)[0]]
-
-    def determine_fitness(self, X_val, y_val):
-        if Config().solution_creation['fitness'] == "pseudo-BIC":
-            n = len(X_val)
-            y_pred = self.predict(X_val)
-            # mse = ResidualSumOfSquares / NumberOfSamples
-            mse = np.sum(np.square(y_val - y_pred)) / n
-
-            # for debugging
-            self.error = mse
-
-            if Config().classifier['local_model'] == 'logistic_regression':
-                macro_f1 = f1_score(y_val, y_pred, average="macro")
-                # for debugging
-                self.f1_score = macro_f1
-                self.error = 1 - macro_f1
-
-            self.fitness = - (n * np.log(self.error) + self.parameters() * np.log(n))
-
-        elif Config().solution_creation['fitness'] == "BIC_matching_punishment":
-            n = len(X_val)
-            # mse = ResidualSumOfSquares / NumberOfSamples
-            mse = np.sum(np.square(y_val - self.predict(X_val))) / n
-            # for debugging
-            self.error = mse
-            matching_pun = np.sum(np.nonzero(np.sum(np.array([cl.matches(X_val)
-                                                              for cl
-                                                              in
-                                                              self.classifiers]),
-                                                    1) > 1))
-            # BIC -(n * np.log(rss / n) + complexity * np.log(n))
-            self.fitness = - (n * np.log(mse) + (self.parameters()
-                                                 + matching_pun
-                                                 ) * np.log(n))
-
-        elif Config().solution_creation['fitness'] == "MSE":
-            self.error = mean_squared_error(y_val, self.predict(X_val))
-            self.fitness = - self.error
-
-        elif Config().solution_creation['fitness'] == "simplified_compl":
-            self.error = mean_squared_error(y_val, self.predict(X_val))
-            self.fitness = -self.error - (len(self.classifiers) - Config().ind_size
-                                          if len(self.classifiers) > Config().ind_size else 0)
 
     def parameters(self, simple=True) -> float:
         if simple:
