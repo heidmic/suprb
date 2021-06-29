@@ -37,7 +37,9 @@ def run_all_experiments(config_path):
                                                         config['lmbd'] = lmbd
                                                         for sigma in values['sigma']:
                                                             config['sigma'] = sigma
-                                                            start_run(config, config_path)
+                                                            for start_points in values['start_points']:
+                                                                config['start_points'] = start_points
+                                                                start_run(config, config_path)
                                         elif opt == "'ES_MLSP'" or opt == "'ES_CMA'":
                                             for rd_steps_per_step in values['rd_steps_per_step']:
                                                 config['rd_steps_per_step'] = rd_steps_per_step
@@ -45,16 +47,29 @@ def run_all_experiments(config_path):
                                                     config['lmbd'] = lmbd
                                                     for mu_denominator in values['mu_denominator']:
                                                         config['mu_denominator'] = mu_denominator
-                                                        start_run(config, config_path)
+                                                        for start_points in values['start_points']:
+                                                            config['start_points'] = start_points
+                                                            start_run(config, config_path)
                                         else:
-                                            pass
-
-
-def start_run(config, config_path):
-    with open(config_path, "w") as f:
-        f.write( get_file_content(config) )
-    subprocess.run('sbatch /data/oc-compute01/fischekl/suprb2/slurm/auto_sweden.sbatch')
-    time.sleep(300)
+                                            for rd_steps_per_step in values['rd_steps_per_step']:
+                                                config['rd_steps_per_step'] = rd_steps_per_step
+                                                for lmbd in values['lmbd']:
+                                                    config['lmbd'] = lmbd
+                                                    for mu_denominator in values['mu_denominator']:
+                                                        config['mu_denominator'] = mu_denominator
+                                                        for rho_denominator in values['rho_denominator']:
+                                                            config['rho_denominator'] = rho_denominator
+                                                            for recombination in values['recombination']:
+                                                                config['recombination'] = recombination
+                                                                for replacement in values['replacement']:
+                                                                    config['replacement'] = replacement
+                                                                    for local_tau in values['local_tau']:
+                                                                        config['local_tau'] = local_tau
+                                                                        for global_tau in values['global_tau']:
+                                                                            config['global_tau'] = global_tau
+                                                                            for start_points in values['start_points']:
+                                                                                config['start_points'] = start_points
+                                                                                start_run(config, config_path)
 
 
 def values_dictionary():
@@ -81,6 +96,13 @@ def values_dictionary():
         'steps': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         'default_error': [100, 500, 1000, 1500, 2000]
     }
+
+
+def start_run(config, config_path):
+    with open(config_path, "w") as f:
+        f.write( get_file_content(config) )
+    subprocess.run('sbatch /data/oc-compute01/fischekl/suprb2/slurm/auto_sweden.sbatch')
+    time.sleep(300)
 
 
 def default_config():

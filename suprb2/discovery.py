@@ -329,6 +329,10 @@ class ES_MuLambd(RuleDiscoverer):
     'replacement'   ->  This hyper parameter defines if we are also adding
                         the copies of the parents to the pool ('+'), or if
                         we are only adding the children (',').
+
+    'start_points'  ->  Define how to create the initial classifier.
+                        Please regard the method RuleDiscovery.create_start_tuples
+                        for more information.
     """
 
 
@@ -541,6 +545,10 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
                             is 2, then run 2 steps in the evolutionary
                             search started by step().
 
+        'start_points':     Define how to create the initial classifier.
+                            Please regard the method RuleDiscovery.create_start_tuples
+                            for more information.
+
     Implementation based on paper ES Overview 2015 by Hansen, Arnold & Auger.
     Page 13, Algorithm 4 - The (μ/μ, λ)-ES with Search Path
     Links:
@@ -637,6 +645,10 @@ class ES_CMA(RuleDiscoverer):
                             is called. For instance, if steps_per_step
                             is 2, then run 2 steps in the evolutionary
                             search started by step().
+
+        'start_points':     Define how to create the initial classifier.
+                            Please regard the method RuleDiscovery.create_start_tuples
+                            for more information.
 
     Implementation based on paper ES Overview 2015 by Hansen, Arnold & Auger.
     Page 15, Algorithm 5 - The (μ/μ_w, λ)-CMA-ES
