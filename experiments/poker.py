@@ -30,7 +30,6 @@ def run_exp(seed, data_seed, run_name):
 
     Config().classifier["local_model"] = "logistic_regression"
     Config().solution_creation["fitness"] = "pseudo-BIC"
-    Config()["default_error"] = 0.9
 
     mf.set_experiment("Test with poker dataset")
     with mf.start_run(run_name=run_name):

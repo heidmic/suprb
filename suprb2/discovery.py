@@ -155,9 +155,7 @@ class RuleDiscoverer(ABC):
 
             # with the i-th line, create n * 2 classifiers
             for k in range(n * 2):
-                new_classifier = Classifier(lowers=intervals[i,:,k,0], uppers=intervals[i,:,k,1],
-                                            local_model=LinearRegression(), degree=1)
-                                            # Reminder: LinearRegression might change in the future
+                new_classifier = Classifier(lowers=intervals[i,:,k,0], uppers=intervals[i,:,k,1], degree=1)
                 new_classifier.fit(X, y)
                 start_tuples.append( [new_classifier, self.create_sigmas(xdim)] )
 

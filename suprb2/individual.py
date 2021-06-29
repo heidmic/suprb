@@ -11,7 +11,6 @@ class Individual:
         self.genome = genome
         self.fitness = None
         self.error = None
-        self.f1_score = None
         self.classifier_pool = classifier_pool
 
     @staticmethod

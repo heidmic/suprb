@@ -1,1 +1,0 @@
-{'name': 'ES_CMA', 'nrules': 50, 'lmbd': 20, 'mu': 5, 'rho': 2, 'sigma': 0.2, 'local_tau': 1.1, 'global_tau': 1.2, 'steps_per_step': 50, 'recombination': 'd', 'replacement': '+', 'start_points': 'u'}

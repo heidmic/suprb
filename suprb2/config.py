@@ -36,7 +36,7 @@ class Config:
             "fitness_factor": 2,
             "steps_per_step": 100
         },
-        "initial_pool_size": 500,
+        "initial_pool_size": 50,
         "initial_genome_length": 100000,
         "steps": 5,
         "use_validation": False,

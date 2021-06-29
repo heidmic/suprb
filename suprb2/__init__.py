@@ -117,20 +117,10 @@ class LCS:
                       .parameters(), step)
         mf.log_metric("classifier pool size", len(self.classifier_pool),
                       step)
-
-        if Config().classifier["local_model"] == "logistic_regression":
-            PerfRecorder().elitist_f1_score.append(
-                self.sol_opt.get_elitist().f1_score)
-            mf.log_metric("macro f1 score elite", self.sol_opt.get_elitist()
-                      .f1_score, step)
-        elif Config().classifier["local_model"] == "linear_regression":
-            mf.log_metric("error elite", self.sol_opt.get_elitist()
-                      .error, step)
-            PerfRecorder().elitist_val_error.append(
-                self.sol_opt.get_elitist().error)
-        else:
-            raise NotImplementedError
-
+        mf.log_metric("error elite", self.sol_opt.get_elitist()
+                    .error, step)
+        PerfRecorder().elitist_val_error.append(
+            self.sol_opt.get_elitist().error)
         PerfRecorder().val_size.append(len(X_val))
         PerfRecorder().elitist_fitness.append(
             self.sol_opt.get_elitist().fitness)
