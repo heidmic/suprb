@@ -119,6 +119,7 @@ class LCS:
                       step)
         mf.log_metric("error elite", self.sol_opt.get_elitist()
                     .error, step)
+        mf.log_metric("population diversity", self.pool_diversity(), step)
         PerfRecorder().elitist_val_error.append(
             self.sol_opt.get_elitist().error)
         PerfRecorder().val_size.append(len(X_val))
@@ -206,6 +207,22 @@ class LCS:
                 candidates.append(cl)
 
         return candidates
+
+    def pool_diversity(self):
+        """
+        Calculates the diversity of the current pool state,
+        based on the calculation proposed by the article
+        Population Diversity Maintenance In Brain Storm Optimization Algorithm
+        from Shi Cheng, Yuhui Shi, Quande Qin, Qingyu Zhang and Ruibin Bai
+        at page 7.
+
+        link: https://www.researchgate.net/publication/268217599_Population_Diversity_Maintenance_In_Brain_Storm_Optimization_Algorithm
+        """
+        diversities = np.zeros(self.xdim)
+        for j in range(self.xdim):
+            xj = [ np.mean( [cl.upperBounds[j], cl.lowerBounds[j]] ) for cl in self.classifier_pool ]
+            diversities[j] = np.mean( [ np.abs( np.mean( [cl.upperBounds[j], cl.lowerBounds[j]] ) - xj ) for cl in self.classifier_pool ] )
+        return np.mean(diversities)
 
 
     @staticmethod
