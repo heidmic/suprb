@@ -57,10 +57,9 @@ class RuleDiscoverer(ABC):
     def create_sigmas(self, x_dim: int) -> np.ndarray:
         """
         Creates an array with size 'x_dim' with
-        uniformly distributed values from [0, 1]
+        uniformly distributed values from [0.9, 1.1]
         """
-        # return Random().random.uniform(low=0.75, high=1.25, size=x_dim)
-        return Random().random.normal(size=x_dim)
+        return Random().random.uniform(low=0.9, high=1.1, size=x_dim)
 
 
     def select_best_classifiers(self, tuple_list: list[tuple[Classifier, np.ndarray]], mu: int) -> list[tuple[Classifier, np.ndarray]]:
