@@ -59,7 +59,8 @@ class RuleDiscoverer(ABC):
         Creates an array with size 'x_dim' with
         uniformly distributed values from [0, 1]
         """
-        return Random().random.uniform(size=x_dim)
+        # return Random().random.uniform(low=0.75, high=1.25, size=x_dim)
+        return Random().random.normal(size=x_dim)
 
 
     def select_best_classifiers(self, tuple_list: list[tuple[Classifier, np.ndarray]], mu: int) -> list[tuple[Classifier, np.ndarray]]:
@@ -585,9 +586,15 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
                 cl = deepcopy(start_point)
                 cl.lowerBounds, cl.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + (start_sigma * cl_sigmas))
                 cl.fit(X, y)
-                rnd_tuple_list.append( [cl, cl_sigmas] )
-            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu), dtype=object)
-            tuples_for_pool.extend( children_tuple_list )
+                if (-1 <= cl.lowerBounds).all() and (cl.lowerBounds <= 1).all() and (-1 <= cl.upperBounds).all() and (cl.upperBounds <= 1).all():
+                    rnd_tuple_list.append( [cl, cl_sigmas] )
+
+            # If there are less than 'mu' tuples, then take it all
+            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, min(len(rnd_tuple_list), mu)), dtype=object)
+            if len(children_tuple_list) == 0:
+                continue
+            else:
+                tuples_for_pool.extend( children_tuple_list )
 
             # recombination and parent update
             search_path = (1 - sigma_coef) * search_path + np.sqrt(sigma_coef * (2 - sigma_coef)) * (np.sqrt(mu) / mu) * np.sum(children_tuple_list[:,1])
@@ -608,14 +615,15 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             start_point.upperBounds = np.mean(parents_attr[1], axis=0)
 
         # add children to pool
-        tuples_array = np.array(tuples_for_pool, dtype='object')
-        nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
-        best_nondominated_tuples = tuples_array[nondominated_indexes]
+        if len(tuples_for_pool) > 0:
+            tuples_array = np.array(tuples_for_pool, dtype='object')
+            nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
+            best_nondominated_tuples = tuples_array[nondominated_indexes]
 
-        nondominated_classifiers_available = min(mu, len(nondominated_indexes))
-        filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
-        self.pool.extend( list(filtered_tuples[:,0]) )
-        self.sigmas.extend( list(filtered_tuples[:,1]) )
+            nondominated_classifiers_available = min(mu, len(nondominated_indexes))
+            filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
+            self.pool.extend( list(filtered_tuples[:,0]) )
+            self.sigmas.extend( list(filtered_tuples[:,1]) )
 
 
 class ES_CMA(RuleDiscoverer):
@@ -672,7 +680,7 @@ class ES_CMA(RuleDiscoverer):
         sp_cov          = np.zeros(x_dim, dtype=float)
         C               = np.identity(x_dim)
         tuples_for_pool = list()
-        start_point, _ = self.create_start_tuples(1, X, y)[0]
+        start_point, _  = self.create_start_tuples(1, X, y)[0]
 
         for i in range(Config().rule_discovery['steps_per_step']):
             start_point.fit(X, y)
@@ -683,13 +691,18 @@ class ES_CMA(RuleDiscoverer):
             C_sqrt_diag = np.diag(np.sqrt(C))
             for j in range(lmbd):
                 cl = deepcopy(start_point)
-                # cl_sigmas = Random().random.uniform(low=0.25, high=1.25, size=x_dim)
                 cl_sigmas = Random().random.normal(size=x_dim)
                 cl.lowerBounds, cl.upperBounds = np.stack((start_point.lowerBounds, start_point.upperBounds) + ( (sigmas * np.sqrt(C)) @ cl_sigmas ))
                 cl.fit(X, y)
-                rnd_tuple_list.append( [cl, cl_sigmas] )
-            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, mu), dtype=object)
-            tuples_for_pool.extend( children_tuple_list )
+                if (-1 <= cl.lowerBounds).all() and (cl.lowerBounds <= 1).all() and (-1 <= cl.upperBounds).all() and (cl.upperBounds <= 1).all():
+                    rnd_tuple_list.append( [cl, cl_sigmas] )
+
+            # If there are less than 'mu' tuples, then take it all
+            children_tuple_list = np.array(self.select_best_classifiers(rnd_tuple_list, min(len(rnd_tuple_list), mu)), dtype=object)
+            if len(children_tuple_list) == 0:
+                continue
+            else:
+                tuples_for_pool.extend( children_tuple_list )
 
             # Initializing factors according to the children's weights
             children_weights = self.calculate_weights(children_tuple_list, lmbd)
@@ -719,14 +732,15 @@ class ES_CMA(RuleDiscoverer):
             C = (1 - cov_one + cov_h - cov_isotropic) * C + cov_one * np.dot(sp_cov, sp_cov.T) + cov_mu * weighted_cov_trans_sum
 
         # add children to pool
-        tuples_array = np.array(tuples_for_pool, dtype='object')
-        nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
-        best_nondominated_tuples = tuples_array[nondominated_indexes]
+        if len(tuples_for_pool) > 0:
+            tuples_array = np.array(tuples_for_pool, dtype='object')
+            nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
+            best_nondominated_tuples = tuples_array[nondominated_indexes]
 
-        nondominated_classifiers_available = min(mu, len(nondominated_indexes))
-        filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
-        self.pool.extend( list(filtered_tuples[:,0]) )
-        self.sigmas.extend( list(filtered_tuples[:,1]) )
+            nondominated_classifiers_available = min(mu, len(nondominated_indexes))
+            filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
+            self.pool.extend( list(filtered_tuples[:,0]) )
+            self.sigmas.extend( list(filtered_tuples[:,1]) )
 
 
     def calculate_weights(self, cls_tuples: list[tuple[Classifier, np.ndarray]], lmbd: int) -> np.ndarray:
