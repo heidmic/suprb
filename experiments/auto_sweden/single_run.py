@@ -16,7 +16,7 @@ import click
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
 @click.option("-n", "--run-name", default="")
-def run_exp(seed, sample_size, data_seed, run_name):
+def run_exp(seed, data_seed, run_name):
     """
     Swedish Auto Insurance Dataset
     https://college.cengage.com/mathematics/brase/understandable_statistics/7e/students/datasets/slr/frames/slr06.html
