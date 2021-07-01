@@ -101,7 +101,8 @@ def values_dictionary():
 def start_run(config, config_path):
     with open(config_path, "w") as f:
         f.write( get_file_content(config) )
-    subprocess.run('sbatch /data/oc-compute01/fischekl/suprb2/slurm/auto_sweden.sbatch')
+    proc = subprocess.Popen(['sbatch /data/oc-compute01/fischekl/suprb2/slurm/auto_sweden.sbatch'],shell=True)
+    proc.wait()
     time.sleep(300)
 
 
