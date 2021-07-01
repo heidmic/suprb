@@ -213,7 +213,7 @@ class RuleDiscoverer(ABC):
         return start_tuples
 
 
-    def nondominated_sort(self, classifiers: list[Classifier], indexes: bool=True):
+    def nondominated_sort(self, classifiers: list[Classifier], indexes: bool=False):
         """
         Takes a list of classifiers and returns all classifiers that were not
             dominated by any other in regard to error AND volume. This is
@@ -236,6 +236,8 @@ class RuleDiscoverer(ABC):
             cl = classifiers[i]
             volume_share_cl = cl.get_volume_share()
             to_be_added = False
+
+            candidates_to_remove = list()
             for j in range(len(candidates)):
                 can = candidates[j] if not indexes else classifiers[candidates[j]]
                 volume_share_can = can.get_volume_share()
@@ -248,11 +250,14 @@ class RuleDiscoverer(ABC):
 
                 elif can.error > cl.error and volume_share_can < volume_share_cl:
                     # classifier dominates candidate
-                    candidates.remove(can)
+                    candidates_to_remove.append(can)
                     to_be_added = True
 
                 else:
                     to_be_added = True
+
+            for cl in candidates_to_remove:
+                candidates.remove(cl)
 
             if to_be_added:
                 candidates.append(cl if not indexes else i)
@@ -267,9 +272,11 @@ class ES_OnePlusLambd(RuleDiscoverer):
 
     def step(self, X: np.ndarray, y: np.ndarray):
         nrules = Config().rule_discovery['nrules']
-        start_cls, _ = self.create_start_tuples(nrules, X, y)
+        start_tuples = self.create_start_tuples(nrules, X, y)
 
-        for cl in start_cls:
+        for cl_tuple in start_tuples:
+            cl = cl_tuple[0]
+
             for i in range(Config().rule_discovery['steps_per_step']):
                 children = list()
                 for j in range(Config().rule_discovery['lmbd']):
