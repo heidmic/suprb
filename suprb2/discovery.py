@@ -159,7 +159,9 @@ class RuleDiscoverer(ABC):
                 new_classifier.fit(X, y)
                 start_tuples.append( [new_classifier, self.create_sigmas(xdim)] )
 
-        return (start_tuples, intervals)
+        # Randomly pick 'n' tuples
+        selected_tuples = Random().random.choice(np.array(start_tuples, dtype=object), n, False)
+        return (selected_tuples, intervals)
 
 
     def split_interval(self, l: np.ndarray, n: int) -> np.ndarray:
@@ -613,6 +615,10 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
             start_point.lowerBounds = np.mean(parents_attr[0], axis=0)
             start_point.upperBounds = np.mean(parents_attr[1], axis=0)
 
+        # add start_point to pool
+        if (-1 <= start_point.lowerBounds).all() and (start_point.lowerBounds <= 1).all() and (-1 <= start_point.upperBounds).all() and (start_point.upperBounds <= 1).all():
+            tuples_for_pool.append( [start_point, start_sigma] )
+
         # add children to pool
         if len(tuples_for_pool) > 0:
             tuples_array = np.array(tuples_for_pool, dtype='object')
@@ -729,6 +735,10 @@ class ES_CMA(RuleDiscoverer):
             cov_h = cov_one * (1 - h_isotropic**2) * cov_coef * (2 - cov_coef)
             weighted_cov_trans_sum = np.sum([ children_weights[i] * np.dot(C_sqrt_diag * children_tuple_list[i,1], (C_sqrt_diag * children_tuple_list[i,1]).T) for i in range(mu) ])
             C = (1 - cov_one + cov_h - cov_isotropic) * C + cov_one * np.dot(sp_cov, sp_cov.T) + cov_mu * weighted_cov_trans_sum
+
+        # add start_point to pool
+        if (-1 <= start_point.lowerBounds).all() and (start_point.lowerBounds <= 1).all() and (-1 <= start_point.upperBounds).all() and (start_point.upperBounds <= 1).all():
+            tuples_for_pool.append( [start_point, sigmas] )
 
         # add children to pool
         if len(tuples_for_pool) > 0:
