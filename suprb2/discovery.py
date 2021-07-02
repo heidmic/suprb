@@ -237,8 +237,8 @@ class RuleDiscoverer(ABC):
             volume_share_cl = cl.get_volume_share()
             to_be_added = False
 
-            candidates_to_remove = list()
-            for j in range(len(candidates)):
+            j = 0
+            while j < len(candidates):
                 can = candidates[j] if not indexes else classifiers[candidates[j]]
                 volume_share_can = can.get_volume_share()
 
@@ -250,14 +250,14 @@ class RuleDiscoverer(ABC):
 
                 elif can.error > cl.error and volume_share_can < volume_share_cl:
                     # classifier dominates candidate
-                    candidates_to_remove.append(can)
+                    candidates.remove(can if not indexes else j)
                     to_be_added = True
+                    # since the current indexed candidate is removed, the next
+                    # candidate is already in the 'j' position (no increment needed)
 
                 else:
+                    j += 1
                     to_be_added = True
-
-            for cl in candidates_to_remove:
-                candidates.remove(cl)
 
             if to_be_added:
                 candidates.append(cl if not indexes else i)
