@@ -74,27 +74,30 @@ def run_all_experiments(config_path):
 
 def values_dictionary():
     return {
+        # Rule Discovery
         'rl_name': ["'ES_OPL'", "'ES_MLSP'", "'ES_CMA'", "'ES_ML'"],
-        'nrules': [1, 5, 10],
+        'nrules': [5, 10, 15, 20],
         'lmbd': [10, 25, 35, 50],
         'mu_denominator': [2, 4],       # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
         'rho_denominator': [1, 2, 4],   # for 'rho' we are going to use max('mu' // 'rho_denom', 2)
-        'sigma': [0.01, 0.05, 0.1, 0.15],
-        'local_tau': [0.7, 0.9, 1.1, 1.2, 1.3],
-        'global_tau': [0.7, 0.9, 1.1, 1.2, 1.3],
-        'rd_steps_per_step': [10, 50, 100, 200, 500],
+        'sigma': [0.1, 0.2, 0.3, 0.4],
+        'local_tau': [0.2, 0.7, 1, 1.3, 1.8],
+        'global_tau': [0.2, 0.7, 1, 1.3, 1.8],
+        'rd_steps_per_step': [10, 50, 100, 150, 200],
         'recombination': ["None", "'i'", "'d'"],
         'replacement': ["'+'", "','"],
         'start_points': ["'d'", "'u'", "'c'"],
-        'weighted_error_const': [10, 25, 50, 100, 150, 200],
+        # Classifiers
+        'weighted_error_const': [0.4, 0.8, 1, 10, 25, 50, 100, 200],
         # local model is defined in the experiment itself
         'radius': [0.1, 0.2, 0.3, 0.4, 0.5],
-        'mutation_rate': [0.1, 0.2, 0.3, 0.4],
-        'fitness': ["'mse'", "'mse_times_C'", "'mse_times_root_C'"],
-        'sc_steps_per_step': [10 , 50, 100, 200, 500],
-        'initial_pool_size': [50, 75, 100, 150, 200],
-        'steps': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        'default_error': [100, 500, 1000, 1500, 2000]
+        # Solution Creation
+        'mutation_rate': [0.1, 0.2, 0.35, 0.5, 0.6],
+        'fitness': ["'mse_times_C'", "'mse_times_root_C'"],
+        'sc_steps_per_step': [10, 50, 100, 150, 200],
+        # LCS
+        'initial_pool_size': [500, 600, 700, 800, 1000],
+        'steps': [50, 100, 200, 300, 400]
     }
 
 
