@@ -23,53 +23,51 @@ def run_all_experiments(config_path):
                             config['initial_pool_size'] = initial_pool_size
                             for steps in values['steps']:
                                 config['steps'] = steps
-                                for default_error in values['default_error']:
-                                    config['default_error'] = default_error
-                                    # Rule discovery hyperparameters
-                                    for opt in values['rl_name']:
-                                        config['rl_name'] = opt
-                                        if opt == "'ES_OPL'":
-                                            for nrule in values['nrules']:
-                                                config['nrules'] = nrule
-                                                for rd_steps_per_step in values['rd_steps_per_step']:
-                                                    config['rd_steps_per_step'] = rd_steps_per_step
-                                                    for lmbd in values['lmbd']:
-                                                        config['lmbd'] = lmbd
-                                                        for sigma in values['sigma']:
-                                                            config['sigma'] = sigma
-                                                            for start_points in values['start_points']:
-                                                                config['start_points'] = start_points
-                                                                start_run(config, config_path)
-                                        elif opt == "'ES_MLSP'" or opt == "'ES_CMA'":
+                                # Rule discovery hyperparameters
+                                for opt in values['rl_name']:
+                                    config['rl_name'] = opt
+                                    if opt == "'ES_OPL'":
+                                        for nrule in values['nrules']:
+                                            config['nrules'] = nrule
                                             for rd_steps_per_step in values['rd_steps_per_step']:
                                                 config['rd_steps_per_step'] = rd_steps_per_step
                                                 for lmbd in values['lmbd']:
                                                     config['lmbd'] = lmbd
-                                                    for mu_denominator in values['mu_denominator']:
-                                                        config['mu_denominator'] = mu_denominator
+                                                    for sigma in values['sigma']:
+                                                        config['sigma'] = sigma
                                                         for start_points in values['start_points']:
                                                             config['start_points'] = start_points
                                                             start_run(config, config_path)
-                                        else:
-                                            for rd_steps_per_step in values['rd_steps_per_step']:
-                                                config['rd_steps_per_step'] = rd_steps_per_step
-                                                for lmbd in values['lmbd']:
-                                                    config['lmbd'] = lmbd
-                                                    for mu_denominator in values['mu_denominator']:
-                                                        config['mu_denominator'] = mu_denominator
-                                                        for rho_denominator in values['rho_denominator']:
-                                                            config['rho_denominator'] = rho_denominator
-                                                            for recombination in values['recombination']:
-                                                                config['recombination'] = recombination
-                                                                for replacement in values['replacement']:
-                                                                    config['replacement'] = replacement
-                                                                    for local_tau in values['local_tau']:
-                                                                        config['local_tau'] = local_tau
-                                                                        for global_tau in values['global_tau']:
-                                                                            config['global_tau'] = global_tau
-                                                                            for start_points in values['start_points']:
-                                                                                config['start_points'] = start_points
-                                                                                start_run(config, config_path)
+                                    elif opt == "'ES_MLSP'" or opt == "'ES_CMA'":
+                                        for rd_steps_per_step in values['rd_steps_per_step']:
+                                            config['rd_steps_per_step'] = rd_steps_per_step
+                                            for lmbd in values['lmbd']:
+                                                config['lmbd'] = lmbd
+                                                for mu_denominator in values['mu_denominator']:
+                                                    config['mu_denominator'] = mu_denominator
+                                                    for start_points in values['start_points']:
+                                                        config['start_points'] = start_points
+                                                        start_run(config, config_path)
+                                    else:
+                                        for rd_steps_per_step in values['rd_steps_per_step']:
+                                            config['rd_steps_per_step'] = rd_steps_per_step
+                                            for lmbd in values['lmbd']:
+                                                config['lmbd'] = lmbd
+                                                for mu_denominator in values['mu_denominator']:
+                                                    config['mu_denominator'] = mu_denominator
+                                                    for rho_denominator in values['rho_denominator']:
+                                                        config['rho_denominator'] = rho_denominator
+                                                        for recombination in values['recombination']:
+                                                            config['recombination'] = recombination
+                                                            for replacement in values['replacement']:
+                                                                config['replacement'] = replacement
+                                                                for local_tau in values['local_tau']:
+                                                                    config['local_tau'] = local_tau
+                                                                    for global_tau in values['global_tau']:
+                                                                        config['global_tau'] = global_tau
+                                                                        for start_points in values['start_points']:
+                                                                            config['start_points'] = start_points
+                                                                            start_run(config, config_path)
 
 
 def values_dictionary():
