@@ -167,7 +167,7 @@ f'''class Config:
         "steps": {config['steps']},
         "use_validation": False,
         "logging": True,
-        "default_error": {config['default_error']}
+        "default_error": 1000
     }}
 
     def __init__(self):
