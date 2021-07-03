@@ -3,7 +3,7 @@
 #SBATCH --partition=cpu
 #SBATCH --output=/data/oc-compute01/fischekl/suprb2/output/output-%A-%a.txt
 #SBATCH --cpus-per-task=5
-#SBATCH --mem-per-cpu=750
+#SBATCH --mem-per-cpu=500
 job_dir=/data/oc-compute01/fischekl/suprb2
 experiment=experiments/auto_sweden/single_run.py
 
