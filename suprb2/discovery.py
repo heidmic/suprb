@@ -71,7 +71,7 @@ class RuleDiscoverer(ABC):
             return tuple_list
         else:
             tuple_array = np.array(tuple_list, dtype=object)
-            idx = np.argpartition([ cl_tuple[0].get_weighted_error() for cl_tuple in tuple_array ], mu-1).astype(int)[:(mu)]
+            idx = np.argpartition([ cl_tuple[0].error for cl_tuple in tuple_array ], mu-1).astype(int)[:(mu)]
             return list(tuple_array[idx])
 
 
@@ -289,7 +289,7 @@ class ES_OnePlusLambd(RuleDiscoverer):
                 #cl = children[np.argmin([child.get_weighted_error() for child in children])]
                 cl = Random().random.choice(self.nondominated_sort(children))
 
-            if cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
+            if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
                 self.pool.append(cl)
 
 
@@ -506,7 +506,7 @@ class ES_MuLambd(RuleDiscoverer):
             cl.upperBounds = lu[1]
             # cl.mutate(Config().rule_discovery['sigma'])
             cl.fit(X, y)
-            if cl.get_weighted_error() < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
+            if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
                 children_tuples.append((cl, cl_sigmas))
 
         return children_tuples
@@ -586,7 +586,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         for i in range(Config().rule_discovery['steps_per_step']):
             rnd_tuple_list = list()
             start_point.fit(X, y)
-            print(f"reference weighted error: {start_point.get_weighted_error()}\tIn. step: {i}")
+            print(f"reference weighted error: {start_point.error}\tIn. step: {i}")
 
             # generating children with sigmas
             for j in range(lmbd):
@@ -696,7 +696,7 @@ class ES_CMA(RuleDiscoverer):
 
         for i in range(Config().rule_discovery['steps_per_step']):
             start_point.fit(X, y)
-            print(f"reference weighted error: {start_point.get_weighted_error()}\tIn. step: {i}")
+            print(f"reference weighted error: {start_point.error}\tIn. step: {i}")
 
             # generating children with sigmas
             rnd_tuple_list = list()
@@ -734,13 +734,14 @@ class ES_CMA(RuleDiscoverer):
             sp_isotropic = (1 - cov_isotropic) * sp_isotropic + np.sqrt(cov_isotropic * (2 - cov_isotropic)) * np.sqrt(mu_weights) * weighted_sigma_sum
             # search path with covariances update
             h_isotropic = 1 if (np.linalg.norm(sp_isotropic)**2 / x_dim) < 2 + 4 / (x_dim + 1) else 0
-            weighted_cov_sigmas_sum = np.sum([ children_weights[i] * C_sqrt_diag * children_tuple_list[i,1] for i in range(mu) ])
+            min_mu = min(mu, len(children_tuple_list))
+            weighted_cov_sigmas_sum = np.sum([ children_weights[i] * C_sqrt_diag * children_tuple_list[i,1] for i in range(min_mu) ])
             sp_cov = (1 - cov_coef) * sp_cov + h_isotropic * ( cov_coef * np.sqrt(mu_weights) * weighted_cov_sigmas_sum )
             # sigmas update
             sigmas *= np.power( np.exp( (np.linalg.norm(sp_isotropic)**2 / x_dim) - 1 ), ((cov_isotropic / dist) / 2) )
             # covariance matrix update
             cov_h = cov_one * (1 - h_isotropic**2) * cov_coef * (2 - cov_coef)
-            weighted_cov_trans_sum = np.sum([ children_weights[i] * np.dot(C_sqrt_diag * children_tuple_list[i,1], (C_sqrt_diag * children_tuple_list[i,1]).T) for i in range(mu) ])
+            weighted_cov_trans_sum = np.sum([ children_weights[i] * np.dot(C_sqrt_diag * children_tuple_list[i,1], (C_sqrt_diag * children_tuple_list[i,1]).T) for i in range(min_mu) ])
             C = (1 - cov_one + cov_h - cov_isotropic) * C + cov_one * np.dot(sp_cov, sp_cov.T) + cov_mu * weighted_cov_trans_sum
 
         # add start_point to pool
@@ -775,9 +776,9 @@ class ES_CMA(RuleDiscoverer):
         """
         tuples_array = np.array(cls_tuples, dtype=object)
         if tuples_array.ndim == 1:
-            weighted_errors = np.array([ cl_tuple[0].get_weighted_error() for cl_tuple in cls_tuples ], dtype=float)
+            weighted_errors = np.array([ cl_tuple[0].error for cl_tuple in cls_tuples ], dtype=float)
         else:
-            weighted_errors = np.array([ cl.get_weighted_error() for cl in tuples_array[:,0] ], dtype=float)
+            weighted_errors = np.array([ cl.error for cl in tuples_array[:,0] ], dtype=float)
         ranked_indexes = np.argsort(weighted_errors)
         weights = np.ones(tuples_array.shape[0], dtype=float)
 

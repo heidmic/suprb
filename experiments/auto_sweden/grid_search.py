@@ -7,52 +7,41 @@ def run_all_experiments(config_path):
     config = default_config()
 
     # Classifier hyperparameters
-    for wec in values['weighted_error_const']:
-        config['weighted_error_const'] = wec
-        for radius in values['radius']:
-            config['radius'] = radius
-            # Solution Creation hyperparameters
-            for mutation_rate in values['mutation_rate']:
-                config['mutation_rate'] = mutation_rate
-                for fitness in values['fitness']:
-                    config['fitness'] = fitness
-                    for sc_steps_per_step in values['sc_steps_per_step']:
-                        config['sc_steps_per_step'] = sc_steps_per_step
-                        # General hyperparameters
-                        for initial_pool_size in values['initial_pool_size']:
-                            config['initial_pool_size'] = initial_pool_size
-                            for steps in values['steps']:
-                                config['steps'] = steps
-                                # Rule discovery hyperparameters
-                                for opt in values['rl_name']:
-                                    config['rl_name'] = opt
-                                    if opt == "'ES_OPL'":
-                                        for nrule in values['nrules']:
-                                            config['nrules'] = nrule
-                                            for rd_steps_per_step in values['rd_steps_per_step']:
-                                                config['rd_steps_per_step'] = rd_steps_per_step
-                                                for lmbd in values['lmbd']:
-                                                    config['lmbd'] = lmbd
+    for radius in values['radius']:
+        config['radius'] = radius
+        # Solution Creation hyperparameters
+        for mutation_rate in values['mutation_rate']:
+            config['mutation_rate'] = mutation_rate
+            for fitness in values['fitness']:
+                config['fitness'] = fitness
+                for sc_steps_per_step in values['sc_steps_per_step']:
+                    config['sc_steps_per_step'] = sc_steps_per_step
+                    # General hyperparameters
+                    for initial_pool_size in values['initial_pool_size']:
+                        config['initial_pool_size'] = initial_pool_size
+                        for steps in values['steps']:
+                            config['steps'] = steps
+                            # Rule discovery hyperparameters
+                            for rd_steps_per_step in values['rd_steps_per_step']:
+                                config['rd_steps_per_step'] = rd_steps_per_step
+                                for lmbd in values['lmbd']:
+                                    config['lmbd'] = lmbd
+                                    for start_points in values['start_points']:
+                                        config['start_points'] = start_points
+                                        for opt in values['rl_name']:
+                                            config['rl_name'] = opt
+
+                                            if opt == "'ES_OPL'":
+                                                for nrule in values['nrules']:
+                                                    config['nrules'] = nrule
                                                     for sigma in values['sigma']:
                                                         config['sigma'] = sigma
-                                                        for start_points in values['start_points']:
-                                                            config['start_points'] = start_points
-                                                            start_run(config, config_path)
-                                    elif opt == "'ES_MLSP'" or opt == "'ES_CMA'":
-                                        for rd_steps_per_step in values['rd_steps_per_step']:
-                                            config['rd_steps_per_step'] = rd_steps_per_step
-                                            for lmbd in values['lmbd']:
-                                                config['lmbd'] = lmbd
+                                                        start_run(config, config_path)
+                                            elif opt == "'ES_MLSP'" or opt == "'ES_CMA'":
                                                 for mu_denominator in values['mu_denominator']:
                                                     config['mu_denominator'] = mu_denominator
-                                                    for start_points in values['start_points']:
-                                                        config['start_points'] = start_points
-                                                        start_run(config, config_path)
-                                    else:
-                                        for rd_steps_per_step in values['rd_steps_per_step']:
-                                            config['rd_steps_per_step'] = rd_steps_per_step
-                                            for lmbd in values['lmbd']:
-                                                config['lmbd'] = lmbd
+                                                    start_run(config, config_path)
+                                            else:
                                                 for mu_denominator in values['mu_denominator']:
                                                     config['mu_denominator'] = mu_denominator
                                                     for rho_denominator in values['rho_denominator']:
@@ -65,37 +54,34 @@ def run_all_experiments(config_path):
                                                                     config['local_tau'] = local_tau
                                                                     for global_tau in values['global_tau']:
                                                                         config['global_tau'] = global_tau
-                                                                        for start_points in values['start_points']:
-                                                                            config['start_points'] = start_points
-                                                                            start_run(config, config_path)
+                                                                        start_run(config, config_path)
 
 
 def values_dictionary():
     return {
         # Rule Discovery
         'rl_name': ["'ES_OPL'", "'ES_MLSP'", "'ES_CMA'", "'ES_ML'"],
-        'nrules': [5, 10, 15, 20],
-        'lmbd': [10, 25, 35, 50],
-        'mu_denominator': [2, 4],       # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
+        'nrules': [20],
+        'lmbd': [8, 16, 32, 64],
+        'mu_denominator': [7],       # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
         'rho_denominator': [1, 2, 4],   # for 'rho' we are going to use max('mu' // 'rho_denom', 2)
-        'sigma': [0.1, 0.2, 0.3, 0.4],
-        'local_tau': [0.2, 0.7, 1, 1.3, 1.8],
-        'global_tau': [0.2, 0.7, 1, 1.3, 1.8],
-        'rd_steps_per_step': [10, 50, 100, 150, 200],
+        'sigma': [0.01, 0.1, 0.2],
+        'local_tau': [1.1, 1.2],
+        'global_tau': [1.1, 1.2],
+        'rd_steps_per_step': [100],
         'recombination': ["None", "'i'", "'d'"],
         'replacement': ["'+'", "','"],
         'start_points': ["'d'", "'u'", "'c'"],
         # Classifiers
-        'weighted_error_const': [0.4, 0.8, 1, 10, 25, 50, 100, 200],
         # local model is defined in the experiment itself
-        'radius': [0.1, 0.2, 0.3, 0.4, 0.5],
+        'radius': [0.1, 0.3, 0.5],
         # Solution Creation
-        'mutation_rate': [0.1, 0.2, 0.35, 0.5, 0.6],
+        'mutation_rate': [0.1, 0.2, 0.3, 0.4],
         'fitness': ["'mse_times_C'", "'mse_times_root_C'"],
-        'sc_steps_per_step': [10, 50, 100, 150, 200],
+        'sc_steps_per_step': [100],
         # LCS
-        'initial_pool_size': [500, 600, 700, 800, 1000],
-        'steps': [50, 100, 200, 300, 400]
+        'initial_pool_size': [500],
+        'steps': [100]
     }
 
 
@@ -146,7 +132,7 @@ f'''class Config:
             "start_points": {config['start_points']}
         }},
         "classifier": {{
-            "weighted_error_const": {config['weighted_error_const']},
+            "weighted_error_const": 0.5,
             "local_model": 'linear_regression',
             "radius": {config['radius']},
         }},
