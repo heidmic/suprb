@@ -37,15 +37,19 @@ def run_all_experiments(config_path):
                                                     for sigma in values['sigma']:
                                                         config['sigma'] = sigma
                                                         start_run(config, config_path)
-                                            elif opt == "'ES_MLSP'" or opt == "'ES_CMA'":
-                                                for mu_denominator in values['mu_denominator']:
+                                            elif opt == "'ES_MLSP'":
+                                                for mu_denominator in values['mu_denominator_MLSP']:
+                                                    config['mu_denominator'] = mu_denominator
+                                                    start_run(config, config_path)
+                                            elif opt == "'ES_CMA'":
+                                                for mu_denominator in values['mu_denominator_CMA']:
                                                     config['mu_denominator'] = mu_denominator
                                                     start_run(config, config_path)
                                             else:
-                                                for mu_denominator in values['mu_denominator']:
+                                                for mu_denominator in values['mu_denominator_ML']:
                                                     config['mu_denominator'] = mu_denominator
-                                                    for rho_denominator in values['rho_denominator']:
-                                                        config['rho_denominator'] = rho_denominator
+                                                    for rho in unique_rho_values(values['rho_denominator'], mu_denominator, lmbd):
+                                                        config['rho'] = rho
                                                         for recombination in values['recombination']:
                                                             config['recombination'] = recombination
                                                             for replacement in values['replacement']:
@@ -60,11 +64,14 @@ def run_all_experiments(config_path):
 def values_dictionary():
     return {
         # Rule Discovery
-        'rl_name': ["'ES_OPL'", "'ES_MLSP'", "'ES_CMA'", "'ES_ML'"],
+        'rl_name': ["'ES_ML'", "'ES_OPL'", "'ES_MLSP'", "'ES_CMA'"],
         'nrules': [20],
         'lmbd': [8, 16, 32, 64],
-        'mu_denominator': [7],       # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
-        'rho_denominator': [1, 2, 4],   # for 'rho' we are going to use max('mu' // 'rho_denom', 2)
+        # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
+        'mu_denominator_ML': [7],
+        'mu_denominator_CMA': [2],
+        'mu_denominator_MLSP': [4],
+        'rho_denominator': [1, 2, 4],   # for 'rho' look at unique_rho_values
         'sigma': [0.01, 0.1, 0.2],
         'local_tau': [1.1, 1.2],
         'global_tau': [1.1, 1.2],
@@ -96,17 +103,22 @@ def start_run(config, config_path):
 def default_config():
     return {
         'rl_name': "'ES_OPL'", 'nrules': 1, 'lmbd': 10, 'mu_denominator': 2,
-        'rho_denominator': 1, 'sigma': 0.01, 'local_tau': 0.7, 'global_tau': 0.7,
+        'rho': 1, 'sigma': 0.01, 'local_tau': 0.7, 'global_tau': 0.7,
         'rd_steps_per_step': 10, 'recombination': "None", 'replacement': "'+'",
-        'start_points': "'d'", 'weighted_error_const': 10, 'radius': 0.1,
-        'mutation_rate': 0.1, 'fitness': "'mse'", 'sc_steps_per_step': 10,
-        'initial_pool_size': 50, 'steps': 1, 'default_error': 100
+        'start_points': "'d'", 'radius': 0.1, 'mutation_rate': 0.1,
+        'fitness': "'mse'", 'sc_steps_per_step': 10, 'initial_pool_size': 50,
+        'steps': 1
     }
+
+
+def unique_rho_values(rho_denominators, mu_denominator, lmbd):
+    mu = max(lmbd // mu_denominator, 1)
+    # transform into set, so that we get only unique values, and then turn it back to list
+    return list(set([ max(mu // rho_den, 1) for rho_den in rho_denominators ]))
 
 
 def get_file_content(config):
     mu = max(config['lmbd'] // config['mu_denominator'], 1)
-    rho = max(mu // config['rho_denominator'], 2)
     return \
 f'''class Config:
     """
@@ -122,7 +134,7 @@ f'''class Config:
             "nrules": {config['nrules']},
             "lmbd": {config['lmbd']},  # not allowed to use lambda
             "mu": {mu},
-            "rho": {rho},
+            "rho": {config['rho']},
             "sigma": {config['sigma']},
             "local_tau": {config['local_tau']},
             "global_tau": {config['global_tau']},
