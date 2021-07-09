@@ -84,7 +84,7 @@ def values_dictionary():
         'radius': [0.1, 0.3, 0.5],
         # Solution Creation
         'mutation_rate': [0.1, 0.2, 0.3, 0.4],
-        'fitness': ["'xxx'", "'yyy'"],
+        'fitness': ["'pseudo-BIC'", "'inverted_macro_f1_score'", "'inverted_macro_f1_score_times_C'"],
         'sc_steps_per_step': [100],
         # LCS
         'initial_pool_size': [500],
