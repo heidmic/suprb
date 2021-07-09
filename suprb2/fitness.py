@@ -15,6 +15,10 @@ def set_fitness_function(config_fitness_function):
         fitness_function = mse_times_C
     elif config_fitness_function == "mse_times_root_C":
         fitness_function = mse_times_root_C
+    elif config_fitness_function == "inverted_macro_f1_score":
+        fitness_function = inverted_macro_f1_score
+    elif config_fitness_function == "inverted_macro_f1_score_times_C":
+        fitness_function = inverted_macro_f1_score_times_C
     else:
         print("Invalid fitness function specified! Exiting..")
         fitness_function = None
@@ -25,7 +29,7 @@ def set_fitness_function(config_fitness_function):
 def calculate_bic_error(n, y_val, predicted_X_val):
     if Config().classifier['local_model'] ==  'logistic_regression':
         # Inverted Macro F1 Score
-        return 1 - f1_score(y_true=y_val, y_pred=predicted_X_val, average='macro')
+        return 1 - f1_score(y_true=y_val, y_pred=np.rint(predicted_X_val), average='macro')
     elif Config().classifier['local_model'] == 'linear_regression':
         # mse = ResidualSumOfSquares / NumberOfSamples
         return np.sum(np.square(y_val - predicted_X_val)) / n
@@ -75,3 +79,13 @@ def mse_times_root_C(X_val, y_val, individual):
         1 / Config().solution_creation["fitness_factor"])
 
 
+def inverted_macro_f1_score(X_val, y_val, individual):
+    y_pred = individual.predict(X_val)
+    individual.fitness = f1_score(y_val, np.rint(y_pred), average='macro')
+    individual.error = 1 - individual.fitness
+
+
+def inverted_macro_f1_score_times_C(X_val, y_val, individual):
+    y_pred = individual.predict(X_val)
+    individual.fitness = f1_score(y_val, np.rint(y_pred), average='macro')
+    individual.error = (1 - individual.fitness) * individual.parameters()
