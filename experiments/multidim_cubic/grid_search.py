@@ -6,6 +6,7 @@ def run_all_experiments(config_path):
     values = values_dictionary()
     config = default_config()
     iterations = 0
+    print(f"Configurations directory: {config_path}")
 
     # Classifier hyperparameters
     for radius in values['radius']:
