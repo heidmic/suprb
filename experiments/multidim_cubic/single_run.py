@@ -49,6 +49,7 @@ def run_exp(seed, sample_size, dimensions, data_seed, config_path, run_name):
     y = f_n(X)
 
     # Import the configurations for this run
+    print(f"Configurations directory: {config_path}")
     module_path = config_path.replace("/", ".")[:-3]
     module = __import__(module_path, fromlist=["Config"])
     config_class = getattr(module, "Config")
