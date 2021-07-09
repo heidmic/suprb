@@ -29,7 +29,7 @@ def f_n(X):
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=1000)
 @click.option("-k", "--dimensions", type=click.IntRange(min=1), default=1)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
-@click.option("-c", "--config-path", default="suprb2.config")
+@click.option("-c", "--config-path", default="suprb2/config.py")
 @click.option("-n", "--run-name", default="")
 def run_exp(seed, sample_size, dimensions, data_seed, config_path, run_name):
     print(f"Starting at {datetime.now().time()}")

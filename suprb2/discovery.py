@@ -81,13 +81,13 @@ class RuleDiscoverer(ABC):
         """
         optimizer = config.rule_discovery['name']
         if optimizer == 'ES_OPL':
-            return ES_OnePlusLambd(pool)
+            return ES_OnePlusLambd(pool, config=config)
         elif optimizer == 'ES_ML':
-            return ES_MuLambd(pool)
+            return ES_MuLambd(pool, config=config)
         elif optimizer == 'ES_MLSP':
-            return ES_MuLambdSearchPath(pool)
+            return ES_MuLambdSearchPath(pool, config=config)
         elif optimizer == 'ES_CMA':
-            return ES_CMA(pool)
+            return ES_CMA(pool, config=config)
         else:
             raise NotImplemented
 
@@ -265,8 +265,8 @@ class RuleDiscoverer(ABC):
 
 
 class ES_OnePlusLambd(RuleDiscoverer):
-    def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None):
-        super().__init__(pool, solution_optimizer)
+    def __init__(self, pool: list[Classifier], config: dict, solution_optimizer: SolutionOptimizer=None):
+        super().__init__(pool, config, solution_optimizer)
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
@@ -344,8 +344,8 @@ class ES_MuLambd(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None) -> None:
-        super().__init__(pool, solution_optimizer)
+    def __init__(self, pool: list[Classifier], config: dict, solution_optimizer: SolutionOptimizer=None) -> None:
+        super().__init__(pool, config, solution_optimizer)
         self.sigmas = list()
 
 
@@ -569,8 +569,8 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: list[tuple[Classifier, np.ndarray]], solution_optimizer: SolutionOptimizer=None) -> None:
-        super().__init__(pool, solution_optimizer)
+    def __init__(self, pool: list[tuple[Classifier, np.ndarray]], config: dict, solution_optimizer: SolutionOptimizer=None) -> None:
+        super().__init__(pool, config, solution_optimizer)
         self.sigmas = list()
 
 
@@ -681,8 +681,8 @@ class ES_CMA(RuleDiscoverer):
     """
 
 
-    def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None) -> None:
-        super().__init__(pool, solution_optimizer)
+    def __init__(self, pool: list[Classifier], config: dict, solution_optimizer: SolutionOptimizer=None) -> None:
+        super().__init__(pool, config, solution_optimizer)
         self.sigmas = list()
 
 
