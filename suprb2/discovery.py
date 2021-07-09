@@ -3,14 +3,12 @@ from __future__ import annotations
 import numpy as np  # type: ignore
 from copy import deepcopy
 from abc import *
-from sklearn.linear_model import LinearRegression, LogisticRegression
 
 # from suprb2.perf_recorder import PerfRecorder
 from suprb2.solutions import SolutionOptimizer
 from suprb2.classifier import Classifier
 from suprb2.utilities import Utilities
 from suprb2.random_gen import Random
-from suprb2.config import Config
 
 class RuleDiscoverer(ABC):
     """
@@ -29,7 +27,8 @@ class RuleDiscoverer(ABC):
     """
 
 
-    def __init__(self, pool: list[Classifier], solution_optimizer: SolutionOptimizer=None) -> None:
+    def __init__(self, pool: list[Classifier], config, solution_optimizer: SolutionOptimizer=None) -> None:
+        self.config = config
         self.pool = pool
         self.sol_opt = solution_optimizer
 
@@ -75,12 +74,12 @@ class RuleDiscoverer(ABC):
             return list(tuple_array[idx])
 
 
-    def get_rule_disc(pool: list[Classifier]) -> RuleDiscoverer:
+    def get_rule_disc(config: dict, pool: list[Classifier]) -> RuleDiscoverer:
         """
         Returns the optimizer pointed by the rule discovery
         hyper-parameter 'name'.
         """
-        optimizer = Config().rule_discovery['name']
+        optimizer = config.rule_discovery['name']
         if optimizer == 'ES_OPL':
             return ES_OnePlusLambd(pool)
         elif optimizer == 'ES_ML':
@@ -98,11 +97,11 @@ class RuleDiscoverer(ABC):
         This method creates classifier as starting points for
         an evolutionary search.
         There are 3 different strategies:
-            - 'draw_examples_from_data' (Config().rule_discovery['start_points'] = 'd')
-            - 'elitist_complement'      (Config().rule_discovery['start_points'] = 'c')
-            - 'elitist_unmatched'       (Config().rule_discovery['start_points'] = 'u')
+            - 'draw_examples_from_data' (self.config.rule_discovery['start_points'] = 'd')
+            - 'elitist_complement'      (self.config.rule_discovery['start_points'] = 'c')
+            - 'elitist_unmatched'       (self.config.rule_discovery['start_points'] = 'u')
         """
-        technique = Config().rule_discovery['start_points']
+        technique = self.config.rule_discovery['start_points']
 
         if technique == 'd' or self.sol_opt is None:
             return self.draw_examples_from_data(n, X, y)
@@ -155,7 +154,7 @@ class RuleDiscoverer(ABC):
 
             # with the i-th line, create n * 2 classifiers
             for k in range(n * 2):
-                new_classifier = Classifier(lowers=intervals[i,:,k,0], uppers=intervals[i,:,k,1], degree=1)
+                new_classifier = Classifier(lowers=intervals[i,:,k,0], uppers=intervals[i,:,k,1], degree=1, config=self.config)
                 new_classifier.fit(X, y)
                 start_tuples.append( [new_classifier, self.create_sigmas(xdim)] )
 
@@ -191,7 +190,7 @@ class RuleDiscoverer(ABC):
 
         classifiers = list()
         for point in unmatched_points:
-            cl = Classifier.random_cl(X.shape[1], point=point)
+            cl = Classifier.random_cl(X.shape[1], config=self.config, point=point)
             cl.fit(X, y)
             classifiers.append(cl)
 
@@ -207,7 +206,7 @@ class RuleDiscoverer(ABC):
         start_tuples = list()
         idxs = Random().random.choice(np.arange(len(X)), n, False)
         for x in X[idxs]:
-            cl = Classifier.random_cl(X.shape[1], point=x)
+            cl = Classifier.random_cl(X.shape[1], config=self.config, point=x)
             cl.fit(X, y)
             start_tuples.append( [cl, self.create_sigmas(X.shape[1])] )
         return start_tuples
@@ -271,17 +270,17 @@ class ES_OnePlusLambd(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        nrules = Config().rule_discovery['nrules']
+        nrules = self.config.rule_discovery['nrules']
         start_tuples = self.create_start_tuples(nrules, X, y)
 
         for cl_tuple in start_tuples:
             cl = cl_tuple[0]
 
-            for i in range(Config().rule_discovery['steps_per_step']):
+            for i in range(self.config.rule_discovery['steps_per_step']):
                 children = list()
-                for j in range(Config().rule_discovery['lmbd']):
+                for j in range(self.config.rule_discovery['lmbd']):
                     child = deepcopy(cl)
-                    child.mutate(Config().rule_discovery['sigma'])
+                    child.mutate(self.config.rule_discovery['sigma'])
                     child.fit(X, y)
                     children.append(child)
                 ## ToDo instead of greedily taking the minimum, treating all
@@ -352,13 +351,13 @@ class ES_MuLambd(RuleDiscoverer):
 
     def step(self, X: np.ndarray, y: np.ndarray):
         generation_tuples = list()
-        mu = Config().rule_discovery['mu']
+        mu = self.config.rule_discovery['mu']
 
         # create start points for evolutionary search (with mutation vectors)
         generation_tuples = self.create_start_tuples(mu, X, y)
 
         # steps forward in the evolutionary search
-        for i in range(Config().rule_discovery['steps_per_step']):
+        for i in range(self.config.rule_discovery['steps_per_step']):
             recmb_tuples      = self.recombine(generation_tuples)
             children_tuples   = self.mutate_and_fit(recmb_tuples, X, y)
             generation_tuples = self.replace(generation_tuples, children_tuples)
@@ -366,9 +365,13 @@ class ES_MuLambd(RuleDiscoverer):
         # add search results to pool
         # mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
         # filtered_tuples = np.array(generation_tuples, dtype=object)[mask]
+
         tuples_array = np.array(generation_tuples, dtype='object')
-        nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
-        best_nondominated_tuples = tuples_array[nondominated_indexes]
+        if tuples_array.ndim > 1:
+            nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
+            best_nondominated_tuples = tuples_array[nondominated_indexes]
+        else:
+            best_nondominated_tuples = tuples_array
 
         nondominated_classifiers_available = min(mu, len(nondominated_indexes))
         filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
@@ -392,9 +395,9 @@ class ES_MuLambd(RuleDiscoverer):
         if len(parents_tuples) == 0:
             return None
 
-        lmbd = Config().rule_discovery['lmbd']
-        rho = Config().rule_discovery['rho']
-        recombination_type = Config().rule_discovery['recombination']
+        lmbd = self.config.rule_discovery['lmbd']
+        rho = self.config.rule_discovery['rho']
+        recombination_type = self.config.rule_discovery['recombination']
 
         if recombination_type == 'i':
             return self.intermediate_recombination(parents_tuples, lmbd, rho)
@@ -427,7 +430,7 @@ class ES_MuLambd(RuleDiscoverer):
             avg_attrs = np.array([[np.mean(classifier_attrs[0].flatten())],
                                   [np.mean(classifier_attrs[1].flatten())],
                                   [np.mean(classifier_attrs[2].flatten())]])
-            classifier = Classifier(lowers=avg_attrs[0], uppers=avg_attrs[1], degree=1)
+            classifier = Classifier(lowers=avg_attrs[0], uppers=avg_attrs[1], degree=1, config=self.config)
 
             children_tuples.append((classifier, avg_attrs[2]))
 
@@ -459,7 +462,7 @@ class ES_MuLambd(RuleDiscoverer):
             bounds = bounds[sidx, np.arange(sidx.shape[1])]
 
             # create new classifier, and save sigmas
-            classifier = Classifier(lowers=bounds[0], uppers=bounds[1], degree=1)
+            classifier = Classifier(lowers=bounds[0], uppers=bounds[1], degree=1, config=self.config)
             children_tuples.append( (classifier, selected_attr[2]) )
 
         return children_tuples
@@ -485,7 +488,7 @@ class ES_MuLambd(RuleDiscoverer):
         vector as standard deviation.
         """
         children_tuples = list()
-        global_learning_rate = Random().random.normal(scale=Config().rule_discovery['global_tau'])
+        global_learning_rate = Random().random.normal(scale=self.config.rule_discovery['global_tau'])
         if cls_tuples is None:
             return children_tuples
 
@@ -495,7 +498,7 @@ class ES_MuLambd(RuleDiscoverer):
             cl, cl_sigmas = cls_tuples[i]
 
             # Apply global and local learning factors to the classifier's mutation vector
-            local_learning_rate = Config().rule_discovery['local_tau'] * Random().random.normal(size=X.shape[1])
+            local_learning_rate = self.config.rule_discovery['local_tau'] * Random().random.normal(size=X.shape[1])
             mutated_sigmas = cl_sigmas * np.exp(local_learning_rate + global_learning_rate)
 
             # Mutate classifier's matching function
@@ -504,7 +507,7 @@ class ES_MuLambd(RuleDiscoverer):
             lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
             cl.lowerBounds = lu[0]
             cl.upperBounds = lu[1]
-            # cl.mutate(Config().rule_discovery['sigma'])
+            # cl.mutate(self.config.rule_discovery['sigma'])
             cl.fit(X, y)
             if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
                 children_tuples.append((cl, cl_sigmas))
@@ -520,7 +523,7 @@ class ES_MuLambd(RuleDiscoverer):
         will also be included ('replacement' == '+').
         Default value for 'replacement' is '+'.
         """
-        if Config().rule_discovery['replacement'] == '+':
+        if self.config.rule_discovery['replacement'] == '+':
             return parents_tuples + children_tuples
         else:
             return children_tuples
@@ -572,8 +575,8 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        lmbd            = Config().rule_discovery['lmbd']
-        mu              = Config().rule_discovery['mu']
+        lmbd            = self.config.rule_discovery['lmbd']
+        mu              = self.config.rule_discovery['mu']
         x_dim           = X.shape[1]
         sigma_coef      = np.sqrt(mu / (x_dim + mu))
         dist_global     = 1 + np.sqrt(mu / x_dim)
@@ -583,7 +586,7 @@ class ES_MuLambdSearchPath(RuleDiscoverer):
         start_point, _  = self.create_start_tuples(1, X, y)[0]
         start_sigma     = Random().random.normal(size=x_dim)
 
-        for i in range(Config().rule_discovery['steps_per_step']):
+        for i in range(self.config.rule_discovery['steps_per_step']):
             rnd_tuple_list = list()
             start_point.fit(X, y)
             print(f"reference weighted error: {start_point.error}\tIn. step: {i}")
@@ -684,8 +687,8 @@ class ES_CMA(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        lmbd            = Config().rule_discovery['lmbd']
-        mu              = Config().rule_discovery['mu']
+        lmbd            = self.config.rule_discovery['lmbd']
+        mu              = self.config.rule_discovery['mu']
         x_dim           = X.shape[1]
         sigmas          = Random().random.normal(size=x_dim)
         sp_isotropic    = np.zeros(x_dim, dtype=float)
@@ -694,7 +697,7 @@ class ES_CMA(RuleDiscoverer):
         tuples_for_pool = list()
         start_point, _  = self.create_start_tuples(1, X, y)[0]
 
-        for i in range(Config().rule_discovery['steps_per_step']):
+        for i in range(self.config.rule_discovery['steps_per_step']):
             start_point.fit(X, y)
             print(f"reference weighted error: {start_point.error}\tIn. step: {i}")
 

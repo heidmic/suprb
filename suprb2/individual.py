@@ -1,6 +1,5 @@
 import numpy as np
 from suprb2.random_gen import Random
-from suprb2.config import Config
 from suprb2.classifier import Classifier
 
 from sklearn.metrics import *

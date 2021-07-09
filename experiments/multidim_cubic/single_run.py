@@ -1,5 +1,4 @@
 from suprb2 import LCS
-from suprb2.config import Config
 from suprb2.random_gen import Random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
@@ -30,8 +29,9 @@ def f_n(X):
 @click.option("-d", "--sample-size", type=click.IntRange(min=1), default=1000)
 @click.option("-k", "--dimensions", type=click.IntRange(min=1), default=1)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
+@click.option("-c", "--config-path", default="suprb2.config")
 @click.option("-n", "--run-name", default="")
-def run_exp(seed, sample_size, dimensions, data_seed, run_name):
+def run_exp(seed, sample_size, dimensions, data_seed, config_path, run_name):
     print(f"Starting at {datetime.now().time()}")
     n = sample_size
 
@@ -47,6 +47,12 @@ def run_exp(seed, sample_size, dimensions, data_seed, run_name):
 
     X = Random().random.uniform(-2.5, 7, (n, dimensions))
     y = f_n(X)
+
+    # Import the configurations for this run
+    module_path = config_path.replace("/", ".")[:-3]
+    module = __import__(module_path, fromlist=["Config"])
+    config_class = getattr(module, "Config")
+    config = config_class()
 
     scale_X = MinMaxScaler(feature_range=(-1, 1))
     scale_X.fit(X)
@@ -71,7 +77,7 @@ def run_exp(seed, sample_size, dimensions, data_seed, run_name):
         # we reset the seed here
         Random().reseed(seed)
 
-        lcs = LCS(dimensions)
+        lcs = LCS(dimensions, config)
 
         lcs.fit(X_train, y_train)
 

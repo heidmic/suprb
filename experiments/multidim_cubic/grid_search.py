@@ -1,10 +1,11 @@
 import click, time, subprocess
 
 @click.command()
-@click.option("-c", "--config_path", type=str, default="suprb2/config.py")
+@click.option("-c", "--config_path", type=str, default="suprb2/")
 def run_all_experiments(config_path):
     values = values_dictionary()
     config = default_config()
+    iterations = 0
 
     # Classifier hyperparameters
     for radius in values['radius']:
@@ -36,15 +37,15 @@ def run_all_experiments(config_path):
                                                     config['nrules'] = nrule
                                                     for sigma in values['sigma']:
                                                         config['sigma'] = sigma
-                                                        start_run(config, config_path)
+                                                        iterations = start_run(config, config_path, iterations)
                                             elif opt == "'ES_MLSP'":
                                                 for mu_denominator in values['mu_denominator_MLSP']:
                                                     config['mu_denominator'] = mu_denominator
-                                                    start_run(config, config_path)
+                                                    iterations = start_run(config, config_path, iterations)
                                             elif opt == "'ES_CMA'":
                                                 for mu_denominator in values['mu_denominator_CMA']:
                                                     config['mu_denominator'] = mu_denominator
-                                                    start_run(config, config_path)
+                                                    iterations = start_run(config, config_path, iterations)
                                             else:
                                                 for mu_denominator in values['mu_denominator_ML']:
                                                     config['mu_denominator'] = mu_denominator
@@ -58,7 +59,7 @@ def run_all_experiments(config_path):
                                                                     config['local_tau'] = local_tau
                                                                     for global_tau in values['global_tau']:
                                                                         config['global_tau'] = global_tau
-                                                                        start_run(config, config_path)
+                                                                        iterations = start_run(config, config_path, iterations)
 
 
 def values_dictionary():
@@ -92,12 +93,19 @@ def values_dictionary():
     }
 
 
-def start_run(config, config_path):
-    with open(config_path, "w") as f:
-        f.write( get_file_content(config) )
+def start_run(config, config_path, iterations):
+    create_and_link_config(config_path, config, iterations)
     proc = subprocess.Popen(['sbatch /data/oc-compute01/fischekl/suprb2/slurm/multidim_cubic.sbatch'], shell=True)
     proc.wait()
-    time.sleep(150)
+    return iterations + 1
+
+
+def create_and_link_config(config_path, config, iterations):
+    config_file_path = f"{config_path}/config_{iterations}.py"
+    with open(config_file_path, "w") as f:
+        f.write( get_file_content(config) )
+    with open("/data/oc-compute01/fischekl/suprb2/slurm/multidim_cubic.sbatch", "w") as f:
+        f.write( sbatch_content(config_file_path) )
 
 
 def default_config():
@@ -115,6 +123,24 @@ def unique_rho_values(rho_denominators, mu_denominator, lmbd):
     mu = max(lmbd // mu_denominator, 1)
     # transform into set, so that we get only unique values, and then turn it back to list
     return list(set([ max(mu // rho_den, 1) for rho_den in rho_denominators ]))
+
+
+def sbatch_content(config_path):
+    return \
+f'''#!/usr/bin/env bash
+#SBATCH --time=72:00:00
+#SBATCH --partition=cpu
+#SBATCH --output=/data/oc-compute01/fischekl/suprb2/output/output-%A-%a.txt
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=500
+#SBATCH --job-name=multidim-cubic
+#SBATCH --array=0-3
+job_dir=/data/oc-compute01/fischekl/suprb2
+experiment=experiments/multidim_cubic/single_run.py
+config_path={config_path}
+
+srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID -k 5 -d 2500 -c '$job_dir/$config_path'"
+'''
 
 
 def get_file_content(config):
@@ -173,4 +199,4 @@ f'''class Config:
 
 
 if __name__ == '__main__':
-    run_all_experiments()
+    run_all_experiments("configs")

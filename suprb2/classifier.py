@@ -1,19 +1,19 @@
 import numpy as np
 from suprb2.random_gen import Random
-from suprb2.config import Config
 
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, degree):
+    def __init__(self, lowers, uppers, degree, config):
         self.lowerBounds = lowers
         self.upperBounds = uppers
+        self.config = config
 
-        if Config().classifier['local_model'] == 'logistic_regression':
+        if self.config.classifier['local_model'] == 'logistic_regression':
             self.model = LogisticRegression(multi_class='multinomial', solver='newton-cg', penalty='l2')
-        elif Config().classifier['local_model'] == 'linear_regression':
+        elif self.config.classifier['local_model'] == 'linear_regression':
             self.model = LinearRegression()
         else:
             raise NotImplementedError
@@ -73,7 +73,7 @@ class Classifier:
         error on it using it's local model's score method.
         """
         self.constant = None
-        logistic_reg = Config().classifier['local_model'] == 'logistic_regression'
+        logistic_reg = self.config.classifier['local_model'] == 'logistic_regression'
         if len(X) < 2 or (logistic_reg and np.unique(y).shape[0] < 2):
             if len(X) == 1:
                 self.constant = y[0]
@@ -81,13 +81,13 @@ class Classifier:
                 self.constant = Classifier.get_default_prediction()
             # TODO is this a good default error? should we use the std?
             #  Equivalent with standardised data?
-            self.error = Config().default_error
+            self.error = self.config.default_error
         else:
             self.model.fit(X, y)
             # TODO should this be on validation data?
             #  We need the score to estimate performance of the whole individual. using validation data would cause an additional loop
             #  using validation data might cause it to bleed over, we should avoid it. in XCS train is used here
-            if Config().classifier['local_model'] == 'linear_regression':
+            if self.config.classifier['local_model'] == 'linear_regression':
                 self.error = self.score(X, y, metric=mean_squared_error)
             elif logistic_reg:
                 self.error =  1 - self.score(X, y, metric=f1_score)
@@ -125,14 +125,14 @@ class Classifier:
         self.upperBounds = lu[1]
 
     @staticmethod
-    def random_cl(xdim, *, point=None):
+    def random_cl(xdim, *, config, point=None):
         """
         Returns a randomly placed classifier within [-1, 1]
         If point is given, the classifier bounds will be point +- N(r, r/2)
-        with r being defined by Config().classifier['radius']
+        with r being defined by self.config.classifier['radius']
         Classifiers width is always > 0 in all dimensions
         The local model of the generated classifier is defined
-        by Config().classifier['local_model']
+        by self.config.classifier['local_model']
         Use the value 'log' for sklearn.linear_model.LogisticRegression()
         and something else for sklearn.linear_model.LinearRegression().
         :param point: center of the classifier
@@ -140,7 +140,7 @@ class Classifier:
         """
         if point is None:
             point = Random().random.random(xdim) * 2 - 1
-        exp_radius = Config().classifier['radius']
+        exp_radius = config.classifier['radius']
         while True:
             radius = Random().random.normal(loc=exp_radius, scale=exp_radius/2,
                                             size=xdim)
@@ -152,7 +152,7 @@ class Classifier:
                 break
         l = np.clip(point - radius, a_min=-1, a_max=1)
         u = np.clip(point + radius, a_min=-1, a_max=1)
-        return Classifier(l, u, 1)
+        return Classifier(l, u, 1, config)
 
     def params(self):
         if self.model is LinearRegression or self.model is LogisticRegression:
@@ -168,7 +168,7 @@ class Classifier:
 
         if volume_share > 0:
             weighted_error = np.log(self.error) - np.log(volume_share) * \
-                             Config().classifier["weighted_error_const"]
+                             self.config.classifier["weighted_error_const"]
 
         return weighted_error
 
