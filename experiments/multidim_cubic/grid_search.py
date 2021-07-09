@@ -139,7 +139,7 @@ job_dir=/data/oc-compute01/fischekl/suprb2
 experiment=experiments/multidim_cubic/single_run.py
 config_path={config_path}
 
-srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID -k 5 -d 2500 -c '$job_dir/$config_path'"
+srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID -k 5 -d 2500 -c '$config_path'"
 '''
 
 
