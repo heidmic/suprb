@@ -97,7 +97,7 @@ def start_run(config, config_path):
         f.write( get_file_content(config) )
     proc = subprocess.Popen(['sbatch /data/oc-compute01/fischekl/suprb2/slurm/haberman.sbatch'], shell=True)
     proc.wait()
-    time.sleep(120)
+    time.sleep(150)
 
 
 def default_config():
