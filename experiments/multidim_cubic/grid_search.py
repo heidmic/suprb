@@ -1,7 +1,7 @@
 import click, time, subprocess
 
 @click.command()
-@click.option("-c", "--config_path", type=str, default="suprb2/")
+@click.option("-c", "--config_path", type=str, default="suprb2")
 def run_all_experiments(config_path):
     values = values_dictionary()
     config = default_config()
@@ -199,4 +199,4 @@ f'''class Config:
 
 
 if __name__ == '__main__':
-    run_all_experiments("configs")
+    run_all_experiments()
