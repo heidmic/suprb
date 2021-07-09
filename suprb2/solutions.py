@@ -50,7 +50,7 @@ class ES_1plus1(SolutionOptimizer):
         for i in range(self.steps):
             candidate = Individual(np.copy(self.individual.genome), self.classifier_pool)
             candidate.mutate(self.mutation_rate)
-            self.determine_fitness(X_val, y_val, candidate)
+            self.determine_fitness(X_val, y_val, candidate, self.config)
             if self.individual.fitness < candidate.fitness:
                 self.individual = candidate
                 success += 1
