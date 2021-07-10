@@ -40,15 +40,15 @@ def run_all_experiments(optimizer, config_path):
                                                 config['nrules'] = nrule
                                                 for sigma in values['sigma']:
                                                     config['sigma'] = sigma
-                                                    iterations = start_run(config, config_path, iterations)
+                                                    iterations = start_run(config, config_path, iterations, optimizer)
                                         elif optimizer == "ES_MLSP":
                                             for mu_denominator in values['mu_denominator_MLSP']:
                                                 config['mu_denominator'] = mu_denominator
-                                                iterations = start_run(config, config_path, iterations)
+                                                iterations = start_run(config, config_path, iterations, optimizer)
                                         elif optimizer == "ES_CMA":
                                             for mu_denominator in values['mu_denominator_CMA']:
                                                 config['mu_denominator'] = mu_denominator
-                                                iterations = start_run(config, config_path, iterations)
+                                                iterations = start_run(config, config_path, iterations, optimizer)
                                         else:
                                             for mu_denominator in values['mu_denominator_ML']:
                                                 config['mu_denominator'] = mu_denominator
@@ -62,7 +62,7 @@ def run_all_experiments(optimizer, config_path):
                                                                 config['local_tau'] = local_tau
                                                                 for global_tau in values['global_tau']:
                                                                     config['global_tau'] = global_tau
-                                                                    iterations = start_run(config, config_path, iterations)
+                                                                    iterations = start_run(config, config_path, iterations, optimizer)
 
 
 def values_dictionary():
@@ -95,19 +95,19 @@ def values_dictionary():
     }
 
 
-def start_run(config, config_path, iterations):
-    create_and_link_config(config_path, config, iterations)
+def start_run(config, config_path, iterations, optimizer):
+    create_and_link_config(config_path, config, iterations, optimizer)
     proc = subprocess.Popen(['sbatch /data/oc-compute01/fischekl/suprb2/slurm/multidim_cubic.sbatch'], shell=True)
     proc.wait()
     return iterations + 1
 
 
-def create_and_link_config(config_path, config, iterations):
+def create_and_link_config(config_path, config, iterations, optimizer):
     config_file_path = f"{config_path}/config_{iterations}.py"
     with open(config_file_path, "w") as f:
         f.write( get_file_content(config) )
     with open("/data/oc-compute01/fischekl/suprb2/slurm/multidim_cubic.sbatch", "w") as f:
-        f.write( sbatch_content(config_file_path) )
+        f.write( sbatch_content(config_file_path, optimizer) )
 
 
 def default_config(optimizer):
@@ -127,7 +127,7 @@ def unique_rho_values(rho_denominators, mu_denominator, lmbd):
     return list(set([ max(mu // rho_den, 1) for rho_den in rho_denominators ]))
 
 
-def sbatch_content(config_path):
+def sbatch_content(config_path, optimizer):
     return \
 f'''#!/usr/bin/env bash
 #SBATCH --time=72:00:00
@@ -135,7 +135,7 @@ f'''#!/usr/bin/env bash
 #SBATCH --output=/data/oc-compute01/fischekl/suprb2/output/output-%A-%a.txt
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=500
-#SBATCH --job-name=multidim-cubic
+#SBATCH --job-name=mdc-{optimizer}
 #SBATCH --array=0-3
 job_dir=/data/oc-compute01/fischekl/suprb2
 experiment=experiments/multidim_cubic/single_run.py
