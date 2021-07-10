@@ -68,7 +68,6 @@ def run_all_experiments(optimizer, config_path):
 def values_dictionary():
     return {
         # Rule Discovery
-        'rl_name': ["'ES_ML'", "'ES_OPL'", "'ES_MLSP'", "'ES_CMA'"],
         'nrules': [200],
         'lmbd': [8, 16, 32, 64],
         # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
