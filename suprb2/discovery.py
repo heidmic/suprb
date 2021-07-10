@@ -392,19 +392,17 @@ class ES_MuLambd(RuleDiscoverer):
         If it is somethin else, then only one classifier
         will be created and it will be a copy from one of the parents.
         """
-        if len(parents_tuples) == 0:
-            return None
-
         lmbd = self.config.rule_discovery['lmbd']
         rho = self.config.rule_discovery['rho']
         recombination_type = self.config.rule_discovery['recombination']
+
+        if len(parents_tuples) == 0 or recombination_type is None:
+            return None
 
         if recombination_type == 'i':
             return self.intermediate_recombination(parents_tuples, lmbd, rho)
         elif recombination_type == 'd':
             return self.discrete_recombination(parents_tuples, lmbd, rho)
-        elif recombination_type is None:
-            return parents_tuples
         else:
             cl_index = Random().random.choice(range(len(parents_tuples)))
             copied_tuple = deepcopy(parents_tuples[cl_index])
