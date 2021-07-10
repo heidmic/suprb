@@ -1,10 +1,15 @@
-import click, time, subprocess
+import click, subprocess
 
 @click.command()
+@click.option("-o", "--optimizer", type=str)
 @click.option("-c", "--config_path", type=str, default="suprb2")
-def run_all_experiments(config_path):
+def run_all_experiments(optimizer, config_path):
+    if optimizer not in ["ES_ML", "ES_OPL", "ES_CMA", "ES_MLSP"]:
+        print("Undefined or unknown rule discovery optimizer. Shutting down...")
+        return
+
     values = values_dictionary()
-    config = default_config()
+    config = default_config(optimizer)
     iterations = 0
 
     # Classifier hyperparameters
@@ -29,37 +34,35 @@ def run_all_experiments(config_path):
                                     config['lmbd'] = lmbd
                                     for start_points in values['start_points']:
                                         config['start_points'] = start_points
-                                        for opt in values['rl_name']:
-                                            config['rl_name'] = opt
 
-                                            if opt == "'ES_OPL'":
-                                                for nrule in values['nrules']:
-                                                    config['nrules'] = nrule
-                                                    for sigma in values['sigma']:
-                                                        config['sigma'] = sigma
-                                                        iterations = start_run(config, config_path, iterations)
-                                            elif opt == "'ES_MLSP'":
-                                                for mu_denominator in values['mu_denominator_MLSP']:
-                                                    config['mu_denominator'] = mu_denominator
+                                        if optimizer == "ES_OPL":
+                                            for nrule in values['nrules']:
+                                                config['nrules'] = nrule
+                                                for sigma in values['sigma']:
+                                                    config['sigma'] = sigma
                                                     iterations = start_run(config, config_path, iterations)
-                                            elif opt == "'ES_CMA'":
-                                                for mu_denominator in values['mu_denominator_CMA']:
-                                                    config['mu_denominator'] = mu_denominator
-                                                    iterations = start_run(config, config_path, iterations)
-                                            else:
-                                                for mu_denominator in values['mu_denominator_ML']:
-                                                    config['mu_denominator'] = mu_denominator
-                                                    for rho in unique_rho_values(values['rho_denominator'], mu_denominator, lmbd):
-                                                        config['rho'] = rho
-                                                        for recombination in values['recombination']:
-                                                            config['recombination'] = recombination
-                                                            for replacement in values['replacement']:
-                                                                config['replacement'] = replacement
-                                                                for local_tau in values['local_tau']:
-                                                                    config['local_tau'] = local_tau
-                                                                    for global_tau in values['global_tau']:
-                                                                        config['global_tau'] = global_tau
-                                                                        iterations = start_run(config, config_path, iterations)
+                                        elif optimizer == "ES_MLSP":
+                                            for mu_denominator in values['mu_denominator_MLSP']:
+                                                config['mu_denominator'] = mu_denominator
+                                                iterations = start_run(config, config_path, iterations)
+                                        elif optimizer == "ES_CMA":
+                                            for mu_denominator in values['mu_denominator_CMA']:
+                                                config['mu_denominator'] = mu_denominator
+                                                iterations = start_run(config, config_path, iterations)
+                                        else:
+                                            for mu_denominator in values['mu_denominator_ML']:
+                                                config['mu_denominator'] = mu_denominator
+                                                for rho in unique_rho_values(values['rho_denominator'], mu_denominator, lmbd):
+                                                    config['rho'] = rho
+                                                    for recombination in values['recombination']:
+                                                        config['recombination'] = recombination
+                                                        for replacement in values['replacement']:
+                                                            config['replacement'] = replacement
+                                                            for local_tau in values['local_tau']:
+                                                                config['local_tau'] = local_tau
+                                                                for global_tau in values['global_tau']:
+                                                                    config['global_tau'] = global_tau
+                                                                    iterations = start_run(config, config_path, iterations)
 
 
 def values_dictionary():
@@ -108,9 +111,9 @@ def create_and_link_config(config_path, config, iterations):
         f.write( sbatch_content(config_file_path) )
 
 
-def default_config():
+def default_config(optimizer):
     return {
-        'rl_name': "'ES_OPL'", 'nrules': 1, 'lmbd': 10, 'mu_denominator': 2,
+        'rl_name': f"'{optimizer}'", 'nrules': 1, 'lmbd': 10, 'mu_denominator': 2,
         'rho': 1, 'sigma': 0.01, 'local_tau': 0.7, 'global_tau': 0.7,
         'rd_steps_per_step': 10, 'recombination': "None", 'replacement': "'+'",
         'start_points': "'d'", 'radius': 0.1, 'mutation_rate': 0.1,
