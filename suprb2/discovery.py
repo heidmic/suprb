@@ -415,18 +415,23 @@ class ES_MuLambd(RuleDiscoverer):
         Classifier's sigmas = average(rho_candidates.sigmas)
         """
         children_tuples = list()
-        parents_array = np.array(parents_tuples, dtype=object)
-        x_dim = parents_array[0,0].lowerBounds.size if type(parents_array[0,0].lowerBounds) == np.ndarray else 1
+        x_dim = parents_tuples[0][0].lowerBounds.size
         for i in range(lmbd):
-            candidates_tuples = Random().random.choice(parents_array, rho, False)
+            candidates_indexes = Random().random.choice(np.arange(len(parents_tuples)), rho, False)
+            candidates_tuples = [ parents_tuples[j] for j in candidates_indexes ]
             classifier_attrs = self.extract_classifier_attributes(candidates_tuples, x_dim=x_dim, rho=rho)
 
-            avg_attrs = np.array([[np.mean(classifier_attrs[0].flatten())],
-                                  [np.mean(classifier_attrs[1].flatten())],
-                                  [np.mean(classifier_attrs[2].flatten())]])
-            classifier = Classifier(lowers=avg_attrs[0], uppers=avg_attrs[1], degree=1, config=self.config)
+            if rho > 0:
+                avg_attrs = classifier_attrs
+            elif rho > 1:
+                avg_attrs = np.array([[np.mean(classifier_attrs[0])],
+                                      [np.mean(classifier_attrs[1])],
+                                      [np.mean(classifier_attrs[2])]])
+            else:
+                raise ValueError
+            classifier = Classifier(lowers=avg_attrs[0].flatten(), uppers=avg_attrs[1].flatten(), degree=1, config=self.config)
 
-            children_tuples.append((classifier, avg_attrs[2]))
+            children_tuples.append((classifier, avg_attrs[2].flatten()))
 
         return children_tuples
 
