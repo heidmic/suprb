@@ -63,7 +63,7 @@ class RuleDiscoverer(ABC):
 
     def select_best_classifiers(self, tuple_list: list[tuple[Classifier, np.ndarray]], mu: int) -> list[tuple[Classifier, np.ndarray]]:
         """
-        Return the 'mu' best classifiers (according to their weighted error)
+        Return the 'mu' best classifiers (according to their error)
         from the 'tuple_list'. If mu < len(tuple_list), then ValueError is raised.
         """
         if mu == len(tuple_list):
@@ -362,10 +362,6 @@ class ES_MuLambd(RuleDiscoverer):
             children_tuples   = self.mutate_and_fit(recmb_tuples, X, y)
             generation_tuples = self.replace(generation_tuples, children_tuples)
 
-        # add search results to pool
-        # mask = np.array([cl_tuple[0].get_weighted_error() < Utilities.default_error(y[np.nonzero(cl_tuple[0].matches(X))]) for cl_tuple in generation_tuples], dtype='bool')
-        # filtered_tuples = np.array(generation_tuples, dtype=object)[mask]
-
         tuples_array = np.array(generation_tuples, dtype='object')
         if tuples_array.ndim > 1:
             nondominated_indexes = self.nondominated_sort(tuples_array[0,:], indexes=True)
@@ -373,7 +369,7 @@ class ES_MuLambd(RuleDiscoverer):
         else:
             best_nondominated_tuples = tuples_array
 
-        nondominated_classifiers_available = min(mu, len(nondominated_indexes))
+        nondominated_classifiers_available = min(mu, len(best_nondominated_tuples))
         filtered_tuples = np.array(self.select_best_classifiers(best_nondominated_tuples, nondominated_classifiers_available), dtype=object)
         self.pool.extend( list(filtered_tuples[:,0]) )
         self.sigmas.extend( list(filtered_tuples[:,1]) )
@@ -487,8 +483,6 @@ class ES_MuLambd(RuleDiscoverer):
         """
         children_tuples = list()
         global_learning_rate = Random().random.normal(scale=self.config.rule_discovery['global_tau'])
-        if cls_tuples is None:
-            return children_tuples
 
         cls_len = len(cls_tuples)
 
@@ -505,10 +499,9 @@ class ES_MuLambd(RuleDiscoverer):
             lu = np.clip(np.sort(np.stack((lowers, uppers)), axis=0), a_max=1, a_min=-1)
             cl.lowerBounds = lu[0]
             cl.upperBounds = lu[1]
-            # cl.mutate(self.config.rule_discovery['sigma'])
+
             cl.fit(X, y)
-            if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
-                children_tuples.append((cl, cl_sigmas))
+            children_tuples.append((cl, cl_sigmas))
 
         return children_tuples
 

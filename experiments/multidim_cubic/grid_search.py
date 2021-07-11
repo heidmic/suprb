@@ -36,11 +36,9 @@ def run_all_experiments(optimizer, config_path):
                                         config['start_points'] = start_points
 
                                         if optimizer == "ES_OPL":
-                                            for nrule in values['nrules']:
-                                                config['nrules'] = nrule
-                                                for sigma in values['sigma']:
-                                                    config['sigma'] = sigma
-                                                    iterations = start_run(config, config_path, iterations, optimizer)
+                                            for sigma in values['sigma']:
+                                                config['sigma'] = sigma
+                                                iterations = start_run(config, config_path, iterations, optimizer)
                                         elif optimizer == "ES_MLSP":
                                             for mu_denominator in values['mu_denominator_MLSP']:
                                                 config['mu_denominator'] = mu_denominator
@@ -68,7 +66,6 @@ def run_all_experiments(optimizer, config_path):
 def values_dictionary():
     return {
         # Rule Discovery
-        'nrules': [200],
         'lmbd': [8, 16, 32, 64],
         # for 'mu' we are going to use max(lmbd // 'mu_denom', 1)
         'mu_denominator_ML': [7],
@@ -112,7 +109,7 @@ def create_and_link_config(config_path, config, iterations, optimizer):
 
 def default_config(optimizer):
     return {
-        'rl_name': f"'{optimizer}'", 'nrules': 1, 'lmbd': 10, 'mu_denominator': 2,
+        'rl_name': f"'{optimizer}'", 'lmbd': 10, 'mu_denominator': 2,
         'rho': 1, 'sigma': 0.01, 'local_tau': 0.7, 'global_tau': 0.7,
         'rd_steps_per_step': 10, 'recombination': "None", 'replacement': "'+'",
         'start_points': "'d'", 'radius': 0.1, 'mutation_rate': 0.1,
@@ -159,7 +156,7 @@ f'''class Config:
         "n_elitists": 1,
         "rule_discovery": {{
             "name": {config['rl_name']},
-            "nrules": {config['nrules']},
+            "nrules": 200,
             "lmbd": {config['lmbd']},  # not allowed to use lambda
             "mu": {mu},
             "rho": {config['rho']},
