@@ -425,17 +425,20 @@ class ES_MuLambd(RuleDiscoverer):
             candidates_tuples = [ parents_tuples[j] for j in candidates_indexes ]
             classifier_attrs = self.extract_classifier_attributes(candidates_tuples, x_dim=x_dim, rho=rho)
 
-            if rho > 0:
-                avg_attrs = classifier_attrs
+            if rho == 1:
+                classifier = Classifier(lowers=classifier_attrs[0].flatten(),
+                                        uppers=classifier_attrs[1].flatten(),
+                                        degree=1, config=self.config)
+                sigmas = classifier_attrs[2].flatten()
             elif rho > 1:
-                avg_attrs = np.array([[np.mean(classifier_attrs[0])],
-                                      [np.mean(classifier_attrs[1])],
-                                      [np.mean(classifier_attrs[2])]])
+                classifier = Classifier(lowers=np.mean(classifier_attrs[0], axis=0),
+                                        uppers=np.mean(classifier_attrs[1], axis=0),
+                                        degree=1, config=self.config)
+                sigmas = np.mean(classifier_attrs[2], axis=0)
             else:
                 raise ValueError
-            classifier = Classifier(lowers=avg_attrs[0].flatten(), uppers=avg_attrs[1].flatten(), degree=1, config=self.config)
 
-            children_tuples.append((classifier, avg_attrs[2].flatten()))
+            children_tuples.append([classifier, sigmas])
 
         return children_tuples
 
@@ -524,7 +527,8 @@ class ES_MuLambd(RuleDiscoverer):
         Default value for 'replacement' is '+'.
         """
         if self.config.rule_discovery['replacement'] == '+':
-            return parents_tuples + children_tuples
+            children_tuples.extend(parents_tuples)
+            return children_tuples
         else:
             return children_tuples
 
