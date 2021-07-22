@@ -100,7 +100,7 @@ def start_run(config, config_path, iterations, optimizer):
 
 
 def create_and_link_config(config_path, config, iterations, optimizer):
-    config_file_path = f"{config_path}/config_{iterations}.py"
+    config_file_path = f"{config_path}/config_{optimizer}_{iterations}.py"
     with open(config_file_path, "w") as f:
         f.write( get_file_content(config) )
     with open("/data/oc-compute01/fischekl/suprb2/slurm/multidim_cubic.sbatch", "w") as f:
