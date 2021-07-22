@@ -1,5 +1,6 @@
 mlruns/
 output/
+configs/
 .idea/
 __pycache__/
 figs/

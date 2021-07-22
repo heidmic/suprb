@@ -127,7 +127,7 @@ def unique_rho_values(rho_denominators, mu_denominator, lmbd):
 def sbatch_content(config_path, optimizer):
     return \
 f'''#!/usr/bin/env bash
-#SBATCH --time=72:00:00
+#SBATCH --time=06:00:00
 #SBATCH --partition=cpu
 #SBATCH --output=/data/oc-compute01/fischekl/suprb2/output/output-%A-%a.txt
 #SBATCH --cpus-per-task=1
