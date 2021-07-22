@@ -270,14 +270,13 @@ class ES_OnePlusLambd(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        nrules = self.config.rule_discovery['nrules']
-        start_tuples = self.create_start_tuples(nrules, X, y)
-
-        for cl_tuple in start_tuples:
-            cl = cl_tuple[0]
+        for k in range(self.config.rule_discovery['nrules']):
+            cl, _ = self.create_start_tuples(1, X, y)[0]
 
             for i in range(self.config.rule_discovery['steps_per_step']):
                 children = list()
+                # make it 1+lambda instead of 1,lambda
+                children.append(cl)
                 for j in range(self.config.rule_discovery['lmbd']):
                     child = deepcopy(cl)
                     child.mutate(self.config.rule_discovery['sigma'])
