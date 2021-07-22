@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --time=72:00:00
+#SBATCH --time=08:00:00
 #SBATCH --partition=cpu
 #SBATCH --output=/data/oc-compute01/fischekl/suprb2/output/output-%A-%a.txt
 #SBATCH --cpus-per-task=1
