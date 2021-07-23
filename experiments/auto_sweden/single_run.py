@@ -15,8 +15,9 @@ import click
 @click.command()
 @click.option("-s", "--seed", type=click.IntRange(min=0), default=0)
 @click.option("-t", "--data-seed", type=click.IntRange(min=0), default=0)
+@click.option("-c", "--config-path", default="suprb2/config.py")
 @click.option("-n", "--run-name", default="")
-def run_exp(seed, data_seed, run_name):
+def run_exp(seed, data_seed, config_path, run_name):
     """
     Swedish Auto Insurance Dataset
     https://college.cengage.com/mathematics/brase/understandable_statistics/7e/students/datasets/slr/frames/slr06.html
@@ -25,6 +26,13 @@ def run_exp(seed, data_seed, run_name):
 
     X_train, X_test, y_train, y_test = import_data(data_seed)
     dimensions = X_train.shape[1]
+
+    # Import the configurations for this run
+    print(f"Configurations directory: {config_path}")
+    module_path = config_path.replace("/", ".")[:-3]
+    module = __import__(module_path, fromlist=["Config"])
+    config_class = getattr(module, "Config")
+    config = config_class()
 
     print(f"Samples generated. Starting training at {datetime.now().time()}")
 
@@ -37,7 +45,7 @@ def run_exp(seed, data_seed, run_name):
         # we reset the seed here
         Random().reseed(seed)
 
-        lcs = LCS(dimensions)
+        lcs = LCS(dimensions, config)
         lcs.fit(X_train, y_train)
         y_pred = lcs.predict(X_test)
         error = mean_squared_error(y_test, y_pred)
