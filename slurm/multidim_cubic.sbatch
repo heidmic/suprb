@@ -9,4 +9,4 @@
 job_dir=/data/oc-compute01/fischekl/suprb2
 experiment=experiments/multidim_cubic/single_run.py
 
-srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID --sample-size 2500 --data-seed 0 --dimensions 5 --run-name ML_rmse_final --config-path configs/ML_rmse_final_config.py"
+srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID --sample-size 2500 --data-seed 0 --dimensions 5 --run-name ML_time_final --config-path configs/ML_time_final_config.py"
