@@ -310,9 +310,31 @@ class ES_OnePlusLambd(RuleDiscoverer):
 
 
     def step(self, X: np.ndarray, y: np.ndarray):
-        for k in range(self.config.rule_discovery['nrules']):
-            cl, _ = self.create_start_tuples(1, X, y)[0]
+        # for k in range(self.config.rule_discovery['nrules']):
+        #     cl, _ = self.create_start_tuples(1, X, y)[0]
 
+        #     for i in range(self.config.rule_discovery['steps_per_step']):
+        #         children = list()
+        #         # make it 1+lambda instead of 1,lambda
+        #         children.append(cl)
+        #         for j in range(self.config.rule_discovery['lmbd']):
+        #             child = deepcopy(cl)
+        #             child.mutate(self.config.rule_discovery['sigma'])
+        #             child.fit(X, y)
+        #             children.append(child)
+        #         ## ToDo instead of greedily taking the minimum, treating all
+        #         ##  below a certain threshhold as equal might yield better  models
+        #         #cl = children[np.argmin([child.get_weighted_error() for child in children])]
+        #         cl = Random().random.choice(self.nondominated_sort_original(children))
+
+        #     if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
+        #         self.pool.append(cl)
+
+        idxs = Random().random.choice(np.arange(len(X)),
+                                      self.config.rule_discovery['nrules'], False)
+        for x in X[idxs]:
+            cl = Classifier.random_cl(X.shape[1], config=self.config, point=x)
+            cl.fit(X, y)
             for i in range(self.config.rule_discovery['steps_per_step']):
                 children = list()
                 # make it 1+lambda instead of 1,lambda
@@ -329,28 +351,6 @@ class ES_OnePlusLambd(RuleDiscoverer):
 
             if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
                 self.pool.append(cl)
-
-        # idxs = Random().random.choice(np.arange(len(X)),
-        #                               self.config.rule_discovery['nrules'], False)
-        # for x in X[idxs]:
-        #     cl = Classifier.random_cl(X.shape[1], config=self.config, point=x)
-        #     cl.fit(X, y)
-        #     for i in range(self.config.rule_discovery['steps_per_step']):
-        #         children = list()
-        #         # make it 1+lambda instead of 1,lambda
-        #         children.append(cl)
-        #         for j in range(self.config.rule_discovery['lmbd']):
-        #             child = deepcopy(cl)
-        #             child.mutate(self.config.rule_discovery['sigma'])
-        #             child.fit(X, y)
-        #             children.append(child)
-        #         ## ToDo instead of greedily taking the minimum, treating all
-        #         ##  below a certain threshhold as equal might yield better  models
-        #         #cl = children[np.argmin([child.get_weighted_error() for child in children])]
-        #         cl = Random().random.choice(self.nondominated_sort(children))
-
-        #     if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
-        #         self.pool.append(cl)
 
 
 class ES_MuLambd(RuleDiscoverer):
