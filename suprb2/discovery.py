@@ -264,6 +264,46 @@ class RuleDiscoverer(ABC):
         return candidates
 
 
+    def nondominated_sort_original(self, classifiers):
+        """
+        Takes a list of classifiers and returns all classifiers that were not
+            dominated by any other in regard to error AND volume. This is
+            equivalent to searching the pareto front
+
+        Inspired by A Fast Elitist Non-Dominated Sorting GeneticAlgorithm for
+            Multi-Objective Optimization: NSGA-II
+            http://repository.ias.ac.in/83498/1/2-a.pdf
+
+        :param classifiers:
+        :return:
+        """
+        candidates = list()
+        candidates.append(classifiers[0])
+        for cl in classifiers[1:]:
+            volume_share_cl = cl.get_volume_share()
+            to_be_added = False
+            for can in candidates:
+                volume_share_can = can.get_volume_share()
+
+                if can.error < cl.error and volume_share_can > volume_share_cl:
+                    # classifier is dominated by this candidate and should not
+                    # become a new candidate
+                    to_be_added = False
+                    break
+
+                elif can.error > cl.error and volume_share_can < volume_share_cl:
+                    # classifier dominates candidate
+                    candidates.remove(can)
+                    to_be_added = True
+
+                else:
+                    to_be_added = True
+
+            if to_be_added:
+                candidates.append(cl)
+
+        return candidates
+
 class ES_OnePlusLambd(RuleDiscoverer):
     def __init__(self, pool: list[Classifier], config: dict, solution_optimizer: SolutionOptimizer=None):
         super().__init__(pool, config, solution_optimizer)
@@ -285,10 +325,32 @@ class ES_OnePlusLambd(RuleDiscoverer):
                 ## ToDo instead of greedily taking the minimum, treating all
                 ##  below a certain threshhold as equal might yield better  models
                 #cl = children[np.argmin([child.get_weighted_error() for child in children])]
-                cl = Random().random.choice(self.nondominated_sort(children))
+                cl = Random().random.choice(self.nondominated_sort_original(children))
 
             if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
                 self.pool.append(cl)
+
+        # idxs = Random().random.choice(np.arange(len(X)),
+        #                               self.config.rule_discovery['nrules'], False)
+        # for x in X[idxs]:
+        #     cl = Classifier.random_cl(X.shape[1], config=self.config, point=x)
+        #     cl.fit(X, y)
+        #     for i in range(self.config.rule_discovery['steps_per_step']):
+        #         children = list()
+        #         # make it 1+lambda instead of 1,lambda
+        #         children.append(cl)
+        #         for j in range(self.config.rule_discovery['lmbd']):
+        #             child = deepcopy(cl)
+        #             child.mutate(self.config.rule_discovery['sigma'])
+        #             child.fit(X, y)
+        #             children.append(child)
+        #         ## ToDo instead of greedily taking the minimum, treating all
+        #         ##  below a certain threshhold as equal might yield better  models
+        #         #cl = children[np.argmin([child.get_weighted_error() for child in children])]
+        #         cl = Random().random.choice(self.nondominated_sort(children))
+
+        #     if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
+        #         self.pool.append(cl)
 
 
 class ES_MuLambd(RuleDiscoverer):
