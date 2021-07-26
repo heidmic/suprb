@@ -43,8 +43,8 @@ def calculate_bic_fitness(n, parameters, error, config):
 
 def pseudo_bic(X_val, y_val, individual, config):
     n = len(X_val)
-    individual.error = calculate_bic_error(n, y_val, individual.predict(X_val))
-    individual.fitness = calculate_bic_fitness(n, individual.parameters(), individual.error)
+    individual.error = calculate_bic_error(n, y_val, individual.predict(X_val), config)
+    individual.fitness = calculate_bic_fitness(n, individual.parameters(), individual.error, config)
 
 
 def bic_matching_punishment(X_val, y_val, individual, config):
