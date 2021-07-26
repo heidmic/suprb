@@ -9,4 +9,4 @@
 job_dir=/data/oc-compute01/fischekl/suprb2
 experiment=experiments/sonar/single_run.py
 
-srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID --data-seed 0 --run-name CMA_diversity_final --config-path configs/classification/CMA_diversity_final_config.py"
+srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID --data-seed 0 --run-name CMA_macro_f1_score_final --config-path configs/classification/CMA_macro_f1_score_final_config.py"
