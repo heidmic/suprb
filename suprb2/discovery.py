@@ -81,7 +81,8 @@ class RuleDiscoverer(ABC):
         """
         optimizer = config.rule_discovery['name']
         if optimizer == 'ES_OPL':
-            return ES_OnePlusLambd(pool, config=config)
+            # return ES_OnePlusLambd(pool, config=config)
+            return None
         elif optimizer == 'ES_ML':
             return ES_MuLambd(pool, config=config)
         elif optimizer == 'ES_MLSP':

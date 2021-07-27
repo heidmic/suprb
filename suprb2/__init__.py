@@ -59,8 +59,12 @@ class LCS:
         start_time = datetime.now()
 
         self.rule_disc = RuleDiscoverer.get_rule_disc(self.config, self.classifier_pool)
-        while len(self.classifier_pool) < self.config.initial_pool_size:
-            self.rule_disc.step(X, y)
+        if self.rule_disc is None:
+            while len(self.classifier_pool) < self.config.initial_pool_size:
+                self.discover_rules(X, y)
+        else:
+            while len(self.classifier_pool) < self.config.initial_pool_size:
+                self.rule_disc.step(X, y)
         discover_rules_time = datetime.now()
 
         self.sol_opt = ES_1plus1(X, y, self.classifier_pool, self.fitness_function, config=self.config)
@@ -88,13 +92,17 @@ class LCS:
         self.run_inital_step(X, y)
 
         # Connect optimizers
-        self.rule_disc.sol_opt = self.sol_opt
+        if self.rule_disc is not None:
+            self.rule_disc.sol_opt = self.sol_opt
 
         # TODO allow other termination criteria. Early Stopping?
         for step in range(self.config.steps):
             start_time = datetime.now()
 
-            self.rule_disc.step(X, y)
+            if self.rule_disc is None:
+                self.discover_rules(X, y)
+            else:
+                self.rule_disc.step(X, y)
             discover_rules_time = datetime.now()
 
             self.sol_opt.step(X, y)
@@ -149,7 +157,7 @@ class LCS:
                                       self.config.rule_discovery['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(self.xdim, point=x)
+            cl = Classifier.random_cl(self.xdim, config=self.config, point=x)
             cl.fit(X, y)
             for i in range(self.config.rule_discovery['steps_per_step']):
                 children = list()

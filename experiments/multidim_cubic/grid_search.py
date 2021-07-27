@@ -32,22 +32,26 @@ def run_all_experiments(optimizer, config_path):
                                 config['rd_steps_per_step'] = rd_steps_per_step
                                 for lmbd in values['lmbd']:
                                     config['lmbd'] = lmbd
-                                    for start_points in values['start_points']:
-                                        config['start_points'] = start_points
 
-                                        if optimizer == "ES_OPL":
-                                            for sigma in values['sigma']:
-                                                config['sigma'] = sigma
-                                                iterations = start_run(config, config_path, iterations, optimizer)
-                                        elif optimizer == "ES_MLSP":
+                                    if optimizer == "ES_OPL":
+                                        for sigma in values['sigma']:
+                                            config['sigma'] = sigma
+                                            iterations = start_run(config, config_path, iterations, optimizer)
+                                    elif optimizer == "ES_MLSP":
+                                        for start_points in values['start_points']:
+                                            config['start_points'] = start_points
                                             for mu_denominator in values['mu_denominator_MLSP']:
                                                 config['mu_denominator'] = mu_denominator
                                                 iterations = start_run(config, config_path, iterations, optimizer)
-                                        elif optimizer == "ES_CMA":
+                                    elif optimizer == "ES_CMA":
+                                        for start_points in values['start_points']:
+                                            config['start_points'] = start_points
                                             for mu_denominator in values['mu_denominator_CMA']:
                                                 config['mu_denominator'] = mu_denominator
                                                 iterations = start_run(config, config_path, iterations, optimizer)
-                                        else:
+                                    else:
+                                        for start_points in values['start_points']:
+                                            config['start_points'] = start_points
                                             for mu_denominator in values['mu_denominator_ML']:
                                                 config['mu_denominator'] = mu_denominator
                                                 for rho in unique_rho_values(values['rho_denominator'], mu_denominator, lmbd):
