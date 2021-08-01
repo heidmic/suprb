@@ -56,7 +56,7 @@ def run_exp(seed, data_seed, config_path, run_name):
 def import_data(data_seed):
     Random().reseed(data_seed)
 
-    data = pd.read_csv("datasets/banknote/banknote.csv", sep=',', header=None).values
+    data = pd.read_csv("datasets/wine_quality/winequality-white.csv", sep=',', header=None).values
 
     X, y = data[:,:-1], data[:,-1]
     scale_X = MinMaxScaler(feature_range=(-1, 1))
