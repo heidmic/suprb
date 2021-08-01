@@ -58,7 +58,7 @@ def import_data(data_seed):
 
     data = pd.read_csv("datasets/wine_quality/winequality-white.csv", sep=';', header=None).values
 
-    X, y = data[1:,:-1], data[1:,-1].reshape(-1, 1)
+    X, y = data[1:,:-1], data[1:,-1].astype(np.int).reshape(-1, 1)
     scale_X = MinMaxScaler(feature_range=(-1, 1))
     scale_X.fit(X)
     X = scale_X.transform(X)
