@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-#SBATCH --time=20:00:00
+#SBATCH --time=08:00:00
 #SBATCH --partition=cpu
-#SBATCH --output=/data/oc-compute02/heidermi/suprb2/output/output-%A-%a.txt
-#SBATCH --cpus-per-task=5
+#SBATCH --output=/data/oc-compute01/fischekl/suprb2/output/output-%A-%a.txt
+#SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=500
-#SBATCH --array=0-9
-job_dir=/data/oc-compute02/heidermi/suprb2/
-experiment=experiments/multidim_cubic.py
-srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID -k 10 -d 2500 -n '$SLURM_ARRAY_JOB_ID-$SLURM_ARRAY_TASK_ID'"
+#SBATCH --job-name=multidim-cubic
+#SBATCH --array=0-19
+job_dir=/data/oc-compute01/fischekl/suprb2
+experiment=experiments/multidim_cubic/single_run.py
 
+srun nix-shell "$job_dir"/slurm/default.nix --command "PYTHONPATH=$job_dir/$PYTHONPATH python $job_dir/$experiment --seed $SLURM_ARRAY_TASK_ID --sample-size 2500 --data-seed 0 --dimensions 5 --run-name ML_time_final --config-path configs/ML_time_final_config.py"

@@ -1,0 +1,528 @@
+auto_sweden:
+  CMA:
+    time:
+      Mean:      151.397100000
+      Std. dev.: 12.296887931
+      Median:    154.339500000
+    rmse:
+      Mean:      0.783706900
+      Std. dev.: 0.264758904
+      Median:    0.610655790
+    diversity:
+      Mean:      0.491821708
+      Std. dev.: 0.012967170
+      Median:    0.493814892
+  MLSP:
+    time:
+      Mean:      246.399600000
+      Std. dev.: 14.372926457
+      Median:    254.748000000
+    rmse:
+      Mean:      0.837171875
+      Std. dev.: 0.269995028
+      Median:    0.881637994
+    diversity:
+      Mean:      0.433648625
+      Std. dev.: 0.012870605
+      Median:    0.433392886
+  ML:
+    time:
+      Mean:      123.618150000
+      Std. dev.: 2.959273547
+      Median:    122.976500000
+    rmse:
+      Mean:      0.562767762
+      Std. dev.: 0.039482380
+      Median:    0.559336723
+    diversity:
+      Mean:      0.689002787
+      Std. dev.: 0.014894821
+      Median:    0.691369127
+  Statical Tests:
+    time:
+      Shaphiro p-values:
+        CMA:  0.000000020
+        MLSP: 0.000691465
+        ML:   0.000000220
+      CMA and MLSP Student's t-test p-value: 0.000000000
+      CMA and ML Student's t-test p-value: 0.000000004
+      MLSP and ML Student's t-test p-value: 0.000000000
+    rmse:
+      Shaphiro p-values:
+        CMA:  0.000105885
+        MLSP: 0.000287928
+        ML:   0.022084679
+      CMA and MLSP Student's t-test p-value: 0.541377958
+      CMA and ML Student's t-test p-value: 0.001815641
+      MLSP and ML Student's t-test p-value: 0.000292756
+    diversity:
+      Shaphiro p-values:
+        CMA:  0.474691927
+        MLSP: 0.327244699
+        ML:   0.925798476
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.000000063
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.000000063
+
+haberman:
+  CMA:
+    time:
+      Mean:      170.070750000
+      Std. dev.: 35.088233921
+      Median:    165.182000000
+    f1_score:
+      Mean:      0.352111271
+      Std. dev.: 0.064775819
+      Median:    0.365678205
+    diversity:
+      Mean:      0.553801213
+      Std. dev.: 0.010770358
+      Median:    0.555406707
+  MLSP:
+    time:
+      Mean:      204.563750000
+      Std. dev.: 81.739131618
+      Median:    192.923500000
+    f1_score:
+      Mean:      0.364981875
+      Std. dev.: 0.059812073
+      Median:    0.375617284
+    diversity:
+      Mean:      0.555566527
+      Std. dev.: 0.008447411
+      Median:    0.554978318
+  ML:
+    time:
+      Mean:      210.280750000
+      Std. dev.: 33.069712977
+      Median:    222.655500000
+    f1_score:
+      Mean:      0.580167174
+      Std. dev.: 0.045190805
+      Median:    0.581111871
+    diversity:
+      Mean:      0.691208811
+      Std. dev.: 0.008277382
+      Median:    0.692689920
+  Statical Tests:
+    time:
+      Shaphiro p-values:
+        CMA:  0.000000112
+        MLSP: 0.000026840
+        ML:   0.000514337
+      CMA and MLSP Student's t-test p-value: 0.103041347
+      CMA and ML Student's t-test p-value: 0.000822398
+      MLSP and ML Student's t-test p-value: 0.779792117
+    f1_score:
+      Shaphiro p-values:
+        CMA:  0.173696250
+        MLSP: 0.060561765
+        ML:   0.680012286
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.432774595
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.000000063
+    diversity:
+      Shaphiro p-values:
+        CMA:  0.654927135
+        MLSP: 0.547733784
+        ML:   0.820504308
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.704909728
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.000000063
+
+multidim_cubic:
+  CMA:
+    time:
+      Mean:      181.431600000
+      Std. dev.: 6.841043644
+      Median:    181.691000000
+    rmse:
+      Mean:      0.878820969
+      Std. dev.: 0.255766074
+      Median:    0.790181143
+    diversity:
+      Mean:      0.595852109
+      Std. dev.: 0.004801173
+      Median:    0.595709809
+  MLSP:
+    time:
+      Mean:      199.592600000
+      Std. dev.: 47.153938519
+      Median:    186.152000000
+    rmse:
+      Mean:      1.646432959
+      Std. dev.: 2.592521321
+      Median:    0.838614660
+    diversity:
+      Mean:      0.594751171
+      Std. dev.: 0.006049469
+      Median:    0.595917839
+  ML:
+    time:
+      Mean:      74.815700000
+      Std. dev.: 33.970007916
+      Median:    48.025000000
+    rmse:
+      Mean:      1.449346504
+      Std. dev.: 2.046175386
+      Median:    0.685163216
+    diversity:
+      Mean:      0.692603759
+      Std. dev.: 0.008426567
+      Median:    0.693824833
+  Statical Tests:
+    time:
+      Shaphiro p-values:
+        CMA:  0.772095919
+        MLSP: 0.000090046
+        ML:   0.000028484
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.024758030
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Student's t-test p-value: 0.000000000
+    rmse:
+      Shaphiro p-values:
+        CMA:  0.000001735
+        MLSP: 0.000000027
+        ML:   0.000000100
+      CMA and MLSP Student's t-test p-value: 0.214159228
+      CMA and ML Student's t-test p-value: 0.242184153
+      MLSP and ML Student's t-test p-value: 0.796256869
+    diversity:
+      Shaphiro p-values:
+        CMA:  0.279259354
+        MLSP: 0.726955473
+        ML:   0.306342840
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.588506355
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.000000063
+
+banknote:
+  CMA:
+    time:
+      Mean:      172.330900000
+      Std. dev.: 62.851309506
+      Median:    159.904000000
+    f1_score:
+      Mean:      0.992345048
+      Std. dev.: 0.007065267
+      Median:    0.992648962
+    diversity:
+      Mean:      0.539298290
+      Std. dev.: 0.009514023
+      Median:    0.538421069
+  MLSP:
+    time:
+      Mean:      220.333400000
+      Std. dev.: 84.591186608
+      Median:    202.590500000
+    f1_score:
+      Mean:      0.988368506
+      Std. dev.: 0.006294753
+      Median:    0.989703044
+    diversity:
+      Mean:      0.541200176
+      Std. dev.: 0.006683275
+      Median:    0.541718364
+  ML:
+    time:
+      Mean:      181.968250000
+      Std. dev.: 10.066372628
+      Median:    178.445000000
+    f1_score:
+      Mean:      0.999412415
+      Std. dev.: 0.001175171
+      Median:    1.000000000
+    diversity:
+      Mean:      0.685216561
+      Std. dev.: 0.007383113
+      Median:    0.684036731
+  Statical Tests:
+    time:
+      Shaphiro p-values:
+        CMA:  0.000056398
+        MLSP: 0.000031163
+        ML:   0.001852235
+      CMA and MLSP Student's t-test p-value: 0.054953687
+      CMA and ML Student's t-test p-value: 0.516815678
+      MLSP and ML Student's t-test p-value: 0.064034013
+    f1_score:
+      Shaphiro p-values:
+        CMA:  0.024891339
+        MLSP: 0.032584179
+        ML:   0.000000289
+      CMA and MLSP Student's t-test p-value: 0.074938039
+      CMA and ML Student's t-test p-value: 0.000346239
+      MLSP and ML Student's t-test p-value: 0.000000271
+    diversity:
+      Shaphiro p-values:
+        CMA:  0.332894295
+        MLSP: 0.859426200
+        ML:   0.376128972
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.401720329
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.000000063
+
+wine_quality_reg:
+  CMA:
+    time:
+      Mean:      491.549550000
+      Std. dev.: 68.593238469
+      Median:    512.650500000
+    rmse:
+      Mean:      1.024679562
+      Std. dev.: 0.302795677
+      Median:    0.924293070
+    diversity:
+      Mean:      0.497376030
+      Std. dev.: 0.003664940
+      Median:    0.496403379
+  MLSP:
+    time:
+      Mean:      339.317850000
+      Std. dev.: 138.646958371
+      Median:    260.008000000
+    rmse:
+      Mean:      0.903830184
+      Std. dev.: 0.068519106
+      Median:    0.872825387
+    diversity:
+      Mean:      0.491623884
+      Std. dev.: 0.005122630
+      Median:    0.491945247
+  ML:
+    time:
+      Mean:      40.447400000
+      Std. dev.: 5.090346525
+      Median:    40.463000000
+    rmse:
+      Mean:      1.010443078
+      Std. dev.: 0.032247977
+      Median:    1.022692574
+    diversity:
+      Mean:      0.690506865
+      Std. dev.: 0.004402985
+      Median:    0.689797426
+  Statical Tests:
+    time:
+      Shaphiro p-values:
+        CMA:  0.000032066
+        MLSP: 0.000033215
+        ML:   0.002045794
+      CMA and MLSP Student's t-test p-value: 0.000195068
+      CMA and ML Student's t-test p-value: 0.000000000
+      MLSP and ML Student's t-test p-value: 0.000000014
+    rmse:
+      Shaphiro p-values:
+        CMA:  0.000001180
+        MLSP: 0.002901440
+        ML:   0.000004282
+      CMA and MLSP Student's t-test p-value: 0.104552389
+      CMA and ML Student's t-test p-value: 0.840637516
+      MLSP and ML Student's t-test p-value: 0.000001472
+    diversity:
+      Shaphiro p-values:
+        CMA:  0.259271443
+        MLSP: 0.972722113
+        ML:   0.241407767
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.000437258
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.000000063
+
+wine_quality_clas:
+  CMA:
+    time:
+      Mean:      267.984750000
+      Std. dev.: 3.622767656
+      Median:    269.101000000
+    f1_score:
+      Mean:      0.193738775
+      Std. dev.: 0.005344084
+      Median:    0.194711113
+    diversity:
+      Mean:      0.494579192
+      Std. dev.: 0.007321212
+      Median:    0.495941410
+  MLSP:
+    time:
+      Mean:      264.929500000
+      Std. dev.: 34.492433351
+      Median:    282.009500000
+    f1_score:
+      Mean:      0.192497838
+      Std. dev.: 0.004123286
+      Median:    0.193567300
+    diversity:
+      Mean:      0.491623884
+      Std. dev.: 0.005122630
+      Median:    0.491945247
+  ML:
+    time:
+      Mean:      126.541550000
+      Std. dev.: 20.360925965
+      Median:    116.768500000
+    f1_score:
+      Mean:      0.032188419
+      Std. dev.: 0.043503324
+      Median:    0.012185539
+    diversity:
+      Mean:      0.690666403
+      Std. dev.: 0.003931079
+      Median:    0.690001988
+  Statical Tests:
+    time:
+      Shaphiro p-values:
+        CMA:  0.004325307
+        MLSP: 0.000003426
+        ML:   0.000027760
+      CMA and MLSP Student's t-test p-value: 0.705159688
+      CMA and ML Student's t-test p-value:   0.000000000
+      MLSP and ML Student's t-test p-value:  0.000000000
+    f1_score:
+      Shaphiro p-values:
+        CMA:  0.870025277
+        MLSP: 0.030846654
+        ML:   0.000080885
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.533841894
+      CMA and ML Wilcoxon rank-sum test p-value:   0.000000063
+      MLSP and ML Student's t-test p-value:        0.000000000
+    diversity:
+      Shaphiro p-values:
+        CMA:  0.159143224
+        MLSP: 0.972722113
+        ML:   0.052076023
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.194148451
+      CMA and ML Wilcoxon rank-sum test p-value:   0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value:  0.000000063
+
+communities:
+  CMA:
+    time:
+      Mean:      195.120900000
+      Std. dev.: 18.992172487
+      Median:    195.300500000
+    rmse:
+      Mean:      1.278437509
+      Std. dev.: 0.000000000
+      Median:    1.278437509
+    diversity:
+      Mean:      0.421288310
+      Std. dev.: 0.004989738
+      Median:    0.421829976
+  MLSP:
+    time:
+      Mean:      157.466950000
+      Std. dev.: 6.252204135
+      Median:    157.624000000
+    rmse:
+      Mean:      1.278437509
+      Std. dev.: 0.000000000
+      Median:    1.278437509
+    diversity:
+      Mean:      0.420215375
+      Std. dev.: 0.004437315
+      Median:    0.421027996
+  ML:
+    time:
+      Mean:      58.340200000
+      Std. dev.: 14.045736772
+      Median:    66.595500000
+    rmse:
+      Mean:      1.278437509
+      Std. dev.: 0.000000000
+      Median:    1.278437509
+    diversity:
+      Mean:      0.689816224
+      Std. dev.: 0.002014024
+      Median:    0.689560318
+  Statical Tests:
+    time:
+      Shaphiro p-values:
+        CMA:  0.091364473
+        MLSP: 0.018560071
+        ML:   0.000099248
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.000005509
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Student's t-test p-value: 0.000000000
+    rmse:
+      Shaphiro p-values:
+        CMA:  1.000000000
+        MLSP: 1.000000000
+        ML:   1.000000000
+      CMA and MLSP Wilcoxon rank-sum test p-value: 1.000000000
+      CMA and ML Wilcoxon rank-sum test p-value: 1.000000000
+      MLSP and ML Wilcoxon rank-sum test p-value: 1.000000000
+    diversity:
+      Shaphiro p-values:
+        CMA:  0.356978476
+        MLSP: 0.032228943
+        ML:   0.869518816
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.417077060
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.000000063
+
+sonar:
+  CMA:
+    time:
+      Mean:      177.392400000
+      Std. dev.: 77.213191325
+      Median:    163.661000000
+    f1_score:
+      Mean:      0.362638889
+      Std. dev.: 0.013842593
+      Median:    0.358024691
+    diversity:
+      Mean:      0.431947675
+      Std. dev.: 0.006458116
+      Median:    0.432602073
+  MLSP:
+    time:
+      Mean:      153.627200000
+      Std. dev.: 47.233662569
+      Median:    152.149000000
+    f1_score:
+      Mean:      0.364544753
+      Std. dev.: 0.016735318
+      Median:    0.358024691
+    diversity:
+      Mean:      0.433113694
+      Std. dev.: 0.005574153
+      Median:    0.434135325
+  ML:
+    time:
+      Mean:      27.257150000
+      Std. dev.: 5.291092196
+      Median:    25.564000000
+    f1_score:
+      Mean:      0.358024691
+      Std. dev.: 0.000000000
+      Median:    0.358024691
+    diversity:
+      Mean:      0.690695203
+      Std. dev.: 0.002294939
+      Median:    0.690191749
+  Statical Tests:
+    time:
+      Shaphiro p-values:
+        CMA:  0.000034699
+        MLSP: 0.000636083
+        ML:   0.002413118
+      CMA and MLSP Student's t-test p-value: 0.261063386
+      CMA and ML Student's t-test p-value: 0.000000068
+      MLSP and ML Student's t-test p-value: 0.000000000
+    f1_score:
+      Shaphiro p-values:
+        CMA:  0.000000018
+        MLSP: 0.000000248
+        ML:   1.000000000
+      CMA and MLSP Student's t-test p-value: 0.704289935
+      CMA and ML Wilcoxon rank-sum test p-value: 0.588506355
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.588506355
+    diversity:
+      Shaphiro p-values:
+        CMA:  0.252194881
+        MLSP: 0.024242476
+        ML:   0.392461807
+      CMA and MLSP Wilcoxon rank-sum test p-value: 0.343764597
+      CMA and ML Wilcoxon rank-sum test p-value: 0.000000063
+      MLSP and ML Wilcoxon rank-sum test p-value: 0.000000063
+
