@@ -190,10 +190,13 @@ class RuleDiscoverer(ABC):
         unmatched_points = X[unmatched_indices]
 
         classifiers = list()
-        for point in unmatched_points:
-            cl = Classifier.random_cl(X.shape[1], config=self.config, point=point)
-            cl.fit(X, y)
-            classifiers.append(cl)
+        if len(unmatched_points) > 0:
+            for point in unmatched_points:
+                cl = Classifier.random_cl(X.shape[1], config=self.config, point=point)
+                cl.fit(X, y)
+                classifiers.append(cl)
+        else:
+            return self.draw_examples_from_data(n, X, y)
 
         number_of_samples = min([n, len(classifiers)])
         return [ [cl, self.create_sigmas(X.shape[1])] for cl in Random().random.choice(classifiers, number_of_samples, False) ]
