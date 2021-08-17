@@ -2,7 +2,7 @@ import numpy as np
 
 from hypothesis import given, settings
 from hypothesis.strategies import lists, integers, floats
-from suprb2 import Classifier
+from suprb2.classifier import Classifier
 from suprb2.config import Config
 
 

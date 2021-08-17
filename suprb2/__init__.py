@@ -15,29 +15,22 @@ import itertools
 
 
 class LCS:
-    def __init__(self, xdim, config,
-                 # pop_size=30, ind_size=50, generations=50,
-                 # fitness="pseudo-BIC",
-                 logging=True):
+    def __init__(self, xdim, config, logging=True):
         self.xdim = xdim
         self.config = config
-        # self.config.pop_size = pop_size
-        # self.config.ind_size = ind_size
-        # self.config.generations = generations
-        # self.config.fitness = fitness
         self.config.logging = logging
+
         if self.config.logging:
             mf.log_params(self.config.__dict__)
             mf.log_param("seed", Random()._seed)
-            self.config = self.config
             self.perf_recording = PerfRecorder()
+
         self.sol_opt = None
         self.rule_disc = None
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
         self.classifier_pool = list()
-        self.fitness_function = fitness.set_fitness_function(
-            self.config.solution_creation["fitness"])
+        self.fitness_function = fitness.set_fitness_function(self.config.solution_creation["fitness"])
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -45,28 +38,21 @@ class LCS:
         return round(delta, 3)
 
     def log_discover_rules_duration(self, start_time, discover_rules_time, step):
-        discover_rules_duration = self.calculate_delta_time(
-            start_time, discover_rules_time)
+        discover_rules_duration = self.calculate_delta_time(start_time, discover_rules_time)
         self.rules_discovery_duration_cumulative += discover_rules_duration
-        mf.log_metric("rules_discovery_duration",
-                      discover_rules_duration, step)
-        mf.log_metric("rules_discovery_duration_cumulative",
-                      self.rules_discovery_duration_cumulative, step)
+        mf.log_metric("rules_discovery_duration", discover_rules_duration, step)
+        mf.log_metric("rules_discovery_duration_cumulative", self.rules_discovery_duration_cumulative, step)
 
     def log_solution_creation_duration(self, start_time, solution_creation_time, step):
-        solution_creation_duration = self.calculate_delta_time(
-            start_time, solution_creation_time)
+        solution_creation_duration = self.calculate_delta_time(start_time, solution_creation_time)
         self.solution_creation_duration_cumulative += solution_creation_duration
-        mf.log_metric("solution_creation_duration",
-                      solution_creation_duration, step)
-        mf.log_metric("solution_creation_duration_cumulative",
-                      self.solution_creation_duration_cumulative, step)
+        mf.log_metric("solution_creation_duration", solution_creation_duration, step)
+        mf.log_metric("solution_creation_duration_cumulative", self.solution_creation_duration_cumulative, step)
 
     def run_inital_step(self, X, y):
         start_time = datetime.now()
 
-        self.rule_disc = RuleDiscoverer.get_rule_disc(
-            self.config, self.classifier_pool)
+        self.rule_disc = RuleDiscoverer.get_rule_disc(self.config, self.classifier_pool)
         if self.rule_disc is None:
             while len(self.classifier_pool) < self.config.initial_pool_size:
                 self.discover_rules(X, y)
@@ -75,14 +61,11 @@ class LCS:
                 self.rule_disc.step(X, y)
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(
-            X, y, self.classifier_pool, self.fitness_function, config=self.config)
-        # self.sol_opt = ES_1plus1(X_val, y_val)
+        self.sol_opt = ES_1plus1(X, y, self.classifier_pool, self.fitness_function, config=self.config)
         solution_creation_time = datetime.now()
 
         if self.config.logging:
             self.log(0, X)
-            # self.log(0, X_val)
             self.log_discover_rules_duration(
                 start_time, discover_rules_time, 0)
             self.log_solution_creation_duration(
@@ -122,30 +105,22 @@ class LCS:
             if self.config.logging:
                 self.log(step+1, X)
                 # self.log(0, X_val)
-                self.log_discover_rules_duration(
-                    start_time, discover_rules_time, step+1)
-                self.log_solution_creation_duration(
-                    discover_rules_time, solution_creation_time, step+1)
+                self.log_discover_rules_duration(start_time, discover_rules_time, step+1)
+                self.log_solution_creation_duration(discover_rules_time, solution_creation_time, step+1)
 
             # add verbosity option
-            # if step % 25 == 0:
-            print(f"Finished step {step + 1} at {datetime.now().time()}\n")
+            if step % 25 == 0:
+                print(f"Finished step {step + 1} at {datetime.now().time()}\n")
 
     def log(self, step, X_val):
-        mf.log_metric("fitness elite", self.sol_opt.get_elitist()
-                      .fitness, step)
-        mf.log_metric("complexity elite", self.sol_opt.get_elitist()
-                      .parameters(), step)
-        mf.log_metric("classifier pool size", len(self.classifier_pool),
-                      step)
-        mf.log_metric("error elite", self.sol_opt.get_elitist()
-                      .error, step)
+        mf.log_metric("fitness elite", self.sol_opt.get_elitist().fitness, step)
+        mf.log_metric("complexity elite", self.sol_opt.get_elitist().parameters(), step)
+        mf.log_metric("classifier pool size", len(self.classifier_pool), step)
+        mf.log_metric("error elite", self.sol_opt.get_elitist().error, step)
         mf.log_metric("population diversity", self.pool_diversity(), step)
-        PerfRecorder().elitist_val_error.append(
-            self.sol_opt.get_elitist().error)
+        PerfRecorder().elitist_val_error.append(self.sol_opt.get_elitist().error)
         PerfRecorder().val_size.append(len(X_val))
-        PerfRecorder().elitist_fitness.append(
-            self.sol_opt.get_elitist().fitness)
+        PerfRecorder().elitist_fitness.append(self.sol_opt.get_elitist().fitness)
         PerfRecorder().elitist_matched.append(np.sum(np.array(
             [cl.matches(X_val) for cl in
              [self.classifier_pool[i] for i in np.nonzero(
