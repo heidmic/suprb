@@ -142,7 +142,7 @@ if __name__ == '__main__':
             # we reset the seed here
             Random().reseed(seed)
 
-            lcs = LCS(xdim)
+            lcs = LCS(xdim, Config())
 
             lcs.fit(X_train, y_train)
 
@@ -151,12 +151,14 @@ if __name__ == '__main__':
             error = mean_squared_error(y_test, y_pred)
 
             if False:
-                plot_results(X_test, y_test, y_pred, lcs.get_elitist(), saveas=seed)
+                plot_results(X_test, y_test, y_pred,
+                             lcs.get_elitist(), saveas=seed)
                 plot_perfrecords(lcs.perf_recording.__dict__,
                                  ["elitist_complexity", "elitist_val_error"], saveas=seed)
                 plot_error_complexity(lcs.perf_recording, saveas=seed)
 
             mf.log_metric("RMSE", np.sqrt(error))
-            print(f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
+            print(
+                f"Finished at {datetime.now().time()}. RMSE was {np.sqrt(error)}")
 
     pass

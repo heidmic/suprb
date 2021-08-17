@@ -1,6 +1,5 @@
 import numpy as np
 from suprb2.random_gen import Random
-from suprb2.config import Config
 from suprb2.classifier import Classifier
 
 from sklearn.metrics import *
@@ -10,7 +9,6 @@ class Individual:
     def __init__(self, genome, classifier_pool):
         self.genome = genome
         self.fitness = None
-        # TODO determine if this error is used anywhere
         self.error = None
         self.classifier_pool = classifier_pool
 

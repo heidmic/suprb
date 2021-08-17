@@ -1,11 +1,11 @@
 import numpy as np
 import suprb2.fitness as fitness
 from suprb2.random_gen import Random
-from suprb2.config import Config
 from suprb2.perf_recorder import PerfRecorder
 from suprb2.classifier import Classifier
 from suprb2.individual import Individual
 from suprb2.solutions import ES_1plus1
+from suprb2.discovery import RuleDiscoverer
 
 from sklearn.model_selection import train_test_split
 from datetime import datetime
@@ -15,26 +15,29 @@ import itertools
 
 
 class LCS:
-    def __init__(self, xdim,
+    def __init__(self, xdim, config,
                  # pop_size=30, ind_size=50, generations=50,
                  # fitness="pseudo-BIC",
                  logging=True):
         self.xdim = xdim
-        # Config().pop_size = pop_size
-        # Config().ind_size = ind_size
-        # Config().generations = generations
-        # Config().fitness = fitness
-        Config().logging = logging
-        if Config().logging:
-            mf.log_params(Config().__dict__)
+        self.config = config
+        # self.config.pop_size = pop_size
+        # self.config.ind_size = ind_size
+        # self.config.generations = generations
+        # self.config.fitness = fitness
+        self.config.logging = logging
+        if self.config.logging:
+            mf.log_params(self.config.__dict__)
             mf.log_param("seed", Random()._seed)
-            self.config = Config()
+            self.config = self.config
             self.perf_recording = PerfRecorder()
         self.sol_opt = None
+        self.rule_disc = None
         self.rules_discovery_duration_cumulative = 0
         self.solution_creation_duration_cumulative = 0
         self.classifier_pool = list()
-        self.fitness_function = fitness.set_fitness_function(Config().solution_creation["fitness"])
+        self.fitness_function = fitness.set_fitness_function(
+            self.config.solution_creation["fitness"])
 
     def calculate_delta_time(self, start_time, end_time):
         delta_time = end_time - start_time
@@ -42,36 +45,51 @@ class LCS:
         return round(delta, 3)
 
     def log_discover_rules_duration(self, start_time, discover_rules_time, step):
-        discover_rules_duration = self.calculate_delta_time(start_time, discover_rules_time)
+        discover_rules_duration = self.calculate_delta_time(
+            start_time, discover_rules_time)
         self.rules_discovery_duration_cumulative += discover_rules_duration
-        mf.log_metric("rules_discovery_duration", discover_rules_duration, step)
-        mf.log_metric("rules_discovery_duration_cumulative", self.rules_discovery_duration_cumulative, step)
+        mf.log_metric("rules_discovery_duration",
+                      discover_rules_duration, step)
+        mf.log_metric("rules_discovery_duration_cumulative",
+                      self.rules_discovery_duration_cumulative, step)
 
     def log_solution_creation_duration(self, start_time, solution_creation_time, step):
-        solution_creation_duration = self.calculate_delta_time(start_time, solution_creation_time)
+        solution_creation_duration = self.calculate_delta_time(
+            start_time, solution_creation_time)
         self.solution_creation_duration_cumulative += solution_creation_duration
-        mf.log_metric("solution_creation_duration", solution_creation_duration, step)
-        mf.log_metric("solution_creation_duration_cumulative", self.solution_creation_duration_cumulative, step)
+        mf.log_metric("solution_creation_duration",
+                      solution_creation_duration, step)
+        mf.log_metric("solution_creation_duration_cumulative",
+                      self.solution_creation_duration_cumulative, step)
 
     def run_inital_step(self, X, y):
         start_time = datetime.now()
-        while len(self.classifier_pool) < Config().initial_pool_size:
-            self.discover_rules(X, y)
 
+        self.rule_disc = RuleDiscoverer.get_rule_disc(
+            self.config, self.classifier_pool)
+        if self.rule_disc is None:
+            while len(self.classifier_pool) < self.config.initial_pool_size:
+                self.discover_rules(X, y)
+        else:
+            while len(self.classifier_pool) < self.config.initial_pool_size:
+                self.rule_disc.step(X, y)
         discover_rules_time = datetime.now()
 
-        self.sol_opt = ES_1plus1(X, y, self.classifier_pool, self.fitness_function)
+        self.sol_opt = ES_1plus1(
+            X, y, self.classifier_pool, self.fitness_function, config=self.config)
         # self.sol_opt = ES_1plus1(X_val, y_val)
         solution_creation_time = datetime.now()
 
-        if Config().logging:
+        if self.config.logging:
             self.log(0, X)
             # self.log(0, X_val)
-            self.log_discover_rules_duration(start_time, discover_rules_time, 0)
-            self.log_solution_creation_duration(discover_rules_time, solution_creation_time, 0)
+            self.log_discover_rules_duration(
+                start_time, discover_rules_time, 0)
+            self.log_solution_creation_duration(
+                discover_rules_time, solution_creation_time, 0)
 
     def fit(self, X, y):
-        # if Config().use_validation:
+        # if self.config.use_validation:
         #     X_train, X_val, y_train, y_val = train_test_split(X, y,
         #                                                       random_state=Random().split_seed())
         #
@@ -84,41 +102,50 @@ class LCS:
 
         self.run_inital_step(X, y)
 
+        # Connect optimizers
+        if self.rule_disc is not None:
+            self.rule_disc.sol_opt = self.sol_opt
+
         # TODO allow other termination criteria. Early Stopping?
-        for step in range(Config().steps):
+        for step in range(self.config.steps):
             start_time = datetime.now()
 
-            self.discover_rules(X, y)
+            if self.rule_disc is None:
+                self.discover_rules(X, y)
+            else:
+                self.rule_disc.step(X, y)
             discover_rules_time = datetime.now()
 
             self.sol_opt.step(X, y)
-            # self.sol_opt.step(X_val, y_val)
             solution_creation_time = datetime.now()
 
-            if Config().logging:
+            if self.config.logging:
                 self.log(step+1, X)
                 # self.log(0, X_val)
-                self.log_discover_rules_duration(start_time, discover_rules_time, step+1)
-                self.log_solution_creation_duration(discover_rules_time, solution_creation_time, step+1)
+                self.log_discover_rules_duration(
+                    start_time, discover_rules_time, step+1)
+                self.log_solution_creation_duration(
+                    discover_rules_time, solution_creation_time, step+1)
 
             # add verbosity option
-            if step % 25 == 0:
-                print(f"Finished step {step + 1} at {datetime.now().time()}\n")
+            # if step % 25 == 0:
+            print(f"Finished step {step + 1} at {datetime.now().time()}\n")
 
     def log(self, step, X_val):
         mf.log_metric("fitness elite", self.sol_opt.get_elitist()
                       .fitness, step)
-        mf.log_metric("error elite", self.sol_opt.get_elitist()
-                      .error, step)
         mf.log_metric("complexity elite", self.sol_opt.get_elitist()
                       .parameters(), step)
         mf.log_metric("classifier pool size", len(self.classifier_pool),
                       step)
-        PerfRecorder().elitist_fitness.append(
-            self.sol_opt.get_elitist().fitness)
+        mf.log_metric("error elite", self.sol_opt.get_elitist()
+                      .error, step)
+        mf.log_metric("population diversity", self.pool_diversity(), step)
         PerfRecorder().elitist_val_error.append(
             self.sol_opt.get_elitist().error)
         PerfRecorder().val_size.append(len(X_val))
+        PerfRecorder().elitist_fitness.append(
+            self.sol_opt.get_elitist().fitness)
         PerfRecorder().elitist_matched.append(np.sum(np.array(
             [cl.matches(X_val) for cl in
              [self.classifier_pool[i] for i in np.nonzero(
@@ -140,22 +167,22 @@ class LCS:
     def discover_rules(self, X, y):
         # draw n examples from data
         idxs = Random().random.choice(np.arange(len(X)),
-                                      Config().rule_discovery['nrules'], False)
+                                      self.config.rule_discovery['nrules'], False)
 
         for x in X[idxs]:
-            cl = Classifier.random_cl(self.xdim, point=x)
+            cl = Classifier.random_cl(self.xdim, config=self.config, point=x)
             cl.fit(X, y)
-            for i in range(Config().rule_discovery['steps_per_step']):
+            for i in range(self.config.rule_discovery['steps_per_step']):
                 children = list()
                 # make it 1+lambda instead of 1,lambda
                 children.append(cl)
-                for j in range(Config().rule_discovery['lmbd']):
+                for j in range(self.config.rule_discovery['lmbd']):
                     child = deepcopy(cl)
-                    child.mutate(Config().rule_discovery['sigma'])
+                    child.mutate(self.config.rule_discovery['sigma'])
                     child.fit(X, y)
                     children.append(child)
-                ## ToDo instead of greedily taking the minimum, treating all
-                ##  below a certain threshhold as equal might yield better  models
+                # ToDo instead of greedily taking the minimum, treating all
+                # below a certain threshhold as equal might yield better  models
                 #cl = children[np.argmin([child.get_weighted_error() for child in children])]
                 cl = Random().random.choice(self.nondominated_sort(children))
 
@@ -182,6 +209,7 @@ class LCS:
             to_be_added = False
             for can in candidates:
                 volume_share_can = can.get_volume_share()
+
                 if can.error < cl.error and volume_share_can > volume_share_cl:
                     # classifier is dominated by this candidate and should not
                     # become a new candidate
@@ -201,6 +229,23 @@ class LCS:
 
         return candidates
 
+    def pool_diversity(self):
+        """
+        Calculates the diversity of the current pool state,
+        based on the calculation proposed by the article
+        Population Diversity Maintenance In Brain Storm Optimization Algorithm
+        from Shi Cheng, Yuhui Shi, Quande Qin, Qingyu Zhang and Ruibin Bai
+        at page 7.
+
+        link: https://www.researchgate.net/publication/268217599_Population_Diversity_Maintenance_In_Brain_Storm_Optimization_Algorithm
+        """
+        diversities = np.zeros(self.xdim)
+        for j in range(self.xdim):
+            xj = [np.mean([cl.upperBounds[j], cl.lowerBounds[j]])
+                  for cl in self.classifier_pool]
+            diversities[j] = np.mean([np.abs(np.mean([cl.upperBounds[j], cl.lowerBounds[j]]) - xj)
+                                      for cl in self.classifier_pool])
+        return np.mean(diversities)
 
     @staticmethod
     def default_error(y):
@@ -249,7 +294,7 @@ class LCS:
 #     """
 #     if len(parent_a.classifiers) + len(parent_b.classifiers) <= 2:
 #         return parent_a, parent_b
-#     elif Config().crossover_type == "off":
+#     elif self.config.crossover_type == "off":
 #         return deepcopy(parent_a), deepcopy(parent_b)
 #     else:
 #         parenta_cl = deepcopy(parent_a.classifiers)
@@ -258,13 +303,13 @@ class LCS:
 #
 #         Random().random.shuffle(all_cl)
 #
-#         if Config().crossover_type == "normal":
+#         if self.config.crossover_type == "normal":
 #             p = 0
 #             # ensure there is at least one classifier per individuum
 #             while not 1 <= p <= len(all_cl) - 1:
 #                 # random crossover point
 #                 p = round(Random().random.normal(loc=np.floor(len(all_cl) / 2)))
-#         elif Config().crossover_type == "uniform":
+#         elif self.config.crossover_type == "uniform":
 #             p = Random().random.integers(1, len(all_cl) - 1)
 #
 #         cl_a_new = all_cl[:p]

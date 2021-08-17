@@ -1,3 +1,4 @@
+from suprb2.config import Config
 import numpy as np
 
 from hypothesis import given, settings, strategies as st
@@ -7,7 +8,8 @@ from suprb2 import Individual, Classifier
 
 
 def create_classifier(experience, error, lower, upper):
-    classifier = Classifier(lower, upper, LinearRegression(), 1)
+    Config().classifier['local_model'] = 'linear_regression'
+    classifier = Classifier(lower, upper, 1, Config())
     classifier.error = error
     classifier.experience = experience
 
