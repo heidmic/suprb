@@ -15,6 +15,8 @@ def set_fitness_function(config_fitness_function):
         fitness_function = mse_times_C
     elif config_fitness_function == "mse_times_root_C":
         fitness_function = mse_times_root_C
+    elif config_fitness_function == "mse_matching_pun":
+        fitness_function = mse_matching_pun
     elif config_fitness_function == "inverted_macro_f1_score":
         fitness_function = inverted_macro_f1_score
     elif config_fitness_function == "inverted_macro_f1_score_times_C":
@@ -26,7 +28,7 @@ def set_fitness_function(config_fitness_function):
     return fitness_function
 
 
-def calculate_bic_error(n, y_val, predicted_X_val, config):
+def _calculate_bic_error(n, y_val, predicted_X_val, config):
     if config.classifier['local_model'] == 'logistic_regression':
         # Inverted Macro F1 Score
         return 1 - f1_score(y_true=y_val, y_pred=np.rint(predicted_X_val), average='macro')
@@ -37,15 +39,15 @@ def calculate_bic_error(n, y_val, predicted_X_val, config):
         raise NotImplementedError
 
 
-def calculate_bic_fitness(n, parameters, error, config):
+def _calculate_bic_fitness(n, parameters, error):
     # BIC -(n * np.log(rss / n) + complexity * np.log(n))
     return -1 * (n * np.log(error) + parameters * np.log(n))
 
 
 def pseudo_bic(X_val, y_val, individual, config):
     n = len(X_val)
-    individual.error = calculate_bic_error(n, y_val, individual.predict(X_val), config)
-    individual.fitness = calculate_bic_fitness(n, individual.parameters(), individual.error, config)
+    individual.error = _calculate_bic_error(n, y_val, individual.predict(X_val), config)
+    individual.fitness = _calculate_bic_fitness(n, individual.parameters(), individual.error)
 
 
 def bic_matching_punishment(X_val, y_val, individual, config):
@@ -53,8 +55,8 @@ def bic_matching_punishment(X_val, y_val, individual, config):
     matching_pun = np.sum(np.nonzero(np.sum(np.array([cl.matches(X_val)
                                                       for cl in individual.get_classifiers()]), 1) > 1))
 
-    individual.error = calculate_bic_error(n, y_val, individual.predict(X_val))
-    individual.fitness = calculate_bic_fitness(n, individual.parameters() + matching_pun, individual.error)
+    individual.error = _calculate_bic_error(n, y_val, individual.predict(X_val), config)
+    individual.fitness = _calculate_bic_fitness(n, individual.parameters() + matching_pun, individual.error)
 
 
 def mse(X_val, y_val, individual, config):
@@ -77,6 +79,21 @@ def mse_times_root_C(X_val, y_val, individual, config):
         error = config.solution_creation["fitness_target"]
     individual.fitness = -1 * error * np.power(individual.parameters(),
                                                1 / config.solution_creation["fitness_factor"])
+
+
+def _calc_matching_pun(X_val, individual, config):
+    matching_matrix = np.array([cl.matches(X_val) for cl in
+                                individual.get_classifiers()])
+    cl_number_per_sample = np.sum(matching_matrix, 1)
+    # fraction of samples that are matched by more than
+    # fitness_factor classifiers
+    return np.sum(cl_number_per_sample >
+                  config.solution_creation[
+                      'fitness_factor']) / len(X_val)
+
+
+def mse_matching_pun(X_val, y_val, individual, config):
+    matching_pun = _calc_matching_pun(X_val, individual, config)
 
 
 def inverted_macro_f1_score(X_val, y_val, individual, config):
