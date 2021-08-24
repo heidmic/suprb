@@ -24,7 +24,7 @@ class Config:
         "classifier": {
             "weighted_error_const": 0.5,
             "local_model": 'linear_regression',
-            "radius": 0.1,
+            "expected_radius": 0.1,
         },
         "solution_creation": {
             "name": '(1+1)-ES',

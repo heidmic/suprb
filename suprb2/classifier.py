@@ -6,7 +6,7 @@ from sklearn.metrics import *
 
 
 class Classifier:
-    def __init__(self, lowers, uppers, degree, config):
+    def __init__(self, lowers, uppers, config):
         self.lowerBounds = lowers
         self.upperBounds = uppers
         self.config = config
@@ -20,7 +20,6 @@ class Classifier:
             raise NotImplementedError
 
         # TODO make this part of local model (as a class)
-        self.degree = degree
         self.error = None
         # TODO expand this int into remember which was matched (to reduce
         # retraining when mutate didnt change the matched data)
@@ -129,7 +128,7 @@ class Classifier:
         """
         Returns a randomly placed classifier within [-1, 1]
         If point is given, the classifier bounds will be point +- N(r, r/2)
-        with r being defined by self.config.classifier['radius']
+        with r being defined by self.config.classifier['expected_radius']
         Classifiers width is always > 0 in all dimensions
         The local model of the generated classifier is defined
         by self.config.classifier['local_model']
@@ -140,7 +139,7 @@ class Classifier:
         """
         if point is None:
             point = Random().random.random(xdim) * 2 - 1
-        exp_radius = config.classifier['radius']
+        exp_radius = config.classifier['expected_radius']
         while True:
             radius = Random().random.normal(loc=exp_radius, scale=exp_radius/2,
                                             size=xdim)
@@ -152,7 +151,7 @@ class Classifier:
                 break
         l = np.clip(point - radius, a_min=-1, a_max=1)
         u = np.clip(point + radius, a_min=-1, a_max=1)
-        return Classifier(l, u, 1, config)
+        return Classifier(l, u, config)
 
     def params(self):
         if self.model is LinearRegression or self.model is LogisticRegression:

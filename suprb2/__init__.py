@@ -206,13 +206,7 @@ class LCS:
 
     def pool_diversity(self):
         """
-        Calculates the diversity of the current pool state,
-        based on the calculation proposed by the article
-        Population Diversity Maintenance In Brain Storm Optimization Algorithm
-        from Shi Cheng, Yuhui Shi, Quande Qin, Qingyu Zhang and Ruibin Bai
-        at page 7.
-
-        link: https://www.researchgate.net/publication/268217599_Population_Diversity_Maintenance_In_Brain_Storm_Optimization_Algorithm
+        Calculates the diversity of the current pool state
         """
         diversities = np.zeros(self.xdim)
         for j in range(self.xdim):

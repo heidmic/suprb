@@ -525,7 +525,7 @@ class ES_MuLambd(RuleDiscoverer):
             bounds = bounds[sidx, np.arange(sidx.shape[1])]
 
             # create new classifier, and save sigmas
-            classifier = Classifier(lowers=bounds[0], uppers=bounds[1], degree=1, config=self.config)
+            classifier = Classifier(lowers=bounds[0], uppers=bounds[1], config=self.config)
             children_tuples.append((classifier, selected_attr[2]))
 
         return children_tuples
