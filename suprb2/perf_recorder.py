@@ -9,7 +9,6 @@ class PerfRecorder:
     See https://code.activestate.com/recipes/66531-singleton-we-dont-need-no-stinkin-singleton-the-bo/ .
     """
     __shared_state = {"elitist_val_error": [],
-                      "elitist_f1_score": [],
                       "elitist_fitness": [],
                       "elitist_matched": [],
                       "elitist_complexity": [],
