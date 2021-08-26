@@ -25,19 +25,18 @@ class SolutionOptimizer(ABC):
 
 class ES_1plus1(SolutionOptimizer):
     def __init__(self, X_val, y_val, classifier_pool, fitness_function, config, individual=None):
+        self.config = config
         self.mutation_rate = config.solution_creation['mutation_rate']
         self.steps = config.solution_creation['steps_per_step']
         self.classifier_pool = classifier_pool
         self.determine_fitness = fitness_function
-        self.config = config
 
         if individual is not None:
             self.individual = individual
         else:
             # This makes most sense when the optimizer is initialised at the
             # start. If a later init is desired, adjust accordingly
-            self.individual = Individual.random_individual(
-                self.config.initial_genome_length, self.classifier_pool)
+            self.individual = Individual.random_individual(self.config.initial_genome_length, self.classifier_pool)
             self.determine_fitness(X_val, y_val, self.individual, config)
 
     def step(self, X_val, y_val):
