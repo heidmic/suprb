@@ -346,12 +346,7 @@ class ES_OnePlusLambd(RuleDiscoverer):
                 #cl = children[np.argmin([child.get_weighted_error() for child in children])]
                 cl = Random().random.choice(self.nondominated_sort_original(children))
 
-            classifier_matches = y[np.nonzero(cl.matches(X))]
-            default_error = 0 if(
-                classifier_matches.size == 0) else np.sum(
-                classifier_matches ** 2) / len(classifier_matches)
-
-            if cl.error < default_error:
+            if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
                 self.pool.append(cl)
 
 
@@ -867,3 +862,9 @@ class ES_CMA(RuleDiscoverer):
             weights[i] = np.log(lmbd/2 + 0.5) - np.log(ranked_indexes[i] + 1)
 
         return weights
+
+    @staticmethod
+    def default_error(y):
+        # for standardised data this should be equivalent to np.var(y)
+        with np.errstate(invalid='ignore'):
+            return np.sum(y**2)/np.array(len(y))

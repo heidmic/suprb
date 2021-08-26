@@ -53,12 +53,9 @@ class LCS:
         start_time = datetime.now()
 
         self.rule_disc = RuleDiscoverer.get_rule_disc(self.config, self.classifier_pool)
-        if self.rule_disc is None:
-            while len(self.classifier_pool) < self.config.initial_pool_size:
-                self.discover_rules(X, y)
-        else:
-            while len(self.classifier_pool) < self.config.initial_pool_size:
-                self.rule_disc.step(X, y)
+        while len(self.classifier_pool) < self.config.initial_pool_size:
+            self.rule_disc.step(X, y)
+
         discover_rules_time = datetime.now()
 
         self.sol_opt = ES_1plus1(X, y, self.classifier_pool, self.fitness_function, config=self.config)
@@ -66,10 +63,8 @@ class LCS:
 
         if self.config.logging:
             self.log(0, X)
-            self.log_discover_rules_duration(
-                start_time, discover_rules_time, 0)
-            self.log_solution_creation_duration(
-                discover_rules_time, solution_creation_time, 0)
+            self.log_discover_rules_duration(start_time, discover_rules_time, 0)
+            self.log_solution_creation_duration(discover_rules_time, solution_creation_time, 0)
 
     def fit(self, X, y):
         # if self.config.use_validation:
@@ -84,19 +79,13 @@ class LCS:
         #     y_val = y
 
         self.run_inital_step(X, y)
-
-        # Connect optimizers
-        if self.rule_disc is not None:
-            self.rule_disc.sol_opt = self.sol_opt
+        self.rule_disc.sol_opt = self.sol_opt
 
         # TODO allow other termination criteria. Early Stopping?
         for step in range(self.config.steps):
             start_time = datetime.now()
 
-            if self.rule_disc is None:
-                self.discover_rules(X, y)
-            else:
-                self.rule_disc.step(X, y)
+            self.rule_disc.step(X, y)
             discover_rules_time = datetime.now()
 
             self.sol_opt.step(X, y)
@@ -138,31 +127,6 @@ class LCS:
         # TODO add a score according to https://scikit-learn.org/stable/developers/develop.html#apis-of-scikit-learn-objects
         #  likely R2
         raise NotImplementedError()
-
-    def discover_rules(self, X, y):
-        # draw n examples from data
-        idxs = Random().random.choice(np.arange(len(X)),
-                                      self.config.rule_discovery['nrules'], False)
-
-        for x in X[idxs]:
-            cl = Classifier.random_cl(self.xdim, config=self.config, point=x)
-            cl.fit(X, y)
-            for i in range(self.config.rule_discovery['steps_per_step']):
-                children = list()
-                # make it 1+lambda instead of 1,lambda
-                children.append(cl)
-                for j in range(self.config.rule_discovery['lmbd']):
-                    child = deepcopy(cl)
-                    child.mutate(self.config.rule_discovery['sigma'])
-                    child.fit(X, y)
-                    children.append(child)
-                # ToDo instead of greedily taking the minimum, treating all
-                # below a certain threshhold as equal might yield better  models
-                #cl = children[np.argmin([child.get_weighted_error() for child in children])]
-                cl = Random().random.choice(self.nondominated_sort(children))
-
-            if cl.error < self.default_error(y[np.nonzero(cl.matches(X))]):
-                self.classifier_pool.append(cl)
 
     def nondominated_sort(self, classifiers):
         """
