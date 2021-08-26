@@ -7,7 +7,6 @@ from abc import *
 # from suprb2.perf_recorder import PerfRecorder
 from suprb2.solutions import SolutionOptimizer
 from suprb2.classifier import Classifier
-from suprb2.utilities import Utilities
 from suprb2.random_gen import Random
 
 
@@ -328,8 +327,8 @@ class ES_OnePlusLambd(RuleDiscoverer):
         #     if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
         #         self.pool.append(cl)
 
-        idxs = Random().random.choice(np.arange(len(X)),
-                                      self.config.rule_discovery['nrules'], False)
+        idxs = Random().random.choice(np.arange(len(X)), self.config.rule_discovery['nrules'], False)
+
         for x in X[idxs]:
             cl = Classifier.random_cl(X.shape[1], config=self.config, point=x)
             cl.fit(X, y)
@@ -347,7 +346,12 @@ class ES_OnePlusLambd(RuleDiscoverer):
                 #cl = children[np.argmin([child.get_weighted_error() for child in children])]
                 cl = Random().random.choice(self.nondominated_sort_original(children))
 
-            if cl.error < Utilities.default_error(y[np.nonzero(cl.matches(X))]):
+            classifier_matches = y[np.nonzero(cl.matches(X))]
+            default_error = 0 if(
+                classifier_matches.size == 0) else np.sum(
+                classifier_matches ** 2) / len(classifier_matches)
+
+            if cl.error < default_error:
                 self.pool.append(cl)
 
 
