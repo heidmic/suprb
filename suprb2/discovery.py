@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np  # type: ignore
 from copy import deepcopy
-from abc import *
+from abc import ABC
 
 # from suprb2.perf_recorder import PerfRecorder
 from suprb2.solutions import SolutionOptimizer
