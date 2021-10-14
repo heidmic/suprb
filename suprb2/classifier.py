@@ -1,9 +1,13 @@
 import numpy as np
 from suprb2.random_gen import Random
 from suprb2.config import Config
+from copy import deepcopy
+
 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import *
+
+model_list = []
 
 
 class Classifier:
@@ -19,7 +23,6 @@ class Classifier:
         self.experience = None
         # if set this overrides local_model and outputs constant for all prediction requests
         self.constant = None
-        self.last_training_match = None
 
     def matches(self, X: np.array) -> np.array:
         l = np.reshape(np.tile(self.lowerBounds, X.shape[0]), (X.shape[0],
@@ -46,6 +49,15 @@ class Classifier:
             else:
                 return self.constant
 
+    def is_model_in_model_list(self, match):
+        global model_list
+
+        for model in model_list:
+            if np.array_equal(match, model["match"]):
+                return model
+
+        return None
+
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
         """
         fits this classifier to the given training date if matched samples changed since the last fit
@@ -53,11 +65,18 @@ class Classifier:
         :param y:
         :return:
         """
+        global model_list
+
         m = self.matches(X)
-        # we save the training match to optimize fit (only re-fit when match changed after mutation)
-        if self.last_training_match is None or (m != self.last_training_match).any():
-            self.last_training_match = m
+        previous_model = self.is_model_in_model_list(m)
+
+        if previous_model:
+            self.error = previous_model["error"]
+            self.experience = previous_model["experience"]
+            self.model = deepcopy(previous_model["model"])
+        else:
             self._fit(X[np.nonzero(m)], y[np.nonzero(m)])
+            model_list.append({"match": m, "error": self.error, "experience": self.experience, "model": self.model})
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> None:
         """
@@ -148,7 +167,7 @@ class Classifier:
 
         if volume_share > 0:
             weighted_error = np.log(self.error) - np.log(volume_share) * \
-                             Config().rule_discovery["weighted_error_constant"]
+                Config().rule_discovery["weighted_error_constant"]
 
         return weighted_error
 
