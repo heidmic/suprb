@@ -18,10 +18,10 @@ Solutions of the problem select classifiers from the unchanging pool.
 ## Install all requirements
 
 
-    pip3 install -r suprb2/requirements.txt
+    pip3 install -r requirements.txt
 
 
-Tested with Python 3.8.5 and Python 3.7.3.
+Tested with Python 3.9.4.
 
 
 ## Contributing
