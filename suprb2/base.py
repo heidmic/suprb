@@ -11,7 +11,7 @@ class BaseComponent(BaseEstimator, metaclass=ABCMeta):
     Base class for subcomponents of a model.
     Note that this technically goes against scikit-learn standards, because input parameters should be
     non-modifiable, but as many subcomponents have different parameters, it is just not possible
-    to write them all into the __init__() of the top-level model.
+    to write all of them into the __init__() of the top-level model.
     This hierarchy of nested components is much cleaner for this use-case.
     The necessary interface to other scikit-learn functionality is still present, because all components
     are instantiated internally, so `sklearn.utils.estimator_checks.check_estimator()` should still pass.
