@@ -18,6 +18,7 @@ def pseudo_accuracy(error: float, beta=1) -> float:
     Calculates the pseudo accuracy PACC, which maps the (possibly unbounded) error into the [0, 1] domain with
     a PACC of 1 corresponding to an error of 0.
     """
+    assert beta > 0
     return np.exp(-beta * error)
 
 

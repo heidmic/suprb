@@ -19,6 +19,7 @@ class Solution(metaclass=ABCMeta):
             return f"{self.__class__.__name__}({concat})"
 
     def _more_str_attributes(self) -> dict:
+        """Should return name and value of additional attributes that should be included in the str representation."""
         return {}
 
 

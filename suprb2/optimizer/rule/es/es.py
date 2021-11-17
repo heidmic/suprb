@@ -78,28 +78,25 @@ class ES1xLambda(SingleSolutionBasedRuleGeneration):
 
         self._init_elitist(X, y)
 
-        def mutate_fit(rule: Rule):
-            mutation = self.mutation(rule, random_state=self.random_state_)
-            return self.constraint(mutation).fit(X, y, self.fitness)
-
         # Main iteration
         for iteration in range(self.n_iter):
             # Generate, fit and evaluate lambda children
-            children = [mutate_fit(self.elitist_) for _ in range(self.lmbda)]
+            children = [self.constraint(self.mutation(self.elitist_, random_state=self.random_state_))
+                            .fit(X, y, self.fitness) for _ in range(self.lmbda)]
             # Filter children that do not match any points
             filtered = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
-            def candidate():
-                return self.selection(filtered, self.random_state_) if filtered else self.elitist_
+            def candidate(population: list[Rule]):
+                return self.selection(population, self.random_state_) if population else self.elitist_
 
             # Different operators
             if self.operator == '+':
                 filtered.append(self.elitist_)
-                self.elitist_ = candidate()
+                self.elitist_ = candidate(filtered)
             elif self.operator == ',':
-                self.elitist_ = candidate()
+                self.elitist_ = candidate(filtered)
             elif self.operator == '&':
-                candidate = candidate()
+                candidate = candidate(filtered)
                 if candidate.fitness_ <= self.elitist_.fitness_:
                     break
                 else:
@@ -110,4 +107,3 @@ class ES1xLambda(SingleSolutionBasedRuleGeneration):
             return self.elitist_
         else:
             return None
-

@@ -11,7 +11,7 @@ from .optimizer import Solution
 from .rule import Rule
 
 
-class MixtureOfExperts(BaseComponent, metaclass=ABCMeta):
+class MixingModel(BaseComponent, metaclass=ABCMeta):
     """Performs mixing of local `Rule`s to obtain a complete prediction of the input space."""
 
     def __init__(self):
@@ -22,7 +22,7 @@ class MixtureOfExperts(BaseComponent, metaclass=ABCMeta):
         pass
 
 
-class ErrorExperienceHeuristic(MixtureOfExperts):
+class ErrorExperienceHeuristic(MixingModel):
     """
     Performs mixing similar to the Inverse Variance Heuristic from
     https://researchportal.bath.ac.uk/en/studentTheses/learning-classifier-systems-from-first-principles-a-probabilistic,
@@ -79,7 +79,7 @@ class Individual(Solution):
     input_size_: int
     complexity_: int
 
-    def __init__(self, genome: np.ndarray, pool: list[Rule], mixture: MixtureOfExperts):
+    def __init__(self, genome: np.ndarray, pool: list[Rule], mixture: MixingModel):
         self.genome = genome
         self.pool = pool
         self.mixture = mixture
@@ -88,7 +88,7 @@ class Individual(Solution):
         pred = self.predict(X, cache=True)
         self.error_ = max(mean_squared_error(y, pred), 1e-4)
         self.input_size_ = self.genome.shape[0]
-        self.complexity_ = np.count_nonzero(self.genome)
+        self.complexity_ = np.sum(self.genome).item()  # equivalent to np.count_nonzero, but possibly faster
         self.fitness_ = fitness(self)
         self.is_fitted_ = True
         return self

@@ -2,8 +2,8 @@ import numpy as np
 from joblib import Parallel, delayed
 
 from suprb2.individual import ErrorExperienceHeuristic
+from suprb2.optimizer.individual.archive import IndividualArchive, Elitist
 from suprb2.optimizer.individual.base import PopulationBasedIndividualOptimizer
-from suprb2.optimizer.individual.archive import IndividualArchive
 from suprb2.optimizer.individual.fitness import IndividualFitness, ComplexityWu
 from suprb2.optimizer.individual.ga.crossover import IndividualCrossover, NPoint
 from suprb2.optimizer.individual.ga.mutation import IndividualMutation, BitFlips
@@ -43,7 +43,7 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
                  selection: IndividualSelection = Ranking(),
                  fitness: IndividualFitness = ComplexityWu(),
                  init: IndividualInit = RandomInit(mixture=ErrorExperienceHeuristic()),
-                 archive: IndividualArchive = None,
+                 archive: IndividualArchive = Elitist(),
                  random_state: int = None,
                  n_jobs: int = 1,
                  warm_start: bool = True,
@@ -74,10 +74,13 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
                 # Crossover
                 selected = [list(self.random_state_.choice(self.population_, size=2, replace=False)) for _ in
                             range(self.population_size - len(self.population_))]
-                crossed = parallel(delayed(self.crossover)(*parents, self.random_state_) for parents in selected)
-                self.population_.extend(crossed)
+                children = parallel(delayed(self.crossover)(*parents, self.random_state_) for parents in selected)
 
                 # Mutation
-                self.population_ = parallel(
-                    delayed(self.mutation)(individual, self.random_state_) for individual in self.population_)
-                self.fit_population(X, y)
+                mutated_children = parallel(delayed(self.mutation)(child, self.random_state_) for child in children)
+
+                # Refit the children
+                mutated_children = [child.fit(X, y, self.fitness) for child in mutated_children]
+
+                # Insert the children
+                self.population_.extend(mutated_children)

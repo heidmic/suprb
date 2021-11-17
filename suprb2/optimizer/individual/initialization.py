@@ -3,14 +3,14 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from suprb2.base import BaseComponent
-from suprb2.individual import Individual, MixtureOfExperts
+from suprb2.individual import Individual, MixingModel
 from suprb2.rule import Rule
 
 
-def padding_size(rule: Individual) -> int:
+def padding_size(individual: Individual) -> int:
     """Calculates the number of bits to add to the genome after the pool was expanded."""
 
-    return len(rule.pool) - rule.genome.shape[0]
+    return len(individual.pool) - individual.genome.shape[0]
 
 
 def random(n: int, p: float, random_state: np.random.RandomState):
@@ -22,7 +22,7 @@ def random(n: int, p: float, random_state: np.random.RandomState):
 class IndividualInit(BaseComponent, metaclass=ABCMeta):
     """Generates initial genomes and pads existing genomes."""
 
-    def __init__(self, mixture: MixtureOfExperts):
+    def __init__(self, mixture: MixingModel):
         self.mixture = mixture
 
     @abstractmethod
@@ -48,7 +48,7 @@ class ZeroInit(IndividualInit):
 class RandomInit(IndividualInit):
     """Init and extend genomes with random values, with `p` denoting the probability of ones."""
 
-    def __init__(self, mixture: MixtureOfExperts, p: float = 0.5):
+    def __init__(self, mixture: MixingModel, p: float = 0.5):
         super().__init__(mixture)
         self.p = p
 

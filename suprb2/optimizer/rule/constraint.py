@@ -12,7 +12,7 @@ class RuleConstraint(BaseComponent, metaclass=ABCMeta):
     """
     Represents a constraint that rules have to fulfill, and changes the rule in order to fit this constraint.
     Note that the rule is mutated directly, and not copied.
-    Returns the mutated rule for convenience.
+    Returns the constrained rule for convenience.
     """
 
     @abstractmethod
@@ -37,7 +37,6 @@ class CombinedConstraint(RuleConstraint):
 
 class Clip(RuleConstraint):
     """Clip the rule into bounds."""
-    type_ = 'clip'
 
     def __init__(self, bounds: np.ndarray = None):
         self.bounds = bounds
@@ -50,7 +49,6 @@ class Clip(RuleConstraint):
 
 class MinRange(RuleConstraint):
     """Make bounds bigger that were generated smaller than min_range."""
-    type_ = 'min_range'
 
     def __init__(self, min_range: float = 1e-6):
         self.min_range = min_range

@@ -17,17 +17,17 @@ class RuleAcceptance(BaseComponent, metaclass=ABCMeta):
 class MaxError(RuleAcceptance):
     """Insert if the rule has an error smaller than a threshold."""
 
-    def __init__(self, min_error: float = 0.01):
-        self.min_error = min_error
+    def __init__(self, max_error: float = 0.01):
+        self.max_error = max_error
 
     def __call__(self, rule: Rule, X: np.ndarray, y: np.ndarray) -> bool:
-        return rule.error_ <= self.min_error
+        return rule.error_ <= self.max_error
 
 
 class Variance(RuleAcceptance):
     """
     Insert if the rule has an error smaller than the variance of matched data divided by beta.
-    Note that this acceptance criterion only computes the variance in a normalized context.
+    Note that this acceptance criterion only computes the variance in a standardized context.
     """
 
     def __init__(self, beta: float = 1):

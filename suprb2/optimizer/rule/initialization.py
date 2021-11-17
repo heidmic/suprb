@@ -1,4 +1,4 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 from scipy.stats import halfnorm
@@ -38,7 +38,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
         random_state_ = check_random_state(random_state)
 
-        # Sample from uniform distribution for now
+        # Place the center of the rules uniformly distributed
         if mean is None:
             mean = random_state_.uniform(self.bounds[:, 0], self.bounds[:, 1])
 
@@ -47,6 +47,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         bounds = np.sort(bounds, axis=1)
         return Rule(bounds, clone(self.model))
 
+    @abstractmethod
     def generate_bounds(self, mean: np.ndarray, random_state: np.random.RandomState) -> np.ndarray:
         pass
 

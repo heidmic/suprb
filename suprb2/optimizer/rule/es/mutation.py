@@ -17,10 +17,15 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
 
     def __call__(self, rule: Rule, random_state: np.random.RandomState) -> Rule:
         # Create copy of the rule
-        mutation = Rule(deepcopy(rule.bounds), clone(rule.model))
-        self.mutate_bounds(mutation, random_state)
-        mutation.bounds = np.sort(mutation.bounds, axis=1)
-        return mutation
+        mutated_rule = Rule(deepcopy(rule.bounds), clone(rule.model))
+
+        # Mutation
+        self.mutate_bounds(mutated_rule, random_state)
+
+        # Sort the bounds, because they could possibly be swapped
+        mutated_rule.bounds = np.sort(mutated_rule.bounds, axis=1)
+
+        return mutated_rule
 
     def mutate_bounds(self, rule: Rule, random_state: np.random.RandomState):
         pass
@@ -49,8 +54,7 @@ class Normal(RuleMutation):
 
 
 class Halfnorm(RuleMutation):
-    """Sample with (half)normal distribution around mean."""
-    type_ = 'halfnorm'
+    """Sample with (half)normal distribution around the center."""
 
     def mutate_bounds(self, rule: Rule, random_state: np.random.RandomState):
         mean = np.mean(rule.bounds, axis=1)
@@ -79,5 +83,5 @@ class UniformIncrease(RuleMutation):
     """Increase bounds with uniform noise."""
 
     def mutate_bounds(self, rule: Rule, random_state: np.random.RandomState):
-        rule.bounds[:, 0] += random_state.uniform(-self.sigma, 0, size=rule.bounds.shape[0])
+        rule.bounds[:, 0] -= random_state.uniform(0, self.sigma, size=rule.bounds.shape[0])
         rule.bounds[:, 1] += random_state.uniform(0, self.sigma, size=rule.bounds.shape[0])

@@ -31,3 +31,15 @@ class RouletteWheel(IndividualSelection):
         fitness_sum = sum([individual.fitness_ for individual in population])
         weights = [individual.fitness_ / fitness_sum for individual in population]
         return list(random_state.choice(population, p=weights, size=self.n_parents(len(population))))
+
+
+class Tournament(IndividualSelection):
+    """Draw k individuals n_parents times and select the best individual from each k-subset."""
+
+    def __init__(self, parent_ratio: float = 0.2, k=5):
+        super().__init__(parent_ratio=parent_ratio)
+        self.k = k
+
+    def __call__(self, population: list[Individual], random_state: np.random.RandomState) -> list[Individual]:
+        return list(max(random_state.choice(population, size=self.k), key=lambda i: i.fitness_)
+                    for _ in range(self.n_parents(len(population))))

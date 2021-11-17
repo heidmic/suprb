@@ -9,7 +9,25 @@ from . import RuleInit, RuleFitness, RuleAcceptance, RuleConstraint
 
 
 class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
-    """Base class of different methods to generate `Rule`s."""
+    """ Base class of different methods to generate `Rule`s.
+
+    Parameters
+    ----------
+    n_iter: int
+        Iterations to evolve a rule.
+    start: Rule
+        The elitist this optimizer starts on.
+    mean: np.ndarray
+        Mean to generate a rule from. The parameter `start` has priority.
+    init: RuleInit
+    fitness: RuleFitness
+    acceptance: RuleAcceptance
+    constraint: RuleConstraint
+    random_state : int, RandomState instance or None, default=None
+        Pass an int for reproducible results across multiple function calls.
+    n_jobs: int
+        The number of threads / processes the optimization uses.
+    """
 
     def __init__(self,
                  n_iter: int,

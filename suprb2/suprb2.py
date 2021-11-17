@@ -20,14 +20,14 @@ from .utils import check_random_state, spawn_random_states, estimate_bounds
 
 
 class SupRB2(BaseRegressor):
-    """ The Pittsburgh/Michigan-Hybrid-Style LCS Regressor developed by the Chair of Organic Computing.
+    """ The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
 
     Parameters
     ----------
     rule_generation: RuleGeneration
-        Optimizer used to evolve the :class:`Rule`s.
+        Optimizer used to evolve the :class:`Rule`s. If None is passed, it is set to :class:`ES1xLambda`.
     individual_optimizer: IndividualOptimizer
-        Optimizer used to evolve the :class:`Individual`s.
+        Optimizer used to evolve the :class:`Individual`s. If None is passed, it is set to :class:`GeneticAlgorithm`.
     n_iter: int
         Iterations the LCS will perform.
     n_initial_rules: int
@@ -90,6 +90,22 @@ class SupRB2(BaseRegressor):
         self.n_jobs = n_jobs
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
+        """ Fit SupRB.2.
+
+            Parameters
+            ----------
+            X : {array-like, sparse matrix}, shape (n_samples, n_features)
+                The training input samples.
+            y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+                The target values.
+            cleanup : bool
+                Optional cleanup of unused rules after fitting.
+
+            Returns
+            -------
+            self : BaseEstimator
+                Returns self.
+        """
 
         # Check that x and y have correct shape
         X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
@@ -206,7 +222,6 @@ class SupRB2(BaseRegressor):
         self._log_to_stdout(f"Optimizing populations", priority=4)
 
         # Reset the random state before every use
-        self.individual_optimizer_.random_state = np.random.default_rng(self.random_state_seeder_.spawn(1)[0])
         self.individual_optimizer_.optimize(X, y)
 
     def predict(self, X: np.ndarray):
@@ -252,7 +267,7 @@ class SupRB2(BaseRegressor):
                 self.rule_generation_.set_params(**{key: bounds})
 
     def _cleanup(self):
-        """Optional Cleanup of old rules after fitting."""
+        """Optional cleanup of unused rules after fitting."""
         self.pool_ = self.individual_optimizer_.elitist().subpopulation
 
         self.individual_optimizer_.elitist().genome = np.ones(len(self.pool_), dtype='bool')

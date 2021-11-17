@@ -11,7 +11,23 @@ from . import IndividualInit, IndividualArchive, IndividualFitness
 
 
 class IndividualOptimizer(BaseOptimizer, metaclass=ABCMeta):
-    """Base class of optimizers for `Individual`s."""
+    """ Base class of optimizers for `Individual`s.
+
+    Parameters
+    ----------
+    n_iter: int
+        Iterations the the metaheuristic will perform.
+    fitness: IndividualFitness
+    init: IndividualInit
+    archive: IndividualArchive
+    random_state : int, RandomState instance or None, default=None
+        Pass an int for reproducible results across multiple function calls.
+    warm_start: bool
+        If False, individuals are generated new for every `optimize()` call.
+        If True, individuals are used from previous runs.
+    n_jobs: int
+        The number of threads / processes the optimization uses.
+    """
 
     pool_: list[Rule]
 
@@ -85,9 +101,8 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
         else:
             self.population_ = [self.init(self.pool_, self.random_state_)]
 
-        self.fit_population(X, y)
-
         if self.archive is not None:
+            self.archive(self.population_)
             self.archive.refit(X, y, self.fitness)
 
         return self.population_

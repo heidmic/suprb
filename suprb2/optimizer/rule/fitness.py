@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABCMeta
+from typing import Callable
 
 import numpy as np
 
@@ -28,6 +29,8 @@ class PseudoAccuracy(RuleFitness):
 class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
     """Rules with bigger bounds (volume) are preferred."""
 
+    fitness_func_: Callable
+
     def __init__(self, alpha: float, bounds: np.ndarray):
         self.alpha = alpha
         self.bounds = bounds
@@ -36,6 +39,10 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
     def bounds_volume_(self):
         diff = self.bounds[:, 1] - self.bounds[:, 0]
         return np.prod(diff)
+
+    def __call__(self, rule: Rule) -> float:
+        volume_share = rule.volume_ / self.bounds_volume_
+        return self.fitness_func_(alpha=self.alpha, x1=pseudo_accuracy(rule.error_, beta=2), x2=volume_share) * 100
 
 
 class VolumeEmary(VolumeRuleFitness):
@@ -47,10 +54,7 @@ class VolumeEmary(VolumeRuleFitness):
 
     def __init__(self, alpha: float = 0.85, bounds: np.ndarray = None):
         super().__init__(alpha, bounds)
-
-    def __call__(self, rule: Rule) -> float:
-        volume_share = rule.volume_ / self.bounds_volume_
-        return emary(self.alpha, pseudo_accuracy(rule.error_, beta=2), volume_share) * 100
+        self.fitness_func_ = emary
 
 
 class VolumeWu(VolumeRuleFitness):
@@ -62,7 +66,4 @@ class VolumeWu(VolumeRuleFitness):
 
     def __init__(self, alpha: float = 0.05, bounds: np.ndarray = None):
         super().__init__(alpha, bounds)
-
-    def __call__(self, rule: Rule) -> float:
-        volume_share = rule.volume_ / self.bounds_volume_
-        return wu(self.alpha, pseudo_accuracy(rule.error_, beta=2), volume_share) * 100
+        self.fitness_func_ = wu
