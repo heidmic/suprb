@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
-from sklearn.model_selection import train_test_split, cross_validate
+from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
@@ -33,8 +32,6 @@ if __name__ == '__main__':
     X, y = load_higdon_gramacy_lee(noise=0.1, random_state=random_state)
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
 
     model = SupRB2(
         rule_generation=rule.es.ES1xLambda(
