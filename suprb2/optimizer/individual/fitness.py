@@ -19,6 +19,7 @@ class PseudoBIC(IndividualFitness):
     """Tries to minimize complexity along with error. Can be negative."""
 
     def __call__(self, individual: Individual) -> float:
+        # note that error is capped to 1e-4 in suprb2.individual.Individual.fit
         return -(individual.input_size_ * np.log(individual.error_)
                  + individual.complexity_ * np.log(individual.input_size_))
 

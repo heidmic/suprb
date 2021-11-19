@@ -23,6 +23,8 @@ class PseudoAccuracy(RuleFitness):
     """
 
     def __call__(self, rule: Rule) -> float:
+        # note that we multiply solely for readability reasons without
+        # any performance impact
         return pseudo_accuracy(rule.error_) * 100
 
 
