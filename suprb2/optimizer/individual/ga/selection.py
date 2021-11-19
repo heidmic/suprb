@@ -36,7 +36,7 @@ class RouletteWheel(IndividualSelection):
 class Tournament(IndividualSelection):
     """Draw k individuals n_parents times and select the best individual from each k-subset."""
 
-    def __init__(self, parent_ratio: float = 0.2, k=5):
+    def __init__(self, parent_ratio: float = 0.2, k: int = 5):
         super().__init__(parent_ratio=parent_ratio)
         self.k = k
 
