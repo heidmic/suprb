@@ -80,9 +80,12 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
                 parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
 
                 # Crossover
-                children = flatten([(self.crossover(A, B, random_state=self.random_state_),
-                                     self.crossover(B, A, random_state=self.random_state_))
-                                    for A, B in parent_pairs])
+                children = list(flatten([(self.crossover(A, B, random_state=self.random_state_),
+                                          self.crossover(B, A, random_state=self.random_state_))
+                                         for A, B in parent_pairs]))
+                # If `n_parents` is odd, we add the individual not selected for reproduction directly
+                if n_parents % 2 != 0:
+                    children.append(parents[-1])
 
                 # Mutation
                 mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
