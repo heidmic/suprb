@@ -1,10 +1,11 @@
 import numpy as np
-from joblib import Parallel, delayed
+from joblib import Parallel
 
 from suprb2.individual.initialization import IndividualInit, RandomInit
+from suprb2.utils import flatten
 from .crossover import IndividualCrossover, NPoint
 from .mutation import IndividualMutation, BitFlips
-from .selection import IndividualSelection, Ranking
+from .selection import IndividualSelection, RouletteWheel
 from ..archive import IndividualArchive, Elitist
 from ..base import PopulationBasedIndividualOptimizer
 
@@ -32,12 +33,15 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
         The number of threads / processes the optimization uses.
     """
 
+    n_elitists_: int
+
     def __init__(self,
                  n_iter: int = 128,
                  population_size: int = 128,
+                 elitist_ratio: float = 0.1,
                  mutation: IndividualMutation = BitFlips(),
                  crossover: IndividualCrossover = NPoint(),
-                 selection: IndividualSelection = Ranking(),
+                 selection: IndividualSelection = RouletteWheel(),
                  init: IndividualInit = RandomInit(),
                  archive: IndividualArchive = Elitist(),
                  random_state: int = None,
@@ -57,25 +61,34 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
         self.mutation = mutation
         self.crossover = crossover
         self.selection = selection
+        self.elitist_ratio = elitist_ratio
 
     def _optimize(self, X: np.ndarray, y: np.ndarray):
         self.fit_population(X, y)
 
+        self.n_elitists_ = int(self.population_size * self.elitist_ratio)
+
         with Parallel(n_jobs=self.n_jobs) as parallel:
             for _ in range(self.n_iter):
+                # Eltitism
+                elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[:self.n_elitists_]
+
                 # Selection
-                self.population_ = self.selection(self.population_, self.random_state_)
+                n_parents = self.population_size - self.n_elitists_
+                parents = self.selection(population=self.population_, n=n_parents, random_state=self.random_state_)
+                # Note that this expression swallows the last element, if `population_size` is odd
+                parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
 
                 # Crossover
-                selected = [list(self.random_state_.choice(self.population_, size=2, replace=False)) for _ in
-                            range(self.population_size - len(self.population_))]
-                children = parallel(delayed(self.crossover)(*parents, self.random_state_) for parents in selected)
+                children = flatten([(self.crossover(A, B, random_state=self.random_state_),
+                                     self.crossover(B, A, random_state=self.random_state_))
+                                    for A, B in parent_pairs])
 
                 # Mutation
-                mutated_children = parallel(delayed(self.mutation)(child, self.random_state_) for child in children)
+                mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
 
-                # Refit the children
-                mutated_children = [child.fit(X, y) for child in mutated_children]
-
-                # Insert the children
+                # Replacement
+                self.population_ = elitists
                 self.population_.extend(mutated_children)
+
+                self.fit_population(X, y)
