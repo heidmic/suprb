@@ -9,11 +9,11 @@ from .mutation import RuleMutation, Normal
 from .selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
-from ..base import SingleSolutionBasedRuleGeneration
+from ..base import SingleElitistRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
 
 
-class ES1xLambda(SingleSolutionBasedRuleGeneration):
+class ES1xLambda(SingleElitistRuleGeneration):
     """ The 1xLambda Evolutionary Strategy, where x is in {,+&}.
 
     Parameters

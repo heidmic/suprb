@@ -52,7 +52,7 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
         pass
 
 
-class SingleSolutionBasedRuleGeneration(RuleGeneration, metaclass=ABCMeta):
+class SingleElitistRuleGeneration(RuleGeneration, metaclass=ABCMeta):
     """Base class of single-solution-based optimizers to generate `Rule`s."""
 
     elitist_: Rule
