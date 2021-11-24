@@ -2,16 +2,15 @@ from typing import Optional
 
 import numpy as np
 
-from suprb2.optimizer.rule import RuleInit, RuleFitness, RuleAcceptance, RuleConstraint
-from suprb2.optimizer.rule.acceptance import Variance
-from suprb2.optimizer.rule.base import SingleSolutionBasedRuleGeneration
-from suprb2.optimizer.rule.constraint import CombinedConstraint, MinRange, Clip
-from suprb2.optimizer.rule.es.mutation import RuleMutation, Normal
-from suprb2.optimizer.rule.es.selection import RuleSelection, Fittest
-from suprb2.optimizer.rule.fitness import VolumeWu
-from suprb2.optimizer.rule.initialization import HalfnormInit
-from suprb2.rule import Rule
+from suprb2.rule import Rule, RuleInit
+from suprb2.rule.initialization import HalfnormInit
 from suprb2.utils import check_random_state
+from .mutation import RuleMutation, Normal
+from .selection import RuleSelection, Fittest
+from .. import RuleAcceptance, RuleConstraint
+from ..acceptance import Variance
+from ..base import SingleSolutionBasedRuleGeneration
+from ..constraint import CombinedConstraint, MinRange, Clip
 
 
 class ES1xLambda(SingleSolutionBasedRuleGeneration):
@@ -29,9 +28,11 @@ class ES1xLambda(SingleSolutionBasedRuleGeneration):
         Children to generate in every iteration.
     operator: str
         Can be one of ',', '+' or '&'.
+        ',' replaces the elitist in every generation.
+        '+' may keep the elitist.
+        '&' behaves similar to '+' and ends the optimization process, if no improvement is found in a generation.
     init: RuleInit
     mutation: RuleMutation
-    fitness: RuleFitness
     selection: RuleSelection
     acceptance: RuleAcceptance
     constraint: RuleConstraint
@@ -49,7 +50,6 @@ class ES1xLambda(SingleSolutionBasedRuleGeneration):
                  operator: str = ',',
                  init: RuleInit = HalfnormInit(),
                  mutation: RuleMutation = Normal(),
-                 fitness: RuleFitness = VolumeWu(),
                  selection: RuleSelection = Fittest(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
@@ -61,7 +61,6 @@ class ES1xLambda(SingleSolutionBasedRuleGeneration):
             start=start,
             mean=mean,
             init=init,
-            fitness=fitness,
             acceptance=acceptance,
             constraint=constraint,
             random_state=random_state,
@@ -82,7 +81,7 @@ class ES1xLambda(SingleSolutionBasedRuleGeneration):
         for iteration in range(self.n_iter):
             # Generate, fit and evaluate lambda children
             children = [self.constraint(self.mutation(self.elitist_, random_state=self.random_state_))
-                            .fit(X, y, self.fitness) for _ in range(self.lmbda)]
+                            .fit(X, y) for _ in range(self.lmbda)]
             # Filter children that do not match any points
             filtered = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 

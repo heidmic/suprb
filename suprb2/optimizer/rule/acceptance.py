@@ -37,5 +37,5 @@ class Variance(RuleAcceptance):
         if rule.experience_ < 1:
             return False
         local_y = y[rule.match_]
-        min_error = np.sum(local_y ** 2) / (len(local_y) * self.beta)
-        return rule.error_ <= min_error
+        default_error = np.sum(local_y ** 2) / (len(local_y) * self.beta)
+        return rule.error_ <= default_error

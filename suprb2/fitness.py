@@ -2,8 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from suprb2.base import BaseComponent
-from suprb2.optimizer import Solution
+from suprb2.base import BaseComponent, Solution
 
 
 class BaseFitness(BaseComponent, metaclass=ABCMeta):

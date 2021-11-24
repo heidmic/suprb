@@ -1,14 +1,12 @@
 import numpy as np
 from joblib import Parallel, delayed
 
-from suprb2.individual import ErrorExperienceHeuristic
-from suprb2.optimizer.individual.archive import IndividualArchive, Elitist
-from suprb2.optimizer.individual.base import PopulationBasedIndividualOptimizer
-from suprb2.optimizer.individual.fitness import IndividualFitness, ComplexityWu
-from suprb2.optimizer.individual.ga.crossover import IndividualCrossover, NPoint
-from suprb2.optimizer.individual.ga.mutation import IndividualMutation, BitFlips
-from suprb2.optimizer.individual.ga.selection import IndividualSelection, Ranking
-from suprb2.optimizer.individual.initialization import IndividualInit, RandomInit
+from suprb2.individual.initialization import IndividualInit, RandomInit
+from .crossover import IndividualCrossover, NPoint
+from .mutation import IndividualMutation, BitFlips
+from .selection import IndividualSelection, Ranking
+from ..archive import IndividualArchive, Elitist
+from ..base import PopulationBasedIndividualOptimizer
 
 
 class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
@@ -23,7 +21,6 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
     mutation: IndividualMutation
     crossover: IndividualCrossover
     selection: IndividualSelection
-    fitness: IndividualFitness
     init: IndividualInit
     archive: IndividualArchive
     random_state : int, RandomState instance or None, default=None
@@ -41,8 +38,7 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
                  mutation: IndividualMutation = BitFlips(),
                  crossover: IndividualCrossover = NPoint(),
                  selection: IndividualSelection = Ranking(),
-                 fitness: IndividualFitness = ComplexityWu(),
-                 init: IndividualInit = RandomInit(mixture=ErrorExperienceHeuristic()),
+                 init: IndividualInit = RandomInit(),
                  archive: IndividualArchive = Elitist(),
                  random_state: int = None,
                  n_jobs: int = 1,
@@ -51,7 +47,6 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
-            fitness=fitness,
             init=init,
             archive=archive,
             random_state=random_state,
@@ -80,7 +75,7 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
                 mutated_children = parallel(delayed(self.mutation)(child, self.random_state_) for child in children)
 
                 # Refit the children
-                mutated_children = [child.fit(X, y, self.fitness) for child in mutated_children]
+                mutated_children = [child.fit(X, y) for child in mutated_children]
 
                 # Insert the children
                 self.population_.extend(mutated_children)

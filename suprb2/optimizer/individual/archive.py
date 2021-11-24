@@ -1,12 +1,10 @@
 from abc import abstractmethod, ABCMeta
-from typing import Union
 
 import numpy as np
 
 from suprb2.base import BaseComponent
 from suprb2.individual import Individual
-from suprb2.optimizer.individual.fitness import IndividualFitness
-from suprb2.optimizer.individual.initialization import ZeroInit
+from suprb2.individual.fitness import IndividualFitness
 from suprb2.rule import Rule
 
 
@@ -20,8 +18,8 @@ class IndividualArchive(BaseComponent, metaclass=ABCMeta):
     def __init__(self):
         self.population_ = []
 
-    def refit(self, X: np.ndarray, y: np.ndarray, fitness: IndividualFitness):
-        self.population_ = [individual.fit(X, y, fitness) for individual in self.population_]
+    def refit(self, X: np.ndarray, y: np.ndarray):
+        self.population_ = [individual.fit(X, y) for individual in self.population_]
 
     def pad(self):
         for individual in self.population_:
@@ -40,6 +38,6 @@ class Elitist(IndividualArchive):
         if self.population_:
             if self.population_[0].fitness_ < best.fitness_:
                 self.population_.pop(0)
-                self.population_.append(Individual(best.genome.copy(), best.pool, best.mixture))
+                self.population_.append(best.clone())
         else:
-            self.population_.append(Individual(best.genome.copy(), best.pool, best.mixture))
+            self.population_.append(best.clone())

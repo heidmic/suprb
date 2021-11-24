@@ -17,7 +17,7 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
 
     def __call__(self, rule: Rule, random_state: np.random.RandomState) -> Rule:
         # Create copy of the rule
-        mutated_rule = Rule(deepcopy(rule.bounds), clone(rule.model))
+        mutated_rule = rule.clone()
 
         # Mutation
         self.mutate_bounds(mutated_rule, random_state)

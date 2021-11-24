@@ -3,11 +3,11 @@ from typing import Union
 
 import numpy as np
 
-from suprb2.individual import Individual
+from suprb2.individual import Individual, IndividualInit
 from suprb2.optimizer import BaseOptimizer
 from suprb2.rule import Rule
 from suprb2.utils import check_random_state
-from . import IndividualInit, IndividualArchive, IndividualFitness
+from . import IndividualArchive
 
 
 class IndividualOptimizer(BaseOptimizer, metaclass=ABCMeta):
@@ -17,7 +17,6 @@ class IndividualOptimizer(BaseOptimizer, metaclass=ABCMeta):
     ----------
     n_iter: int
         Iterations the the metaheuristic will perform.
-    fitness: IndividualFitness
     init: IndividualInit
     archive: IndividualArchive
     random_state : int, RandomState instance or None, default=None
@@ -33,7 +32,6 @@ class IndividualOptimizer(BaseOptimizer, metaclass=ABCMeta):
 
     def __init__(self,
                  n_iter: int,
-                 fitness: IndividualFitness,
                  init: IndividualInit,
                  archive: IndividualArchive,
                  random_state: int,
@@ -42,7 +40,6 @@ class IndividualOptimizer(BaseOptimizer, metaclass=ABCMeta):
                  ):
         super().__init__(random_state=random_state, n_jobs=n_jobs)
         self.n_iter = n_iter
-        self.fitness = fitness
         self.init = init
         self.archive = archive
         self.warm_start = warm_start
@@ -65,7 +62,6 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
     def __init__(self,
                  population_size: int,
                  n_iter: int,
-                 fitness: IndividualFitness,
                  init: IndividualInit,
                  archive: IndividualArchive,
                  random_state: int,
@@ -74,7 +70,6 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
                  ):
         super().__init__(
             n_iter=n_iter,
-            fitness=fitness,
             init=init,
             archive=archive,
             warm_start=warm_start,
@@ -103,7 +98,7 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
 
         if self.archive is not None:
             self.archive(self.population_)
-            self.archive.refit(X, y, self.fitness)
+            self.archive.refit(X, y)
 
         return self.population_
 
@@ -127,7 +122,7 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
             self.population_ = [self.init.pad(individual, self.random_state_) for individual in self.population_]
 
     def fit_population(self, X, y):
-        self.population_ = [individual.fit(X, y, self.fitness) for individual in self.population_]
+        self.population_ = [individual.fit(X, y) for individual in self.population_]
 
     def _reset(self):
         super()._reset()

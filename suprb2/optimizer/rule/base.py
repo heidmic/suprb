@@ -4,8 +4,9 @@ from typing import Union
 import numpy as np
 
 from suprb2.optimizer import BaseOptimizer
-from suprb2.rule import Rule
-from . import RuleInit, RuleFitness, RuleAcceptance, RuleConstraint
+from suprb2.rule import Rule, RuleInit
+from .acceptance import RuleAcceptance
+from .constraint import RuleConstraint
 
 
 class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
@@ -20,7 +21,6 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
     mean: np.ndarray
         Mean to generate a rule from. The parameter `start` has priority.
     init: RuleInit
-    fitness: RuleFitness
     acceptance: RuleAcceptance
     constraint: RuleConstraint
     random_state : int, RandomState instance or None, default=None
@@ -34,7 +34,6 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
                  start: Rule,
                  mean: np.ndarray,
                  init: RuleInit,
-                 fitness: RuleFitness,
                  acceptance: RuleAcceptance,
                  constraint: RuleConstraint,
                  random_state: int,
@@ -46,7 +45,6 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
         self.start = start
         self.mean = mean
         self.init = init
-        self.fitness = fitness
         self.acceptance = acceptance
         self.constraint = constraint
 
@@ -63,9 +61,9 @@ class SingleSolutionBasedRuleGeneration(RuleGeneration, metaclass=ABCMeta):
         """Generate starting rule, if not provided."""
         if self.start is None:
             self.elitist_ = self.init(mean=self.mean, random_state=self.random_state_)
-            self.constraint(self.elitist_).fit(X, y, self.fitness)
+            self.constraint(self.elitist_).fit(X, y)
         else:
-            self.elitist_ = self.constraint(self.start).fit(X, y, self.fitness)
+            self.elitist_ = self.constraint(self.start).fit(X, y)
 
     def elitist(self):
         return self.elitist_

@@ -1,18 +1,10 @@
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta
 from typing import Callable
 
 import numpy as np
 
-from suprb2.individual import Individual
-from suprb2.optimizer.fitness import emary, pseudo_accuracy, wu, BaseFitness
-
-
-class IndividualFitness(BaseFitness, metaclass=ABCMeta):
-    """Evaluate the fitness of a `Individual`."""
-
-    @abstractmethod
-    def __call__(self, individual: Individual) -> float:
-        pass
+from suprb2.fitness import emary, pseudo_accuracy, wu
+from . import Individual, IndividualFitness
 
 
 class PseudoBIC(IndividualFitness):

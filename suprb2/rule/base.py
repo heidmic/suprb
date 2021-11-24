@@ -1,12 +1,22 @@
 from __future__ import annotations
 
+from abc import ABCMeta, abstractmethod
 from typing import Union
 
 import numpy as np
-from sklearn.base import RegressorMixin
+from sklearn.base import RegressorMixin, clone
 from sklearn.metrics import mean_squared_error
 
-from .optimizer import Solution
+from suprb2.base import Solution
+from suprb2.fitness import BaseFitness
+
+
+class RuleFitness(BaseFitness, metaclass=ABCMeta):
+    """Evaluates the fitness of a `Rule`."""
+
+    @abstractmethod
+    def __call__(self, rule: Rule) -> float:
+        pass
 
 
 class Rule(Solution):
@@ -24,14 +34,12 @@ class Rule(Solution):
     match_: np.ndarray
     pred_: Union[np.ndarray, None]  # only the prediction of matching points, so of x[match_]
 
-    def __init__(self, bounds: np.ndarray, model: RegressorMixin):
+    def __init__(self, bounds: np.ndarray, model: RegressorMixin, fitness: RuleFitness):
         self.bounds = bounds
         self.model = model
+        self.fitness = fitness
 
-    def fit(self, X: np.ndarray, y: np.ndarray, fitness) -> Rule:
-
-        # Validate params
-        self._validate_bounds(X)
+    def fit(self, X: np.ndarray, y: np.ndarray) -> Rule:
 
         # Match input data
         match = self.matched_data(X)
@@ -62,7 +70,7 @@ class Rule(Solution):
 
         self.pred_ = self.model.predict(X)
         self.error_ = max(mean_squared_error(y, self.pred_), 1e-4)  # TODO: make min a parameter?
-        self.fitness_ = fitness(self)
+        self.fitness_ = self.fitness(self)
         self.experience_ = float(X.shape[0])
 
         self.is_fitted_ = True
@@ -80,6 +88,14 @@ class Rule(Solution):
 
     def predict(self, X: np.ndarray):
         return self.model.predict(X)
+
+    def clone(self, **kwargs) -> Rule:
+        args = dict(
+            bounds=self.bounds.copy() if 'bounds' not in kwargs else None,
+            model=clone(self.model) if 'model' not in kwargs else None,
+            fitness=self.fitness
+        )
+        return Rule(**(args | kwargs))
 
     def _validate_bounds(self, X: np.ndarray):
         """Validates that bounds have the correct shape."""

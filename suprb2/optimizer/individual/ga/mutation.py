@@ -22,4 +22,4 @@ class BitFlips(IndividualMutation):
     def __call__(self, individual: Individual, random_state: np.random.RandomState) -> Individual:
         bit_flips = random_state.random(individual.genome.shape) < self.mutation_rate
         genome = np.logical_xor(individual.genome, bit_flips)
-        return Individual(genome, pool=individual.pool, mixture=individual.mixture)
+        return individual.clone(genome=genome)

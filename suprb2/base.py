@@ -18,6 +18,34 @@ class BaseComponent(BaseEstimator, metaclass=ABCMeta):
     """
     pass
 
+    def _validate_components(self, **kwargs):
+        for parameter_name, default in kwargs.items():
+            current_value = self.__getattribute__(parameter_name)
+            self.__setattr__(parameter_name, current_value if current_value is not None else default)
+
+
+class Solution(metaclass=ABCMeta):
+    """An individual solution to some problem."""
+
+    is_fitted_: bool
+    error_: float
+    fitness_: float
+
+    @abstractmethod
+    def clone(self, **kwargs) -> Solution:
+        """Clone a solution such that all relevant attributes are copied / transferred to the new solution."""
+        pass
+
+    def __str__(self):
+        if hasattr(self, 'is_fitted_') and self.is_fitted_:
+            attributes = {'error': self.error_, 'fitness': self.fitness_} | self._more_str_attributes()
+            concat = ",".join([f"{key}={value}" for key, value in attributes.items()])
+            return f"{self.__class__.__name__}({concat})"
+
+    def _more_str_attributes(self) -> dict:
+        """Should return name and value of additional attributes that should be included in the str representation."""
+        return {}
+
 
 class BaseRegressor(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     """A base (composite) Regressor."""

@@ -1,19 +1,10 @@
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta
 from typing import Callable
 
 import numpy as np
 
-from suprb2.optimizer.fitness import BaseFitness
-from suprb2.optimizer.fitness import pseudo_accuracy, emary, wu
-from suprb2.rule import Rule
-
-
-class RuleFitness(BaseFitness, metaclass=ABCMeta):
-    """Evaluates the fitness of a `Rule`."""
-
-    @abstractmethod
-    def __call__(self, rule: Rule) -> float:
-        pass
+from suprb2.fitness import pseudo_accuracy, emary, wu
+from . import Rule, RuleFitness
 
 
 class PseudoAccuracy(RuleFitness):

@@ -1,3 +1,4 @@
+import itertools
 from collections import defaultdict
 from typing import Union
 
@@ -16,7 +17,7 @@ from .optimizer.individual.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
-from .utils import check_random_state, spawn_random_states, estimate_bounds
+from .utils import check_random_state, spawn_random_states, estimate_bounds, flatten
 
 
 class SupRB2(BaseRegressor):
@@ -120,8 +121,6 @@ class SupRB2(BaseRegressor):
         self._validate_rule_generation(default=ES1xLambda())
         self._validate_individual_optimizer(default=GeneticAlgorithm())
 
-        self.total_rules_ = self.n_iter * self.n_rules + self.n_initial_rules
-
         self._propagate_component_parameters()
         self._init_bounds(X)
 
@@ -176,6 +175,18 @@ class SupRB2(BaseRegressor):
 
         return self
 
+    @staticmethod
+    @delayed
+    def _generate_rule_with_mean(X: np.ndarray, y: np.ndarray, rule_generation: RuleGeneration, mean: np.ndarray,
+                                 random_state: np.random.RandomState) -> Rule:
+        """
+        Helper method to execute several `RuleGeneration`s in parallel.
+        Generates rules from some distribution with mean `mean`.
+        """
+        rule_generation.mean = mean
+        rule_generation.random_state = random_state
+        return rule_generation.optimize(X, y)
+
     def _generate_rules(self, X: np.ndarray, y: np.ndarray, n_rules: int, parallel: Parallel = None):
         """Performs the rule discovery / rule generation (RG) process."""
 
@@ -197,20 +208,15 @@ class SupRB2(BaseRegressor):
 
         indices = self.random_state_.choice(np.arange(len(X)), n_rules, p=probabilities)
 
-        # Generate rules in parallel
-        @delayed
-        def generate_rule_for_mean(rule_generation: RuleGeneration, mean: np.ndarray,
-                                   random_state: np.random.RandomState) -> Rule:
-            rule_generation.mean = mean
-            rule_generation.random_state = random_state
-            return rule_generation.optimize(X, y)
+        # Init every optimizer with own random state and generate the rules in parallel
+        random_states = spawn_random_states(self.random_state_seeder_, len(indices))
+        result = parallel(self._generate_rule_with_mean(X, y, clone(self.rule_generation_), mean, random_state)
+                          for mean, random_state in zip(X[indices], random_states))
 
-        # Init every optimizer with own random state and then filter all None's
-        new_rules = list(filter(lambda rule: rule is not None,
-                                parallel(generate_rule_for_mean(clone(self.rule_generation_), mean, random_state)
-                                         for mean, random_state in
-                                         zip(X[indices],
-                                             spawn_random_states(self.random_state_seeder_, len(indices))))))
+        # Flatten the result (may be nested) and filter all invalid rules
+        new_rules = filter(lambda rule: rule is not None, flatten(result))
+
+        # Extend the pool with the new rules
         self.pool_.extend(new_rules)
 
         if not self.pool_:
@@ -221,7 +227,6 @@ class SupRB2(BaseRegressor):
 
         self._log_to_stdout(f"Optimizing populations", priority=4)
 
-        # Reset the random state before every use
         self.individual_optimizer_.optimize(X, y)
 
     def predict(self, X: np.ndarray):
@@ -252,7 +257,7 @@ class SupRB2(BaseRegressor):
 
     def _propagate_component_parameters(self):
         """Propagate shared parameters to subcomponents."""
-        keys = ['random_state', 'n_jobs', 'debug']
+        keys = ['random_state', 'n_jobs']
         params = {key: value for key, value in self.get_params().items() if key in keys}
 
         self.rule_generation_.set_params(**params)

@@ -6,8 +6,9 @@ from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 
 from suprb2.base import BaseComponent
-from suprb2.rule import Rule
 from suprb2.utils import check_random_state
+from . import Rule, RuleFitness
+from .fitness import VolumeWu
 
 
 class RuleInit(BaseComponent, metaclass=ABCMeta):
@@ -21,9 +22,12 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
             Local model used for fitting the intervals.
     """
 
-    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = LinearRegression()):
+    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None):
         self.bounds = bounds
         self.model = model
+        self.fitness = fitness
+
+        self._validate_components(model=LinearRegression(), fitness=VolumeWu())
 
     def __call__(self, random_state: np.random.RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
@@ -45,7 +49,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         # Sample the bounds
         bounds = self.generate_bounds(mean, random_state_)
         bounds = np.sort(bounds, axis=1)
-        return Rule(bounds, clone(self.model))
+        return Rule(bounds=bounds, model=clone(self.model), fitness=self.fitness)
 
     @abstractmethod
     def generate_bounds(self, mean: np.ndarray, random_state: np.random.RandomState) -> np.ndarray:
@@ -62,7 +66,7 @@ class MeanInit(RuleInit):
 class NormalInit(RuleInit):
     """Initializes both bounds with points drawn from a normal distribution."""
 
-    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = LinearRegression(), sigma: float = 0.1):
+    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, sigma: float = 0.1):
         super().__init__(bounds=bounds, model=model)
         self.sigma = sigma
 
@@ -73,7 +77,7 @@ class NormalInit(RuleInit):
 class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
 
-    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = LinearRegression(), sigma: float = 0.1):
+    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, sigma: float = 0.1):
         super().__init__(bounds=bounds, model=model)
         self.sigma = sigma
 

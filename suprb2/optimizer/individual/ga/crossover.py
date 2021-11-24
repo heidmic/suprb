@@ -20,7 +20,7 @@ class NPoint(IndividualCrossover):
 
     @staticmethod
     def _single_point(A: Individual, B: Individual, index: int) -> Individual:
-        return Individual(genome=np.append(A.genome[:index], B.genome[index:]), pool=A.pool, mixture=A.mixture)
+        return A.clone(genome=np.append(A.genome[:index], B.genome[index:]))
 
     def __call__(self, A: Individual, B: Individual, random_state: np.random.RandomState) -> Individual:
         indices = random_state.choice(np.arange(len(A.genome)), size=self.n, replace=False)
@@ -39,4 +39,4 @@ class Uniform(IndividualCrossover):
         genome[indices] = A.genome[indices]
         genome[~indices] = B.genome[~indices]
 
-        return Individual(genome=genome, pool=A.pool, mixture=A.mixture)
+        return A.clone(genome=genome)

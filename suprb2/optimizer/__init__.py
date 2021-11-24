@@ -1,1 +1,2 @@
-from .base import BaseOptimizer, Solution
+from .base import BaseOptimizer
+from ..base import Solution

@@ -1,3 +1,4 @@
+import collections
 import numbers
 from typing import Iterator, Union
 
@@ -33,3 +34,15 @@ def spawn_random_states(ss: np.random.SeedSequence, n: int) -> Iterator[np.rando
 
 def estimate_bounds(X) -> np.ndarray:
     return np.stack((np.min(X, axis=0), np.max(X, axis=0)), axis=0).T
+
+
+def flatten(iterable):
+    """
+    Flattens an iterable that itself contains lists or single elements.
+    Note that implementations like `itertools.chain` only flatten nested lists, not irregular nested lists.
+     """
+    for el in iterable:
+        if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
+            yield from flatten(el)
+        else:
+            yield el
