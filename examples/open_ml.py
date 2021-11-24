@@ -11,7 +11,7 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
 from suprb2 import SupRB2
-from suprb2.optimizer import rule, individual
+from suprb2 import rule, individual
 from suprb2.optimizer.individual import ga
 from suprb2.optimizer.rule import es
 
@@ -38,18 +38,17 @@ if __name__ == '__main__':
         SVR(),
         KNeighborsRegressor(),
         SupRB2(
-            rule_generation=rule.es.ES1xLambda(
-                n_iter=10_000,
+            rule_generation=es.ES1xLambda(
+                n_iter=100,
                 operator='&',
-                fitness=rule.fitness.VolumeWu(alpha=0.8),
-                init=rule.initialization.MeanInit(),
-                mutation=rule.es.mutation.HalfnormIncrease(sigma=2)
+                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
+                mutation=es.mutation.HalfnormIncrease(sigma=2)
             ),
-            individual_optimizer=individual.ga.GeneticAlgorithm(
+            individual_optimizer=ga.GeneticAlgorithm(
                 n_iter=128,
-                crossover=individual.ga.crossover.Uniform(),
-                selection=individual.ga.selection.Ranking(),
-                mutation=individual.ga.mutation.BitFlips(),
+                crossover=ga.crossover.Uniform(),
+                selection=ga.selection.Tournament(),
+                mutation=ga.mutation.BitFlips(),
             ),
             n_iter=16,
             n_rules=16,

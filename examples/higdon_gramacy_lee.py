@@ -4,8 +4,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
-from suprb2 import SupRB2
-from suprb2.optimizer import rule, individual
+from suprb2 import SupRB2, rule
 from suprb2.optimizer.individual import ga
 from suprb2.optimizer.rule import es
 from suprb2.utils import check_random_state
@@ -34,17 +33,16 @@ if __name__ == '__main__':
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
     model = SupRB2(
-        rule_generation=rule.es.ES1xLambda(
+        rule_generation=es.ES1xLambda(
             n_iter=100,
             operator='&',
-            fitness=rule.fitness.VolumeWu(alpha=0.05),
-            init=rule.initialization.MeanInit(),
-            mutation=rule.es.mutation.HalfnormIncrease(sigma=0.1)
+            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05),),
+            mutation=es.mutation.HalfnormIncrease(sigma=0.1)
         ),
-        individual_optimizer=individual.ga.GeneticAlgorithm(
+        individual_optimizer=ga.GeneticAlgorithm(
             n_iter=128,
-            crossover=individual.ga.crossover.Uniform(),
-            selection=individual.ga.selection.Ranking(),
+            crossover=ga.crossover.Uniform(),
+            selection=ga.selection.Tournament(),
         ),
         n_iter=4,
         n_rules=16,
