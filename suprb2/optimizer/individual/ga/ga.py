@@ -68,30 +68,29 @@ class GeneticAlgorithm(PopulationBasedIndividualOptimizer):
 
         self.n_elitists_ = int(self.population_size * self.elitist_ratio)
 
-        with Parallel(n_jobs=self.n_jobs) as parallel:
-            for _ in range(self.n_iter):
-                # Eltitism
-                elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[:self.n_elitists_]
+        for _ in range(self.n_iter):
+            # Eltitism
+            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[:self.n_elitists_]
 
-                # Selection
-                n_parents = self.population_size - self.n_elitists_
-                parents = self.selection(population=self.population_, n=n_parents, random_state=self.random_state_)
-                # Note that this expression swallows the last element, if `population_size` is odd
-                parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
+            # Selection
+            parents = self.selection(population=self.population_, n=self.population_size,
+                                     random_state=self.random_state_)
+            # Note that this expression swallows the last element, if `population_size` is odd
+            parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
 
-                # Crossover
-                children = list(flatten([(self.crossover(A, B, random_state=self.random_state_),
-                                          self.crossover(B, A, random_state=self.random_state_))
-                                         for A, B in parent_pairs]))
-                # If `n_parents` is odd, we add the individual not selected for reproduction directly
-                if n_parents % 2 != 0:
-                    children.append(parents[-1])
+            # Crossover
+            children = list(flatten([(self.crossover(A, B, random_state=self.random_state_),
+                                      self.crossover(B, A, random_state=self.random_state_))
+                                     for A, B in parent_pairs]))
+            # If `population_size` is odd, we add the individual not selected for reproduction directly
+            if self.population_size % 2 != 0:
+                children.append(parents[-1])
 
-                # Mutation
-                mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
+            # Mutation
+            mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
 
-                # Replacement
-                self.population_ = elitists
-                self.population_.extend(mutated_children)
+            # Replacement
+            self.population_ = elitists
+            self.population_.extend(mutated_children)
 
-                self.fit_population(X, y)
+            self.fit_population(X, y)
