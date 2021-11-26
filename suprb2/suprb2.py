@@ -176,7 +176,6 @@ class SupRB2(BaseRegressor):
         return self
 
     @staticmethod
-    @delayed
     def _generate_rule_with_mean(X: np.ndarray, y: np.ndarray, rule_generation: RuleGeneration, mean: np.ndarray,
                                  random_state: np.random.RandomState) -> Rule:
         """
@@ -210,7 +209,7 @@ class SupRB2(BaseRegressor):
 
         # Init every optimizer with own random state and generate the rules in parallel
         random_states = spawn_random_states(self.random_state_seeder_, len(indices))
-        result = parallel(self._generate_rule_with_mean(X, y, clone(self.rule_generation_), mean, random_state)
+        result = parallel(delayed(self._generate_rule_with_mean)(X, y, clone(self.rule_generation_), mean, random_state)
                           for mean, random_state in zip(X[indices], random_states))
 
         # Flatten the result (may be nested) and filter all invalid rules
