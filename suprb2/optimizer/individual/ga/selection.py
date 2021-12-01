@@ -24,7 +24,10 @@ class RouletteWheel(IndividualSelection):
 
     def __call__(self, population: list[Individual], n: int, random_state: np.random.RandomState) -> list[Individual]:
         fitness_sum = sum([individual.fitness_ for individual in population])
-        weights = [individual.fitness_ / fitness_sum for individual in population]
+        if fitness_sum != 0:
+            weights = [individual.fitness_ / fitness_sum for individual in population]
+        else:
+            weights = None
         return list(random_state.choice(population, p=weights, size=n))
 
 
