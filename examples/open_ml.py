@@ -11,7 +11,8 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
 from suprb2 import SupRB2
-from suprb2 import rule, individual
+from suprb2 import rule
+from suprb2.logging.stdout import StdoutLogger
 from suprb2.optimizer.individual import ga
 from suprb2.optimizer.rule import es
 
@@ -52,7 +53,7 @@ if __name__ == '__main__':
             ),
             n_iter=16,
             n_rules=16,
-            progress_bar=True,
+            logger=StdoutLogger(),
             random_state=random_state,
         )
     ]

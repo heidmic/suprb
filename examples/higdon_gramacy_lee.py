@@ -4,7 +4,11 @@ from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
-from suprb2 import SupRB2, rule
+from suprb2 import SupRB2
+from suprb2 import rule
+from suprb2.logging.combination import CombinedLogger
+from suprb2.logging.mlflow import MlflowLogger
+from suprb2.logging.stdout import StdoutLogger
 from suprb2.optimizer.individual import ga
 from suprb2.optimizer.rule import es
 from suprb2.utils import check_random_state
@@ -36,17 +40,18 @@ if __name__ == '__main__':
         rule_generation=es.ES1xLambda(
             n_iter=100,
             operator='&',
-            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05),),
+            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05), ),
             mutation=es.mutation.HalfnormIncrease(sigma=0.1)
         ),
         individual_optimizer=ga.GeneticAlgorithm(
-            n_iter=128,
+            n_iter=32,
             crossover=ga.crossover.Uniform(),
             selection=ga.selection.Tournament(),
         ),
         n_iter=4,
         n_rules=16,
-        progress_bar=True,
+        verbose=10,
+        logger=CombinedLogger([('stdout', StdoutLogger()), ('mlflow', MlflowLogger())]),
         random_state=random_state,
     )
 
