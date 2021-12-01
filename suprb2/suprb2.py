@@ -1,4 +1,4 @@
-import itertools
+import warnings
 from collections import defaultdict
 from typing import Union
 
@@ -8,10 +8,11 @@ from joblib import Parallel, delayed
 from sklearn import clone
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted, check_array
-from tqdm import tqdm
 
 from .base import BaseRegressor
+from .exceptions import PopulationEmptyWarning
 from .individual import Individual
+from .logging import BaseLogger
 from .optimizer.individual import IndividualOptimizer
 from .optimizer.individual.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
@@ -37,12 +38,11 @@ class SupRB2(BaseRegressor):
         Number of :class:`Rule`s generated in the every step.
     random_state : int, RandomState/Generator instance or None, default=None
         Pass an int for reproducible results across multiple function calls.
-    progress_bar: bool
-        If tqdm progress bars should be used or not.
     verbose : int
         - >0: Show some description.
         - >5: Show elaborate description.
         - >10: show all
+    logger: BaseLogger
     n_jobs: int
         The number of threads / processes the fitting process uses.
         If -1 all CPUs are used. If 1 is given, no parallel computing code is used at all,
@@ -53,7 +53,6 @@ class SupRB2(BaseRegressor):
         Taken from the `joblib.Parallel` documentation.
     """
 
-    iterator_: Union[range, tqdm]
     step_: int = 0
     total_rules_: int
 
@@ -69,6 +68,8 @@ class SupRB2(BaseRegressor):
 
     n_features_in_: int
 
+    logger_: BaseLogger
+
     def __init__(self,
                  rule_generation: RuleGeneration = None,
                  individual_optimizer: IndividualOptimizer = None,
@@ -76,8 +77,8 @@ class SupRB2(BaseRegressor):
                  n_initial_rules: int = 0,
                  n_rules: int = 16,
                  random_state: int = None,
-                 progress_bar: bool = False,
                  verbose: int = 0,
+                 logger: BaseLogger = None,
                  n_jobs: int = 1,
                  ):
         self.n_iter = n_iter
@@ -86,8 +87,8 @@ class SupRB2(BaseRegressor):
         self.rule_generation = rule_generation
         self.individual_optimizer = individual_optimizer
         self.random_state = random_state
-        self.progress_bar = progress_bar
         self.verbose = verbose
+        self.logger = logger
         self.n_jobs = n_jobs
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
@@ -131,11 +132,10 @@ class SupRB2(BaseRegressor):
         self.random_state_ = check_random_state(self.random_state)
         self.random_state_seeder_ = np.random.SeedSequence(self.random_state)
 
-        # Use tqdm, if parameter is set
-        if self.progress_bar:
-            self.iterator_ = tqdm(range(self.n_iter), desc='Fitting model', ncols=80)
-        else:
-            self.iterator_ = range(self.n_iter)
+        # Init Logging
+        self.logger_ = clone(self.logger) if self.logger is not None else None
+        if self.logger_ is not None:
+            self.logger_.log_init(X, y, self)
 
         with Parallel(n_jobs=self.n_jobs) as parallel:
             # Fill population before first step
@@ -143,26 +143,16 @@ class SupRB2(BaseRegressor):
                 self._generate_rules(X, y, self.n_initial_rules, parallel=parallel)
 
             # Main loop
-            for self.step_ in self.iterator_:
-
+            for self.step_ in range(1, self.n_iter + 1):
                 # Insert new rules into population
                 self._generate_rules(X, y, self.n_rules, parallel=parallel)
 
                 # Optimize individuals
                 self._select_rules(X, y)
 
-                # Log stdout
-                error = self.individual_optimizer_.elitist().error_
-                fitness = self.individual_optimizer_.elitist().fitness_
-                complexity = self.individual_optimizer_.elitist().complexity_
-
-                self._log_to_stdout(f"MSE = {error}")
-                self._log_to_stdout(f"Fitness = {fitness}")
-                self._log_to_stdout(f"Complexity = {complexity}")
-
-                # Update the progress bar
-                if self.progress_bar:
-                    self.iterator_.set_description(f"MSE={error:.4f}, F={fitness:.4f}, C={complexity}")
+                # Log Iteration
+                if self.logger_ is not None:
+                    self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
         if cleanup:
             self._cleanup()
@@ -170,8 +160,9 @@ class SupRB2(BaseRegressor):
         self.elitist_ = self.individual_optimizer_.elitist()
         self.is_fitted_ = True
 
-        # Remove iterator, so it is pickleable (tqdm is not)
-        del self.iterator_
+        # Log final result
+        if self.logger_ is not None:
+            self.logger_.log_final(X, y, self)
 
         return self
 
@@ -219,7 +210,10 @@ class SupRB2(BaseRegressor):
         self.pool_.extend(new_rules)
 
         if not self.pool_:
-            self._warning_to_stdout("population is empty")
+            warnings.warn(
+                "The population is empty, even after generating rules. "
+                "Individual optimization will be skipped.",
+                PopulationEmptyWarning)
 
     def _select_rules(self, X: np.ndarray, y: np.ndarray):
         """Performs rule selection (RS)."""
@@ -246,13 +240,7 @@ class SupRB2(BaseRegressor):
     def _log_to_stdout(self, message, priority=1):
         if self.verbose >= priority:
             message = f"[{self.step_}/{self.n_iter}] {message}"
-            if self.progress_bar:
-                self.iterator_.write(message)
-            else:
-                print(message)
-
-    def _warning_to_stdout(self, message):
-        self._log_to_stdout(f"WARNING: {message}", priority=0)
+            print(message)
 
     def _propagate_component_parameters(self):
         """Propagate shared parameters to subcomponents."""
@@ -267,7 +255,7 @@ class SupRB2(BaseRegressor):
         bounds = estimate_bounds(X)
         for key, value in self.rule_generation_.get_params().items():
             if key.endswith('bounds') and value is None:
-                self._log_to_stdout("Found empty bounds, estimating from data")
+                self._log_to_stdout(f"Found empty bounds for {key}, estimating from data")
                 self.rule_generation_.set_params(**{key: bounds})
 
     def _cleanup(self):

@@ -4,6 +4,7 @@ import itertools
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
+from sklearn.base import RegressorMixin
 from sklearn.metrics import mean_squared_error
 
 from suprb2.rule import Rule
@@ -30,7 +31,7 @@ class IndividualFitness(BaseFitness, metaclass=ABCMeta):
         pass
 
 
-class Individual(Solution):
+class Individual(Solution, RegressorMixin):
     """Individual that mixes a subpopulation of rules with MoE."""
 
     input_size_: int
