@@ -49,7 +49,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         # Sample the bounds
         bounds = self.generate_bounds(mean, random_state_)
         bounds = np.sort(bounds, axis=1)
-        return Rule(bounds=bounds, model=clone(self.model), fitness=self.fitness)
+        return Rule(bounds=bounds, input_space=self.bounds, model=clone(self.model), fitness=self.fitness)
 
     @abstractmethod
     def generate_bounds(self, mean: np.ndarray, random_state: np.random.RandomState) -> np.ndarray:

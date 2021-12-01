@@ -34,8 +34,9 @@ class Rule(Solution):
     match_: np.ndarray
     pred_: Union[np.ndarray, None]  # only the prediction of matching points, so of x[match_]
 
-    def __init__(self, bounds: np.ndarray, model: RegressorMixin, fitness: RuleFitness):
+    def __init__(self, bounds: np.ndarray, input_space: np.ndarray, model: RegressorMixin, fitness: RuleFitness):
         self.bounds = bounds
+        self.input_space = input_space
         self.model = model
         self.fitness = fitness
 
@@ -92,6 +93,7 @@ class Rule(Solution):
     def clone(self, **kwargs) -> Rule:
         args = dict(
             bounds=self.bounds.copy() if 'bounds' not in kwargs else None,
+            input_space=self.input_space,
             model=clone(self.model) if 'model' not in kwargs else None,
             fitness=self.fitness
         )

@@ -24,17 +24,14 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
 
     fitness_func_: Callable
 
-    def __init__(self, alpha: float, bounds: np.ndarray):
+    def __init__(self, alpha: float):
         self.alpha = alpha
-        self.bounds = bounds
-
-    @property
-    def bounds_volume_(self):
-        diff = self.bounds[:, 1] - self.bounds[:, 0]
-        return np.prod(diff)
 
     def __call__(self, rule: Rule) -> float:
-        volume_share = rule.volume_ / self.bounds_volume_
+        diff = rule.input_space[:, 1] - rule.input_space[:, 0]
+        input_space_volume = np.prod(diff)
+
+        volume_share = rule.volume_ / input_space_volume
         return self.fitness_func_(alpha=self.alpha, x1=pseudo_accuracy(rule.error_, beta=2), x2=volume_share) * 100
 
 
@@ -45,8 +42,8 @@ class VolumeEmary(VolumeRuleFitness):
     Computed fitness is in [0, 100].
     """
 
-    def __init__(self, alpha: float = 0.85, bounds: np.ndarray = None):
-        super().__init__(alpha, bounds)
+    def __init__(self, alpha: float = 0.85):
+        super().__init__(alpha)
         self.fitness_func_ = emary
 
 
@@ -57,6 +54,6 @@ class VolumeWu(VolumeRuleFitness):
     Computed fitness is in [0, 100].
     """
 
-    def __init__(self, alpha: float = 0.05, bounds: np.ndarray = None):
-        super().__init__(alpha, bounds)
+    def __init__(self, alpha: float = 0.05):
+        super().__init__(alpha)
         self.fitness_func_ = wu
