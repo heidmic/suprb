@@ -1,9 +1,7 @@
 from abc import ABCMeta
-from copy import deepcopy
 
 import numpy as np
 from scipy.stats import halfnorm
-from sklearn import clone
 
 from suprb2.base import BaseComponent
 from suprb2.rule import Rule

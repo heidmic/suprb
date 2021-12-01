@@ -1,5 +1,4 @@
 import numpy as np
-from joblib import Parallel
 
 from suprb2.individual.initialization import IndividualInit, RandomInit
 from suprb2.utils import flatten

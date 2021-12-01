@@ -4,7 +4,6 @@ import numpy as np
 
 from suprb2.base import BaseComponent
 from suprb2.individual import Individual
-from suprb2.individual.fitness import IndividualFitness
 from suprb2.rule import Rule
 
 
