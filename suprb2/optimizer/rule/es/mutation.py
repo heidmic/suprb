@@ -54,20 +54,24 @@ class Normal(RuleMutation):
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""
 
+    def mutation(self, rule: Rule, random_state: np.random.RandomState):
+        return halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+
     def mutate_bounds(self, rule: Rule, random_state: np.random.RandomState):
         mean = np.mean(rule.bounds, axis=1)
-        rule.bounds[:, 0] = mean - halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0],
-                                                random_state=random_state)
-        rule.bounds[:, 1] = mean + halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0],
-                                                random_state=random_state)
+        rule.bounds[:, 0] = mean - self.mutation(rule=rule, random_state=random_state)
+        rule.bounds[:, 1] = mean + self.mutation(rule=rule, random_state=random_state)
 
 
 class HalfnormIncrease(RuleMutation):
     """Increase bounds with (half)normal noise."""
 
+    def mutation(self, rule: Rule, random_state: np.random.RandomState):
+        return halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+
     def mutate_bounds(self, rule: Rule, random_state: np.random.RandomState):
-        rule.bounds[:, 0] -= halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
-        rule.bounds[:, 1] += halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+        rule.bounds[:, 0] -= self.mutation(rule=rule, random_state=random_state)
+        rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
 
 
 class Uniform(RuleMutation):
@@ -80,6 +84,9 @@ class Uniform(RuleMutation):
 class UniformIncrease(RuleMutation):
     """Increase bounds with uniform noise."""
 
+    def mutation(self, rule: Rule, random_state: np.random.RandomState):
+        return random_state.uniform(0, self.sigma, size=rule.bounds.shape[0])
+
     def mutate_bounds(self, rule: Rule, random_state: np.random.RandomState):
-        rule.bounds[:, 0] -= random_state.uniform(0, self.sigma, size=rule.bounds.shape[0])
-        rule.bounds[:, 1] += random_state.uniform(0, self.sigma, size=rule.bounds.shape[0])
+        rule.bounds[:, 0] -= self.mutation(rule=rule, random_state=random_state)
+        rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)

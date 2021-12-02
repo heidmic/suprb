@@ -53,7 +53,7 @@ class BaseRegressor(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
     is_fitted_: bool
 
     @abstractmethod
-    def fit(self, X: np.ndarray, y: np.ndarray) -> BaseEstimator:
+    def fit(self, X: np.ndarray, y: np.ndarray) -> BaseRegressor:
         """ A reference implementation of a fitting function.
 
         Parameters

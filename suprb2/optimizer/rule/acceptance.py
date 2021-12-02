@@ -15,7 +15,7 @@ class RuleAcceptance(BaseComponent, metaclass=ABCMeta):
 
 
 class MaxError(RuleAcceptance):
-    """Insert if the rule has an error smaller than a threshold."""
+    """Insert if the rule has an error smaller or equal to a threshold."""
 
     def __init__(self, max_error: float = 0.01):
         self.max_error = max_error
@@ -26,7 +26,7 @@ class MaxError(RuleAcceptance):
 
 class Variance(RuleAcceptance):
     """
-    Insert if the rule has an error smaller than the variance of matched data divided by beta.
+    Insert if the rule has an error smaller or equal to the variance of matched data divided by beta.
     Note that this acceptance criterion only computes the variance in a standardized context.
     """
 

@@ -143,7 +143,7 @@ class SupRB2(BaseRegressor):
                 self._generate_rules(X, y, self.n_initial_rules, parallel=parallel)
 
             # Main loop
-            for self.step_ in range(1, self.n_iter + 1):
+            for self.step_ in range(self.n_iter):
                 # Insert new rules into population
                 self._generate_rules(X, y, self.n_rules, parallel=parallel)
 
@@ -239,7 +239,7 @@ class SupRB2(BaseRegressor):
 
     def _log_to_stdout(self, message, priority=1):
         if self.verbose >= priority:
-            message = f"[{self.step_}/{self.n_iter}] {message}"
+            message = f"[{self.step_ + 1}/{self.n_iter}] {message}"
             print(message)
 
     def _propagate_component_parameters(self):

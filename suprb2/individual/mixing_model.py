@@ -16,7 +16,7 @@ class ErrorExperienceHeuristic(MixingModel):
 
         # No need to perform any calculation if no rule was selected.
         if not subpopulation:
-            return np.zeros(X.shape[0])
+            return np.zeros(input_size)
 
         # Get errors and experience of all rules in subpopulation
         experiences = np.array([rule.experience_ for rule in subpopulation])

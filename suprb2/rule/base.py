@@ -26,6 +26,8 @@ class Rule(Solution):
     ----------
     bounds: np.ndarray
         The interval this rule will be fitted on.
+    input_space: np.ndarray
+        The bounds of the input space `X`.
     model: RegressorMixin
         Local model used to fit an interval.
     """

@@ -32,7 +32,7 @@ class IndividualFitness(BaseFitness, metaclass=ABCMeta):
 
 
 class Individual(Solution, RegressorMixin):
-    """Individual that mixes a subpopulation of rules"""
+    """Individual that mixes a subpopulation of rules."""
 
     input_size_: int
     complexity_: int

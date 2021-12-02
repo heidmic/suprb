@@ -30,7 +30,7 @@ class StdoutLogger(BaseLogger):
             score=elitist.score(X, y),
         ))
 
-        message = f"[{iteration}/{estimator.n_iter}] Statistics: {message}"
+        message = f"[{iteration + 1}/{estimator.n_iter}] Statistics: {message}"
 
         if self.progress_bar:
             self.iterator_.write(message)

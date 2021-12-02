@@ -13,8 +13,6 @@ from suprb2.optimizer.individual import ga
 from suprb2.optimizer.rule import es
 from suprb2.utils import check_random_state
 
-plt.rcParams["figure.figsize"] = (8, 8)
-
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state=None):
     random_state_ = check_random_state(random_state)
@@ -40,7 +38,7 @@ if __name__ == '__main__':
         rule_generation=es.ES1xLambda(
             n_iter=100,
             operator='&',
-            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05), ),
+            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
             mutation=es.mutation.HalfnormIncrease(sigma=0.1)
         ),
         individual_optimizer=ga.GeneticAlgorithm(
@@ -58,6 +56,7 @@ if __name__ == '__main__':
     scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10, scoring=['r2', 'neg_mean_squared_error'],
                             return_estimator=True)
 
+    plt.rcParams["figure.figsize"] = (8, 8)
     fig, axes = plt.subplots(2, 2)
     X_plot = np.linspace(X.min(), X.max(), 500).reshape((-1, 1))
     for ax, model in zip(axes.flatten(), scores['estimator']):
