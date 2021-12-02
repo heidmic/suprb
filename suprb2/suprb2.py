@@ -1,9 +1,6 @@
 import warnings
-from collections import defaultdict
-from typing import Union
 
 import numpy as np
-import pandas as pd
 from joblib import Parallel, delayed
 from sklearn import clone
 from sklearn.utils import check_X_y
@@ -63,8 +60,6 @@ class SupRB2(BaseRegressor):
 
     rule_generation_: RuleGeneration
     individual_optimizer_: IndividualOptimizer
-
-    fit_metrics_: Union[defaultdict, pd.DataFrame]
 
     n_features_in_: int
 
