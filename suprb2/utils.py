@@ -6,7 +6,11 @@ import numpy as np
 
 
 def check_random_state(seed) -> Union[np.random.Generator, np.random.RandomState]:
-    """Turn seed into a np.random.RandomState instance
+    """Turn seed into a np.random.Generator or np.random.RandomState instance.
+
+    Note that sklearn currently doesn't support np.random.Generator in its sklearn.utils.check_random_state function.
+    See https://github.com/scikit-learn/scikit-learn/issues/16988 for the current status.
+    If they actually add support in the future, this function may become obsolete.
 
     Parameters
     ----------

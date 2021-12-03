@@ -23,6 +23,11 @@ def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state
     y += random_state_.normal(scale=noise, size=n_samples)
     X = X.reshape((-1, 1))
     if shuffle:
+        # Note that we have to supply `random_state` (the parameter) to `apply_shuffle` here,
+        # and not `random_state_` (the `np.random.Generator` instance)
+        # because `sklearn.utils.check_random_state()` does currently not support `np.random.Generator`.
+        # See https://github.com/scikit-learn/scikit-learn/issues/16988 for the current status.
+        # Our `suprb2.utils.check_random_state()` can handle `np.random.Generator`.
         X, y = apply_shuffle(X, y, random_state=random_state)
     return X, y
 
