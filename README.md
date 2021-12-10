@@ -26,11 +26,11 @@ Tested with Python 3.9.4.
 
 ## Contributing
 
-A newly created branch must follow the following convention:
+Newly created branch should follow a pattern that allows easy comprehension of what is being done and why, e.g.:
 
-**<affiliation>_<Issue_number>\_<short_description_of_PR>**
+**<Issue_number>\_<short_description_of_PR>**, e.g. *issue_3_introduce_volume_for_rule_discovery*.
 
-e.g. oc_3_introduce_volume_for_rule_discovery
+If there is no open issue the branch name should just reflect a short description of the feature/fix, e.g. *introduce_volume_for_rule_discovery*.
 
 
 The commit messages of all the commits in your PR should be properly formatted:
