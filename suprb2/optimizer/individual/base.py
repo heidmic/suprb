@@ -87,6 +87,8 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
 
         self._init_population()
 
+        # Pad solutions in the archive with zeros and update their fitness value,
+        # because rules may were added to the pool
         if self.archive is not None:
             self.archive.pad()
             self.archive.pool_ = self.pool_
@@ -97,8 +99,10 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
         else:
             self.population_ = [self.init(self.pool_, self.random_state_)]
 
+        # Check if new solutions should be stored in the archive, store them and refit
         if self.archive is not None:
             self.archive(self.population_)
+            self.archive.refit(X, y)
 
         return self.population_
 
