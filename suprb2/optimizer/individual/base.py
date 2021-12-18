@@ -90,6 +90,7 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
         if self.archive is not None:
             self.archive.pad()
             self.archive.pool_ = self.pool_
+            self.archive.refit(X, y)
 
         if self.pool_:
             self._optimize(X, y)
@@ -98,7 +99,6 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
 
         if self.archive is not None:
             self.archive(self.population_)
-            self.archive.refit(X, y)
 
         return self.population_
 
