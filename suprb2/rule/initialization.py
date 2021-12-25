@@ -6,7 +6,7 @@ from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 
 from suprb2.base import BaseComponent
-from suprb2.utils import check_random_state
+from suprb2.utils import check_random_state, RandomState
 from . import Rule, RuleFitness
 from .fitness import VolumeWu
 
@@ -29,7 +29,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
         self._validate_components(model=LinearRegression(), fitness=VolumeWu())
 
-    def __call__(self, random_state: np.random.RandomState, mean: np.ndarray = None) -> Rule:
+    def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
 
         Parameters
@@ -52,14 +52,14 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         return Rule(bounds=bounds, input_space=self.bounds, model=clone(self.model), fitness=self.fitness)
 
     @abstractmethod
-    def generate_bounds(self, mean: np.ndarray, random_state: np.random.RandomState) -> np.ndarray:
+    def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
         pass
 
 
 class MeanInit(RuleInit):
     """Initializes both bounds with the mean."""
 
-    def generate_bounds(self, mean: np.ndarray, _random_state: np.random.RandomState) -> np.ndarray:
+    def generate_bounds(self, mean: np.ndarray, _random_state: RandomState) -> np.ndarray:
         return np.stack((mean.T, mean.T), axis=1)
 
 
@@ -71,7 +71,7 @@ class NormalInit(RuleInit):
         super().__init__(bounds=bounds, model=model, fitness=fitness)
         self.sigma = sigma
 
-    def generate_bounds(self, mean: np.ndarray, random_state: np.random.RandomState) -> np.ndarray:
+    def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
         return random_state.normal(loc=mean, scale=self.sigma, size=(2, mean.shape[0])).T
 
 
@@ -83,7 +83,7 @@ class HalfnormInit(RuleInit):
         super().__init__(bounds=bounds, model=model, fitness=fitness)
         self.sigma = sigma
 
-    def generate_bounds(self, mean: np.ndarray, random_state: np.random.RandomState) -> np.ndarray:
+    def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
         low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
         high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
         return np.stack((low.T, high.T), axis=1)

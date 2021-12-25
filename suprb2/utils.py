@@ -4,8 +4,10 @@ from typing import Iterator, Union
 
 import numpy as np
 
+RandomState = Union[np.random.RandomState, np.random.Generator]
 
-def check_random_state(seed) -> Union[np.random.Generator, np.random.RandomState]:
+
+def check_random_state(seed) -> RandomState:
     """Turn seed into a np.random.Generator or np.random.RandomState instance.
 
     Note that sklearn currently doesn't support np.random.Generator in its sklearn.utils.check_random_state function.
@@ -30,7 +32,7 @@ def check_random_state(seed) -> Union[np.random.Generator, np.random.RandomState
                      ' instance' % seed)
 
 
-def spawn_random_states(ss: np.random.SeedSequence, n: int) -> Iterator[np.random.RandomState]:
+def spawn_random_states(ss: np.random.SeedSequence, n: int) -> Iterator[RandomState]:
     children = ss.spawn(n)
     for child in children:
         yield np.random.default_rng(child)

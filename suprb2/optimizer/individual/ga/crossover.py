@@ -4,6 +4,7 @@ import numpy as np
 
 from suprb2.base import BaseComponent
 from suprb2.individual import Individual
+from suprb2.utils import RandomState
 
 
 class IndividualCrossover(BaseComponent, metaclass=ABCMeta):
@@ -11,7 +12,7 @@ class IndividualCrossover(BaseComponent, metaclass=ABCMeta):
     def __init__(self, crossover_rate: float = 0.9):
         self.crossover_rate = crossover_rate
 
-    def __call__(self, A: Individual, B: Individual, random_state: np.random.RandomState) -> Individual:
+    def __call__(self, A: Individual, B: Individual, random_state: RandomState) -> Individual:
         if random_state.random() < self.crossover_rate:
             return self._crossover(A=A, B=B, random_state=random_state)
         else:
@@ -19,7 +20,7 @@ class IndividualCrossover(BaseComponent, metaclass=ABCMeta):
             return A
 
     @abstractmethod
-    def _crossover(self, A: Individual, B: Individual, random_state: np.random.RandomState) -> Individual:
+    def _crossover(self, A: Individual, B: Individual, random_state: RandomState) -> Individual:
         pass
 
 
@@ -34,7 +35,7 @@ class NPoint(IndividualCrossover):
     def _single_point(A: Individual, B: Individual, index: int) -> Individual:
         return A.clone(genome=np.append(A.genome[:index], B.genome[index:]))
 
-    def _crossover(self, A: Individual, B: Individual, random_state: np.random.RandomState) -> Individual:
+    def _crossover(self, A: Individual, B: Individual, random_state: RandomState) -> Individual:
         indices = random_state.choice(np.arange(len(A.genome)), size=self.n, replace=False)
         for index in indices:
             A = self._single_point(A, B, index)
@@ -45,7 +46,7 @@ class NPoint(IndividualCrossover):
 class Uniform(IndividualCrossover):
     """Decide for every bit with uniform probability if the bit in genome A or B is used."""
 
-    def _crossover(self, A: Individual, B: Individual, random_state: np.random.RandomState) -> Individual:
+    def _crossover(self, A: Individual, B: Individual, random_state: RandomState) -> Individual:
         indices = random_state.random(size=len(A.genome)) <= 0.5
         genome = np.empty(A.genome.shape)
         genome[indices] = A.genome[indices]

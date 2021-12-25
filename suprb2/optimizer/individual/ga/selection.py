@@ -4,25 +4,26 @@ import numpy as np
 
 from suprb2.base import BaseComponent
 from suprb2.individual import Individual
+from suprb2.utils import RandomState
 
 
 class IndividualSelection(BaseComponent, metaclass=ABCMeta):
 
-    def __call__(self, population: list[Individual], n: int, random_state: np.random.RandomState) -> list[Individual]:
+    def __call__(self, population: list[Individual], n: int, random_state: RandomState) -> list[Individual]:
         pass
 
 
 class Random(IndividualSelection):
     """Sample `n_parents` at random."""
 
-    def __call__(self, population: list[Individual], n: int, random_state: np.random.RandomState) -> list[Individual]:
+    def __call__(self, population: list[Individual], n: int, random_state: RandomState) -> list[Individual]:
         return list(random_state.choice(population, size=n))
 
 
 class RouletteWheel(IndividualSelection):
     """Sample `n_parents` individuals proportional to their fitness."""
 
-    def __call__(self, population: list[Individual], n: int, random_state: np.random.RandomState) -> list[Individual]:
+    def __call__(self, population: list[Individual], n: int, random_state: RandomState) -> list[Individual]:
         fitness_sum = sum([individual.fitness_ for individual in population])
         if fitness_sum != 0:
             weights = [individual.fitness_ / fitness_sum for individual in population]
@@ -34,7 +35,7 @@ class RouletteWheel(IndividualSelection):
 class LinearRank(IndividualSelection):
     """Sample `n_parents` individuals linear to their fitness ranking."""
 
-    def __call__(self, population: list[Individual], n: int, random_state: np.random.RandomState) -> list[Individual]:
+    def __call__(self, population: list[Individual], n: int, random_state: RandomState) -> list[Individual]:
         fitness = np.array([individual.fitness_ for individual in population])
         ranks = fitness.argsort().argsort() + 1  # double `argsort()` obtains the ranks
         weights = ranks / sum(ranks)
@@ -47,6 +48,6 @@ class Tournament(IndividualSelection):
     def __init__(self, k: int = 5):
         self.k = k
 
-    def __call__(self, population: list[Individual], n: int, random_state: np.random.RandomState) -> list[Individual]:
+    def __call__(self, population: list[Individual], n: int, random_state: RandomState) -> list[Individual]:
         return list(max(random_state.choice(population, size=self.k), key=lambda i: i.fitness_)
                     for _ in range(n))

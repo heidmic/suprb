@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.base import BaseEstimator
 
 from suprb2.base import Solution
+from suprb2.utils import RandomState
 
 
 class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
@@ -16,7 +17,7 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
         self.random_state = random_state
         self.n_jobs = n_jobs
 
-    random_state_: Union[np.random.Generator, np.random.RandomState]
+    random_state_: RandomState
 
     @abstractmethod
     def optimize(self, X: np.ndarray, y: np.ndarray) -> Union[Solution, list[Solution], None]:

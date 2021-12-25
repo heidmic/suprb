@@ -15,7 +15,7 @@ from .optimizer.individual.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
-from .utils import check_random_state, spawn_random_states, estimate_bounds, flatten
+from .utils import check_random_state, spawn_random_states, estimate_bounds, flatten, RandomState
 
 
 class SupRB2(BaseRegressor):
@@ -163,7 +163,7 @@ class SupRB2(BaseRegressor):
 
     @staticmethod
     def _generate_rule_with_mean(X: np.ndarray, y: np.ndarray, rule_generation: RuleGeneration, mean: np.ndarray,
-                                 random_state: np.random.RandomState) -> Rule:
+                                 random_state: RandomState) -> Rule:
         """
         Helper method to execute several `RuleGeneration`s in parallel.
         Generates rules from some distribution with mean `mean`.

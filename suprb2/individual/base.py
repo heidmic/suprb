@@ -77,7 +77,11 @@ class Individual(Solution, RegressorMixin):
             mixing=self.mixing,
             fitness=self.fitness
         )
-        return Individual(**(args | kwargs))
+        individual = Individual(**(args | kwargs))
+        if not kwargs:
+            attributes = ['fitness_', 'error_', 'complexity_', 'is_fitted_', 'input_size_']
+            individual.__dict__ |= {key: getattr(self, key) for key in attributes}
+        return individual
 
     def _more_str_attributes(self) -> dict:
         return {'complexity': self.complexity_}
