@@ -1,7 +1,6 @@
 import warnings
 
 import numpy as np
-from joblib import Parallel, delayed
 from sklearn import clone
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted, check_array
@@ -15,7 +14,7 @@ from .optimizer.individual.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
-from .utils import check_random_state, spawn_random_states, estimate_bounds, flatten, RandomState
+from .utils import check_random_state, estimate_bounds
 
 
 class SupRB2(BaseRegressor):
@@ -122,6 +121,7 @@ class SupRB2(BaseRegressor):
 
         # Init optimizers
         self.individual_optimizer_.pool_ = self.pool_
+        self.rule_generation_.pool_ = self.pool_
 
         # Random state
         self.random_state_ = check_random_state(self.random_state)
@@ -132,22 +132,21 @@ class SupRB2(BaseRegressor):
         if self.logger_ is not None:
             self.logger_.log_init(X, y, self)
 
-        with Parallel(n_jobs=self.n_jobs) as parallel:
-            # Fill population before first step
-            if self.n_initial_rules > 0:
-                self._generate_rules(X, y, self.n_initial_rules, parallel=parallel)
+        # Fill population before first step
+        if self.n_initial_rules > 0:
+            self._generate_rules(X, y, self.n_initial_rules)
 
-            # Main loop
-            for self.step_ in range(self.n_iter):
-                # Insert new rules into population
-                self._generate_rules(X, y, self.n_rules, parallel=parallel)
+        # Main loop
+        for self.step_ in range(self.n_iter):
+            # Insert new rules into population
+            self._generate_rules(X, y, self.n_rules)
 
-                # Optimize individuals
-                self._select_rules(X, y)
+            # Optimize individuals
+            self._select_rules(X, y)
 
-                # Log Iteration
-                if self.logger_ is not None:
-                    self.logger_.log_iteration(X, y, self, iteration=self.step_)
+            # Log Iteration
+            if self.logger_ is not None:
+                self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
         if cleanup:
             self._cleanup()
@@ -161,45 +160,16 @@ class SupRB2(BaseRegressor):
 
         return self
 
-    @staticmethod
-    def _generate_rule_with_mean(X: np.ndarray, y: np.ndarray, rule_generation: RuleGeneration, mean: np.ndarray,
-                                 random_state: RandomState) -> Rule:
-        """
-        Helper method to execute several `RuleGeneration`s in parallel.
-        Generates rules from some distribution with mean `mean`.
-        """
-        rule_generation.mean = mean
-        rule_generation.random_state = random_state
-        return rule_generation.optimize(X, y)
-
-    def _generate_rules(self, X: np.ndarray, y: np.ndarray, n_rules: int, parallel: Parallel = None):
+    def _generate_rules(self, X: np.ndarray, y: np.ndarray, n_rules: int):
         """Performs the rule discovery / rule generation (RG) process."""
 
-        self._log_to_stdout(f"Discovering {n_rules} rules", priority=4)
+        self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
 
-        # TODO: Really generate n_rules
-        # For now, less rules could be generated because some are not accepted into the population
+        # Update the current elitist
+        self.rule_generation_.elitist_ = self.individual_optimizer_.elitist()
 
-        # Bias the indices that input values that were matched less than others
-        # have a higher probability to be selected
-        if self.pool_:
-            counts = np.count_nonzero(np.stack([rule.match_ for rule in self.pool_], axis=0) == 0, axis=0)
-            counts_sum = np.sum(counts)
-            # If all input values are matched by every rule, no bias is needed
-            probabilities = counts / counts_sum if counts_sum != 0 else None
-        else:
-            # No bias needed when no rule exists
-            probabilities = None
-
-        indices = self.random_state_.choice(np.arange(len(X)), n_rules, p=probabilities)
-
-        # Init every optimizer with own random state and generate the rules in parallel
-        random_states = spawn_random_states(self.random_state_seeder_, len(indices))
-        result = parallel(delayed(self._generate_rule_with_mean)(X, y, clone(self.rule_generation_), mean, random_state)
-                          for mean, random_state in zip(X[indices], random_states))
-
-        # Flatten the result (may be nested) and filter all invalid rules
-        new_rules = filter(lambda rule: rule is not None, flatten(result))
+        # Generate new rules
+        new_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules)
 
         # Extend the pool with the new rules
         self.pool_.extend(new_rules)
