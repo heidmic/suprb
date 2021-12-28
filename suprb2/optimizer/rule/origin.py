@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 from typing import Optional
 
 import numpy as np
@@ -9,8 +9,8 @@ from suprb2.rule import Rule
 from suprb2.utils import RandomState
 
 
-class RuleOriginSampling(BaseComponent):
-    """Samples neglected single points from the current state of the model to generate new rules from."""
+class RuleOriginGeneration(BaseComponent, metaclass=ABCMeta):
+    """Determines a set of examples to initiate new rules around, i.e., the origins of new rules."""
 
     @abstractmethod
     def __call__(self, n_rules: int, X: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
@@ -18,10 +18,18 @@ class RuleOriginSampling(BaseComponent):
         pass
 
 
-class SubgroupMatching(RuleOriginSampling):
+class UniformOrigin(RuleOriginGeneration):
+    """Sample origins uniformly in the input space."""
+
+    def __call__(self, n_rules: int, X: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
+                 random_state: RandomState) -> np.ndarray:
+        return random_state.uniform(np.min(X, axis=0), np.max(X, axis=0), size=(n_rules, X.shape[1]))
+
+
+class SubgroupMatching(RuleOriginGeneration):
     """
-    Bias the indices so that input values that were matched less than others by rules in the particular subgroup
-    defined by `_subgroup()` have a higher probability to be selected.
+    Bias the examples that were matched less than others by rules in the particular subgroup
+    defined by `_subgroup()` to have a higher probability to be selected.
     """
 
     def __call__(self, n_rules: int, X: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
@@ -48,7 +56,7 @@ class SubgroupMatching(RuleOriginSampling):
 
 class PoolMatching(SubgroupMatching):
     """
-    Bias the indices so that input values that were matched less than others by rules in the pool
+    Bias the examples that were matched less than others by rules in the pool to
     have a higher probability to be selected.
     """
 
@@ -58,8 +66,8 @@ class PoolMatching(SubgroupMatching):
 
 class ElitistMatching(SubgroupMatching):
     """
-    Bias the indices so that input values that were matched less than others by rules in the subpopulation of
-    the current elitist have a higher probability to be selected.
+    Bias the examples that were matched less than others by rules in the subpopulation of
+    the current elitist (the current elitist solution) to have a higher probability to be selected.
     """
 
     def _subgroup(self, pool: list[Rule], elitist: Optional[Individual]) -> list[Rule]:

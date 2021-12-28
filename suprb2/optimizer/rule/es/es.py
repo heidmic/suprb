@@ -4,23 +4,24 @@ import numpy as np
 
 from suprb2.rule import Rule, RuleInit
 from suprb2.rule.initialization import HalfnormInit
+from suprb2.utils import RandomState
 from .mutation import RuleMutation, Normal
 from .selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
-from ..base import SingleElitistRuleGeneration
+from ..base import ParallelSingleRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import PoolMatching, RuleOriginSampling
+from ..origin import PoolMatching, RuleOriginGeneration
 
 
-class ES1xLambda(SingleElitistRuleGeneration):
+class ES1xLambda(ParallelSingleRuleGeneration):
     """ The 1xLambda Evolutionary Strategy, where x is in {,+&}.
 
     Parameters
     ----------
     n_iter: int
         Iterations to evolve a rule.
-    sampling: RuleOriginSampling
+    origin_generation: RuleOriginGeneration
         The sampling process which decides on the next initial points or bounds.
     lmbda: int
         Children to generate in every iteration.
@@ -44,7 +45,7 @@ class ES1xLambda(SingleElitistRuleGeneration):
                  n_iter: int = 10,
                  lmbda: int = 20,
                  operator: str = ',',
-                 sampling: RuleOriginSampling = PoolMatching(),
+                 origin_generation: RuleOriginGeneration = PoolMatching(),
                  init: RuleInit = HalfnormInit(),
                  mutation: RuleMutation = Normal(),
                  selection: RuleSelection = Fittest(),
@@ -55,7 +56,7 @@ class ES1xLambda(SingleElitistRuleGeneration):
                  ):
         super().__init__(
             n_iter=n_iter,
-            sampling=sampling,
+            origin_generation=origin_generation,
             init=init,
             acceptance=acceptance,
             constraint=constraint,
@@ -68,27 +69,27 @@ class ES1xLambda(SingleElitistRuleGeneration):
         self.mutation = mutation
         self.selection = selection
 
-    def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule) -> Optional[Rule]:
+    def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
 
         elitist = initial_rule
 
         # Main iteration
         for iteration in range(self.n_iter):
             # Generate, fit and evaluate lambda children
-            children = [self.constraint(self.mutation(elitist, random_state=self.random_state_))
+            children = [self.constraint(self.mutation(elitist, random_state=random_state))
                             .fit(X, y) for _ in range(self.lmbda)]
 
-            # Filter children that do not match any points
+            # Filter children that do not match any data samples
             children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
             # Different operators
             if self.operator == '+':
                 children.append(elitist)
-                elitist = self.selection(children, self.random_state_)
+                elitist = self.selection(children, random_state=random_state)
             elif self.operator == ',':
-                elitist = self.selection(children, self.random_state_)
+                elitist = self.selection(children, random_state=random_state)
             elif self.operator == '&':
-                candidate = self.selection(children, self.random_state_)
+                candidate = self.selection(children, random_state=random_state)
                 if candidate.fitness_ <= elitist.fitness_:
                     break
                 else:

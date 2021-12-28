@@ -50,15 +50,17 @@ class SupRB2(BaseRegressor):
     """
 
     step_: int = 0
-    total_rules_: int
 
     pool_: list[Rule]
     elitist_: Individual
+
     random_state_: np.random.Generator
-    random_state_seeder_: np.random.SeedSequence
 
     rule_generation_: RuleGeneration
+    rule_generation_seeds_: list[int]
+
     individual_optimizer_: IndividualOptimizer
+    individual_optimizer_seeds_: list[int]
 
     n_features_in_: int
 
@@ -111,6 +113,12 @@ class SupRB2(BaseRegressor):
         # Init sklearn interface
         self.n_features_in_ = X.shape[1]
 
+        # Random state
+        self.random_state_ = check_random_state(self.random_state)
+        seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter * 2)
+        self.rule_generation_seeds_ = seeds[::2]
+        self.individual_optimizer_seeds_ = seeds[1::2]
+
         # Initialise components
         self.pool_ = []
 
@@ -123,10 +131,6 @@ class SupRB2(BaseRegressor):
         # Init optimizers
         self.individual_optimizer_.pool_ = self.pool_
         self.rule_generation_.pool_ = self.pool_
-
-        # Random state
-        self.random_state_ = check_random_state(self.random_state)
-        self.random_state_seeder_ = np.random.SeedSequence(self.random_state)
 
         # Init Logging
         self.logger_ = clone(self.logger) if self.logger is not None else None
@@ -169,6 +173,9 @@ class SupRB2(BaseRegressor):
         # Update the current elitist
         self.rule_generation_.elitist_ = self.individual_optimizer_.elitist()
 
+        # Update the random state
+        self.rule_generation_.random_state = self.rule_generation_seeds_[self.step_]
+
         # Generate new rules
         new_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules)
 
@@ -210,7 +217,7 @@ class SupRB2(BaseRegressor):
 
     def _propagate_component_parameters(self):
         """Propagate shared parameters to subcomponents."""
-        keys = ['random_state', 'n_jobs']
+        keys = ['n_jobs']
         params = {key: value for key, value in self.get_params().items() if key in keys}
 
         self.rule_generation_.set_params(**params)
