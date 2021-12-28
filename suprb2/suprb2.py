@@ -95,7 +95,8 @@ class SupRB2(BaseRegressor):
             y : array-like, shape (n_samples,) or (n_samples, n_outputs)
                 The target values.
             cleanup : bool
-                Optional cleanup of unused rules after fitting.
+                Optional cleanup of unused rules and components after fitting. Can be used to reduce size if only the
+                final model is relevant. Note that all information about the fitting process itself is removed.
 
             Returns
             -------
@@ -148,15 +149,15 @@ class SupRB2(BaseRegressor):
             if self.logger_ is not None:
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
-        if cleanup:
-            self._cleanup()
-
-        self.elitist_ = self.individual_optimizer_.elitist()
+        self.elitist_ = self.individual_optimizer_.elitist().clone()
         self.is_fitted_ = True
 
         # Log final result
         if self.logger_ is not None:
             self.logger_.log_final(X, y, self)
+
+        if cleanup:
+            self._cleanup()
 
         return self
 
@@ -224,11 +225,18 @@ class SupRB2(BaseRegressor):
                 self.rule_generation_.set_params(**{key: bounds})
 
     def _cleanup(self):
-        """Optional cleanup of unused rules after fitting."""
-        self.pool_ = self.individual_optimizer_.elitist().subpopulation
+        """
+        Optional cleanup of unused rules and components after fitting.
+        Can be used to reduce size (e.g., for pickling) if only the final model is relevant.
+        Note that all information about the fitting process itself is removed.
+        """
+        self.pool_ = self.elitist_.subpopulation
 
-        self.individual_optimizer_.elitist().genome = np.ones(len(self.pool_), dtype='bool')
-        self.individual_optimizer_.elitist().pool = self.pool_
+        self.elitist_.genome = np.ones(len(self.pool_), dtype='bool')
+        self.elitist_.pool = self.pool_
+
+        del self.rule_generation_
+        del self.individual_optimizer_
 
     def _more_tags(self):
         """
