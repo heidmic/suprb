@@ -44,9 +44,9 @@ if __name__ == '__main__':
         rule_generation=es.ES1xLambda(
             n_iter=100,
             operator='&',
-            sampling=rule_opt.origin.ElitistMatching(),
+            origin_generation=rule_opt.origin.ElitistMatching(),
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
-            mutation=es.mutation.HalfnormIncrease(sigma=0.1)
+            mutation=es.mutation.HalfnormIncrease(sigma=0.1),
         ),
         individual_optimizer=ga.GeneticAlgorithm(
             n_iter=32,
