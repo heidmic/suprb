@@ -22,7 +22,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
     n_iter: int
         Iterations to evolve a rule.
     origin_generation: RuleOriginGeneration
-        The sampling process which decides on the next initial points or bounds.
+        The selection process which decides on the next initial points.
     lmbda: int
         Children to generate in every iteration.
     operator: str
