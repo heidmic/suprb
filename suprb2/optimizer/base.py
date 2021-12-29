@@ -20,7 +20,7 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
     random_state_: RandomState
 
     @abstractmethod
-    def optimize(self, X: np.ndarray, y: np.ndarray) -> Union[Solution, list[Solution], None]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Solution, list[Solution], None]:
         """ Optimizes the fitness of `Individuals`.
 
         Parameters
@@ -35,18 +35,6 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
         elitist
             Returns the best individual(s) found.
         """
-        pass
-
-    @abstractmethod
-    def elitist(self):
-        """ Returns the best individual.
-
-        Returns
-        -------
-        elitist : Individual
-            Returns the best individual found.
-        """
-
         pass
 
     def _reset(self):

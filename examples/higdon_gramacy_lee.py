@@ -6,6 +6,7 @@ from sklearn.utils import shuffle as apply_shuffle
 
 from suprb2 import SupRB2
 from suprb2 import rule
+from suprb2.optimizer import rule as rule_opt
 from suprb2.logging.combination import CombinedLogger
 from suprb2.logging.mlflow import MlflowLogger
 from suprb2.logging.stdout import StdoutLogger
@@ -43,8 +44,9 @@ if __name__ == '__main__':
         rule_generation=es.ES1xLambda(
             n_iter=100,
             operator='&',
+            origin_generation=rule_opt.origin.ElitistMatching(),
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
-            mutation=es.mutation.HalfnormIncrease(sigma=0.1)
+            mutation=es.mutation.HalfnormIncrease(sigma=0.1),
         ),
         individual_optimizer=ga.GeneticAlgorithm(
             n_iter=32,
@@ -59,7 +61,7 @@ if __name__ == '__main__':
     )
 
     scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10, scoring=['r2', 'neg_mean_squared_error'],
-                            return_estimator=True)
+                            return_estimator=True, fit_params={'cleanup': True})
 
     plt.rcParams["figure.figsize"] = (8, 8)
     fig, axes = plt.subplots(2, 2)

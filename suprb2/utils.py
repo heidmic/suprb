@@ -24,7 +24,7 @@ def check_random_state(seed) -> RandomState:
     """
     if seed is None or seed is np.random:
         return np.random.mtrand._rand
-    if isinstance(seed, numbers.Integral):
+    if isinstance(seed, numbers.Integral) or isinstance(seed, np.random.SeedSequence):
         return np.random.default_rng(seed)
     if isinstance(seed, np.random.RandomState) or isinstance(seed, np.random.Generator):
         return seed
@@ -32,8 +32,8 @@ def check_random_state(seed) -> RandomState:
                      ' instance' % seed)
 
 
-def spawn_random_states(ss: np.random.SeedSequence, n: int) -> Iterator[RandomState]:
-    children = ss.spawn(n)
+def spawn_random_states(random_state: RandomState, n: int) -> Iterator[RandomState]:
+    children = random_state.bit_generator._seed_seq.spawn(n)
     for child in children:
         yield np.random.default_rng(child)
 

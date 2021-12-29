@@ -1,5 +1,5 @@
-from abc import ABCMeta
-from typing import Union
+from abc import ABCMeta, abstractmethod
+from typing import Union, Optional
 
 import numpy as np
 
@@ -16,7 +16,7 @@ class IndividualOptimizer(BaseOptimizer, metaclass=ABCMeta):
     Parameters
     ----------
     n_iter: int
-        Iterations the the metaheuristic will perform.
+        Iterations the metaheuristic will perform.
     init: IndividualInit
     archive: IndividualArchive
     random_state : int, RandomState instance or None, default=None
@@ -44,7 +44,12 @@ class IndividualOptimizer(BaseOptimizer, metaclass=ABCMeta):
         self.archive = archive
         self.warm_start = warm_start
 
-    def optimize(self, X: np.ndarray, y: np.ndarray) -> Union[Individual, list[Individual], None]:
+    @abstractmethod
+    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Individual, list[Individual], None]:
+        pass
+
+    @abstractmethod
+    def elitist(self) -> Optional[Individual]:
         pass
 
     def _reset(self):
@@ -77,7 +82,7 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
             n_jobs=n_jobs)
         self.population_size = population_size
 
-    def optimize(self, X: np.ndarray, y: np.ndarray) -> Union[Individual, list[Individual], None]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Individual, list[Individual], None]:
         """
         This method does all the work that is independent of the metaheuristic used.
         Specific procedures go into `_optimize()`.
@@ -106,12 +111,17 @@ class PopulationBasedIndividualOptimizer(IndividualOptimizer, metaclass=ABCMeta)
 
         return self.population_
 
+    @abstractmethod
     def _optimize(self, X: np.ndarray, y: np.ndarray):
         """Method to overwrite in subclasses to perform the specific optimization."""
         pass
 
-    def elitist(self) -> Individual:
+    def elitist(self) -> Optional[Individual]:
         """Returns the best `Individual` from the archive and the population together."""
+
+        if not hasattr(self, 'population_') or not self.population_:
+            return None
+
         population = self.population_.copy()  # shallow copy
         if self.archive is not None:
             population.extend(self.archive.population_)

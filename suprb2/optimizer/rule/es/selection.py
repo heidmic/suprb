@@ -18,7 +18,7 @@ class RuleSelection(BaseComponent, metaclass=ABCMeta):
 class Fittest(RuleSelection):
     """Take the rule with highest fitness."""
 
-    def __call__(self, rules: list[Rule], _random_state: RandomState) -> Rule:
+    def __call__(self, rules: list[Rule], random_state: RandomState) -> Rule:
         return max(rules, key=lambda child: child.fitness_)
 
 

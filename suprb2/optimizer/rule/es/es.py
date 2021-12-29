@@ -4,26 +4,25 @@ import numpy as np
 
 from suprb2.rule import Rule, RuleInit
 from suprb2.rule.initialization import HalfnormInit
-from suprb2.utils import check_random_state
+from suprb2.utils import RandomState
 from .mutation import RuleMutation, Normal
 from .selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
-from ..base import SingleElitistRuleGeneration
+from ..base import ParallelSingleRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
+from ..origin import PoolMatching, RuleOriginGeneration
 
 
-class ES1xLambda(SingleElitistRuleGeneration):
+class ES1xLambda(ParallelSingleRuleGeneration):
     """ The 1xLambda Evolutionary Strategy, where x is in {,+&}.
 
     Parameters
     ----------
     n_iter: int
         Iterations to evolve a rule.
-    start: Rule
-        The elitist this optimizer starts on.
-    mean: np.ndarray
-        Mean to generate a rule from. The parameter `start` has priority.
+    origin_generation: RuleOriginGeneration
+        The sampling process which decides on the next initial points or bounds.
     lmbda: int
         Children to generate in every iteration.
     operator: str
@@ -44,10 +43,9 @@ class ES1xLambda(SingleElitistRuleGeneration):
 
     def __init__(self,
                  n_iter: int = 10,
-                 start: Rule = None,
-                 mean: np.ndarray = None,
                  lmbda: int = 20,
                  operator: str = ',',
+                 origin_generation: RuleOriginGeneration = PoolMatching(),
                  init: RuleInit = HalfnormInit(),
                  mutation: RuleMutation = Normal(),
                  selection: RuleSelection = Fittest(),
@@ -58,8 +56,7 @@ class ES1xLambda(SingleElitistRuleGeneration):
                  ):
         super().__init__(
             n_iter=n_iter,
-            start=start,
-            mean=mean,
+            origin_generation=origin_generation,
             init=init,
             acceptance=acceptance,
             constraint=constraint,
@@ -72,37 +69,30 @@ class ES1xLambda(SingleElitistRuleGeneration):
         self.mutation = mutation
         self.selection = selection
 
-    def optimize(self, X: np.ndarray, y: np.ndarray) -> Optional[Rule]:
-        self.random_state_ = check_random_state(self.random_state)
+    def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
 
-        self._init_elitist(X, y)
+        elitist = initial_rule
 
         # Main iteration
         for iteration in range(self.n_iter):
             # Generate, fit and evaluate lambda children
-            children = [self.constraint(self.mutation(self.elitist_, random_state=self.random_state_))
+            children = [self.constraint(self.mutation(elitist, random_state=random_state))
                             .fit(X, y) for _ in range(self.lmbda)]
-            # Filter children that do not match any points
-            filtered = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
-            def candidate(population: list[Rule]):
-                return self.selection(population, self.random_state_) if population else self.elitist_
+            # Filter children that do not match any data samples
+            children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
             # Different operators
             if self.operator == '+':
-                filtered.append(self.elitist_)
-                self.elitist_ = candidate(filtered)
+                children.append(elitist)
+                elitist = self.selection(children, random_state=random_state)
             elif self.operator == ',':
-                self.elitist_ = candidate(filtered)
+                elitist = self.selection(children, random_state=random_state)
             elif self.operator == '&':
-                candidate = candidate(filtered)
-                if candidate.fitness_ <= self.elitist_.fitness_:
+                candidate = self.selection(children, random_state=random_state)
+                if candidate.fitness_ <= elitist.fitness_:
                     break
                 else:
-                    self.elitist_ = candidate
+                    elitist = candidate
 
-        # Rules under a threshold error are appended to the pool
-        if self.acceptance(self.elitist_, X, y):
-            return self.elitist_
-        else:
-            return None
+        return elitist
