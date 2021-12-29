@@ -21,7 +21,7 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
     n_iter: int
         Iterations to evolve a rule.
     origin_generation: RuleOriginGeneration
-        The sampling process which decides on the next initial points or bounds.
+        The selection process which decides on the next initial points or bounds.
     init: RuleInit
     acceptance: RuleAcceptance
     constraint: RuleConstraint
