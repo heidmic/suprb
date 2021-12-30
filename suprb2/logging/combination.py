@@ -31,7 +31,7 @@ class CombinedLogger(BaseLogger):
 
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
         for _, logger in self.loggers_:
-            logger.log_init(X=X, y=y, estimator=estimator)
+            logger.log_final(X=X, y=y, estimator=estimator)
 
     def get_params(self, deep=True):
         # Call get_params on every logger
