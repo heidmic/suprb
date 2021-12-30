@@ -29,7 +29,7 @@ def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state
     return X, y
 
 
-if __name__ == '__main__':
+def setup():
     random_state = 42
 
     X, y = load_higdon_gramacy_lee(noise=0.1, random_state=random_state)
@@ -55,18 +55,42 @@ if __name__ == '__main__':
         random_state=random_state,
     )
 
-    X_predict = np.linspace(X.min(), X.max(), 500).reshape((-1, 1))
+    return model, X, y
 
-    scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=1, scoring=['r2', 'neg_mean_squared_error'],
-                            return_estimator=True)
 
-    model = scores["estimator"][0]
-    original_prediction = model.predict(X_predict)
+class TestClass:
+    def test_save_load_config(self):
+        model, X, y = setup()
 
-    JsonIO().save(model, "save_state.json")
-    model = JsonIO().load("save_state.json")
+        scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=1, scoring=['r2', 'neg_mean_squared_error'],
+                                return_estimator=True)
 
-    loaded_prediction = model.predict(X_predict)
+        model = scores["estimator"][0]
 
-    assert((original_prediction == loaded_prediction).all())
-    os.remove("save_state.json")
+        json_io = JsonIO()
+        json_io._save_config(model)
+        json_io._load_config(json_io.json_config["config"])
+
+        json_io_params = json_io.suprb.get_params()
+        model_params = model.get_params()
+
+        for key in json_io_params:
+            assert(type(json_io_params[key]) == type(model_params[key]))
+
+    def test_smoke_test(self):
+        model, X, y = setup()
+
+        X_predict = np.linspace(X.min(), X.max(), 500).reshape((-1, 1))
+
+        scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=1, scoring=['r2', 'neg_mean_squared_error'],
+                                return_estimator=True)
+
+        model = scores["estimator"][0]
+        original_prediction = model.predict(X_predict)
+
+        JsonIO().save(model, "save_state.json")
+        model = JsonIO().load("save_state.json")
+        loaded_prediction = model.predict(X_predict)
+
+        assert((original_prediction == loaded_prediction).all())
+        os.remove("save_state.json")

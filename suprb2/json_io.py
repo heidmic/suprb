@@ -1,7 +1,8 @@
 import json
 import numpy as np
-from suprb2.individual import mixing_model
 
+import suprb2
+from suprb2.individual import mixing_model
 from suprb2.suprb2 import SupRB2
 from .individual import Individual
 from suprb2.optimizer.rule import es
@@ -9,7 +10,23 @@ from suprb2.optimizer.individual import ga
 from suprb2.individual.mixing_model import ErrorExperienceHeuristic
 from suprb2.individual.fitness import ComplexityWu
 from sklearn.linear_model import LinearRegression
-
+from suprb2.optimizer.individual.archive import Elitist
+from suprb2.optimizer.individual.ga.crossover import Uniform
+from suprb2.individual.initialization import RandomInit
+from suprb2.optimizer.individual.ga.ga import BitFlips
+from suprb2.optimizer.individual.ga.selection import Tournament
+from suprb2.optimizer.individual.ga import GeneticAlgorithm
+from suprb2.logging.stdout import StdoutLogger
+from suprb2.logging.mlflow import MlflowLogger
+from suprb2.logging.combination import CombinedLogger
+from suprb2.optimizer.rule.acceptance import Variance
+from suprb2.optimizer.rule.constraint import Clip
+from suprb2.optimizer.rule.constraint import MinRange, CombinedConstraint
+from suprb2.rule.fitness import VolumeWu
+from suprb2.rule.initialization import MeanInit
+from suprb2.optimizer.rule.es.mutation import HalfnormIncrease
+from suprb2.optimizer.rule.es.selection import Fittest
+from suprb2.optimizer.rule.es.es import ES1xLambda
 
 from .rule import Rule
 from suprb2 import rule
@@ -83,15 +100,16 @@ class JsonIO:
 
     # Save Config
     def _save_config(self, suprb):
-        self.json_config["config"] = {"n_iter":                 suprb.n_iter,
-                                      "n_initial_rules":        suprb.n_initial_rules,
-                                      "n_rules":                suprb.n_rules,
-                                      "rule_generation":        str(suprb.rule_generation),
-                                      "individual_optimizer":   str(suprb.individual_optimizer),
-                                      "random_state":           suprb.random_state,
-                                      "verbose":                suprb.verbose,
-                                      "logger":                 str(suprb.logger),
-                                      "n_jobs":                 suprb.n_jobs}
+        params = {}
+        primitive = (int, str, bool, float)
+
+        for key, value in suprb.get_params().items():
+            if isinstance(value, primitive):
+                params[key] = value
+            else:
+                params[key] = str(value)
+
+        self.json_config["config"] = params
 
     # Save Pool
     def _save_pool(self, pool):
@@ -128,7 +146,15 @@ class JsonIO:
     # Load Config
     def _load_config(self, json_config):
         self.suprb = SupRB2()
-        self.suprb.set_params(**json_config)
+        params = {}
+
+        for key, value in json_config.items():
+            if isinstance(value, str) and value != "deprecated" and value != "&":
+                params[key] = eval(value)
+            else:
+                params[key] = value
+
+        self.suprb.set_params(**params)
 
     def _convert_model(self, json_model):
         for model_name in json_model:
