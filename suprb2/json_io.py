@@ -14,8 +14,6 @@ from sklearn.linear_model import LinearRegression
 from .rule import Rule
 from suprb2 import rule
 
-from suprb2 import individual
-
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -52,6 +50,37 @@ class JsonIO:
 
         return self.suprb
 
+    # Static Helper Functions
+    @staticmethod
+    def convert_to_json_format(np_array):
+        return json.dumps(np_array, cls=NumpyEncoder)
+
+    @staticmethod
+    def convert_from_json_format(json_array):
+        return np.array(json.loads(json_array))
+
+    @staticmethod
+    def convert_key_value(string_json):
+        if string_json.startswith("ComplexityWu"):
+            return ComplexityWu()
+        elif string_json.startswith("ErrorExperienceHeuristic"):
+            return ErrorExperienceHeuristic()
+        elif string_json.startswith("HalfnormIncrease"):
+            return es.mutation.HalfnormIncrease()
+        elif string_json.startswith("MeanInit(fitness=VolumeWu()"):
+            return rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu())
+        elif string_json.startswith("Uniform"):
+            return ga.crossover.Uniform()
+        elif string_json.startswith("Tournament"):
+            return ga.selection.Tournament()
+
+    @staticmethod
+    def convert_individual_to_json(rule):
+        return {"error_":        rule.error_,
+                "fitness_":      rule.fitness_,
+                "fitness":       str(rule.fitness),
+                "is_fitted_":    rule.is_fitted_}
+
     # Save Config
     def _save_config(self, suprb):
         self.json_config["config"] = {"n_iter":                 suprb.n_iter,
@@ -70,104 +99,36 @@ class JsonIO:
             self.json_config["pool"].append(self._convert_rule_to_json(rule))
 
     def _convert_rule_to_json(self, rule):
-
         return {"error_":        rule.error_,
                 "experience_":   rule.experience_,
-                "input_space":   self._convert_to_json_format(rule.input_space),
-                "bounds":        self._convert_to_json_format(rule.bounds),
+                "input_space":   JsonIO.convert_to_json_format(rule.input_space),
+                "bounds":        JsonIO.convert_to_json_format(rule.bounds),
                 "fitness_":      rule.fitness_,
-                "match_":        self._convert_to_json_format(rule.match_),
-                "pred_":         self._convert_to_json_format(rule.pred_),
+                "match_":        JsonIO.convert_to_json_format(rule.match_),
+                "pred_":         JsonIO.convert_to_json_format(rule.pred_),
                 "fitness":       str(rule.fitness),
                 "is_fitted_":    rule.is_fitted_,
                 "model":         self._get_json_model(rule.model)}
 
     def _get_json_model(self, model):
-        mp = {}
-
-        for p in ("coef_", "rank_", "singular_", "n_features_in_", "intercept_"):
-            if (p == "coef_") or (p == "singular_"):
-                mp[p] = self._convert_to_json_format(getattr(model, p))
-            else:
-                mp[p] = getattr(model, p)
-
         return {str(model): {"init_params": model.get_params(),
-                             "model_params": mp}}
+                             "model_params": {"coef_":          JsonIO.convert_to_json_format(getattr(model, "coef_")),
+                                              "rank_":          getattr(model, "rank_"),
+                                              "singular_":      JsonIO.convert_to_json_format(getattr(model, "singular_")),
+                                              "n_features_in_": getattr(model, "n_features_in_"),
+                                              "intercept_":     getattr(model, "intercept_")}}}
 
     # Save Elitist
     def _save_elitist(self, elitist):
-        self.json_config["elitist"] = {"genome":        self._convert_to_json_format(elitist.genome),
+        self.json_config["elitist"] = {"genome":        JsonIO.convert_to_json_format(elitist.genome),
                                        "mixing":        str(elitist.mixing),
                                        "fitness":       str(elitist.fitness),
-                                       "individual":    self._convert_individual_to_json(elitist)}
-
-    def _convert_individual_to_json(self, rule):
-        return {"error_":        rule.error_,
-                "fitness_":      rule.fitness_,
-                "fitness":       str(rule.fitness),
-                "is_fitted_":    rule.is_fitted_}
+                                       "individual":    JsonIO.convert_individual_to_json(elitist)}
 
     # Load Config
     def _load_config(self, json_config):
-        rule_generation = self._get_rule_generation_from_json(json_config)
-        individual_optimizer = self._get_individual_optimizer_from_json(json_config)
-
-        self.suprb = SupRB2(
-            rule_generation=rule_generation,
-            individual_optimizer=individual_optimizer,
-            n_iter=json_config["n_iter"],
-            n_initial_rules=json_config["n_initial_rules"],
-            n_rules=json_config["n_rules"],
-            random_state=json_config["random_state"],
-            verbose=json_config["verbose"],
-            n_jobs=json_config["n_jobs"])
-
-    # Load Rule Generation
-    def _get_rule_generation_from_json(self, json_config):
-        rule_generation = json_config["rule_generation"]
-
-        if rule_generation.startswith("ES1xLambda"):
-            n_iter = self._get_value_from_string(rule_generation, "n_iter")
-            operator = self._get_value_from_string(rule_generation, "operator")
-            init = self._convert_key_value(self._get_value_from_string(rule_generation, "init"))
-            mutation = self._convert_key_value(self._get_value_from_string(rule_generation, "mutation"))
-
-            return es.ES1xLambda(
-                n_iter=int(n_iter),
-                operator=operator,
-                init=init,
-                mutation=mutation)
-
-    # Load Individual Optimizer
-    def _get_individual_optimizer_from_json(self, json_config):
-        individual_optimizer = json_config["individual_optimizer"]
-
-        if individual_optimizer.startswith("GeneticAlgorithm"):
-            n_iter = self._get_value_from_string(individual_optimizer, "n_iter")
-            crossover = self._convert_key_value(self._get_value_from_string(individual_optimizer, "crossover"))
-            selection = self._convert_key_value(self._get_value_from_string(individual_optimizer, "selection"))
-
-            return ga.GeneticAlgorithm(
-                n_iter=int(n_iter),
-                crossover=crossover,
-                selection=selection
-            )
-
-    def _convert_json_to_rule(self, json_rule):
-        rule = Rule(
-            self._convert_from_json_format(json_rule["bounds"]),
-            self._convert_from_json_format(json_rule["input_space"]),
-            self._convert_model(json_rule["model"]),
-            json_rule["fitness"])
-
-        rule.error_ = json_rule["error_"]
-        rule.experience_ = json_rule["experience_"]
-        rule.fitness_ = json_rule["fitness_"]
-        rule.match_ = self._convert_from_json_format(json_rule["match_"])
-        rule.pred_ = self._convert_from_json_format(json_rule["pred_"])
-        rule.is_fitted_ = json_rule["is_fitted_"]
-
-        return rule
+        self.suprb = SupRB2()
+        self.suprb.set_params(**json_config)
 
     def _convert_model(self, json_model):
         for model_name in json_model:
@@ -175,7 +136,7 @@ class JsonIO:
                 model = LinearRegression(**json_model[model_name]["init_params"])
                 for name, p in json_model[model_name]["model_params"].items():
                     if (name == "coef_") or (name == "singular_"):
-                        setattr(model, name, self._convert_from_json_format(p))
+                        setattr(model, name, JsonIO.convert_from_json_format(p))
                     else:
                         setattr(model, name, p)
 
@@ -183,14 +144,14 @@ class JsonIO:
 
     # Load Elitist
     def _load_elitist(self, json_elitist):
-        self.suprb.elitist_ = Individual(genome=self._convert_from_json_format(json_elitist["genome"]),
+        self.suprb.elitist_ = Individual(genome=JsonIO.convert_from_json_format(json_elitist["genome"]),
                                          pool=self.suprb.pool_,
-                                         mixing=self._convert_key_value(json_elitist["mixing"]),
-                                         fitness=self._convert_key_value(json_elitist["fitness"]))
+                                         mixing=JsonIO.convert_key_value(json_elitist["mixing"]),
+                                         fitness=JsonIO.convert_key_value(json_elitist["fitness"]))
 
         self.suprb.elitist_.error_ = json_elitist["individual"]["error_"]
         self.suprb.elitist_.fitness_ = json_elitist["individual"]["fitness_"]
-        self.suprb.elitist_.fitness = self._convert_key_value(json_elitist["individual"]["fitness"])
+        self.suprb.elitist_.fitness = JsonIO.convert_key_value(json_elitist["individual"]["fitness"])
         self.suprb.elitist_.is_fitted_ = json_elitist["individual"]["is_fitted_"]
 
     # Load Pool
@@ -200,32 +161,18 @@ class JsonIO:
         for rule in json_pool:
             self.suprb.pool_.append(self._convert_json_to_rule(rule))
 
-    # Helper Functions
-    def _get_value_from_string(self, string, param):
-        start_idx = string.find(param) + len(param) + 1
-        end_idx = string[start_idx:].find(",")
+    def _convert_json_to_rule(self, json_rule):
+        rule = Rule(
+            JsonIO.convert_from_json_format(json_rule["bounds"]),
+            JsonIO.convert_from_json_format(json_rule["input_space"]),
+            self._convert_model(json_rule["model"]),
+            json_rule["fitness"])
 
-        if end_idx < 0:
-            end_idx = string[start_idx:].find(")")
+        rule.error_ = json_rule["error_"]
+        rule.experience_ = json_rule["experience_"]
+        rule.fitness_ = json_rule["fitness_"]
+        rule.match_ = JsonIO.convert_from_json_format(json_rule["match_"])
+        rule.pred_ = JsonIO.convert_from_json_format(json_rule["pred_"])
+        rule.is_fitted_ = json_rule["is_fitted_"]
 
-        return string[start_idx:start_idx + end_idx]
-
-    def _convert_to_json_format(self, np_array):
-        return json.dumps(np_array, cls=NumpyEncoder)
-
-    def _convert_from_json_format(self, json_array):
-        return np.array(json.loads(json_array))
-
-    def _convert_key_value(self, string_json):
-        if string_json.startswith("ComplexityWu"):
-            return ComplexityWu()
-        elif string_json.startswith("ErrorExperienceHeuristic"):
-            return ErrorExperienceHeuristic()
-        elif string_json.startswith("HalfnormIncrease"):
-            return es.mutation.HalfnormIncrease()
-        elif string_json.startswith("MeanInit(fitness=VolumeWu()"):
-            return rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu())
-        elif string_json.startswith("Uniform"):
-            return ga.crossover.Uniform()
-        elif string_json.startswith("Tournament"):
-            return ga.selection.Tournament()
+        return rule
