@@ -8,7 +8,7 @@ from suprb2 import SupRB2
 from suprb2 import rule
 from suprb2.optimizer import rule as rule_opt
 from suprb2.logging.combination import CombinedLogger
-from suprb2.logging.mlflow import MlflowLogger
+from suprb2.logging.default import DefaultLogger
 from suprb2.logging.stdout import StdoutLogger
 from suprb2.optimizer.individual import ga
 from suprb2.optimizer.rule import es
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         n_iter=4,
         n_rules=16,
         verbose=10,
-        logger=CombinedLogger([('stdout', StdoutLogger()), ('mlflow', MlflowLogger())]),
+        logger=CombinedLogger([('stdout', StdoutLogger()), ('default', DefaultLogger())]),
         random_state=random_state,
     )
 
