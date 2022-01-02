@@ -6,7 +6,7 @@ from suprb2 import Rule, Individual
 
 def genome_diversity(population: list[Individual]):
     combinations = list(itertools.combinations(population, 2))
-    return sum([hamming_distance(a.genome, b.genome) for a, b in combinations])
+    return sum([hamming_distance(a.genome, b.genome) for a, b in combinations]) / population[0].genome.shape[0]
 
 
 def hamming_distance(a: np.ndarray, b: np.ndarray):
