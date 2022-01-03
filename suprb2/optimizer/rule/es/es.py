@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional
 
 import numpy as np
@@ -80,7 +81,13 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                             .fit(X, y) for _ in range(self.lmbda)]
 
             # Filter children that do not match any data samples
-            children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
+            valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
+
+            if valid_children:
+                children = valid_children
+            else:
+                warnings.warn("No valid children were generated during this iteration.", UserWarning)
+                continue
 
             # Different operators
             if self.operator == '+':
