@@ -5,6 +5,7 @@ from suprb2 import Rule, Individual
 
 
 def genome_diversity(population: list[Individual]):
+    """Calculates the relative pairwise hamming distance of the genomes of all individuals in the population."""
     combinations = list(itertools.combinations(population, 2))
     return sum([hamming_distance(a.genome, b.genome) for a, b in combinations]) / population[0].genome.shape[0]
 
