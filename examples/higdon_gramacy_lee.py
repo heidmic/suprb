@@ -1,15 +1,16 @@
 import matplotlib.pyplot as plt
+import mlflow
 import numpy as np
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import cross_validate, train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
 from suprb2 import SupRB2
 from suprb2 import rule
-from suprb2.optimizer import rule as rule_opt
 from suprb2.logging.combination import CombinedLogger
-from suprb2.logging.mlflow import MlflowLogger
+from suprb2.logging.default import DefaultLogger
 from suprb2.logging.stdout import StdoutLogger
+from suprb2.optimizer import rule as rule_opt
 from suprb2.optimizer.individual import ga
 from suprb2.optimizer.rule import es
 from suprb2.utils import check_random_state
@@ -36,10 +37,14 @@ def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state
 if __name__ == '__main__':
     random_state = 42
 
+    # Prepare the data
     X, y = load_higdon_gramacy_lee(noise=0.1, random_state=random_state)
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
+
+    # Prepare the model
     model = SupRB2(
         rule_generation=es.ES1xLambda(
             n_iter=100,
@@ -56,13 +61,17 @@ if __name__ == '__main__':
         n_iter=4,
         n_rules=16,
         verbose=10,
-        logger=CombinedLogger([('stdout', StdoutLogger()), ('mlflow', MlflowLogger())]),
+        logger=CombinedLogger([('stdout', StdoutLogger()), ('default', DefaultLogger())]),
         random_state=random_state,
     )
 
-    scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10, scoring=['r2', 'neg_mean_squared_error'],
+    # Do cross-validation
+    scores = cross_validate(model, X_train, y_train, cv=4, n_jobs=1, verbose=10,
+                            scoring=['r2', 'neg_mean_squared_error'],
                             return_estimator=True, fit_params={'cleanup': True})
+    models = scores['estimator']
 
+    # Plot the prediction
     plt.rcParams["figure.figsize"] = (8, 8)
     fig, axes = plt.subplots(2, 2)
     X_plot = np.linspace(X.min(), X.max(), 500).reshape((-1, 1))
@@ -75,4 +84,25 @@ if __name__ == '__main__':
     fig.suptitle('Prediction on Higdon and Gramacy and Lee')
     fig.tight_layout()
 
-    plt.show()
+    # Log the results to mlflow
+    mlflow.set_experiment("Higdon & Gramacy & Lee")
+
+    with mlflow.start_run(run_name="Cross-Validation"):
+        mlflow.log_param("cv", len(models))
+        for i, estimator in enumerate(models):
+            with mlflow.start_run(run_name=f"Fold {i}", nested=True):
+                logger = estimator.logger_.loggers_[1][1]
+
+                # Log model parameters
+                mlflow.log_params(logger.params_)
+
+                # Log fitting metrics
+                for key, values in logger.metrics_.items():
+                    for step, value in values.items():
+                        mlflow.log_metric(key=key, value=value, step=step)
+
+                # Log test metrics
+                mlflow.log_metric("test_score", estimator.score(X_test, y_test))
+
+        # Add the figure as artifact
+        mlflow.log_figure(fig, 'predictions.png')
