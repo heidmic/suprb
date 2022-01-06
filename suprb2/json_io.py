@@ -2,7 +2,6 @@ import json
 import numpy as np
 
 import suprb2
-from suprb2.individual import mixing_model
 from suprb2.suprb2 import SupRB2
 from .individual import Individual
 from suprb2.optimizer.rule import es
@@ -10,26 +9,13 @@ from suprb2.optimizer.individual import ga
 from suprb2.individual.mixing_model import ErrorExperienceHeuristic
 from suprb2.individual.fitness import ComplexityWu
 from sklearn.linear_model import LinearRegression
-from suprb2.optimizer.individual.archive import Elitist
-from suprb2.optimizer.individual.ga.crossover import Uniform
-from suprb2.individual.initialization import RandomInit
-from suprb2.optimizer.individual.ga.ga import BitFlips
-from suprb2.optimizer.individual.ga.selection import Tournament
-from suprb2.optimizer.individual.ga import GeneticAlgorithm
 from suprb2.logging.stdout import StdoutLogger
 from suprb2.logging.mlflow import MlflowLogger
 from suprb2.logging.combination import CombinedLogger
-from suprb2.optimizer.rule.acceptance import Variance
-from suprb2.optimizer.rule.constraint import Clip
-from suprb2.optimizer.rule.constraint import MinRange, CombinedConstraint
-from suprb2.rule.fitness import VolumeWu
-from suprb2.rule.initialization import MeanInit
-from suprb2.optimizer.rule.es.mutation import HalfnormIncrease
-from suprb2.optimizer.rule.es.selection import Fittest
-from suprb2.optimizer.rule.es.es import ES1xLambda
 
 from .rule import Rule
 from suprb2 import rule
+import importlib
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -62,6 +48,7 @@ class JsonIO:
 
         self._load_config(json_dict["config"])
         self._load_pool(json_dict["pool"])
+        # TODO: Use get_params here as well
         self._load_elitist(json_dict["elitist"])
         self.suprb.is_fitted_ = True
 
@@ -75,21 +62,6 @@ class JsonIO:
     @staticmethod
     def convert_from_json_format(json_array):
         return np.array(json.loads(json_array))
-
-    @staticmethod
-    def convert_key_value(string_json):
-        if string_json.startswith("ComplexityWu"):
-            return ComplexityWu()
-        elif string_json.startswith("ErrorExperienceHeuristic"):
-            return ErrorExperienceHeuristic()
-        elif string_json.startswith("HalfnormIncrease"):
-            return es.mutation.HalfnormIncrease()
-        elif string_json.startswith("MeanInit(fitness=VolumeWu()"):
-            return rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu())
-        elif string_json.startswith("Uniform"):
-            return ga.crossover.Uniform()
-        elif string_json.startswith("Tournament"):
-            return ga.selection.Tournament()
 
     @staticmethod
     def convert_individual_to_json(rule):
@@ -144,17 +116,86 @@ class JsonIO:
                                        "individual":    JsonIO.convert_individual_to_json(elitist)}
 
     # Load Config
-    def _load_config(self, json_config):
-        self.suprb = SupRB2()
+    def _get_class(self, value):
+        # TODO: Change this
+        if value == "LinearRegression()":
+            module = importlib.import_module("sklearn.linear_model")
+            return getattr(module, value[:-2])
+
+        value = value[6:]
+        separator_idx = value.rfind(".")
+        module_string = value[:separator_idx]
+        class_string = value[separator_idx+1:]
+
+        module = importlib.import_module(module_string)
+        return getattr(module, class_string)
+
+    def _get_longest_key(self, json_config):
+        longest = -1
+        longest_key = None
+
+        for key in json_config:
+            if isinstance(key, str) and key.count("__") > longest:
+                longest = key.count("__")
+                longest_key = key
+
+        base_key = self._get_param_key(longest_key)
+        return base_key, longest_key
+
+    def _get_keys_with_same_base(self, json_config, base):
+        same_base_key_list = []
+        for key in json_config:
+            if key.startswith(base) and key != base:
+                same_base_key_list.append(key)
+
+        return same_base_key_list
+
+    def _get_param_key(self, dict_key):
+        return dict_key if dict_key.count("__") == 0 else dict_key[:dict_key.rfind("__")]
+
+    def _update_longest_key(self, json_config, longest_key):
+        if isinstance(json_config[longest_key], str) and json_config[longest_key].startswith("class:"):
+            json_config[longest_key] = self._get_class(json_config[longest_key])()
+        else:
+            json_config[longest_key] = json_config[longest_key]
+
+    def _update_same_base_keys(self, json_config, base_key):
         params = {}
 
-        for key, value in json_config.items():
-            if isinstance(value, str) and value != "deprecated" and value != "&":
-                params[key] = eval(value)
-            else:
-                params[key] = value
+        for key in self._get_keys_with_same_base(json_config, base_key):
+            param = key[key.rfind("__") + 2:]
 
-        self.suprb.set_params(**params)
+            if json_config[key] == "None":
+                params[param] = None
+            elif isinstance(json_config[key], str) and json_config[key].startswith("class:"):
+                json_config[key] = self._get_class(json_config[key])()
+            else:
+                params[param] = json_config[key]
+
+            del json_config[key]
+
+        return params
+
+    def _deserialize_config(self, json_config):
+        number_of_arguments_for_suprb = 8
+
+        while len(list(json_config.keys())) != number_of_arguments_for_suprb:
+            base_key, longest_key = self._get_longest_key(json_config)
+            self._update_longest_key(json_config, longest_key)
+            params = self._update_same_base_keys(json_config, base_key)
+            json_config[base_key] = self._get_class(json_config[base_key])(**params)
+
+    def _load_config(self, json_config):
+        # TODO: Logger has a list of tuples, find a way to get the class anyway
+        del json_config["logger__loggers"]
+        del json_config["logger__stdout"]
+        del json_config["logger__mlflow"]
+        del json_config["logger__stdout__progress_bar"]
+        del json_config["logger"]
+
+        self._deserialize_config(json_config)
+        json_config["logger"] = CombinedLogger([('stdout', StdoutLogger()), ('mlflow', MlflowLogger())])
+        self.suprb = SupRB2(**json_config)
 
     def _convert_model(self, json_model):
         for model_name in json_model:
@@ -172,12 +213,12 @@ class JsonIO:
     def _load_elitist(self, json_elitist):
         self.suprb.elitist_ = Individual(genome=JsonIO.convert_from_json_format(json_elitist["genome"]),
                                          pool=self.suprb.pool_,
-                                         mixing=JsonIO.convert_key_value(json_elitist["mixing"]),
-                                         fitness=JsonIO.convert_key_value(json_elitist["fitness"]))
+                                         mixing=self._get_class(json_elitist["mixing"])(),
+                                         fitness=self._get_class(json_elitist["fitness"]))
 
         self.suprb.elitist_.error_ = json_elitist["individual"]["error_"]
         self.suprb.elitist_.fitness_ = json_elitist["individual"]["fitness_"]
-        self.suprb.elitist_.fitness = JsonIO.convert_key_value(json_elitist["individual"]["fitness"])
+        self.suprb.elitist_.fitness = self._get_class(json_elitist["individual"]["fitness"])
         self.suprb.elitist_.is_fitted_ = json_elitist["individual"]["is_fitted_"]
 
     # Load Pool

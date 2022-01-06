@@ -23,6 +23,13 @@ class BaseComponent(BaseEstimator, metaclass=ABCMeta):
             current_value = self.__getattribute__(parameter_name)
             self.__setattr__(parameter_name, current_value if current_value is not None else default)
 
+    def __str__(self):
+        class_name = self.__class__
+        module = class_name.__module__
+        if module == 'builtins':
+            return class_name.__qualname__
+        return "class:" + module + '.' + class_name.__qualname__
+
 
 class Solution(metaclass=ABCMeta):
     """An individual solution to some problem."""
