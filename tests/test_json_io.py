@@ -58,7 +58,7 @@ def setup():
     return model, X, y
 
 
-class TestClass:
+class TestJsonIO:
     def test_save_load_config(self):
         model, X, y = setup()
 

@@ -55,10 +55,3 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
         """
         if hasattr(self, 'random_state_'):
             del self.random_state_
-
-    def __str__(self):
-        class_name = self.__class__
-        module = class_name.__module__
-        if module == 'builtins':
-            return class_name.__qualname__
-        return "class:" + module + '.' + class_name.__qualname__

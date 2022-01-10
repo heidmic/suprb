@@ -67,19 +67,28 @@ class JsonIO:
     def convert_individual_to_json(rule):
         return {"error_":        rule.error_,
                 "fitness_":      rule.fitness_,
-                "fitness":       str(rule.fitness),
+                "fitness":       JsonIO()._get_full_class_name(rule.fitness),
                 "is_fitted_":    rule.is_fitted_}
 
     # Save Config
+    def _get_full_class_name(self, instance):
+        class_name = instance.__class__
+        module = class_name.__module__
+        if module == 'builtins':
+            return class_name.__qualname__
+        return "class:" + module + '.' + class_name.__qualname__
+
     def _save_config(self, suprb):
         params = {}
         primitive = (int, str, bool, float)
 
         for key, value in suprb.get_params().items():
-            if isinstance(value, primitive):
+            if key.startswith("logger"):
+                continue
+            elif isinstance(value, primitive):
                 params[key] = value
             else:
-                params[key] = str(value)
+                params[key] = self._get_full_class_name(value)
 
         self.json_config["config"] = params
 
@@ -111,8 +120,8 @@ class JsonIO:
     # Save Elitist
     def _save_elitist(self, elitist):
         self.json_config["elitist"] = {"genome":        JsonIO.convert_to_json_format(elitist.genome),
-                                       "mixing":        str(elitist.mixing),
-                                       "fitness":       str(elitist.fitness),
+                                       "mixing":        self._get_full_class_name(elitist.mixing),
+                                       "fitness":       self._get_full_class_name(elitist.fitness),
                                        "individual":    JsonIO.convert_individual_to_json(elitist)}
 
     # Load Config
@@ -131,15 +140,9 @@ class JsonIO:
         return getattr(module, class_string)
 
     def _get_longest_key(self, json_config):
-        longest = -1
-        longest_key = None
+        longest_key = max(json_config, key=lambda key: key.count('__'))
+        base_key = '__'.join(longest_key.split('__')[:-1])
 
-        for key in json_config:
-            if isinstance(key, str) and key.count("__") > longest:
-                longest = key.count("__")
-                longest_key = key
-
-        base_key = self._get_param_key(longest_key)
         return base_key, longest_key
 
     def _get_keys_with_same_base(self, json_config, base):
@@ -149,9 +152,6 @@ class JsonIO:
                 same_base_key_list.append(key)
 
         return same_base_key_list
-
-    def _get_param_key(self, dict_key):
-        return dict_key if dict_key.count("__") == 0 else dict_key[:dict_key.rfind("__")]
 
     def _update_longest_key(self, json_config, longest_key):
         if isinstance(json_config[longest_key], str) and json_config[longest_key].startswith("class:"):
@@ -165,7 +165,7 @@ class JsonIO:
         for key in self._get_keys_with_same_base(json_config, base_key):
             param = key[key.rfind("__") + 2:]
 
-            if json_config[key] == "None":
+            if json_config[key] == "NoneType":
                 params[param] = None
             elif isinstance(json_config[key], str) and json_config[key].startswith("class:"):
                 json_config[key] = self._get_class(json_config[key])()
@@ -186,13 +186,6 @@ class JsonIO:
             json_config[base_key] = self._get_class(json_config[base_key])(**params)
 
     def _load_config(self, json_config):
-        # TODO: Logger has a list of tuples, find a way to get the class anyway
-        del json_config["logger__loggers"]
-        del json_config["logger__stdout"]
-        del json_config["logger__mlflow"]
-        del json_config["logger__stdout__progress_bar"]
-        del json_config["logger"]
-
         self._deserialize_config(json_config)
         json_config["logger"] = CombinedLogger([('stdout', StdoutLogger()), ('mlflow', MlflowLogger())])
         self.suprb = SupRB2(**json_config)

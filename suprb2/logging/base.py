@@ -22,10 +22,3 @@ class BaseLogger(BaseComponent):
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
         """Log the final state of the estimator. It is assumed that the fitting process is already completed."""
         pass
-
-    def __str__(self):
-        class_name = self.__class__
-        module = class_name.__module__
-        if module == 'builtins':
-            return class_name.__qualname__
-        return "class:" + module + '.' + class_name.__qualname__
