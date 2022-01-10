@@ -126,11 +126,6 @@ class JsonIO:
 
     # Load Config
     def _get_class(self, value):
-        # TODO: Change this
-        if value == "LinearRegression()":
-            module = importlib.import_module("sklearn.linear_model")
-            return getattr(module, value[:-2])
-
         value = value[6:]
         separator_idx = value.rfind(".")
         module_string = value[:separator_idx]
