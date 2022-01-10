@@ -103,8 +103,7 @@ def _get_json_model(model):
                     "n_features_in_": getattr(model, "n_features_in_"),
                     "intercept_":     getattr(model, "intercept_")}
 
-    return {_get_full_class_name(model): {"init_params": model.get_params(),
-                                          "model_params": model_params}}
+    return {_get_full_class_name(model): {"model_params": model_params}}
 
 
 def _load_config(json_config):
@@ -197,7 +196,7 @@ def _convert_json_to_rule(json_rule):
 
 def _convert_model(json_model):
     model_name = list(json_model.keys())[0]
-    model = _get_class(model_name)(**json_model[model_name]["init_params"])
+    model = _get_class(model_name)()
 
     for name, p in json_model[model_name]["model_params"].items():
         if (name == "coef_") or (name == "singular_"):
