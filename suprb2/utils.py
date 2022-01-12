@@ -16,19 +16,20 @@ def check_random_state(seed) -> RandomState:
 
     Parameters
     ----------
-    seed : None, int or instance of RandomState
-        If seed is None, return the RandomState singleton used by np.random.
-        If seed is an int, return a new Generator instance seeded with seed.
-        If seed is already a RandomState or Generator instance, return it.
+    seed : None, int or instance of RandomState, Generator
+        If seed is None, return a Generator seeded by numpy.
+        If seed is an int or SeedSequence, return a new Generator instance seeded with seed.
+        If seed is a RandomState instance, return a new Generator instance seeded with its SeedSequence.
+        If seed is already a Generator instance, return it.
         Otherwise raise ValueError.
     """
-    if seed is None or seed is np.random:
-        return np.random.mtrand._rand
-    if isinstance(seed, numbers.Integral) or isinstance(seed, np.random.SeedSequence):
+    if seed is None or isinstance(seed, numbers.Integral) or isinstance(seed, np.random.SeedSequence):
         return np.random.default_rng(seed)
-    if isinstance(seed, np.random.RandomState) or isinstance(seed, np.random.Generator):
+    if isinstance(seed, np.random.RandomState):
+        return np.random.default_rng(seed.bit_generator._seed_seq)
+    if isinstance(seed, np.random.Generator):
         return seed
-    raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
+    raise ValueError('%r cannot be used to seed a numpy.random.Generator'
                      ' instance' % seed)
 
 
