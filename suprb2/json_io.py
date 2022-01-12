@@ -10,6 +10,10 @@ from suprb2.logging.combination import CombinedLogger
 from .rule import Rule
 import importlib
 
+"""(De)Serialization currenlty only supports LinearRegression as local models. """
+
+CLASS_PREFIX = "class:"
+
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -60,7 +64,7 @@ def _get_full_class_name(instance):
     module = class_name.__module__
     if module == 'builtins':
         return class_name.__qualname__
-    return "class:" + module + '.' + class_name.__qualname__
+    return CLASS_PREFIX + module + '.' + class_name.__qualname__
 
 
 def _save_config(suprb):
@@ -93,10 +97,10 @@ def _convert_rule_to_json(rule):
             "bounds":        _convert_to_json_format(rule.bounds),
             "fitness":       _get_full_class_name(rule.fitness),
             "is_fitted_":    rule.is_fitted_,
-            "model":         _get_json_model(rule.model)}
+            "model":         _convert_linear_regression_to_json(rule.model)}
 
 
-def _get_json_model(model):
+def _convert_linear_regression_to_json(model):
     model_params = {"coef_":          _convert_to_json_format(getattr(model, "coef_")),
                     "rank_":          getattr(model, "rank_"),
                     "singular_":      _convert_to_json_format(getattr(model, "singular_")),
@@ -108,14 +112,11 @@ def _get_json_model(model):
 
 def _load_config(json_config):
     _deserialize_config(json_config)
-    json_config["logger"] = CombinedLogger([('stdout', StdoutLogger()), ('mlflow', MlflowLogger())])
     return SupRB2(**json_config)
 
 
 def _deserialize_config(json_config):
-    number_of_arguments_for_suprb = 8
-
-    while len(list(json_config.keys())) != number_of_arguments_for_suprb:
+    while "__" in "".join(json_config.keys()):
         base_key, longest_key = _get_longest_key(json_config)
         _update_longest_key(json_config, longest_key)
         params = _update_same_base_keys(json_config, base_key)
@@ -130,14 +131,14 @@ def _get_longest_key(json_config):
 
 
 def _update_longest_key(json_config, longest_key):
-    if isinstance(json_config[longest_key], str) and json_config[longest_key].startswith("class:"):
+    if isinstance(json_config[longest_key], str) and json_config[longest_key].startswith(CLASS_PREFIX):
         json_config[longest_key] = _get_class(json_config[longest_key])()
     else:
         json_config[longest_key] = json_config[longest_key]
 
 
 def _get_class(full_class_name):
-    full_class_name = full_class_name[6:]
+    full_class_name = full_class_name.replace(CLASS_PREFIX, "")
     separator_idx = full_class_name.rfind(".")
     module_string = full_class_name[:separator_idx]
     class_string = full_class_name[separator_idx+1:]
@@ -154,7 +155,7 @@ def _update_same_base_keys(json_config, base_key):
 
         if json_config[key] == "NoneType":
             params[param] = None
-        elif isinstance(json_config[key], str) and json_config[key].startswith("class:"):
+        elif isinstance(json_config[key], str) and json_config[key].startswith(CLASS_PREFIX):
             json_config[key] = _get_class(json_config[key])()
         else:
             params[param] = json_config[key]

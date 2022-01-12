@@ -73,7 +73,8 @@ class TestJsonIO:
         model_params = model.get_params()
 
         for key in json_io_params:
-            assert(type(json_io_params[key]) == type(model_params[key]))
+            if not key.startswith("logger"):
+                assert(type(json_io_params[key]) == type(model_params[key]))
 
     def test_smoke_test(self):
         model, X, y = setup()
