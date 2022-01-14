@@ -130,6 +130,7 @@ class SupRB2(BaseRegressor):
 
         # Init optimizers
         self.individual_optimizer_.pool_ = self.pool_
+        self.individual_optimizer_.init.fitness.max_genome_length_ = self.n_rules * self.n_iter + self.n_initial_rules
         self.rule_generation_.pool_ = self.pool_
 
         # Init Logging
