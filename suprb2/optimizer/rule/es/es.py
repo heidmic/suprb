@@ -1,4 +1,5 @@
 import warnings
+from collections import deque
 from typing import Optional
 
 import numpy as np
@@ -74,8 +75,12 @@ class ES1xLambda(ParallelSingleRuleGeneration):
 
         elitist = initial_rule
 
+        elitists = deque(maxlen=self.lmbda)
+
         # Main iteration
         for iteration in range(self.n_iter):
+            elitists.append(elitist)
+
             # Generate, fit and evaluate lambda children
             children = [self.constraint(self.mutation(elitist, random_state=random_state))
                             .fit(X, y) for _ in range(self.lmbda)]
@@ -93,13 +98,11 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             if self.operator == '+':
                 children.append(elitist)
                 elitist = self.selection(children, random_state=random_state)
-            elif self.operator == ',':
+            elif self.operator in (',', '&'):
                 elitist = self.selection(children, random_state=random_state)
-            elif self.operator == '&':
-                candidate = self.selection(children, random_state=random_state)
-                if candidate.fitness_ <= elitist.fitness_:
+            if self.operator == '&':
+                if len(elitists) == self.lmbda and all(map(lambda e: e.fitness_ <= elitists[0].fitness_, elitists)):
+                    elitist = elitists[0]
                     break
-                else:
-                    elitist = candidate
 
         return elitist
