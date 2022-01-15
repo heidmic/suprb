@@ -13,7 +13,7 @@ from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import ParallelSingleRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import PoolMatching, RuleOriginGeneration
+from ..origin import RuleMatching, RuleOriginGeneration
 
 
 class ES1xLambda(ParallelSingleRuleGeneration):
@@ -47,7 +47,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  n_iter: int = 10,
                  lmbda: int = 20,
                  operator: str = ',',
-                 origin_generation: RuleOriginGeneration = PoolMatching(),
+                 origin_generation: RuleOriginGeneration = RuleMatching(),
                  init: RuleInit = HalfnormInit(),
                  mutation: RuleMutation = Normal(),
                  selection: RuleSelection = Fittest(),

@@ -13,7 +13,7 @@ class RuleOriginGeneration(BaseComponent, metaclass=ABCMeta):
     """Determines a set of examples to initiate new rules around, i.e., the origins of new rules."""
 
     @abstractmethod
-    def __call__(self, n_rules: int, X: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
+    def __call__(self, n_rules: int, X: np.ndarray, y: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
                  random_state: RandomState) -> np.ndarray:
         pass
 
@@ -21,27 +21,30 @@ class RuleOriginGeneration(BaseComponent, metaclass=ABCMeta):
 class UniformOrigin(RuleOriginGeneration):
     """Sample origins uniformly in the input space."""
 
-    def __call__(self, n_rules: int, X: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
-                 random_state: RandomState) -> np.ndarray:
+    def __call__(self, n_rules: int, X: np.ndarray, random_state: RandomState, **kwargs) -> np.ndarray:
         return random_state.uniform(np.min(X, axis=0), np.max(X, axis=0), size=(n_rules, X.shape[1]))
 
 
-class SubgroupMatching(RuleOriginGeneration):
+class RuleStatisticsOrigin(RuleOriginGeneration):
     """
-    Bias the examples that were matched less than others by rules in the particular subgroup
-    defined by `_subgroup()` to have a higher probability to be selected.
+    Sample origins with weights calculated from rules in the pool.
+    If `use_elitist` is set, the matching is only calculated on
+     the subpopulation of the current elitist (the current elitist solution).
     """
+
+    def __init__(self, use_elitist: bool = False):
+        self.use_elitist = use_elitist
 
     def __call__(self, n_rules: int, X: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
-                 random_state: RandomState) -> np.ndarray:
+                 random_state: RandomState, **kwargs) -> np.ndarray:
 
-        subgroup = self._subgroup(pool=pool, elitist=elitist)
+        subgroup = elitist.subpopulation if elitist is not None and self.use_elitist else pool
 
         if subgroup:
-            counts = np.count_nonzero(np.stack([rule.match_ for rule in subgroup], axis=0) == 0, axis=0)
-            counts_sum = np.sum(counts)
-            # If all input values are matched by every rule, no bias is needed
-            probabilities = counts / counts_sum if counts_sum != 0 else None
+            weights = self._calculate_weights(subgroup=subgroup, X=X, elitist=elitist, random_state=random_state, **kwargs)
+            weights_sum = np.sum(weights)
+            # If all weights are zero, no bias is needed
+            probabilities = weights / weights_sum if weights_sum != 0 else None
         else:
             # No bias needed when no rule exists
             probabilities = None
@@ -50,28 +53,29 @@ class SubgroupMatching(RuleOriginGeneration):
         return X[indices]
 
     @abstractmethod
-    def _subgroup(self, pool: list[Rule], elitist: Optional[Individual]) -> list[Rule]:
+    def _calculate_weights(self, subgroup: list[Rule], **kwargs) -> np.ndarray:
         pass
 
 
-class PoolMatching(SubgroupMatching):
+class RuleMatching(RuleStatisticsOrigin):
     """
-    Bias the examples that were matched less than others by rules in the pool to
-    have a higher probability to be selected.
-    """
-
-    def _subgroup(self, pool: list[Rule], elitist: Optional[Individual]) -> list[Rule]:
-        return pool
-
-
-class ElitistMatching(SubgroupMatching):
-    """
-    Bias the examples that were matched less than others by rules in the subpopulation of
-    the current elitist (the current elitist solution) to have a higher probability to be selected.
+    Bias the examples that were matched less than others by rules
+     to have a higher probability to be selected.
     """
 
-    def _subgroup(self, pool: list[Rule], elitist: Optional[Individual]) -> list[Rule]:
-        if elitist is not None:
-            return elitist.subpopulation
+    def _calculate_weights(self, subgroup: list[Rule], **kwargs) -> np.ndarray:
+        return np.count_nonzero(np.stack([rule.match_ for rule in subgroup], axis=0) == 0, axis=0)
+
+
+class RuleError(RuleStatisticsOrigin):
+    """Bias the examples that have higher error on rules to have a higher probability to be selected."""
+
+    def _calculate_weights(self, X: np.ndarray = None, y: np.ndarray = None, elitist: Individual = None,
+                           **kwargs) -> np.ndarray:
+
+        if self.use_elitist:
+            pred = elitist.predict(X)
         else:
-            return pool
+            pred = elitist.clone(genome=np.ones(len(elitist.pool))).predict(X)
+
+        return (pred - y) ** 2
