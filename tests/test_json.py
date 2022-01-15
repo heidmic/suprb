@@ -13,7 +13,7 @@ from suprb2.logging.stdout import StdoutLogger
 from suprb2.optimizer.individual import ga
 from suprb2.optimizer.rule import es
 from suprb2.utils import check_random_state
-import suprb2.json_io as json_io
+import suprb2.json as json
 
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state=None):
@@ -68,8 +68,8 @@ class TestJsonIO:
         model = scores["estimator"][0]
         json_io_params = model.get_params()
 
-        original_config = json_io._save_config(model)
-        model = json_io._load_config(original_config["config"])
+        original_config = json._save_config(model)
+        model = json._load_config(original_config["config"])
         model_params = model.get_params()
 
         for key in json_io_params:
@@ -87,8 +87,8 @@ class TestJsonIO:
         model = scores["estimator"][0]
         original_prediction = model.predict(X_predict)
 
-        json_io.dump(model, "save_state.json")
-        model = json_io.load("save_state.json")
+        json.dump(model, "save_state.json")
+        model = json.load("save_state.json")
         loaded_prediction = model.predict(X_predict)
 
         assert((original_prediction == loaded_prediction).all())
