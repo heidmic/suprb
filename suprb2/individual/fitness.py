@@ -30,7 +30,7 @@ class ComplexityIndividualFitness(IndividualFitness, metaclass=ABCMeta):
 
     def __call__(self, individual: Individual) -> float:
         return self.fitness_func_(self.alpha, pseudo_accuracy(individual.error_),
-                                  c_norm(individual.complexity_, individual.input_size_)) * 100
+                                  c_norm(individual.complexity_, self.max_genome_length_)) * 100
 
 
 class ComplexityEmary(ComplexityIndividualFitness):

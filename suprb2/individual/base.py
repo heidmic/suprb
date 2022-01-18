@@ -26,6 +26,8 @@ class MixingModel(BaseComponent, metaclass=ABCMeta):
 class IndividualFitness(BaseFitness, metaclass=ABCMeta):
     """Evaluate the fitness of a `Individual`."""
 
+    max_genome_length_: int
+
     @abstractmethod
     def __call__(self, individual: Individual) -> float:
         pass

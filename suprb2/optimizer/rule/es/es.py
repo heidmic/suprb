@@ -1,4 +1,5 @@
 import warnings
+from collections import deque
 from typing import Optional
 
 import numpy as np
@@ -12,7 +13,7 @@ from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import ParallelSingleRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import PoolMatching, RuleOriginGeneration
+from ..origin import Matching, RuleOriginGeneration
 
 
 class ES1xLambda(ParallelSingleRuleGeneration):
@@ -31,6 +32,8 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         ',' replaces the elitist in every generation.
         '+' may keep the elitist.
         '&' behaves similar to '+' and ends the optimization process, if no improvement is found in a generation.
+    delay: int
+        Only relevant if operator is '&'. Controls the number of elitists which need to be worse before stopping.
     init: RuleInit
     mutation: RuleMutation
     selection: RuleSelection
@@ -46,7 +49,8 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  n_iter: int = 10,
                  lmbda: int = 20,
                  operator: str = ',',
-                 origin_generation: RuleOriginGeneration = PoolMatching(),
+                 delay: int = 20,
+                 origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = HalfnormInit(),
                  mutation: RuleMutation = Normal(),
                  selection: RuleSelection = Fittest(),
@@ -66,6 +70,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         )
 
         self.lmbda = lmbda
+        self.delay = delay
         self.operator = operator
         self.mutation = mutation
         self.selection = selection
@@ -74,8 +79,12 @@ class ES1xLambda(ParallelSingleRuleGeneration):
 
         elitist = initial_rule
 
+        elitists = deque(maxlen=self.delay)
+
         # Main iteration
         for iteration in range(self.n_iter):
+            elitists.append(elitist)
+
             # Generate, fit and evaluate lambda children
             children = [self.constraint(self.mutation(elitist, random_state=random_state))
                             .fit(X, y) for _ in range(self.lmbda)]
@@ -93,13 +102,11 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             if self.operator == '+':
                 children.append(elitist)
                 elitist = self.selection(children, random_state=random_state)
-            elif self.operator == ',':
+            elif self.operator in (',', '&'):
                 elitist = self.selection(children, random_state=random_state)
-            elif self.operator == '&':
-                candidate = self.selection(children, random_state=random_state)
-                if candidate.fitness_ <= elitist.fitness_:
+            if self.operator == '&':
+                if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
+                    elitist = elitists[0]
                     break
-                else:
-                    elitist = candidate
 
         return elitist

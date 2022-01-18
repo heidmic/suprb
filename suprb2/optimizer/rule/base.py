@@ -69,7 +69,7 @@ class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
         self.random_state_ = check_random_state(self.random_state)
         random_states = spawn_random_states(self.random_state_, n=n_rules)
 
-        origins = self.origin_generation(n_rules=n_rules, X=X, pool=self.pool_, elitist=self.elitist_,
+        origins = self.origin_generation(n_rules=n_rules, X=X, y=y, pool=self.pool_, elitist=self.elitist_,
                                          random_state=self.random_state_)
 
         initial_rules = []
