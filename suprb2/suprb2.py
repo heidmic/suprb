@@ -194,6 +194,10 @@ class SupRB2(BaseRegressor):
 
         self._log_to_stdout(f"Optimizing populations", priority=4)
 
+        # Update the random state
+        self.individual_optimizer_.random_state = self.individual_optimizer_seeds_[self.step_]
+
+        # Optimize
         self.individual_optimizer_.optimize(X, y)
 
     def predict(self, X: np.ndarray):
