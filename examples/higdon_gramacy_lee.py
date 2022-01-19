@@ -49,7 +49,7 @@ if __name__ == '__main__':
         rule_generation=es.ES1xLambda(
             n_iter=100,
             operator='&',
-            origin_generation=rule_opt.origin.ElitistMatching(),
+            origin_generation=rule_opt.origin.Matching(),
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
             mutation=es.mutation.HalfnormIncrease(sigma=0.1),
         ),
