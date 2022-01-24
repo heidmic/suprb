@@ -14,7 +14,7 @@ from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import MultiRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import PoolMatching, RuleOriginGeneration, UniformOrigin
+from ..origin import Matching, RuleOriginGeneration
 
 
 class NoveltySearch(MultiRuleGeneration):
@@ -23,7 +23,7 @@ class NoveltySearch(MultiRuleGeneration):
                  n_iter: int = 10,
                  lmbda: int = 6,
                  mu: int = 7,
-                 origin_generation: RuleOriginGeneration = PoolMatching(),
+                 origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = HalfnormInit(),
                  crossover: RuleCrossover = UniformCrossover(),
                  mutation: RuleMutation = Normal(),
