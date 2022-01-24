@@ -36,7 +36,7 @@ class NPoint(IndividualCrossover):
         return A.clone(genome=np.append(A.genome[:index], B.genome[index:]))
 
     def _crossover(self, A: Individual, B: Individual, random_state: RandomState) -> Individual:
-        indices = random_state.choice(np.arange(len(A.genome)), size=self.n, replace=False)
+        indices = random_state.choice(np.arange(len(A.genome)), size=min(self.n, len(A.genome)), replace=False)
         for index in indices:
             A = self._single_point(A, B, index)
             B = self._single_point(B, A, index)
