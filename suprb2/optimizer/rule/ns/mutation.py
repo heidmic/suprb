@@ -11,7 +11,7 @@ from suprb2.utils import RandomState
 class RuleMutation(BaseComponent, metaclass=ABCMeta):
     """Mutates the bounds of a rule with the strength defined by sigma."""
 
-    def __init__(self, sigma: float = 0.1):
+    def __init__(self, sigma: float = 0.01):
         self.sigma = sigma
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:

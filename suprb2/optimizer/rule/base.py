@@ -98,6 +98,5 @@ class MultiRuleGeneration(RuleGeneration, metaclass=ABCMeta):
         return self._filter_invalid_rules(X=X, y=y, rules=rules)
 
     @abstractmethod
-    def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> \
-    Optional[Rule]:
+    def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> Optional[Rule]:
         pass
