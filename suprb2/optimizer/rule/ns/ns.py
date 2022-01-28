@@ -50,6 +50,7 @@ class NoveltySearch(MultiRuleGeneration):
         self.selection = selection
         self.iterations = 10
         self.first_iter = True
+        self.minimal_criteria = True
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule, float]:
 
