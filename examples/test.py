@@ -26,7 +26,11 @@ if __name__ == '__main__':
             rule_generation=ns.NoveltySearch(
                 n_iter=100,
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=ns.mutation.HalfnormIncrease(sigma=2)
+                minimal_criteria=False,
+                threshold_fitness=None,
+                threshold_error=None,
+                threshold_amount_matched=10,
+                local_competition=False
             ),
             individual_optimizer=ga.GeneticAlgorithm(
                 n_iter=128,
