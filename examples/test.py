@@ -1,14 +1,20 @@
 import pandas as pd
 from sklearn.datasets import fetch_openml
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, \
+    HistGradientBoostingRegressor, AdaBoostRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.svm import SVR
+from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
 from suprb2 import SupRB2
 from suprb2 import rule
 from suprb2.logging.stdout import StdoutLogger
 from suprb2.optimizer.individual import ga
-from suprb2.optimizer.rule import ns, es
+from suprb2.optimizer.rule import ns
 
 if __name__ == '__main__':
     random_state = 42
@@ -30,7 +36,8 @@ if __name__ == '__main__':
                 threshold_fitness=None,
                 threshold_error=None,
                 threshold_amount_matched=10,
-                local_competition=False
+                local_competition=False,
+                archive='novelty'
             ),
             individual_optimizer=ga.GeneticAlgorithm(
                 n_iter=128,
@@ -49,7 +56,8 @@ if __name__ == '__main__':
 
     def run(name, model):
         print(f"[EVALUATION] {name}")
-        return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=4, verbose=10, scoring='r2'), name='r2')
+        return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=4, verbose=10, scoring='neg_root_mean_squared_error')
+                         , name='negated RMSE')
 
 
     scores = pd.concat({name: run(name=name, model=model) for name, model in models.items()}, axis=0).to_frame()

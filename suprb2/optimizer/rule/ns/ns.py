@@ -16,13 +16,13 @@ from ..origin import RuleOriginGeneration, UniformSamplesOrigin
 class NoveltySearch(MultiRuleGeneration):
 
     def __init__(self,
-                 n_iter: int = 10,
-                 lmbda: int = 70,
-                 mu: int = 7,
+                 n_iter: int = None,
+                 lmbda: int = 160,       # has to be even
+                 mu: int = 16,
                  origin_generation: RuleOriginGeneration = UniformSamplesOrigin(),
                  init: RuleInit = HalfnormInit(),
                  crossover: RuleCrossover = UniformCrossover(),
-                 mutation: RuleMutation = Normal(sigma=0.25),
+                 mutation: RuleMutation = Normal(sigma=0.1),
                  selection: RuleSelection = Random(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
@@ -32,7 +32,8 @@ class NoveltySearch(MultiRuleGeneration):
                  threshold_fitness: float = None,
                  threshold_error: float = None,
                  threshold_amount_matched: int = None,
-                 local_competition: bool = False
+                 local_competition: bool = False,
+                 archive: str = 'novelty'               # novelty, random or no
                  ):
         super().__init__(
             n_iter=n_iter,
@@ -49,7 +50,7 @@ class NoveltySearch(MultiRuleGeneration):
         self.crossover = crossover
         self.mutation = mutation
         self.selection = selection
-        self.iterations = 10
+        self.iterations = n_iter
         self.first_iter = True
 
         self.minimal_criteria = minimal_criteria
@@ -58,6 +59,8 @@ class NoveltySearch(MultiRuleGeneration):
         self.threshold_amount_matched = threshold_amount_matched
 
         self.local_competition = local_competition
+
+        self.archive = archive
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule, float]:
         population = self._init_population(X, y)
@@ -81,7 +84,7 @@ class NoveltySearch(MultiRuleGeneration):
             population = self._new_population(X, y, children, parents)
 
             # at the end of first iteration change behaviour to normal
-            if self.first_iter and i == self.iterations - 1:
+            if self.first_iter and i == self.iterations - 1 and self.archive != 'no':
                 self.first_iter = False
 
         return population
@@ -107,10 +110,10 @@ class NoveltySearch(MultiRuleGeneration):
             # no need to enter if there is no valid_archive
             if self.local_competition and valid_archive:
                 count_worse = 0
-                for x, _ in rules_w_distances[:int(round(len(rules_w_distances) / 10))]:
+                for x, _ in rules_w_distances[:int(round(len(rules_w_distances) / 20))]:
                     if x.fitness_ < rule.fitness_:
                         count_worse += 1
-                local_score = count_worse / len(rules_w_distances[:int(round(len(rules_w_distances) / 10))])
+                local_score = count_worse / len(rules_w_distances[:int(round(len(rules_w_distances) / 20))])
                 novelty_score = novelty_score + local_score
 
             # matched_data_count is the secondary key which decides what rule is better if novelty is the same

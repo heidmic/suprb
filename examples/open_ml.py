@@ -61,7 +61,8 @@ if __name__ == '__main__':
 
     def run(name, model):
         print(f"[EVALUATION] {name}")
-        return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=4, verbose=10, scoring='r2'), name='r2')
+        return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=4, verbose=10, scoring='neg_root_mean_squared_error')
+                         , name='negated RMSE')
 
     scores = pd.concat({name: run(name=name, model=model) for name, model in models.items()}, axis=0).to_frame()
     scores.index.names = ['model', 'cv']
