@@ -31,13 +31,13 @@ if __name__ == '__main__':
         SupRB2(
             rule_generation=ns.NoveltySearch(
                 n_iter=100,
+                mu=16,
+                sigma=0.1,
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                minimal_criteria=False,
-                threshold_fitness=None,
-                threshold_error=None,
+                ns_type='NS',
                 threshold_amount_matched=10,
-                local_competition=False,
-                archive='novelty'
+                archive='novelty',
+                fitness_novelty_combination='pareto'
             ),
             individual_optimizer=ga.GeneticAlgorithm(
                 n_iter=128,
