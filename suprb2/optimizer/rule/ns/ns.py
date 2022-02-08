@@ -70,7 +70,7 @@ class NoveltySearch(MultiRuleGeneration):
         self.archive = archive
         self.fitness_novelty_combination = fitness_novelty_combination
 
-    def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule, float]:
+    def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
         population = self._init_population(X, y)
         self.last_iter_inner = False
 
@@ -101,7 +101,7 @@ class NoveltySearch(MultiRuleGeneration):
 
         return population
 
-    def _calculate_novelty_score(self, rules: list[Rule], archive: list[Rule], k: int) -> list[Rule, float]:
+    def _calculate_novelty_score(self, rules: list[Rule], archive: list[Rule], k: int) -> list[tuple(Rule, float, int)]:
 
         rules_with_novelty_score = []
 
@@ -153,7 +153,7 @@ class NoveltySearch(MultiRuleGeneration):
 
         return rules_with_novelty_score
 
-    def _init_population(self, X: np.ndarray, y: np.ndarray):
+    def _init_population(self, X: np.ndarray, y: np.ndarray) -> list[Rule]:
         population = []
         if len(self.pool_) < int(self.mu / 2):
             origins = self.origin_generation(n_rules=(self.mu - len(self.pool_)), X=X, pool=self.pool_,
@@ -169,7 +169,7 @@ class NoveltySearch(MultiRuleGeneration):
             population.extend(self.random_state_.choice(self.pool_, size=int(self.mu / 2)))
         return population
 
-    def _new_population(self, children: list[Rule], parents: list[Rule]):
+    def _new_population(self, children: list[Rule], parents: list[Rule]) -> list[Rule]:
         population = []
         if self.last_iter_inner and self.archive == 'random':
             children_w_ns = self._calculate_novelty_score(rules=children, archive=children, k=15)
@@ -197,7 +197,7 @@ class NoveltySearch(MultiRuleGeneration):
             population.extend([x[0] for x in parents_w_ns][:int(round(self.mu * 1 / 7))])
         return population
 
-    def _filter_for_minimal_criteria(self, rules: list[Rule]):
+    def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
         if self.threshold_error:
             rules = [rule for rule in rules if rule.error_ > self.threshold_error]
         if self.threshold_fitness:
@@ -206,7 +206,7 @@ class NoveltySearch(MultiRuleGeneration):
             rules = [rule for rule in rules if np.count_nonzero(rule.match_) > self.threshold_amount_matched]
         return rules
 
-    def _filter_for_progressive_minimal_criteria(self, rules: list[Rule]):
+    def _filter_for_progressive_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
         self.threshold_fitness = np.median([rule.fitness_ for rule in rules])
         if self.threshold_fitness:
             rules = [rule for rule in rules if rule.fitness_ >= self.threshold_fitness]
