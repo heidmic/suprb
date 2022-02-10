@@ -23,13 +23,16 @@
   
 
   \node[initial,state,minimum size=2.1cm] (D)                    {Discover\\ Rules};
-  \node[state,minimum size=2.1cm]         (C) [below of=D]       {Create\\ Solution\\ from Pool};
+  \node[state,minimum size=2.1cm]         (C) [below of=D]       {Compose\\ Solution\\ from Pool};
   \node[state,accepting,yshift=2cm,minimum size=0.1cm](T)[below of=C]		  {};
 
-  \path (D) edge[loop above] node {$-$ / $n++$}	(D)
-            edge[bend left]	node[align=right] {$n=n_{RD}$ / put rules into pool, $n\leftarrow0$}	(C)
+  \path (D) edge[loop above] node {$-$ / $n \leftarrow n+1$}	(D)
+            edge[bend left]	node[align=right] {
+            \begin{tabular}{p{1.8cm} @{\hspace{0.5\tabcolsep}} p{2.5cm}}
+            $n=n_{RD}$ / & \raggedright put rules into pool, $n\leftarrow0$
+            \end{tabular} }	(C)
 		(C) edge[bend left] node[align=right] {$n=n_{SC}$ / $n\leftarrow0$}	  	(D)
-			edge[loop right] node {$-$ / $n++$}		(C)
+			edge[loop right] node {$-$ / $n \leftarrow n+1$}		(C)
 			edge			  node[align=center] {termination criterion / $-$}		(T);
 \end{tikzpicture}
 
