@@ -17,7 +17,7 @@ class StdoutLogger(BaseLogger):
 
     def log_init(self, X: np.ndarray, y: np.ndarray, estimator: SupRB2):
         if self.progress_bar:
-            self.iterator_ = tqdm(desc='Fitting SupRB-2', total=estimator.n_iter, ncols=80)
+            self.iterator_ = tqdm(desc='Fitting SupRB2', total=estimator.n_iter, ncols=80)
 
     def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: SupRB2, iteration: int):
 
