@@ -57,3 +57,9 @@ class NondominatedSort(RuleSelection):
                 candidates.append(rule)
 
         return random_state.choice(candidates)
+
+
+class Random(RuleSelection):
+
+    def __call__(self, rules: list[Rule], random_state: RandomState) -> Rule:
+        return random_state.choice(rules)

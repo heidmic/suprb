@@ -7,8 +7,8 @@ import numpy as np
 from suprb2.rule import Rule, RuleInit
 from suprb2.rule.initialization import HalfnormInit
 from suprb2.utils import RandomState
-from .mutation import RuleMutation, Normal
-from .selection import RuleSelection, Fittest
+from ..mutation import RuleMutation, Normal
+from ..selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import ParallelSingleRuleGeneration

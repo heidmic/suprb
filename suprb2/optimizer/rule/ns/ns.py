@@ -1,13 +1,11 @@
-import random
-
 import numpy as np
 from scipy.spatial.distance import hamming
 
 from suprb2.rule import Rule, RuleInit
 from suprb2.rule.initialization import HalfnormInit
 from .crossover import RuleCrossover, UniformCrossover
-from .mutation import RuleMutation, Normal
-from .selection import RuleSelection, Random
+from suprb2.optimizer.rule.mutation import Normal
+from suprb2.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import MultiRuleGeneration
@@ -81,14 +79,14 @@ class NoveltySearch(MultiRuleGeneration):
                 self.last_iter_inner = True
 
             # select lambda parents from population for crossover
-            parents = self.selection(population, size=self.lmbda, random_state=self.random_state_)
+            parents = []
+            for j in range(self.lmbda):
+                parents.append(self.selection(population, random_state=self.random_state_))
 
             # from parents generate children through crossover and mutation
             children = []
-            parents_iter = iter(parents)
-            for parent in parents_iter:
-                children.extend(self.crossover(A=parent, B=next(parents_iter), random_state=self.random_state_))
-
+            for j in range(0, len(parents) - 1, 2):
+                children.extend(self.crossover(A=parents[i], B=parents[i + 1], random_state=self.random_state_))
             children = [self.constraint(self.mutation(child, random_state=self.random_state_))
                             .fit(X, y) for child in children]
 
@@ -101,7 +99,7 @@ class NoveltySearch(MultiRuleGeneration):
 
         return population
 
-    def _calculate_novelty_score(self, rules: list[Rule], archive: list[Rule], k: int) -> list[tuple(Rule, float, int)]:
+    def _calculate_novelty_score(self, rules: list[Rule], archive: list[Rule], k: int) -> list[tuple[Rule, float, int]]:
 
         rules_with_novelty_score = []
 
@@ -171,30 +169,25 @@ class NoveltySearch(MultiRuleGeneration):
 
     def _new_population(self, children: list[Rule], parents: list[Rule]) -> list[Rule]:
         population = []
+
         if self.last_iter_inner and self.archive == 'random':
             children_w_ns = self._calculate_novelty_score(rules=children, archive=children, k=15)
             self.random_state_.shuffle(children_w_ns)
-            population.extend([x[0] for x in children_w_ns][:int(round(self.mu * 6 / 7))])
-
             parents_w_ns = self._calculate_novelty_score(rules=parents, archive=parents, k=15)
             self.random_state_.shuffle(parents_w_ns)
-            population.extend([x[0] for x in parents_w_ns][:int(round(self.mu * 1 / 7))])
         elif self.first_iter_outer:
             children_w_ns = self._calculate_novelty_score(rules=children, archive=children, k=15)
             children_w_ns = sorted(children_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-            population.extend([x[0] for x in children_w_ns][:int(round(self.mu * 6 / 7))])
-
             parents_w_ns = self._calculate_novelty_score(rules=parents, archive=parents, k=15)
             parents_w_ns = sorted(parents_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-            population.extend([x[0] for x in parents_w_ns][:int(round(self.mu * 1 / 7))])
         else:
             children_w_ns = self._calculate_novelty_score(rules=children, archive=self.pool_, k=15)
             children_w_ns = sorted(children_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-            population.extend([x[0] for x in children_w_ns][:int(round(self.mu * 6 / 7))])
-
             parents_w_ns = self._calculate_novelty_score(rules=parents, archive=self.pool_, k=15)
             parents_w_ns = sorted(parents_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-            population.extend([x[0] for x in parents_w_ns][:int(round(self.mu * 1 / 7))])
+
+        population.extend([x[0] for x in children_w_ns][:int(round(self.mu * 6 / 7))])
+        population.extend([x[0] for x in parents_w_ns][:int(round(self.mu * 1 / 7))])
         return population
 
     def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:

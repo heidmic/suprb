@@ -1,13 +1,7 @@
 import pandas as pd
 from sklearn.datasets import fetch_openml
-from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, \
-    HistGradientBoostingRegressor, AdaBoostRegressor
-from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
-from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.svm import SVR
-from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
 from suprb2 import SupRB2
