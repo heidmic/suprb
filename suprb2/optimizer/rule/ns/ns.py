@@ -86,7 +86,7 @@ class NoveltySearch(MultiRuleGeneration):
             # from parents generate children through crossover and mutation
             children = []
             for j in range(0, len(parents) - 1, 2):
-                children.extend(self.crossover(A=parents[i], B=parents[i + 1], random_state=self.random_state_))
+                children.extend(self.crossover(A=parents[j], B=parents[j + 1], random_state=self.random_state_))
             children = [self.constraint(self.mutation(child, random_state=self.random_state_))
                             .fit(X, y) for child in children]
 
