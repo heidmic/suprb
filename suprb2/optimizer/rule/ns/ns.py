@@ -32,7 +32,6 @@ class NoveltySearch(MultiRuleGeneration):
                  ns_type: str = 'NS',                           # NS, NSLC or MCNS
 
                  threshold_amount_matched: int = None,
-                 threshold_fitness: float = None,
 
                  archive: str = 'novelty',                      # novelty, random or none
                  fitness_novelty_combination: str = 'novelty'   # novelty, 50/50, 25/75, pmcns or pareto
@@ -60,7 +59,6 @@ class NoveltySearch(MultiRuleGeneration):
         self.ns_type = ns_type
 
         # params for MCNS
-        self.threshold_fitness = threshold_fitness
         self.threshold_amount_matched = threshold_amount_matched
 
         self.archive = archive
@@ -188,14 +186,11 @@ class NoveltySearch(MultiRuleGeneration):
         return population
 
     def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
-        if self.threshold_fitness:
-            rules = [rule for rule in rules if rule.fitness_ > self.threshold_fitness]
         if self.threshold_amount_matched:
             rules = [rule for rule in rules if np.count_nonzero(rule.match_) > self.threshold_amount_matched]
         return rules
 
     def _filter_for_progressive_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
-        self.threshold_fitness = np.median([rule.fitness_ for rule in rules])
-        if self.threshold_fitness:
-            rules = [rule for rule in rules if rule.fitness_ >= self.threshold_fitness]
+        threshold_fitness = np.median([rule.fitness_ for rule in rules])
+        rules = [rule for rule in rules if rule.fitness_ >= threshold_fitness]
         return rules
