@@ -33,7 +33,6 @@ class NoveltySearch(MultiRuleGeneration):
 
                  threshold_amount_matched: int = None,
                  threshold_fitness: float = None,
-                 threshold_error: float = None,
 
                  archive: str = 'novelty',                      # novelty, random or none
                  fitness_novelty_combination: str = 'novelty'   # novelty, 50/50, 25/75, pmcns or pareto
@@ -62,7 +61,6 @@ class NoveltySearch(MultiRuleGeneration):
 
         # params for MCNS
         self.threshold_fitness = threshold_fitness
-        self.threshold_error = threshold_error
         self.threshold_amount_matched = threshold_amount_matched
 
         self.archive = archive
@@ -79,9 +77,7 @@ class NoveltySearch(MultiRuleGeneration):
                 self.last_iter_inner = True
 
             # select lambda parents from population for crossover
-            parents = []
-            for j in range(self.lmbda):
-                parents.append(self.selection(population, random_state=self.random_state_))
+            parents = self.selection(population, random_state=self.random_state_, size=self.lmbda)
 
             # from parents generate children through crossover and mutation
             children = []
@@ -170,20 +166,21 @@ class NoveltySearch(MultiRuleGeneration):
     def _new_population(self, children: list[Rule], parents: list[Rule]) -> list[Rule]:
         population = []
 
-        if self.last_iter_inner and self.archive == 'random':
-            children_w_ns = self._calculate_novelty_score(rules=children, archive=children, k=15)
-            self.random_state_.shuffle(children_w_ns)
-            parents_w_ns = self._calculate_novelty_score(rules=parents, archive=parents, k=15)
-            self.random_state_.shuffle(parents_w_ns)
-        elif self.first_iter_outer:
-            children_w_ns = self._calculate_novelty_score(rules=children, archive=children, k=15)
-            children_w_ns = sorted(children_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-            parents_w_ns = self._calculate_novelty_score(rules=parents, archive=parents, k=15)
-            parents_w_ns = sorted(parents_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
+        if not self.first_iter_outer:
+            archive_children = self.pool_
+            archive_parents = self.pool_
         else:
-            children_w_ns = self._calculate_novelty_score(rules=children, archive=self.pool_, k=15)
+            archive_children = children
+            archive_parents = parents
+
+        children_w_ns = self._calculate_novelty_score(rules=children, archive=archive_children, k=15)
+        parents_w_ns = self._calculate_novelty_score(rules=parents, archive=archive_parents, k=15)
+
+        if self.last_iter_inner and self.archive == 'random':
+            self.random_state_.shuffle(children_w_ns)
+            self.random_state_.shuffle(parents_w_ns)
+        else:
             children_w_ns = sorted(children_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-            parents_w_ns = self._calculate_novelty_score(rules=parents, archive=self.pool_, k=15)
             parents_w_ns = sorted(parents_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
 
         population.extend([x[0] for x in children_w_ns][:int(round(self.mu * 6 / 7))])
@@ -191,8 +188,6 @@ class NoveltySearch(MultiRuleGeneration):
         return population
 
     def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
-        if self.threshold_error:
-            rules = [rule for rule in rules if rule.error_ > self.threshold_error]
         if self.threshold_fitness:
             rules = [rule for rule in rules if rule.fitness_ > self.threshold_fitness]
         if self.threshold_amount_matched:
