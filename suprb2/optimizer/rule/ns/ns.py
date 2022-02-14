@@ -15,6 +15,8 @@ from ..origin import RuleOriginGeneration, UniformSamplesOrigin
 
 class NoveltySearch(MultiRuleGeneration):
 
+    last_iter_inner: bool
+
     def __init__(self,
                  n_iter: int = 100,
                  mu: int = 16,
@@ -53,8 +55,6 @@ class NoveltySearch(MultiRuleGeneration):
         self.mutation = Normal(sigma=self.sigma)
         self.selection = selection
         self.iterations = n_iter
-        self.first_iter_outer = True
-        self.last_iter_inner = False
 
         self.ns_type = ns_type
 
@@ -87,10 +87,6 @@ class NoveltySearch(MultiRuleGeneration):
             # fill population for new iteration with 6/7 best children and 1/7 elitists
             population = self._new_population(children, parents)
 
-            # at the end of first iteration change behaviour to normal
-            if self.first_iter_outer and i == self.iterations - 1 and self.archive != 'none':
-                self.first_iter_outer = False
-
         return population
 
     def _calculate_novelty_score(self, rules: list[Rule], archive: list[Rule], k: int) -> list[tuple[Rule, float, int]]:
@@ -98,7 +94,7 @@ class NoveltySearch(MultiRuleGeneration):
         rules_with_novelty_score = []
 
         # filter rules for minimal criteria
-        if self.ns_type == 'MCNS' and not self.first_iter_outer:
+        if self.ns_type == 'MCNS' and self.pool_:
             rules = self._filter_for_minimal_criteria(rules)
 
         if self.fitness_novelty_combination == 'pmcns':
@@ -133,7 +129,7 @@ class NoveltySearch(MultiRuleGeneration):
 
             rules_with_novelty_score.append((rule, novelty_score, matched_data_count))
 
-        if self.fitness_novelty_combination == 'pareto' and not self.first_iter_outer:
+        if self.fitness_novelty_combination == 'pareto' and self.pool_:
             rules_with_novelty_score = sorted(rules_with_novelty_score, key=lambda a: (a[1], a[0].fitness_), reverse=True)
             p_front = [rules_with_novelty_score[0]]
 
@@ -164,7 +160,7 @@ class NoveltySearch(MultiRuleGeneration):
     def _new_population(self, children: list[Rule], parents: list[Rule]) -> list[Rule]:
         population = []
 
-        if not self.first_iter_outer:
+        if self.pool_ and self.archive != 'none':
             archive_children = self.pool_
             archive_parents = self.pool_
         else:
