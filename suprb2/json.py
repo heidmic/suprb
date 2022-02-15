@@ -2,7 +2,7 @@ import json
 import numpy as np
 
 from suprb2.suprb2 import SupRB2
-from .individual import Individual
+from .solution import Solution
 from suprb2.logging.stdout import StdoutLogger
 from suprb2.logging.mlflow import MlflowLogger
 from suprb2.logging.combination import CombinedLogger
@@ -209,7 +209,7 @@ def _convert_model(json_model):
 
 
 def _load_elitist(suprb):
-    suprb.elitist_ = Individual(genome=np.ones(len(suprb.pool_)),
-                                pool=suprb.pool_,
-                                mixing=suprb.individual_optimizer.init.mixing,
-                                fitness=suprb.individual_optimizer.init.fitness)
+    suprb.elitist_ = Solution(genome=np.ones(len(suprb.pool_)),
+                              pool=suprb.pool_,
+                              mixing=suprb.solution_optimizer.init.mixing,
+                              fitness=suprb.solution_optimizer.init.fitness)

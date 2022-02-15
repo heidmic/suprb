@@ -10,7 +10,7 @@ from suprb2 import rule
 from suprb2.logging.combination import CombinedLogger
 from suprb2.logging.mlflow import MlflowLogger
 from suprb2.logging.stdout import StdoutLogger
-from suprb2.optimizer.individual import ga
+from suprb2.optimizer.solution import ga
 from suprb2.optimizer.rule import es
 from suprb2.utils import check_random_state
 import suprb2.json as json
@@ -43,7 +43,7 @@ def setup():
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
             mutation=es.mutation.HalfnormIncrease(sigma=0.1)
         ),
-        individual_optimizer=ga.GeneticAlgorithm(
+        solution_optimizer=ga.GeneticAlgorithm(
             n_iter=1,
             crossover=ga.crossover.Uniform(),
             selection=ga.selection.Tournament(),

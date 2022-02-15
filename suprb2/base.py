@@ -24,7 +24,7 @@ class BaseComponent(BaseEstimator, metaclass=ABCMeta):
             self.__setattr__(parameter_name, current_value if current_value is not None else default)
 
 
-class Solution(metaclass=ABCMeta):
+class SolutionBase(metaclass=ABCMeta):
     """An individual solution to some problem."""
 
     is_fitted_: bool
@@ -32,7 +32,7 @@ class Solution(metaclass=ABCMeta):
     fitness_: float
 
     @abstractmethod
-    def clone(self, **kwargs) -> Solution:
+    def clone(self, **kwargs) -> SolutionBase:
         """Clone a solution such that all relevant attributes are copied / transferred to the new solution."""
         pass
 
