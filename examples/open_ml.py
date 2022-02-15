@@ -13,7 +13,7 @@ from sklearn.utils import shuffle
 from suprb2 import SupRB2
 from suprb2 import rule
 from suprb2.logging.stdout import StdoutLogger
-from suprb2.optimizer.individual import ga
+from suprb2.optimizer.solution import ga
 from suprb2.optimizer.rule import es
 
 if __name__ == '__main__':
@@ -45,7 +45,7 @@ if __name__ == '__main__':
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
                 mutation=es.mutation.HalfnormIncrease(sigma=2)
             ),
-            individual_optimizer=ga.GeneticAlgorithm(
+            solution_optimizer=ga.GeneticAlgorithm(
                 n_iter=128,
                 crossover=ga.crossover.Uniform(),
                 selection=ga.selection.Tournament(),
@@ -59,11 +59,9 @@ if __name__ == '__main__':
     ]
     models = {model.__class__.__name__: model for model in models}
 
-
     def run(name, model):
         print(f"[EVALUATION] {name}")
         return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=4, verbose=10, scoring='r2'), name='r2')
-
 
     scores = pd.concat({name: run(name=name, model=model) for name, model in models.items()}, axis=0).to_frame()
     scores.index.names = ['model', 'cv']

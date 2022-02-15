@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 
 from suprb2.base import BaseComponent
-from suprb2.individual import Individual
+from suprb2.solution import Solution
 from suprb2.rule import Rule
 from suprb2.utils import RandomState
 
@@ -13,7 +13,7 @@ class RuleOriginGeneration(BaseComponent, metaclass=ABCMeta):
     """Determines a set of examples to initiate new rules around, i.e., the origins of new rules."""
 
     @abstractmethod
-    def __call__(self, n_rules: int, X: np.ndarray, y: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
+    def __call__(self, n_rules: int, X: np.ndarray, y: np.ndarray, pool: list[Rule], elitist: Optional[Solution],
                  random_state: RandomState) -> np.ndarray:
         pass
 
@@ -42,7 +42,7 @@ class RouletteWheelOrigin(RuleOriginGeneration):
     def __init__(self, use_elitist: bool = True):
         self.use_elitist = use_elitist
 
-    def __call__(self, n_rules: int, X: np.ndarray, pool: list[Rule], elitist: Optional[Individual],
+    def __call__(self, n_rules: int, X: np.ndarray, pool: list[Rule], elitist: Optional[Solution],
                  random_state: RandomState, **kwargs) -> np.ndarray:
 
         subgroup = elitist.subpopulation if elitist is not None and self.use_elitist else pool
@@ -75,7 +75,7 @@ class Matching(RouletteWheelOrigin):
 class SquaredError(RouletteWheelOrigin):
     """Bias the examples that have higher squared error on rules to have a higher probability to be selected."""
 
-    def _calculate_weights(self, X: np.ndarray = None, y: np.ndarray = None, elitist: Individual = None,
+    def _calculate_weights(self, X: np.ndarray = None, y: np.ndarray = None, elitist: Solution = None,
                            **kwargs) -> np.ndarray:
 
         if self.use_elitist:

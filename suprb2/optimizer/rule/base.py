@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 from joblib import Parallel, delayed
 
-from suprb2.individual import Individual
+from suprb2.solution import Solution
 from suprb2.optimizer import BaseOptimizer
 from suprb2.rule import Rule, RuleInit
 from .acceptance import RuleAcceptance
@@ -32,7 +32,7 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
     """
 
     pool_: list[Rule]
-    elitist_: Individual
+    elitist_: Solution
 
     def __init__(self,
                  n_iter: int,

@@ -2,13 +2,13 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from suprb2.base import BaseComponent, Solution
+from suprb2.base import BaseComponent, SolutionBase
 
 
 class BaseFitness(BaseComponent, metaclass=ABCMeta):
 
     @abstractmethod
-    def __call__(self, solution: Solution) -> float:
+    def __call__(self, solution: SolutionBase) -> float:
         pass
 
 

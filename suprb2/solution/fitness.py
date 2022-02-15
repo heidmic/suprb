@@ -4,23 +4,23 @@ from typing import Callable
 import numpy as np
 
 from suprb2.fitness import emary, pseudo_accuracy, wu
-from . import Individual, IndividualFitness
+from . import Solution, SolutionFitness
 
 
-class PseudoBIC(IndividualFitness):
+class PseudoBIC(SolutionFitness):
     """Tries to minimize complexity along with error. Can be negative."""
 
-    def __call__(self, individual: Individual) -> float:
-        # note that error is capped to 1e-4 in suprb2.individual.Individual.fit
-        return -(individual.input_size_ * np.log(individual.error_)
-                 + individual.complexity_ * np.log(individual.input_size_))
+    def __call__(self, solution: Solution) -> float:
+        # note that error is capped to 1e-4 in suprb2.solution.Solution.fit
+        return -(solution.input_size_ * np.log(solution.error_)
+                 + solution.complexity_ * np.log(solution.input_size_))
 
 
 def c_norm(complexity, N) -> float:
     return 1 - complexity / N
 
 
-class ComplexityIndividualFitness(IndividualFitness, metaclass=ABCMeta):
+class ComplexitySolutionFitness(SolutionFitness, metaclass=ABCMeta):
     """Tries to minimize complexity along with error."""
 
     fitness_func_: Callable
@@ -28,12 +28,12 @@ class ComplexityIndividualFitness(IndividualFitness, metaclass=ABCMeta):
     def __init__(self, alpha: float):
         self.alpha = alpha
 
-    def __call__(self, individual: Individual) -> float:
-        return self.fitness_func_(self.alpha, pseudo_accuracy(individual.error_),
-                                  c_norm(individual.complexity_, self.max_genome_length_)) * 100
+    def __call__(self, solution: Solution) -> float:
+        return self.fitness_func_(self.alpha, pseudo_accuracy(solution.error_),
+                                  c_norm(solution.complexity_, self.max_genome_length_)) * 100
 
 
-class ComplexityEmary(ComplexityIndividualFitness):
+class ComplexityEmary(ComplexitySolutionFitness):
     """
     Mixes the pseudo-accuracy as primary objective x1
     and c_norm as secondary objective x2 using the Emary fitness.
@@ -45,7 +45,7 @@ class ComplexityEmary(ComplexityIndividualFitness):
         self.fitness_func = emary
 
 
-class ComplexityWu(ComplexityIndividualFitness):
+class ComplexityWu(ComplexitySolutionFitness):
     """
     Mixes the pseudo-accuracy as primary objective x1
     and c_norm as secondary objective x2 using the Wu fitness.

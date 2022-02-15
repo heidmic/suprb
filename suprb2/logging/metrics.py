@@ -1,17 +1,17 @@
 import itertools
 import numpy as np
 
-from suprb2 import Rule, Individual
+from suprb2 import Rule, Solution
 
 
-def genome_diversity(population: list[Individual]):
+def genome_diversity(population: list[Solution]):
     """
-    Calculates the relative pairwise hamming distance of the genomes of all individuals in the population.
-    
+    Calculates the relative pairwise hamming distance of the genomes of all solutions in the population.
+
     Note that this does not speak to the diversity of individual solutions, i.e. two different genomes can construct 
     identical solutions if the same rule is part of the pool multiple times
     """
-    
+
     combinations = list(itertools.combinations(population, 2))
     return np.sum([hamming_distance(a.genome, b.genome) for a, b in combinations]) / population[0].genome.shape[0]
 

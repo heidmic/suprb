@@ -1,2 +1,2 @@
 from .base import BaseOptimizer
-from ..base import Solution
+from ..base import SolutionBase

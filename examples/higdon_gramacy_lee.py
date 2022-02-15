@@ -11,7 +11,7 @@ from suprb2.logging.combination import CombinedLogger
 from suprb2.logging.default import DefaultLogger
 from suprb2.logging.stdout import StdoutLogger
 from suprb2.optimizer import rule as rule_opt
-from suprb2.optimizer.individual import ga
+from suprb2.optimizer.solution import ga
 from suprb2.optimizer.rule import es
 from suprb2.utils import check_random_state
 
@@ -53,7 +53,7 @@ if __name__ == '__main__':
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
             mutation=es.mutation.HalfnormIncrease(sigma=0.1),
         ),
-        individual_optimizer=ga.GeneticAlgorithm(
+        solution_optimizer=ga.GeneticAlgorithm(
             n_iter=32,
             crossover=ga.crossover.Uniform(),
             selection=ga.selection.Tournament(),

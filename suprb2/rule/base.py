@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.base import RegressorMixin, clone
 from sklearn.metrics import mean_squared_error
 
-from suprb2.base import Solution
+from suprb2.base import SolutionBase
 from suprb2.fitness import BaseFitness
 
 
@@ -19,7 +19,7 @@ class RuleFitness(BaseFitness, metaclass=ABCMeta):
         pass
 
 
-class Rule(Solution):
+class Rule(SolutionBase):
     """ A rule that fits the input data in a certain interval.
 
     Parameters

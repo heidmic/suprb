@@ -8,7 +8,7 @@ from sklearn.base import RegressorMixin
 from sklearn.metrics import mean_squared_error
 
 from suprb2.rule import Rule
-from suprb2.base import BaseComponent, Solution
+from suprb2.base import BaseComponent, SolutionBase
 from suprb2.fitness import BaseFitness
 
 
@@ -23,29 +23,29 @@ class MixingModel(BaseComponent, metaclass=ABCMeta):
         pass
 
 
-class IndividualFitness(BaseFitness, metaclass=ABCMeta):
-    """Evaluate the fitness of a `Individual`."""
+class SolutionFitness(BaseFitness, metaclass=ABCMeta):
+    """Evaluate the fitness of a `Solution`."""
 
     max_genome_length_: int
 
     @abstractmethod
-    def __call__(self, individual: Individual) -> float:
+    def __call__(self, solution: Solution) -> float:
         pass
 
 
-class Individual(Solution, RegressorMixin):
-    """Individual that mixes a subpopulation of rules."""
+class Solution(SolutionBase, RegressorMixin):
+    """Solution that mixes a subpopulation of rules."""
 
     input_size_: int
     complexity_: int
 
-    def __init__(self, genome: np.ndarray, pool: list[Rule], mixing: MixingModel, fitness: IndividualFitness):
+    def __init__(self, genome: np.ndarray, pool: list[Rule], mixing: MixingModel, fitness: SolutionFitness):
         self.genome = genome
         self.pool = pool
         self.mixing = mixing
         self.fitness = fitness
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> Individual:
+    def fit(self, X: np.ndarray, y: np.ndarray) -> Solution:
         pred = self.predict(X, cache=True)
         self.error_ = max(mean_squared_error(y, pred), 1e-4)
         self.input_size_ = self.genome.shape[0]
@@ -72,18 +72,18 @@ class Individual(Solution, RegressorMixin):
         assert (len(self.genome) == len(self.pool))
         return list(itertools.compress(self.pool, self.genome))
 
-    def clone(self, **kwargs) -> Individual:
+    def clone(self, **kwargs) -> Solution:
         args = dict(
             genome=self.genome.copy() if 'genome' not in kwargs else None,
             pool=self.pool,
             mixing=self.mixing,
             fitness=self.fitness
         )
-        individual = Individual(**(args | kwargs))
+        solution = Solution(**(args | kwargs))
         if not kwargs:
             attributes = ['fitness_', 'error_', 'complexity_', 'is_fitted_', 'input_size_']
-            individual.__dict__ |= {key: getattr(self, key) for key in attributes}
-        return individual
+            solution.__dict__ |= {key: getattr(self, key) for key in attributes}
+        return solution
 
     def _more_str_attributes(self) -> dict:
         return {'complexity': self.complexity_}

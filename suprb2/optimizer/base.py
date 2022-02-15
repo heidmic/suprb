@@ -6,7 +6,7 @@ from typing import Union
 import numpy as np
 from sklearn.base import BaseEstimator
 
-from suprb2.base import Solution
+from suprb2.base import SolutionBase
 from suprb2.utils import RandomState
 
 
@@ -20,8 +20,8 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
     random_state_: RandomState
 
     @abstractmethod
-    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Solution, list[Solution], None]:
-        """ Optimizes the fitness of `Individuals`.
+    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[SolutionBase, list[SolutionBase], None]:
+        """ Optimizes the fitness of `Solutions`.
 
         Parameters
         ----------
@@ -33,7 +33,7 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
         Returns
         -------
         elitist
-            Returns the best individual(s) found.
+            Returns the best solution(s) found.
         """
         pass
 
