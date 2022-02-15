@@ -5,40 +5,42 @@ from scipy.spatial.distance import hamming
 
 from suprb2.rule import Rule, RuleInit
 from suprb2.rule.initialization import HalfnormInit
+from suprb2.utils import check_random_state
 from .crossover import RuleCrossover, UniformCrossover
-from suprb2.optimizer.rule.mutation import Normal
+from suprb2.optimizer.rule.mutation import Normal, RuleMutation
 from suprb2.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
-from ..base import MultiRuleGeneration
+from ..base import RuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import RuleOriginGeneration, UniformSamplesOrigin
 
 
-class NoveltySearch(MultiRuleGeneration):
+class NoveltySearch(RuleGeneration):
 
     last_iter_inner: bool
 
     def __init__(self,
                  n_iter: int = 100,
                  mu: int = 16,
+                 lm_ratio: int = 10,
 
                  origin_generation: RuleOriginGeneration = UniformSamplesOrigin(),
                  init: RuleInit = HalfnormInit(),
                  crossover: RuleCrossover = UniformCrossover(),
-                 sigma: float = 0.1,
+                 mutation: RuleMutation = Normal(sigma=0.1),
                  selection: RuleSelection = Random(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
                  random_state: int = None,
                  n_jobs: int = 1,
 
-                 ns_type: str = 'NS',                           # NS, NSLC or MCNS
+                 ns_type: str = 'NS',  # NS, NSLC or MCNS
 
                  threshold_amount_matched: int = None,
 
-                 archive: str = 'novelty',                      # novelty, random or none
-                 fitness_novelty_combination: str = 'novelty'   # novelty, 50/50, 25/75, pmcns or pareto
+                 archive: str = 'novelty',  # novelty, random or none
+                 novelty_fitness_combination: str = 'novelty'  # novelty, 50/50, 75/25, pmcns or pareto
                  ):
         super().__init__(
             n_iter=n_iter,
@@ -51,28 +53,33 @@ class NoveltySearch(MultiRuleGeneration):
         )
 
         self.mu = mu
-        self.lmbda = 10 * mu
+        self.lm_ratio = lm_ratio
+        self.lmbda = self.lm_ratio * mu
         self.crossover = crossover
-        self.sigma = sigma
-        self.mutation = Normal(sigma=self.sigma)
+        self.mutation = mutation
         self.selection = selection
         self.iterations = n_iter
 
-        if ns_type in ["NS", "NSLC", "MCNS"]:
-            self.ns_type = ns_type
-        else:
-            warnings.warn("No valid NS-Type was given. Using default Novelty Search", UserWarning)
-            self.ns_type = "NS"
+        self.ns_type = ns_type
 
         # params for MCNS
         self.threshold_amount_matched = threshold_amount_matched
 
         self.archive = archive
-        self.fitness_novelty_combination = fitness_novelty_combination
+        self.novelty_fitness_combination = novelty_fitness_combination
+
+    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
+        self._validate_params()
+
+        self.random_state_ = check_random_state(self.random_state)
+
+        rules = self._optimize(X=X, y=y, n_rules=n_rules)
+
+        return self._filter_invalid_rules(X=X, y=y, rules=rules)
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
         """
-
+            # TODO: docstring
         """
         population = self._init_population(X, y)
         self.last_iter_inner = False
@@ -86,6 +93,8 @@ class NoveltySearch(MultiRuleGeneration):
             # select lambda parents from population for crossover
             parents = self.selection(population, random_state=self.random_state_, size=self.lmbda)
 
+            self.random_state_.shuffle(parents)
+
             # from parents generate children through crossover and mutation
             children = []
             for j in range(0, len(parents) - 1, 2):
@@ -93,7 +102,7 @@ class NoveltySearch(MultiRuleGeneration):
             children = [self.constraint(self.mutation(child, random_state=self.random_state_))
                             .fit(X, y) for child in children]
 
-            # fill population for new iteration with 6/7 best children and 1/7 elitists
+            # fill population for new iteration with 6/7 best children and 1/7 elitists except for last iteration
             population = self._new_population(children, parents)
 
         return population
@@ -106,7 +115,7 @@ class NoveltySearch(MultiRuleGeneration):
         if self.ns_type == 'MCNS' and self.pool_:
             rules = self._filter_for_minimal_criteria(rules)
 
-        if self.fitness_novelty_combination == 'pmcns':
+        if self.novelty_fitness_combination == 'pmcns':
             rules = self._filter_for_progressive_minimal_criteria(rules)
 
         valid_archive = list(filter(lambda r: r.is_fitted_ and r.experience_ > 0, archive))
@@ -126,15 +135,16 @@ class NoveltySearch(MultiRuleGeneration):
             matched_data_count = np.count_nonzero(rule.match_)
 
             # linear combination of fitness and novelty
+            # any changes to fitness scaling would need to be also applied here
             scaled_fitness = rule.fitness_ / 100
-            if self.fitness_novelty_combination == '50/50':
+            if self.novelty_fitness_combination == '50/50':
                 novelty_score = 0.5 * novelty_score + 0.5 * scaled_fitness
-            elif self.fitness_novelty_combination == '25/75':
+            elif self.novelty_fitness_combination == '75/25':
                 novelty_score = 0.75 * novelty_score + 0.25 * scaled_fitness
 
             rules_with_novelty_score.append((rule, novelty_score, matched_data_count))
 
-        if self.fitness_novelty_combination == 'pareto' and self.pool_:
+        if self.novelty_fitness_combination == 'pareto' and self.pool_:
             rules_with_novelty_score = self._get_pareto_front(rules_with_novelty_score)
 
         return rules_with_novelty_score
@@ -173,16 +183,19 @@ class NoveltySearch(MultiRuleGeneration):
         children_w_ns = self._calculate_novelty_score(rules=children, archive=archive_children, k=15)
         parents_w_ns = self._calculate_novelty_score(rules=parents, archive=archive_parents, k=15)
 
-        if self.last_iter_inner and self.archive == 'random':
-            self.random_state_.shuffle(children_w_ns)
-            self.random_state_.shuffle(parents_w_ns)
+        if self.last_iter_inner:
+            population = children_w_ns + parents_w_ns
+            if self.archive == "random":
+                self.random_state_.shuffle(population)
+            else:
+                population = sorted(population, key=lambda x: (x[1], x[2]), reverse=True)
+            return [x[0] for x in population][:self.mu]
         else:
             children_w_ns = sorted(children_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
             parents_w_ns = sorted(parents_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-
-        population.extend([x[0] for x in children_w_ns][:int(round(self.mu * 6 / 7))])
-        population.extend([x[0] for x in parents_w_ns][:int(round(self.mu * 1 / 7))])
-        return population
+            population.extend([x[0] for x in children_w_ns][:int(round(self.mu * 6 / 7))])
+            population.extend([x[0] for x in parents_w_ns][:int(round(self.mu * 1 / 7))])
+            return population
 
     def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
         if self.threshold_amount_matched:
@@ -211,3 +224,14 @@ class NoveltySearch(MultiRuleGeneration):
                 p_front.append(r)
 
         return p_front
+
+    def _validate_params(self):
+        if self.ns_type not in ["NS", "NSLC", "MCNS"]:
+            warnings.warn("No valid NS-Type was given. Using default Novelty Search", UserWarning)
+            self.ns_type = "NS"
+        if self.archive not in ["novelty", "random", "none"]:
+            warnings.warn("No valid Archive-Type was given. Using default Novelty Archive", UserWarning)
+            self.archive = "novelty"
+        if self.novelty_fitness_combination not in ["novelty", "50/50", "75/25", "pmcns", "pareto"]:
+            warnings.warn("No valid Fitness-Novelty Combination was given. Using default of pure Novelty", UserWarning)
+            self.novelty_fitness_combination = "novelty"

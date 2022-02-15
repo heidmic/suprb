@@ -86,17 +86,3 @@ class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
     @abstractmethod
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
         pass
-
-
-class MultiRuleGeneration(RuleGeneration, metaclass=ABCMeta):
-
-    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
-        self.random_state_ = check_random_state(self.random_state)
-
-        rules = self._optimize(X=X, y=y, n_rules=n_rules)
-
-        return self._filter_invalid_rules(X=X, y=y, rules=rules)
-
-    @abstractmethod
-    def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> Optional[Rule]:
-        pass
