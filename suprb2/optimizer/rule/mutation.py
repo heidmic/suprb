@@ -91,5 +91,3 @@ class UniformIncrease(RuleMutation):
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
         rule.bounds[:, 0] -= self.mutation(rule=rule, random_state=random_state)
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
-
-

@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 from scipy.spatial.distance import hamming
 
@@ -56,7 +58,11 @@ class NoveltySearch(MultiRuleGeneration):
         self.selection = selection
         self.iterations = n_iter
 
-        self.ns_type = ns_type
+        if ns_type in ["NS", "NSLC", "MCNS"]:
+            self.ns_type = ns_type
+        else:
+            warnings.warn("No valid NS-Type was given. Using default Novelty Search", UserWarning)
+            self.ns_type = "NS"
 
         # params for MCNS
         self.threshold_amount_matched = threshold_amount_matched
@@ -65,6 +71,9 @@ class NoveltySearch(MultiRuleGeneration):
         self.fitness_novelty_combination = fitness_novelty_combination
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
+        """
+
+        """
         population = self._init_population(X, y)
         self.last_iter_inner = False
 
@@ -111,50 +120,44 @@ class NoveltySearch(MultiRuleGeneration):
 
             # no need to enter if there is no valid_archive
             if self.ns_type == 'NSLC' and valid_archive:
-                count_worse = 0
-                for x, _ in rules_w_distances[:int(round(len(rules_w_distances) / 20))]:
-                    if x.fitness_ < rule.fitness_:
-                        count_worse += 1
-                local_score = count_worse / len(rules_w_distances[:int(round(len(rules_w_distances) / 20))])
-                novelty_score = novelty_score + local_score
+                novelty_score = novelty_score + self._get_local_score(rule, rules_w_distances)
 
             # matched_data_count is the secondary key which decides what rule is better if novelty is the same
             matched_data_count = np.count_nonzero(rule.match_)
 
             # linear combination of fitness and novelty
+            scaled_fitness = rule.fitness_ / 100
             if self.fitness_novelty_combination == '50/50':
-                novelty_score = novelty_score + (rule.fitness_ / 100)
+                novelty_score = 0.5 * novelty_score + 0.5 * scaled_fitness
             elif self.fitness_novelty_combination == '25/75':
-                novelty_score = novelty_score + (rule.fitness_ / 200)
+                novelty_score = 0.75 * novelty_score + 0.25 * scaled_fitness
 
             rules_with_novelty_score.append((rule, novelty_score, matched_data_count))
 
         if self.fitness_novelty_combination == 'pareto' and self.pool_:
-            rules_with_novelty_score = sorted(rules_with_novelty_score, key=lambda a: (a[1], a[0].fitness_), reverse=True)
-            p_front = [rules_with_novelty_score[0]]
-
-            for r in rules_with_novelty_score[1:]:
-                if r[0].fitness_ >= p_front[-1][0].fitness_:
-                    p_front.append(r)
-
-            rules_with_novelty_score = p_front
+            rules_with_novelty_score = self._get_pareto_front(rules_with_novelty_score)
 
         return rules_with_novelty_score
 
     def _init_population(self, X: np.ndarray, y: np.ndarray) -> list[Rule]:
         population = []
+
         if len(self.pool_) < int(self.mu / 2):
-            origins = self.origin_generation(n_rules=(self.mu - len(self.pool_)), X=X, pool=self.pool_,
-                                             elitist=self.elitist_, random_state=self.random_state_)
-            for origin in origins:
-                population.append(self.constraint(self.init(mean=origin, random_state=self.random_state_)).fit(X, y))
-                population.extend(self.pool_)
+            n_rules = self.mu - len(self.pool_)
         else:
-            origins = self.origin_generation(n_rules=int(self.mu / 2), X=X, pool=self.pool_, elitist=self.elitist_,
-                                             random_state=self.random_state_)
-            for origin in origins:
-                population.append(self.constraint(self.init(mean=origin, random_state=self.random_state_)).fit(X, y))
-            population.extend(self.random_state_.choice(self.pool_, size=int(self.mu / 2)))
+            n_rules = int(self.mu / 2)
+
+        origins = self.origin_generation(n_rules=n_rules, X=X, pool=self.pool_,
+                                         elitist=self.elitist_, random_state=self.random_state_)
+
+        for origin in origins:
+            population.append(self.constraint(self.init(mean=origin, random_state=self.random_state_)).fit(X, y))
+
+        if len(self.pool_) < int(self.mu / 2):
+            population.extend(self.pool_)
+        else:
+            population.extend(self.random_state_.choice(self.pool_, size=int(self.mu / 2), replace=False))
+
         return population
 
     def _new_population(self, children: list[Rule], parents: list[Rule]) -> list[Rule]:
@@ -190,3 +193,21 @@ class NoveltySearch(MultiRuleGeneration):
         threshold_fitness = np.median([rule.fitness_ for rule in rules])
         rules = [rule for rule in rules if rule.fitness_ >= threshold_fitness]
         return rules
+
+    def _get_local_score(self, rule: Rule, rules_w_distances: list[tuple[Rule, float]]) -> float:
+        count_worse = 0
+        for x, _ in rules_w_distances[:int(round(len(rules_w_distances) / 5))]:
+            if x.fitness_ < rule.fitness_:
+                count_worse += 1
+        local_score = count_worse / len(rules_w_distances[:int(round(len(rules_w_distances) / 5))])
+        return local_score
+
+    def _get_pareto_front(self, rules_with_novelty_score: list[tuple[Rule, float]]):
+        rules_with_novelty_score = sorted(rules_with_novelty_score, key=lambda a: (a[1], a[0].fitness_), reverse=True)
+        p_front = [rules_with_novelty_score[0]]
+
+        for r in rules_with_novelty_score[1:]:
+            if r[0].fitness_ >= p_front[-1][0].fitness_:
+                p_front.append(r)
+
+        return p_front

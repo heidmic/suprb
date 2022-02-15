@@ -15,7 +15,7 @@ class RuleCrossover(BaseComponent, metaclass=ABCMeta):
         if random_state.random() < self.crossover_rate:
             return self._crossover(A=A, B=B, random_state=random_state)
         else:
-            # Just return the primary parent
+            # Just return parents
             return [A, B]
 
     @abstractmethod
@@ -27,6 +27,7 @@ class UniformCrossover(RuleCrossover):
     """Decide for every bound tuple with uniform probability if the bound tuple in rule A or B is used."""
 
     def _crossover(self, A: Rule, B: Rule, random_state: RandomState) -> list[Rule]:
+        # each parent has a 50 %  probability to supply its boundaries to either child a or b, thus the value 0.5
         indices = random_state.random(size=len(A.bounds)) <= 0.5
         a = A.clone()
         b = B.clone()
