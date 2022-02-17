@@ -10,7 +10,7 @@ from suprb2.utils import check_random_state
 from . import SolutionArchive
 
 
-class SolutionOptimizer(BaseOptimizer, metaclass=ABCMeta):
+class SolutionComposition(BaseOptimizer, metaclass=ABCMeta):
     """ Base class of optimizers for `Solution`s.
 
     Parameters
@@ -58,7 +58,7 @@ class SolutionOptimizer(BaseOptimizer, metaclass=ABCMeta):
             del self.pool_
 
 
-class PopulationBasedSolutionOptimizer(SolutionOptimizer, metaclass=ABCMeta):
+class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta):
     """Base class of population-based optimizers for `Solution`s."""
 
     pool_: list[Rule]

@@ -46,15 +46,15 @@ class DefaultLogger(BaseLogger):
         log_metric_min_max_mean("pool_fitness", 'fitness_', pool)
 
         # Log population
-        # Note that this technically is `PopulationBasedSolutionOptimizer` specific.
-        population = estimator.solution_optimizer_.population_
+        # Note that this technically is `PopulationBasedSolutionComposition` specific.
+        population = estimator.solution_composition_.population_
         log_metric("population_diversity", genome_diversity(population))
         log_metric_min_max_mean("population_fitness", 'fitness_', population)
         log_metric_min_max_mean("population_error", 'error_', population)
         log_metric_min_max_mean("population_complexity", 'complexity_', population)
 
         # Log elitist
-        elitist = estimator.solution_optimizer_.elitist()
+        elitist = estimator.solution_composition_.elitist()
         log_metric("elitist_fitness", elitist.fitness_)
         log_metric("elitist_error", elitist.error_)
         log_metric("elitist_complexity", elitist.complexity_)

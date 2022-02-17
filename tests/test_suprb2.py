@@ -15,7 +15,7 @@ class TestSupRB2(unittest.TestCase):
         # Low n_iter for speed. Still takes forever though.
         estimator = suprb2.SupRB2(
             n_iter=1,
-            solution_optimizer=suprb2.optimizer.solution.ga.GeneticAlgorithm(n_iter=16, population_size=16),
+            solution_composition=suprb2.optimizer.solution.ga.GeneticAlgorithm(n_iter=16, population_size=16),
             logger=suprb2.logging.stdout.StdoutLogger(),
             verbose=10
         )

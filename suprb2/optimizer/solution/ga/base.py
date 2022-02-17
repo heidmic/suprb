@@ -6,10 +6,10 @@ from .crossover import SolutionCrossover, NPoint
 from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, RouletteWheel
 from ..archive import SolutionArchive, Elitist
-from ..base import PopulationBasedSolutionOptimizer
+from ..base import PopulationBasedSolutionComposition
 
 
-class GeneticAlgorithm(PopulationBasedSolutionOptimizer):
+class GeneticAlgorithm(PopulationBasedSolutionComposition):
     """ A simple Genetic Algorithm.
 
     Parameters
