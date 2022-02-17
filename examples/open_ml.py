@@ -45,7 +45,7 @@ if __name__ == '__main__':
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
                 mutation=es.mutation.HalfnormIncrease(sigma=2)
             ),
-            solution_optimizer=ga.GeneticAlgorithm(
+            solution_composition=ga.GeneticAlgorithm(
                 n_iter=128,
                 crossover=ga.crossover.Uniform(),
                 selection=ga.selection.Tournament(),

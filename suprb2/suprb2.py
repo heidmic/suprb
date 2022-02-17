@@ -9,7 +9,7 @@ from .base import BaseRegressor
 from .exceptions import PopulationEmptyWarning
 from .solution import Solution
 from .logging import BaseLogger
-from .optimizer.solution import SolutionOptimizer
+from .optimizer.solution import SolutionComposition
 from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
@@ -24,7 +24,7 @@ class SupRB2(BaseRegressor):
     ----------
     rule_generation: RuleGeneration
         Optimizer used to evolve the :class:`Rule`s. If None is passed, it is set to :class:`ES1xLambda`.
-    solution_optimizer: SolutionOptimizer
+    solution_composition: SolutionComposition
         Optimizer used to evolve the :class:`Solution`s. If None is passed, it is set to :class:`GeneticAlgorithm`.
     n_iter: int
         Iterations the LCS will perform.
@@ -59,8 +59,8 @@ class SupRB2(BaseRegressor):
     rule_generation_: RuleGeneration
     rule_generation_seeds_: list[int]
 
-    solution_optimizer_: SolutionOptimizer
-    solution_optimizer_seeds_: list[int]
+    solution_composition_: SolutionComposition
+    solution_composition_seeds_: list[int]
 
     n_features_in_: int
 
@@ -68,7 +68,7 @@ class SupRB2(BaseRegressor):
 
     def __init__(self,
                  rule_generation: RuleGeneration = None,
-                 solution_optimizer: SolutionOptimizer = None,
+                 solution_composition: SolutionComposition = None,
                  n_iter: int = 16,
                  n_initial_rules: int = 0,
                  n_rules: int = 16,
@@ -81,7 +81,7 @@ class SupRB2(BaseRegressor):
         self.n_initial_rules = n_initial_rules
         self.n_rules = n_rules
         self.rule_generation = rule_generation
-        self.solution_optimizer = solution_optimizer
+        self.solution_composition = solution_composition
         self.random_state = random_state
         self.verbose = verbose
         self.logger = logger
@@ -117,20 +117,20 @@ class SupRB2(BaseRegressor):
         self.random_state_ = check_random_state(self.random_state)
         seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter * 2)
         self.rule_generation_seeds_ = seeds[::2]
-        self.solution_optimizer_seeds_ = seeds[1::2]
+        self.solution_composition_seeds_ = seeds[1::2]
 
         # Initialise components
         self.pool_ = []
 
         self._validate_rule_generation(default=ES1xLambda())
-        self._validate_solution_optimizer(default=GeneticAlgorithm())
+        self._validate_solution_composition(default=GeneticAlgorithm())
 
         self._propagate_component_parameters()
         self._init_bounds(X)
 
         # Init optimizers
-        self.solution_optimizer_.pool_ = self.pool_
-        self.solution_optimizer_.init.fitness.max_genome_length_ = self.n_rules * self.n_iter + self.n_initial_rules
+        self.solution_composition_.pool_ = self.pool_
+        self.solution_composition_.init.fitness.max_genome_length_ = self.n_rules * self.n_iter + self.n_initial_rules
         self.rule_generation_.pool_ = self.pool_
 
         # Init Logging
@@ -154,7 +154,7 @@ class SupRB2(BaseRegressor):
             if self.logger_ is not None:
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
-        self.elitist_ = self.solution_optimizer_.elitist().clone()
+        self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
 
         # Log final result
@@ -172,7 +172,7 @@ class SupRB2(BaseRegressor):
         self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
 
         # Update the current elitist
-        self.rule_generation_.elitist_ = self.solution_optimizer_.elitist()
+        self.rule_generation_.elitist_ = self.solution_composition_.elitist()
 
         # Update the random state
         self.rule_generation_.random_state = self.rule_generation_seeds_[self.step_]
@@ -190,15 +190,15 @@ class SupRB2(BaseRegressor):
                 PopulationEmptyWarning)
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
-        """Performs rule selection (RS)."""
+        """Performs solution composition."""
 
         self._log_to_stdout(f"Optimizing populations", priority=4)
 
         # Update the random state
-        self.solution_optimizer_.random_state = self.solution_optimizer_seeds_[self.step_]
+        self.solution_composition_.random_state = self.solution_composition_seeds_[self.step_]
 
         # Optimize
-        self.solution_optimizer_.optimize(X, y)
+        self.solution_composition_.optimize(X, y)
 
     def predict(self, X: np.ndarray):
         # Check is fit had been called
@@ -211,9 +211,9 @@ class SupRB2(BaseRegressor):
     def _validate_rule_generation(self, default=None):
         self.rule_generation_ = clone(self.rule_generation) if self.rule_generation is not None else clone(default)
 
-    def _validate_solution_optimizer(self, default=None):
-        self.solution_optimizer_ = clone(self.solution_optimizer) \
-            if self.solution_optimizer is not None else clone(default)
+    def _validate_solution_composition(self, default=None):
+        self.solution_composition_ = clone(self.solution_composition) \
+            if self.solution_composition is not None else clone(default)
 
     def _log_to_stdout(self, message, priority=1):
         if self.verbose >= priority:
@@ -226,7 +226,7 @@ class SupRB2(BaseRegressor):
         params = {key: value for key, value in self.get_params().items() if key in keys}
 
         self.rule_generation_.set_params(**params)
-        self.solution_optimizer_.set_params(**params)
+        self.solution_composition_.set_params(**params)
 
     def _init_bounds(self, X):
         """Try to estimate all bounds that are not provided at the start from the training data."""
@@ -248,7 +248,7 @@ class SupRB2(BaseRegressor):
         self.elitist_.pool = self.pool_
 
         del self.rule_generation_
-        del self.solution_optimizer_
+        del self.solution_composition_
 
     def _more_tags(self):
         """

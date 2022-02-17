@@ -21,7 +21,7 @@ class StdoutLogger(BaseLogger):
 
     def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: SupRB2, iteration: int):
 
-        elitist = estimator.solution_optimizer_.elitist()
+        elitist = estimator.solution_composition_.elitist()
 
         message = str(dict(
             error=elitist.error_,

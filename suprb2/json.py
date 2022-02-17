@@ -211,5 +211,5 @@ def _convert_model(json_model):
 def _load_elitist(suprb):
     suprb.elitist_ = Solution(genome=np.ones(len(suprb.pool_)),
                               pool=suprb.pool_,
-                              mixing=suprb.solution_optimizer.init.mixing,
-                              fitness=suprb.solution_optimizer.init.fitness)
+                              mixing=suprb.solution_composition.init.mixing,
+                              fitness=suprb.solution_composition.init.fitness)

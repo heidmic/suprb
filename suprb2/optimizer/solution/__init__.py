@@ -1,2 +1,2 @@
 from .archive import SolutionArchive
-from .base import SolutionOptimizer
+from .base import SolutionComposition
