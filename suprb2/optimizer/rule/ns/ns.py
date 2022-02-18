@@ -17,6 +17,44 @@ from ..origin import RuleOriginGeneration, UniformSamplesOrigin
 
 
 class NoveltySearch(RuleGeneration):
+    """ NoveltySearch Algorithm
+
+        Parameters
+        ----------
+        n_iter: int
+            Iterations to evolve rules.
+        mu: int
+            The amount of offspring from each population get selected.
+        lm_ratio: int
+            The ratio of lambda and mu. Each generation lambda children will be generated but only mu will survive.
+        origin_generation: RuleOriginGeneration
+            The selection process which decides on the next initial points.
+        init: RuleInit
+        mutation: RuleMutation
+        selection: RuleSelection
+        acceptance: RuleAcceptance
+        constraint: RuleConstraint
+        random_state : int, RandomState instance or None, default=None
+            Pass an int for reproducible results across multiple function calls.
+        n_jobs: int
+            The number of threads / processes the optimization uses. Currently not used for this optimizer.
+        ns_type: str
+            The type of Novelty Search to be used. Can be 'NS' for standard Novelty Search, 'NSLC' for Novelty Search
+            with Local Competition or 'MCNS' for Minimal Criteria Novelty Search.
+        threshold_amount_matched: int
+            The amount of samples a rule must match when using MCNS. Otherwise this parameter has no effect.
+        archive: str
+            The type of archive to be used by the algorithm. Can be 'novelty' for an archive with the most novel
+            individuals of each call of _optimize, 'random' where individuals will be chosen randomly from the final
+            population or  'none' where there is no archive but only the current generation is used to calculate
+            novelty.
+        novelty_fitness_combination: str
+            The type of novelty-fitness combination. Can be 'novelty' where only novelty affects the score of an
+            individual, '50/50' or '75/25' which gives a linear combination of novelty and fitness with the according
+            weights, 'pmcns' which stands for progressive MCNS and only allows the best 50% of the current population
+            in fitness to be considered for the final offspring of a generation or 'pareto' which calculates the pareto
+            front of each generation and assigns each individual a score through that.
+        """
 
     last_iter_inner: bool
 
@@ -209,10 +247,10 @@ class NoveltySearch(RuleGeneration):
 
     def _get_local_score(self, rule: Rule, rules_w_distances: list[tuple[Rule, float]]) -> float:
         count_worse = 0
-        for x, _ in rules_w_distances[:int(round(len(rules_w_distances) / 5))]:
+        for x, _ in rules_w_distances[:15]:
             if x.fitness_ < rule.fitness_:
                 count_worse += 1
-        local_score = count_worse / len(rules_w_distances[:int(round(len(rules_w_distances) / 5))])
+        local_score = count_worse / len(rules_w_distances[:15])
         return local_score
 
     def _get_pareto_front(self, rules_with_novelty_score: list[tuple[Rule, float]]):

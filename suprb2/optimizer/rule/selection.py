@@ -18,7 +18,7 @@ class RuleSelection(BaseComponent, metaclass=ABCMeta):
 class Fittest(RuleSelection):
     """Take the rule with highest fitness."""
 
-    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = None) -> Rule:
+    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> Rule:
         rules = sorted(rules, key=lambda child: child.fitness_, reverse=True)
         return rules[:size]
 
@@ -26,7 +26,7 @@ class Fittest(RuleSelection):
 class RouletteWheel(RuleSelection):
     """Selection probability is proportional to fitness."""
 
-    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = None) -> Rule:
+    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> Rule:
         fitness = np.array([rule.fitness_ for rule in rules])
         fitness /= np.sum(fitness)
 
@@ -36,7 +36,7 @@ class RouletteWheel(RuleSelection):
 class NondominatedSort(RuleSelection):
     """Choose a random rule from the pareto front."""
 
-    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = None) -> Rule:
+    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> Rule:
         candidates: list[Rule] = [rules[0]]
         for rule in rules[1:]:
             to_be_added = False

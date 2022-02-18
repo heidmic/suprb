@@ -40,15 +40,11 @@ if __name__ == '__main__':
         SVR(),
         KNeighborsRegressor(),
         SupRB2(
-            rule_generation=ns.NoveltySearch(
+            rule_generation=es.ES1xLambda(
                 n_iter=100,
-                mu=16,
-                mutation=suprb2.optimizer.rule.mutation.Normal(sigma=0.1),
+                operator='&',
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                ns_type='NS',
-                threshold_amount_matched=10,
-                archive='novelty',
-                novelty_fitness_combination='pareto'
+                mutation=suprb2.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
             ),
             individual_optimizer=ga.GeneticAlgorithm(
                 n_iter=128,
