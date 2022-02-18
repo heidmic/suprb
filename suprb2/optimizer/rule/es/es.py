@@ -77,18 +77,16 @@ class ES1xLambda(ParallelSingleRuleGeneration):
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
 
-        # elititst is a list[Rule] since this is the output of all selection methods, however only the element at
-        # index 0 is relevant
-        elitist = [initial_rule]
+        elitist = initial_rule
 
         elitists = deque(maxlen=self.delay)
 
         # Main iteration
         for iteration in range(self.n_iter):
-            elitists.append(elitist[0])
+            elitists.append(elitist)
 
             # Generate, fit and evaluate lambda children
-            children = [self.constraint(self.mutation(elitist[0], random_state=random_state))
+            children = [self.constraint(self.mutation(elitist, random_state=random_state))
                             .fit(X, y) for _ in range(self.lmbda)]
 
             # Filter children that do not match any data samples
@@ -101,6 +99,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 continue
 
             # Different operators
+            # return is a list[Rule], but only first element is relevant in this case
             if self.operator == '+':
                 children.append(elitist)
                 elitist = self.selection(children, random_state=random_state)[0]
