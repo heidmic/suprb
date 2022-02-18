@@ -103,9 +103,9 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             # Different operators
             if self.operator == '+':
                 children.append(elitist)
-                elitist = self.selection(children, random_state=random_state)
+                elitist = self.selection(children, random_state=random_state)[0]
             elif self.operator in (',', '&'):
-                elitist = self.selection(children, random_state=random_state)
+                elitist = self.selection(children, random_state=random_state)[0]
             if self.operator == '&':
                 if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
                     elitist = elitists[0]
