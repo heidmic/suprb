@@ -8,7 +8,7 @@ from suprb2.rule.initialization import HalfnormInit
 from suprb2.utils import check_random_state
 from .crossover import RuleCrossover, UniformCrossover
 from suprb2.optimizer.rule.mutation import Normal, RuleMutation
-from suprb2.optimizer.rule.selection import RuleSelection, Random
+from suprb2.optimizer.rule.selection import RuleSelection, Random, RouletteWheel
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import RuleGeneration
@@ -59,15 +59,15 @@ class NoveltySearch(RuleGeneration):
     last_iter_inner: bool
 
     def __init__(self,
-                 n_iter: int = 100,
-                 mu: int = 16,
+                 n_iter: int = 10,
+                 mu: int = 7,
                  lm_ratio: int = 10,
 
                  origin_generation: RuleOriginGeneration = UniformSamplesOrigin(),
                  init: RuleInit = HalfnormInit(),
                  crossover: RuleCrossover = UniformCrossover(),
                  mutation: RuleMutation = Normal(sigma=0.1),
-                 selection: RuleSelection = Random(),
+                 selection: RuleSelection = RouletteWheel(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
                  random_state: int = None,
@@ -140,8 +140,11 @@ class NoveltySearch(RuleGeneration):
             children = [self.constraint(self.mutation(child, random_state=self.random_state_))
                             .fit(X, y) for child in children]
 
+            # filter children
+            valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
+
             # fill population for new iteration with 6/7 best children and 1/7 elitists except for last iteration
-            population = self._new_population(children, parents)
+            population = self._new_population(valid_children, parents)
 
         return population
 
