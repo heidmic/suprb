@@ -14,7 +14,7 @@ import suprb2.optimizer.rule.mutation
 from suprb2 import SupRB2
 from suprb2 import rule
 from suprb2.logging.stdout import StdoutLogger
-from suprb2.optimizer.individual import ga
+from suprb2.optimizer.solution import ga
 from suprb2.optimizer.rule import es, ns
 
 if __name__ == '__main__':
@@ -46,7 +46,7 @@ if __name__ == '__main__':
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
                 mutation=suprb2.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
             ),
-            individual_optimizer=ga.GeneticAlgorithm(
+            solution_composition=ga.GeneticAlgorithm(
                 n_iter=128,
                 crossover=ga.crossover.Uniform(),
                 selection=ga.selection.Tournament(),
