@@ -128,6 +128,8 @@ class NoveltySearch(RuleGeneration):
             if i == self.iterations - 1:
                 self.last_iter_inner = True
 
+            population = self._filter_invalid_rules(X, y, population)
+
             # select lambda parents from population for crossover
             parents = self.selection(population, random_state=self.random_state_, size=self.lmbda)
 
