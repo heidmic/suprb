@@ -59,7 +59,7 @@ class NoveltySearch(RuleGeneration):
     last_iter_inner: bool
 
     def __init__(self,
-                 n_iter: int = 10,
+                 n_iter: int = 100,
                  mu: int = 7,
                  lm_ratio: int = 10,
 
@@ -96,7 +96,7 @@ class NoveltySearch(RuleGeneration):
         self.crossover = crossover
         self.mutation = mutation
         self.selection = selection
-        self.iterations = n_iter
+        self.n_iter = n_iter
 
         self.ns_type = ns_type
 
@@ -123,9 +123,9 @@ class NoveltySearch(RuleGeneration):
         self.last_iter_inner = False
 
         # main loop
-        for i in range(self.iterations):
+        for i in range(self.n_iter):
 
-            if i == self.iterations - 1:
+            if i == self.n_iter - 1:
                 self.last_iter_inner = True
 
             # select lambda parents from population for crossover
@@ -144,7 +144,7 @@ class NoveltySearch(RuleGeneration):
             valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
             # fill population for new iteration with 6/7 best children and 1/7 elitists except for last iteration
-            population = self._new_population(valid_children, parents)
+            population = self._new_population(valid_children, parents, n_rules)
 
         return population
 
@@ -211,7 +211,7 @@ class NoveltySearch(RuleGeneration):
 
         return population
 
-    def _new_population(self, children: list[Rule], parents: list[Rule]) -> list[Rule]:
+    def _new_population(self, children: list[Rule], parents: list[Rule], n_rules: int) -> list[Rule]:
         population = []
 
         if self.pool_ and self.archive != 'none':
@@ -230,7 +230,7 @@ class NoveltySearch(RuleGeneration):
                 self.random_state_.shuffle(population)
             else:
                 population = sorted(population, key=lambda x: (x[1], x[2]), reverse=True)
-            return [x[0] for x in population][:self.mu]
+            return [x[0] for x in population][:n_rules]
         else:
             children_w_ns = sorted(children_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
             parents_w_ns = sorted(parents_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
