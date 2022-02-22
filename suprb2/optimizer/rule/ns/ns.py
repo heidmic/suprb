@@ -1,5 +1,4 @@
 import math
-import warnings
 
 import numpy as np
 from scipy.spatial.distance import hamming
@@ -9,7 +8,7 @@ from suprb2.rule.initialization import HalfnormInit
 from suprb2.utils import check_random_state
 from .crossover import RuleCrossover, UniformCrossover
 from suprb2.optimizer.rule.mutation import Normal, RuleMutation
-from suprb2.optimizer.rule.selection import RuleSelection, Random, RouletteWheel
+from suprb2.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import RuleGeneration
@@ -25,9 +24,10 @@ class NoveltySearch(RuleGeneration):
         n_iter: int
             Iterations to evolve rules.
         mu: int
-            The amount of offspring from each population get selected.
+            The amount of offspring from each population that get selected for the next generation.
         lm_ratio: int
-            The ratio of lambda and mu. Each generation lambda children will be generated but only mu will survive.
+            The ratio of lambda and mu. Each generation lambda=lm_ration*mu children will be generated but only mu will
+            survive.
         origin_generation: RuleOriginGeneration
             The selection process which decides on the next initial points.
         init: RuleInit
@@ -47,7 +47,7 @@ class NoveltySearch(RuleGeneration):
         archive: str
             The type of archive to be used by the algorithm. Can be 'novelty' for an archive with the most novel
             individuals of each call of _optimize, 'random' where individuals will be chosen randomly from the final
-            population or  'none' where there is no archive but only the current generation is used to calculate
+            population or  'none' where there is no archive and only the current generation is used to calculate
             novelty.
         novelty_fitness_combination: str
             The type of novelty-fitness combination. Can be 'novelty' where only novelty affects the score of an
@@ -101,7 +101,7 @@ class NoveltySearch(RuleGeneration):
 
         self.ns_type = ns_type
 
-        # params for MCNS
+        # parameter only for MCNS
         self.threshold_amount_matched = threshold_amount_matched
 
         self.archive = archive
@@ -268,7 +268,8 @@ class NoveltySearch(RuleGeneration):
         local_score = count_worse / len(rules_w_distances[:15])
         return local_score
 
-    def _get_pareto_front(self, rules_with_novelty_score: list[tuple[Rule, float]]):
+    def _get_pareto_front(self, rules_with_novelty_score: list[tuple[Rule, float, int]]) -> list[tuple[Rule, float,
+                                                                                                       int]]:
         rules_with_novelty_score = sorted(rules_with_novelty_score, key=lambda a: (a[1], a[0].fitness_), reverse=True)
         p_front = [rules_with_novelty_score[0]]
 
