@@ -4,6 +4,8 @@ import numpy as np
 from scipy.stats import halfnorm
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
+
 
 from suprb2.base import BaseComponent
 from suprb2.utils import check_random_state, RandomState
@@ -22,7 +24,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
             Local model used for fitting the intervals.
     """
 
-    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None):
+    def __init__(self, bounds: np.ndarray = None, model: Ridge(alpha=0.01) = None, fitness: RuleFitness = VolumeWu()):
         self.bounds = bounds
         self.model = model
         self.fitness = fitness
