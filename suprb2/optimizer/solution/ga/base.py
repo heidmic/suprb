@@ -4,7 +4,7 @@ from suprb2.solution.initialization import SolutionInit, RandomInit
 from suprb2.utils import flatten
 from .crossover import SolutionCrossover, NPoint
 from .mutation import SolutionMutation, BitFlips
-from .selection import SolutionSelection, RouletteWheel
+from .selection import SolutionSelection, LinearRank
 from ..archive import SolutionArchive, Elitist
 from ..base import PopulationBasedSolutionComposition
 
@@ -35,12 +35,12 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
     n_elitists_: int
 
     def __init__(self,
-                 n_iter: int = 128,
-                 population_size: int = 128,
-                 elitist_ratio: float = 0.1,
-                 mutation: SolutionMutation = BitFlips(),
-                 crossover: SolutionCrossover = NPoint(),
-                 selection: SolutionSelection = RouletteWheel(),
+                 n_iter: int = 32,
+                 population_size: int = 32,
+                 elitist_ratio: float = 0.17,
+                 mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
+                 crossover: SolutionCrossover = NPoint(n=3),
+                 selection: SolutionSelection = LinearRank(),
                  init: SolutionInit = RandomInit(),
                  archive: SolutionArchive = Elitist(),
                  random_state: int = None,

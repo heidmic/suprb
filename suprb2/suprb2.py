@@ -4,17 +4,20 @@ import numpy as np
 from sklearn import clone
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted, check_array
+from sklearn.linear_model import Ridge
 
 from .base import BaseRegressor
 from .exceptions import PopulationEmptyWarning
 from .solution import Solution
 from .logging import BaseLogger
-from .optimizer.solution import SolutionComposition
+from .optimizer.solution import SolutionComposition, ga
 from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
 from .utils import check_random_state, estimate_bounds
+from suprb2 import rule
+from suprb2.optimizer.rule import es, origin
 
 
 class SupRB2(BaseRegressor):
@@ -67,13 +70,20 @@ class SupRB2(BaseRegressor):
     logger_: BaseLogger
 
     def __init__(self,
-                 rule_generation: RuleGeneration = None,
-                 solution_composition: SolutionComposition = None,
-                 n_iter: int = 16,
+                 rule_generation: RuleGeneration = es.ES1xLambda(
+                     operator='&',
+                     n_iter=10_000,
+                     init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(),
+                                                       model=Ridge(alpha=0.01, random_state=42)),
+                     mutation=es.mutation.HalfnormIncrease(),
+                     origin_generation=origin.SquaredError(),
+                 ),
+                 solution_composition: SolutionComposition = ga.GeneticAlgorithm(),
+                 n_iter: int = 32,
                  n_initial_rules: int = 0,
-                 n_rules: int = 16,
-                 random_state: int = None,
-                 verbose: int = 0,
+                 n_rules: int = 4,
+                 random_state: int = 42,
+                 verbose: int = 10,
                  logger: BaseLogger = None,
                  n_jobs: int = 1,
                  ):

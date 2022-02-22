@@ -7,7 +7,7 @@ import numpy as np
 from suprb2.rule import Rule, RuleInit
 from suprb2.rule.initialization import HalfnormInit
 from suprb2.utils import RandomState
-from .mutation import RuleMutation, Normal
+from .mutation import RuleMutation, HalfnormIncrease
 from .selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
@@ -49,10 +49,10 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  n_iter: int = 10,
                  lmbda: int = 20,
                  operator: str = ',',
-                 delay: int = 20,
+                 delay: int = 146,
                  origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = HalfnormInit(),
-                 mutation: RuleMutation = Normal(),
+                 mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
                  selection: RuleSelection = Fittest(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
