@@ -1,3 +1,4 @@
+import math
 import warnings
 
 import numpy as np
@@ -204,10 +205,10 @@ class NoveltySearch(RuleGeneration):
     def _init_population(self, X: np.ndarray, y: np.ndarray) -> list[Rule]:
         population = []
 
-        if len(self.pool_) < int(self.mu / 2):
+        if len(self.pool_) < int(math.ceil(self.mu / 2)):
             n_rules = self.mu - len(self.pool_)
         else:
-            n_rules = int(self.mu / 2)
+            n_rules = int(math.ceil(self.mu / 2))
 
         origins = self.origin_generation(n_rules=n_rules, X=X, pool=self.pool_,
                                          elitist=self.elitist_, random_state=self.random_state_)
@@ -215,7 +216,7 @@ class NoveltySearch(RuleGeneration):
         for origin in origins:
             population.append(self.constraint(self.init(mean=origin, random_state=self.random_state_)).fit(X, y))
 
-        if len(self.pool_) < int(self.mu / 2):
+        if len(self.pool_) < int(math.ceil(self.mu / 2)):
             population.extend(self.pool_)
         else:
             population.extend(self.random_state_.choice(self.pool_, size=int(self.mu / 2), replace=False))
@@ -279,13 +280,10 @@ class NoveltySearch(RuleGeneration):
 
     def _validate_params(self, n_rules: int):
         if self.ns_type not in ["NS", "NSLC", "MCNS"]:
-            warnings.warn("No valid NS-Type was given. Using default Novelty Search", UserWarning)
-            self.ns_type = "NS"
+            raise ValueError(f"{self.ns_type} is no valid NS-Type.")
         if self.archive not in ["novelty", "random", "none"]:
-            warnings.warn("No valid Archive-Type was given. Using default Novelty Archive", UserWarning)
-            self.archive = "novelty"
+            raise ValueError(f"{self.archive} is no valid Archive-Type.")
         if self.novelty_fitness_combination not in ["novelty", "50/50", "75/25", "pmcns", "pareto"]:
-            warnings.warn("No valid Fitness-Novelty Combination was given. Using default of pure Novelty", UserWarning)
-            self.novelty_fitness_combination = "novelty"
+            raise ValueError(f"{self.novelty_fitness_combination} is no valid Fitness-Novelty Combination.")
         if n_rules > (self.mu + self.lmbda):
-            raise ValueError("n_rules must be less or equal to mu+lambda.")
+            raise ValueError(f"n_rules={n_rules} must be less or equal to mu+lambda={self.mu+self.lmbda}.")
