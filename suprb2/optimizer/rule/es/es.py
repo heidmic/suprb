@@ -99,7 +99,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 continue
 
             # Different operators
-            # return is a list[Rule], but only first element is relevant in this case
+            # return is a list[Rule] of one rule, but selection can only take type Rule as input.
             if self.operator == '+':
                 children.append(elitist)
                 elitist = self.selection(children, random_state=random_state)[0]

@@ -31,6 +31,7 @@ class NoveltySearch(RuleGeneration):
         origin_generation: RuleOriginGeneration
             The selection process which decides on the next initial points.
         init: RuleInit
+        crossover: RuleCrossover
         mutation: RuleMutation
         selection: RuleSelection
         acceptance: RuleAcceptance
@@ -42,7 +43,7 @@ class NoveltySearch(RuleGeneration):
         ns_type: str
             The type of Novelty Search to be used. Can be 'NS' for standard Novelty Search, 'NSLC' for Novelty Search
             with Local Competition or 'MCNS' for Minimal Criteria Novelty Search.
-        threshold_amount_matched: int
+        MCNS_threshold_matched: int
             The amount of samples a rule must match when using MCNS. Otherwise this parameter has no effect.
         archive: str
             The type of archive to be used by the algorithm. Can be 'novelty' for an archive with the most novel
@@ -76,7 +77,7 @@ class NoveltySearch(RuleGeneration):
 
                  ns_type: str = 'NS',  # NS, NSLC or MCNS
 
-                 threshold_amount_matched: int = None,
+                 MCNS_threshold_matched: int = None,
 
                  archive: str = 'novelty',  # novelty, random or none
                  novelty_fitness_combination: str = 'novelty'  # novelty, 50/50, 75/25, pmcns or pareto
@@ -102,12 +103,17 @@ class NoveltySearch(RuleGeneration):
         self.ns_type = ns_type
 
         # parameter only for MCNS
-        self.threshold_amount_matched = threshold_amount_matched
+        self.MCNS_threshold_matched = MCNS_threshold_matched
 
         self.archive = archive
         self.novelty_fitness_combination = novelty_fitness_combination
 
     def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
+        """ Validation of the parameters and checking the random_state.
+            Then _optimize is called, where the Novelty Search algorithm is implemented.
+
+            Return: A list of filtered Rules.
+        """
         self._validate_params(n_rules)
 
         self.random_state_ = check_random_state(self.random_state)
@@ -148,7 +154,8 @@ class NoveltySearch(RuleGeneration):
             # filter children
             valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
-            # fill population for new iteration with 6/7 best children and 1/7 elitists except for last iteration
+            # fill population for new iteration with mu children and n_rules elitists except for last iteration
+            # where children and parents will be combined and n_rules are chosen
             population = self._new_population(valid_children, parents, n_rules)
 
         return population
@@ -251,8 +258,8 @@ class NoveltySearch(RuleGeneration):
             return population
 
     def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
-        if self.threshold_amount_matched:
-            rules = [rule for rule in rules if np.count_nonzero(rule.match_) > self.threshold_amount_matched]
+        if self.MCNS_threshold_matched:
+            rules = [rule for rule in rules if np.count_nonzero(rule.match_) > self.MCNS_threshold_matched]
         return rules
 
     def _filter_for_progressive_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:

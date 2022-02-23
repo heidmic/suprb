@@ -15,7 +15,7 @@ from suprb2 import SupRB2
 from suprb2 import rule
 from suprb2.logging.stdout import StdoutLogger
 from suprb2.optimizer.solution import ga
-from suprb2.optimizer.rule import es, ns
+from suprb2.optimizer.rule import es
 
 if __name__ == '__main__':
     random_state = 42
