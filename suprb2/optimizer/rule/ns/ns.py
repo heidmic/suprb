@@ -31,6 +31,9 @@ class NoveltySearch(RuleGeneration):
         origin_generation: RuleOriginGeneration
             The selection process which decides on the next initial points.
         init: RuleInit
+            A method to init rules. The init must always match at least one
+            example but ideally should already match more than one,
+            e.g. HalfnormInit, whereas NormalInit would not work consistently.
         crossover: RuleCrossover
         mutation: RuleMutation
         selection: RuleSelection
