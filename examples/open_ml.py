@@ -10,6 +10,7 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
+import suprb2.optimizer.rule.mutation
 from suprb2 import SupRB2
 from suprb2 import rule
 from suprb2.logging.stdout import StdoutLogger
@@ -43,7 +44,7 @@ if __name__ == '__main__':
                 n_iter=100,
                 operator='&',
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=es.mutation.HalfnormIncrease(sigma=2)
+                mutation=suprb2.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
             ),
             solution_composition=ga.GeneticAlgorithm(
                 n_iter=128,
@@ -59,9 +60,12 @@ if __name__ == '__main__':
     ]
     models = {model.__class__.__name__: model for model in models}
 
+
     def run(name, model):
         print(f"[EVALUATION] {name}")
-        return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=4, verbose=10, scoring='r2'), name='r2')
+        return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=4, verbose=10, scoring='neg_root_mean_squared_error')
+                         , name='negated RMSE')
+
 
     scores = pd.concat({name: run(name=name, model=model) for name, model in models.items()}, axis=0).to_frame()
     scores.index.names = ['model', 'cv']

@@ -7,8 +7,8 @@ import numpy as np
 from suprb2.rule import Rule, RuleInit
 from suprb2.rule.initialization import HalfnormInit
 from suprb2.utils import RandomState
-from .mutation import RuleMutation, Normal
-from .selection import RuleSelection, Fittest
+from ..mutation import RuleMutation, Normal
+from ..selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import ParallelSingleRuleGeneration
@@ -99,11 +99,12 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 continue
 
             # Different operators
+            # return is a list[Rule] of one rule, but selection can only take type Rule as input.
             if self.operator == '+':
                 children.append(elitist)
-                elitist = self.selection(children, random_state=random_state)
+                elitist = self.selection(children, random_state=random_state)[0]
             elif self.operator in (',', '&'):
-                elitist = self.selection(children, random_state=random_state)
+                elitist = self.selection(children, random_state=random_state)[0]
             if self.operator == '&':
                 if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
                     elitist = elitists[0]
