@@ -9,7 +9,7 @@ from .base import BaseRegressor
 from .exceptions import PopulationEmptyWarning
 from .solution import Solution
 from .logging import BaseLogger
-from .optimizer.solution import SolutionComposition
+from .optimizer.solution import SolutionComposition, ga
 from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
@@ -69,11 +69,11 @@ class SupRB2(BaseRegressor):
     def __init__(self,
                  rule_generation: RuleGeneration = None,
                  solution_composition: SolutionComposition = None,
-                 n_iter: int = 16,
+                 n_iter: int = 32,
                  n_initial_rules: int = 0,
-                 n_rules: int = 16,
+                 n_rules: int = 4,
                  random_state: int = None,
-                 verbose: int = 0,
+                 verbose: int = 1,
                  logger: BaseLogger = None,
                  n_jobs: int = 1,
                  ):

@@ -5,9 +5,9 @@ from typing import Optional
 import numpy as np
 
 from suprb2.rule import Rule, RuleInit
-from suprb2.rule.initialization import HalfnormInit
+from suprb2.rule.initialization import MeanInit
 from suprb2.utils import RandomState
-from ..mutation import RuleMutation, Normal
+from ..mutation import RuleMutation, HalfnormIncrease
 from ..selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
@@ -46,13 +46,13 @@ class ES1xLambda(ParallelSingleRuleGeneration):
     """
 
     def __init__(self,
-                 n_iter: int = 10,
+                 n_iter: int = 10_000,
                  lmbda: int = 20,
-                 operator: str = ',',
-                 delay: int = 20,
+                 operator: str = '&',
+                 delay: int = 146,
                  origin_generation: RuleOriginGeneration = Matching(),
-                 init: RuleInit = HalfnormInit(),
-                 mutation: RuleMutation = Normal(),
+                 init: RuleInit = MeanInit(),
+                 mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
                  selection: RuleSelection = Fittest(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),

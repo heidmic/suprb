@@ -4,6 +4,8 @@ import numpy as np
 from scipy.stats import halfnorm
 from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
+
 
 from suprb2.base import BaseComponent
 from suprb2.utils import check_random_state, RandomState
@@ -27,7 +29,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         self.model = model
         self.fitness = fitness
 
-        self._validate_components(model=LinearRegression(), fitness=VolumeWu())
+        self._validate_components(model=Ridge(alpha=0.01), fitness=VolumeWu())
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
