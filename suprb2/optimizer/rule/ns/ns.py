@@ -159,7 +159,8 @@ class NoveltySearch(RuleGeneration):
 
             # fill population for new iteration with mu children and n_rules elitists except for last iteration
             # where children and parents will be combined and n_rules are chosen
-            population = self._new_population(valid_children, parents, n_rules)
+            if valid_children:
+                population = self._new_population(valid_children, parents, n_rules)
 
         return population
 
