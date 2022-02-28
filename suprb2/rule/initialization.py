@@ -24,12 +24,12 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
             Local model used for fitting the intervals.
     """
 
-    def __init__(self, bounds: np.ndarray = None, model: Ridge(alpha=0.01) = None, fitness: RuleFitness = VolumeWu()):
+    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None):
         self.bounds = bounds
         self.model = model
         self.fitness = fitness
 
-        self._validate_components(model=LinearRegression(), fitness=VolumeWu())
+        self._validate_components(model=Ridge(alpha=0.01), fitness=VolumeWu())
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
