@@ -39,6 +39,7 @@ class Clip(RuleConstraint):
     """Clip the rule into bounds."""
 
     def __init__(self, bounds: np.ndarray = None):
+        # if not set here it is set during SupRB2._init_bounds()
         self.bounds = bounds
 
     def __call__(self, rule: Rule) -> Rule:
