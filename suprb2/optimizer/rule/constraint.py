@@ -55,9 +55,8 @@ class MinRange(RuleConstraint):
         self.min_range = min_range
 
     def __call__(self, rule: Rule) -> Rule:
-        diff = rule.bounds[:, 1] - rule.bounds[:, 0]
+        diff = rule.bounds[:, 1] * 2
         if self.min_range > 0:
             invalid_indices = np.argwhere(diff < self.min_range)
-            rule.bounds[invalid_indices, 0] -= self.min_range / 2
             rule.bounds[invalid_indices, 1] += self.min_range / 2
         return rule
