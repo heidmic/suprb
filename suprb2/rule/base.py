@@ -81,7 +81,8 @@ class Rule(SolutionBase):
 
     def matched_data(self, X: np.ndarray):
         """Returns a boolean array that is True for data points the rule matches."""
-        return np.all((self.bounds[:, 0] <= X) & (X <= self.bounds[:, 1]), axis=1)
+        return np.all((self.bounds[:, 0] <= X) & (X <= self.bounds[:, 1]) |
+                      (self.bounds[:, 1] <= X) & (X <= self.bounds[:, 0]), axis=1)
 
     @property
     def volume_(self):
