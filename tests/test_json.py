@@ -5,15 +5,15 @@ from sklearn.model_selection import cross_validate
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
-from suprb2 import SupRB2
-from suprb2 import rule
-from suprb2.logging.combination import CombinedLogger
-from suprb2.logging.mlflow import MlflowLogger
-from suprb2.logging.stdout import StdoutLogger
-from suprb2.optimizer.solution import ga
-from suprb2.optimizer.rule import es
-from suprb2.utils import check_random_state
-import suprb2.json as json
+from suprb import SupRB
+from suprb import rule
+from suprb.logging.combination import CombinedLogger
+from suprb.logging.mlflow import MlflowLogger
+from suprb.logging.stdout import StdoutLogger
+from suprb.optimizer.solution import ga
+from suprb.optimizer.rule import es
+from suprb.utils import check_random_state
+import suprb.json as json
 
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state=None):
@@ -36,7 +36,7 @@ def setup():
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
-    model = SupRB2(
+    model = SupRB(
         rule_generation=es.ES1xLambda(
             n_iter=2,
             operator='&',
