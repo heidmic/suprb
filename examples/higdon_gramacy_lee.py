@@ -5,15 +5,15 @@ from sklearn.model_selection import cross_validate, train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
-from suprb2 import SupRB2
-from suprb2 import rule
-from suprb2.logging.combination import CombinedLogger
-from suprb2.logging.default import DefaultLogger
-from suprb2.logging.stdout import StdoutLogger
-from suprb2.optimizer import rule as rule_opt
-from suprb2.optimizer.solution import ga
-from suprb2.optimizer.rule import es
-from suprb2.utils import check_random_state
+from suprb import SupRB
+from suprb import rule
+from suprb.logging.combination import CombinedLogger
+from suprb.logging.default import DefaultLogger
+from suprb.logging.stdout import StdoutLogger
+from suprb.optimizer import rule as rule_opt
+from suprb.optimizer.solution import ga
+from suprb.optimizer.rule import es
+from suprb.utils import check_random_state
 
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state=None):
@@ -29,7 +29,7 @@ def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state
         # and not `random_state_` (the `np.random.Generator` instance)
         # because `sklearn.utils.check_random_state()` does currently not support `np.random.Generator`.
         # See https://github.com/scikit-learn/scikit-learn/issues/16988 for the current status.
-        # Our `suprb2.utils.check_random_state()` can handle `np.random.Generator`.
+        # Our `suprb.utils.check_random_state()` can handle `np.random.Generator`.
         X, y = apply_shuffle(X, y, random_state=random_state)
     return X, y
 
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
 
     # Prepare the model
-    model = SupRB2(
+    model = SupRB(
         rule_generation=es.ES1xLambda(
             n_iter=100,
             operator='&',
