@@ -44,7 +44,8 @@ class Clip(RuleConstraint):
 
     def __call__(self, rule: Rule) -> Rule:
         low, high = self.bounds[None].T
-        rule.bounds = rule.bounds.clip(low, high)
+        rule.bounds[:, 0] = rule.bounds[:, 0].clip(low, high)[0, :]
+        rule.bounds[:, 1] = rule.bounds[:, 1].clip(0, 1)
         return rule
 
 
@@ -55,7 +56,9 @@ class MinRange(RuleConstraint):
         self.min_range = min_range
 
     def __call__(self, rule: Rule) -> Rule:
-        diff = (rule.bounds[:, 1] * (2 - rule.bounds[:, 0])) - rule.bounds[:, 0]
+        diff = (rule.bounds[:, 1] * (1 - rule.bounds[:, 0])) - rule.bounds[:, 0]
+        #print(f"Rule Bounds 0 : {rule.bounds[:, 0]}")
+        #print(f"Current diff: {diff}")
         if self.min_range > 0:
             invalid_indices = np.argwhere(diff < self.min_range)
             rule.bounds[invalid_indices, 0] -= self.min_range / 2

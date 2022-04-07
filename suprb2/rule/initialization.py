@@ -1,3 +1,4 @@
+
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
@@ -15,7 +16,6 @@ from .fitness import VolumeWu
 
 class RuleInit(BaseComponent, metaclass=ABCMeta):
     """ Generates initial `Rule`s.
-
     Parameters
         ----------
         bounds: np.ndarray
@@ -33,7 +33,6 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
-
         Parameters
         ----------
         mean: np.ndarray
@@ -59,14 +58,17 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
 
 class MeanInit(RuleInit):
-    """Initializes both bounds with the mean."""
+    """Initializes the lower bound with the mean and chooses a random value in [0,1] for distance proportion."""
 
     def generate_bounds(self, mean: np.ndarray, _random_state: RandomState) -> np.ndarray:
-        return np.stack((mean.T, mean.T), axis=1)
+        spread = np.random.uniform(0, 1, mean.shape[0]).T
+        #print(np.stack((mean.T, spread), axis=1))
+        return np.stack((mean.T, spread), axis=1)
 
 
 class NormalInit(RuleInit):
-    """Initializes both bounds with points drawn from a normal distribution."""
+    """Initializes center with points drawn from a normal distribution
+    and distance proportion with random value in [0,1]."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
                  sigma: float = 0.1):
@@ -74,9 +76,10 @@ class NormalInit(RuleInit):
         self.sigma = sigma
 
     def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        return random_state.normal(loc=mean, scale=self.sigma, size=(2, mean.shape[0])).T
+        return np.stack((random_state.normal(loc=mean, scale=self.sigma, size=(mean.shape[0])).T,
+                         np.random.uniform(0, 1, mean.shape[0]).T), axis=1)
 
-
+#Unaltered
 class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
 
