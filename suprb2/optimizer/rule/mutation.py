@@ -46,10 +46,12 @@ class SigmaRange(RuleMutation):
 
 
 class Normal(RuleMutation):
-    """Normal noise on both bounds."""
+    """Normal noise on both center and spread."""
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        rule.bounds += random_state.normal(scale=self.sigma, size=rule.bounds.shape)
+        temp = random_state.normal(scale=self.sigma, size=rule.bounds.shape)
+        #print(f"The mutation{temp}")
+        rule.bounds += temp
 
 
 class Halfnorm(RuleMutation):
@@ -65,13 +67,12 @@ class Halfnorm(RuleMutation):
 
 
 class HalfnormIncrease(RuleMutation):
-    """Increase bounds with (half)normal noise."""
+    """Increases the spread with (half)normal noise."""
 
     def mutation(self, rule: Rule, random_state: RandomState):
         return halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        rule.bounds[:, 0] -= self.mutation(rule=rule, random_state=random_state)
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
 
 
@@ -83,11 +84,10 @@ class Uniform(RuleMutation):
 
 
 class UniformIncrease(RuleMutation):
-    """Increase bounds with uniform noise."""
+    """Increase the spread with uniform noise."""
 
     def mutation(self, rule: Rule, random_state: RandomState):
         return random_state.uniform(0, self.sigma, size=rule.bounds.shape[0])
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        rule.bounds[:, 0] -= self.mutation(rule=rule, random_state=random_state)
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
