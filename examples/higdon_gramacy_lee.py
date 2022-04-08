@@ -14,6 +14,7 @@ from suprb.optimizer import rule as rule_opt
 from suprb.optimizer.solution import ga
 from suprb.optimizer.rule import es
 from suprb.utils import check_random_state
+from suprb.optimizer.rule.mutation import HalfnormIncrease
 
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state=None):
@@ -51,7 +52,7 @@ if __name__ == '__main__':
             operator='&',
             origin_generation=rule_opt.origin.Matching(),
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
-            mutation=es.mutation.HalfnormIncrease(sigma=0.1),
+            mutation=HalfnormIncrease(sigma=0.1),
         ),
         solution_composition=ga.GeneticAlgorithm(
             n_iter=32,
