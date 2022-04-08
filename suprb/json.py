@@ -3,9 +3,6 @@ import numpy as np
 
 from suprb.suprb import SupRB
 from .solution import Solution
-from suprb.logging.stdout import StdoutLogger
-from suprb.logging.mlflow import MlflowLogger
-from suprb.logging.combination import CombinedLogger
 
 from .rule import Rule
 import importlib
@@ -101,9 +98,19 @@ def _convert_rule_to_json(rule):
 
 
 def _convert_linear_regression_to_json(model):
+    try:
+        rank = getattr(model, "rank_")
+    except AttributeError:
+        rank = "NaN"
+
+    try:
+        singular = _convert_to_json_format(getattr(model, "singular_")),
+    except AttributeError:
+        singular = "NaN"
+
     model_params = {"coef_":          _convert_to_json_format(getattr(model, "coef_")),
-                    "rank_":          getattr(model, "rank_"),
-                    "singular_":      _convert_to_json_format(getattr(model, "singular_")),
+                    "rank_":          rank,
+                    "singular_":      singular,
                     "n_features_in_": getattr(model, "n_features_in_"),
                     "intercept_":     getattr(model, "intercept_")}
 

@@ -7,12 +7,10 @@ from sklearn.utils import shuffle as apply_shuffle
 
 from suprb import SupRB
 from suprb import rule
-from suprb.logging.combination import CombinedLogger
-from suprb.logging.mlflow import MlflowLogger
-from suprb.logging.stdout import StdoutLogger
 from suprb.optimizer.solution import ga
 from suprb.optimizer.rule import es
 from suprb.utils import check_random_state
+from suprb.optimizer.rule.mutation import HalfnormIncrease
 import suprb.json as json
 
 
@@ -41,7 +39,7 @@ def setup():
             n_iter=2,
             operator='&',
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
-            mutation=es.mutation.HalfnormIncrease(sigma=0.1)
+            mutation=HalfnormIncrease(sigma=0.1)
         ),
         solution_composition=ga.GeneticAlgorithm(
             n_iter=1,
@@ -51,7 +49,6 @@ def setup():
         n_iter=1,
         n_rules=5,
         verbose=1,
-        logger=CombinedLogger([('stdout', StdoutLogger()), ('mlflow', MlflowLogger())]),
         random_state=random_state,
     )
 
