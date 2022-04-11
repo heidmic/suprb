@@ -88,6 +88,7 @@ class Rule(SolutionBase):
     def volume_(self):
         """Calculates the volume of the interval."""
         diff = self.bounds[:, 1] - self.bounds[:, 0]
+        diff = np.maximum(diff, -diff)
         return np.prod(diff)
 
     def predict(self, X: np.ndarray):
