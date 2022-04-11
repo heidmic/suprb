@@ -87,7 +87,7 @@ class Rule(SolutionBase):
     @property
     def volume_(self):
         """Calculates the volume of the interval."""
-        diff = self.bounds[:, 1] - self.bounds[:, 0]
+        diff = self.bounds[:, 1] - (self.bounds[:, 0] + self.bounds[:, 1] * (1 - self.bounds[:, 0]))
         return np.prod(diff)
 
     def predict(self, X: np.ndarray):
