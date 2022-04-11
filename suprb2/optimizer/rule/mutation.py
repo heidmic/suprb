@@ -9,10 +9,11 @@ from suprb2.utils import RandomState
 
 
 class RuleMutation(BaseComponent, metaclass=ABCMeta):
-    """Mutates the bounds of a rule with the strength defined by sigma."""
+    """Mutates the center and spread of a rule by the strength of sigma_center and sigma_spread respectively."""
 
-    def __init__(self, sigma: float = 0.1):
-        self.sigma = sigma
+    def __init__(self, sigma_center: float = 0.1, sigma_spread: float = 0.01):
+        self.sigma_center = sigma_center
+        self.sigma_spread = sigma_spread
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:
         # Create copy of the rule
@@ -41,24 +42,26 @@ class SigmaRange(RuleMutation):
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:
         self.sigma = random_state.uniform(self.low, self.high)
-        self.mutation.sigma = self.sigma
+        self.mutation.sigma_center = self.sigma
         return self.mutation(rule, random_state)
 
 
 class Normal(RuleMutation):
-    """Normal noise on both center and spread."""
+    """Normal noise on both center and spread using the respective scale."""
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        temp = random_state.normal(scale=self.sigma, size=rule.bounds.shape)
+        temp_center = random_state.normal(scale=self.sigma_center, size=rule.bounds.shape[0])
+        temp_spread = random_state.normal(scale=self.sigma_spread, size=rule.bounds.shape[0])
         #print(f"The mutation{temp}")
-        rule.bounds += temp
+        rule.bounds[:, 0] += temp_center
+        rule.bounds[:, 1] += temp_spread
 
 
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""
-
+    # Unaltered
     def mutation(self, rule: Rule, random_state: RandomState):
-        return halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+        return halfnorm.rvs(scale=self.sigma_center / 2, size=rule.bounds.shape[0], random_state=random_state)
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
         mean = np.mean(rule.bounds, axis=1)
@@ -70,7 +73,7 @@ class HalfnormIncrease(RuleMutation):
     """Increases the spread with (half)normal noise."""
 
     def mutation(self, rule: Rule, random_state: RandomState):
-        return halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+        return halfnorm.rvs(scale=self.sigma_spread / 2, size=rule.bounds.shape[0], random_state=random_state)
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
@@ -78,16 +81,16 @@ class HalfnormIncrease(RuleMutation):
 
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""
-
+    # Unaltered
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        rule.bounds += random_state.uniform(-self.sigma, self.sigma, size=rule.bounds.shape)
+        rule.bounds += random_state.uniform(-self.sigma_center, self.sigma_center, size=rule.bounds.shape)
 
 
 class UniformIncrease(RuleMutation):
     """Increase the spread with uniform noise."""
 
     def mutation(self, rule: Rule, random_state: RandomState):
-        return random_state.uniform(0, self.sigma, size=rule.bounds.shape[0])
+        return random_state.uniform(0, self.sigma_spread, size=rule.bounds.shape[0])
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)

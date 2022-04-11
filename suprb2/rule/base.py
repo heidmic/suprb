@@ -87,7 +87,12 @@ class Rule(SolutionBase):
     @property
     def volume_(self):
         """Calculates the volume of the interval."""
-        diff = self.bounds[:, 1] - self.bounds[:, 0]
+        diff = self.bounds[:, 1] * 2
+        invalid_indices_l = np.argwhere(self.bounds[:, 0] - self.bounds[:, 1] < -1)
+        invalid_indices_h = np.argwhere(self.bounds[:, 0] + self.bounds[:, 1] > 1)
+        # Account for scenarios where the interval would be out of bounds
+        diff[invalid_indices_l] += self.bounds[invalid_indices_l, 0] - self.bounds[invalid_indices_l, 1]
+        diff[invalid_indices_h] -= self.bounds[invalid_indices_h, 0] + self.bounds[invalid_indices_h, 1]
         return np.prod(diff)
 
     def predict(self, X: np.ndarray):
