@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/303331999.svg)](https://zenodo.org/badge/latestdoi/303331999)
+
 # SupRB
 
 ## What is SupRB?
