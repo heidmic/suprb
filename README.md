@@ -17,6 +17,16 @@ Solutions of the problem select classifiers from the unchanging pool.
 <img src="./docs/solution.png" alt="Solutions and Pool of classifiers" width="600"/>
 
 
+## Publications
+
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. Separating Rule Discovery and Global Solution Composition in a Learning Classifier System. In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
+
+Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System. In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
+
+## Experiments
+
+We provide the experiment scripts used in associated publications under: https://github.com/heidmic/suprb-experimentation
+
 ## Install all requirements
 
 
