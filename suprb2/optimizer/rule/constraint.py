@@ -48,7 +48,8 @@ class Clip(RuleConstraint):
 
 
 class MinRange(RuleConstraint):
-    """Make bounds bigger that were generated smaller than min_range."""
+    """Make bounds bigger that were generated smaller than min_range.
+    Accounts for both possible representations when looking for diff"""
 
     def __init__(self, min_range: float = 1e-6):
         self.min_range = min_range
