@@ -59,35 +59,23 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
 
 class MeanInit(RuleInit):
-    """Initializes the center with the mean and chooses a random value in [0,2] for spread."""
+    """Initializes the center with the mean and sets the spread to 0."""
 
     def generate_bounds(self, mean: np.ndarray, _random_state: RandomState) -> np.ndarray:
-        spread = np.random.uniform(0, 2, mean.shape[0]).T
-        return np.stack((mean.T, spread), axis=1)
+        return np.stack((mean.T, np.zeros((mean.shape[0]))), axis=1)
 
 
 class NormalInit(RuleInit):
-    """Initializes center with points drawn from a normal distribution and spread with random value in [0,2]."""
+    """Initializes center with points drawn from a normal distribution and spread with
+    a halfnorm distribution scaled with sigma_spread ."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
+                 sigma_center: float = 0.1, sigma_spread: float = 0.01):
         super().__init__(bounds=bounds, model=model, fitness=fitness)
-        self.sigma = sigma
+        self.sigma_center = sigma_center
+        self.sigma_spread = sigma_spread
 
     def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        return np.stack((random_state.normal(loc=mean, scale=self.sigma, size=(mean.shape[0])).T,
-                         np.random.uniform(0, 2, mean.shape[0]).T), axis=1)
-
-#Unaltered
-class HalfnormInit(RuleInit):
-    """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
-
-    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
-        super().__init__(bounds=bounds, model=model, fitness=fitness)
-        self.sigma = sigma
-
-    def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
-        high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
-        return np.stack((low.T, high.T), axis=1)
+        center = random_state.normal(loc=mean, scale=self.sigma_center, size=(mean.shape[0]))
+        spread = halfnorm.rvs(scale=self.sigma_spread / 2, size=mean.shape[0], random_state=random_state)
+        return np.stack((center.T, spread.T), axis=1)

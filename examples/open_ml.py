@@ -17,13 +17,16 @@ from suprb2.logging.stdout import StdoutLogger
 from suprb2.optimizer.solution import ga
 from suprb2.optimizer.rule import es
 
+import time
+
 if __name__ == '__main__':
+    start_time = time.time()
     random_state = 42
 
     data, _ = fetch_openml(name='Concrete_Data', version=1, return_X_y=True)
     data = data.to_numpy()
 
-    X, y = data[:, :8], data[:, 8]
+    X, y = data[:200, :8], data[:200, 8]
     X, y = shuffle(X, y, random_state=random_state)
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
@@ -41,10 +44,11 @@ if __name__ == '__main__':
         KNeighborsRegressor(),
         SupRB2(
             rule_generation=es.ES1xLambda(
-                n_iter=100,
+                n_iter=10,
                 operator='&',
-                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb2.optimizer.rule.mutation.HalfnormIncrease(sigma_center=2, sigma_spread=0.1)
+                init=rule.initialization.NormalInit(
+                    fitness=rule.fitness.VolumeWu(alpha=0.8), sigma_center=1, sigma_spread=0.1),
+                mutation=suprb2.optimizer.rule.mutation.HalfnormIncrease(sigma_center=1, sigma_spread=0.1)
             ),
             solution_composition=ga.GeneticAlgorithm(
                 n_iter=128,
@@ -52,8 +56,8 @@ if __name__ == '__main__':
                 selection=ga.selection.Tournament(),
                 mutation=ga.mutation.BitFlips(),
             ),
-            n_iter=16,
-            n_rules=16,
+            n_iter=6,
+            n_rules=6,
             logger=StdoutLogger(),
             random_state=random_state,
         )
@@ -63,7 +67,7 @@ if __name__ == '__main__':
 
     def run(name, model):
         print(f"[EVALUATION] {name}")
-        return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=4, verbose=10, scoring='neg_root_mean_squared_error')
+        return pd.Series(cross_val_score(model, X, y, cv=4, n_jobs=1, verbose=10, scoring='neg_root_mean_squared_error')
                          , name='negated RMSE')
 
 
@@ -71,3 +75,4 @@ if __name__ == '__main__':
     scores.index.names = ['model', 'cv']
 
     print(scores.groupby(by='model').describe().to_string())
+    print(f"The total time needed was: {time.time() - start_time} seconds")
