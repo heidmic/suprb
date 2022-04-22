@@ -45,9 +45,8 @@ class Clip(RuleConstraint):
     def __call__(self, rule: Rule) -> Rule:
         low, high = self.bounds[None].T
         diff = np.abs(high - low)
-        # clip creates 3 - dimensional array out 2 dimensional array (odd behaviour)
+        # Indexing needed because clipping creates 3 - dimensional array
         rule.bounds[:, 0] = rule.bounds[:, 0].clip(low, high)[0, :]
-        # same behaviour here
         rule.bounds[:, 1] = rule.bounds[:, 1].clip(0, diff)[0, :]
         return rule
 

@@ -75,4 +75,3 @@ if __name__ == '__main__':
     scores.index.names = ['model', 'cv']
 
     print(scores.groupby(by='model').describe().to_string())
-    print(f"The total time needed was: {time.time() - start_time} seconds")
