@@ -86,13 +86,13 @@ class Rule(SolutionBase):
 
     @property
     def volume_(self):
-        """Calculates the volume of the interval."""
-        diff = self.bounds[:, 1] * 2
-        invalid_indices_l = np.argwhere(self.bounds[:, 0] - self.bounds[:, 1] < -1)
-        invalid_indices_h = np.argwhere(self.bounds[:, 0] + self.bounds[:, 1] > 1)
-        # Account for scenarios where the interval would be out of bounds
-        diff[invalid_indices_l] += self.bounds[invalid_indices_l, 0] - self.bounds[invalid_indices_l, 1]
-        diff[invalid_indices_h] -= self.bounds[invalid_indices_h, 0] + self.bounds[invalid_indices_h, 1]
+        """Calculates the lower and upper bounds from tuple and clips them to ensure no invalid bounds are used
+        then calculates diff for all intervals and returns the product."""
+        lower = self.bounds[:, 0] - self.bounds[:, 1]
+        higher = self.bounds[:, 0] + self.bounds[:, 1]
+        lower = lower.clip(-1, 1)
+        higher = higher.clip(-1, 1)
+        diff = higher - lower
         return np.prod(diff)
 
     def predict(self, X: np.ndarray):

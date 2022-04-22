@@ -53,13 +53,18 @@ class Clip(RuleConstraint):
 
 
 class MinRange(RuleConstraint):
-    """Make bounds bigger that were generated smaller than min_range."""
+    """Calculate bounds and clip them into range, then increase spread for bounds with a
+    diff lower than min_range."""
 
     def __init__(self, min_range: float = 1e-6):
         self.min_range = min_range
 
     def __call__(self, rule: Rule) -> Rule:
-        diff = rule.bounds[:, 1] * 2
+        low = rule.bounds[:, 0] - rule.bounds[:, 1]
+        high = rule.bounds[:, 0] + rule.bounds[:, 1]
+        low = low.clip(-1, 1)
+        high = high.clip(-1, 1)
+        diff = high - low
         if self.min_range > 0:
             invalid_indices = np.argwhere(diff < self.min_range)
             rule.bounds[invalid_indices, 1] += self.min_range / 2
