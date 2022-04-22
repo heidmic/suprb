@@ -58,37 +58,23 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
 
 class MeanInit(RuleInit):
-    """Initializes the lower bound with the mean and chooses a random value in [0,1] for distance proportion."""
+    """Initializes the lower bound with the mean and sets proportion to zero for all values."""
 
     def generate_bounds(self, mean: np.ndarray, _random_state: RandomState) -> np.ndarray:
-        spread = np.random.uniform(0, 1, mean.shape[0]).T
-        #print(np.stack((mean.T, spread), axis=1))
-        return np.stack((mean.T, spread), axis=1)
+        return np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1)
 
 
 class NormalInit(RuleInit):
     """Initializes center with points drawn from a normal distribution
-    and distance proportion with random value in [0,1]."""
+    and distance proportion with halfnormal distribution using the respective scales."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
+                 sigma_lower: float = 0.1, sigma_prop: float = 0.1):
         super().__init__(bounds=bounds, model=model, fitness=fitness)
-        self.sigma = sigma
+        self.sigma_lower = sigma_lower
+        self.sigma_prop = sigma_prop
 
     def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        return np.stack((random_state.normal(loc=mean, scale=self.sigma, size=(mean.shape[0])).T,
-                         np.random.uniform(0, 1, mean.shape[0]).T), axis=1)
-
-#Unaltered
-class HalfnormInit(RuleInit):
-    """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
-
-    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
-        super().__init__(bounds=bounds, model=model, fitness=fitness)
-        self.sigma = sigma
-
-    def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
-        high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
-        return np.stack((low.T, high.T), axis=1)
+        lower = random_state.normal(loc=mean, scale=self.sigma_lower, size=(mean.shape[0]))
+        prop = halfnorm.rvs(scale=self.sigma_prop / 2, size=mean.shape[0], random_state=random_state)
+        return np.stack((lower.T, prop.T), axis=1)
