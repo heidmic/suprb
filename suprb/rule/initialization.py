@@ -1,3 +1,4 @@
+
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
@@ -15,7 +16,6 @@ from .fitness import VolumeWu
 
 class RuleInit(BaseComponent, metaclass=ABCMeta):
     """ Generates initial `Rule`s.
-
     Parameters
         ----------
         bounds: np.ndarray
@@ -33,7 +33,6 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
-
         Parameters
         ----------
         mean: np.ndarray
@@ -59,33 +58,23 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
 
 class MeanInit(RuleInit):
-    """Initializes both bounds with the mean."""
+    """Initializes the lower bound with the mean and sets proportion to zero for all values."""
 
     def generate_bounds(self, mean: np.ndarray, _random_state: RandomState) -> np.ndarray:
-        return np.stack((mean.T, mean.T), axis=1)
+        return np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1)
 
 
 class NormalInit(RuleInit):
-    """Initializes both bounds with points drawn from a normal distribution."""
+    """Initializes center with points drawn from a normal distribution
+    and distance proportion with halfnormal distribution using the respective scales."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
+                 sigma_lower: float = 0.1, sigma_prop: float = 0.1):
         super().__init__(bounds=bounds, model=model, fitness=fitness)
-        self.sigma = sigma
+        self.sigma_lower = sigma_lower
+        self.sigma_prop = sigma_prop
 
     def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        return random_state.normal(loc=mean, scale=self.sigma, size=(2, mean.shape[0])).T
-
-
-class HalfnormInit(RuleInit):
-    """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
-
-    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
-        super().__init__(bounds=bounds, model=model, fitness=fitness)
-        self.sigma = sigma
-
-    def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
-        high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
-        return np.stack((low.T, high.T), axis=1)
+        lower = random_state.normal(loc=mean, scale=self.sigma_lower, size=(mean.shape[0]))
+        prop = halfnorm.rvs(scale=self.sigma_prop / 2, size=mean.shape[0], random_state=random_state)
+        return np.stack((lower.T, prop.T), axis=1)
