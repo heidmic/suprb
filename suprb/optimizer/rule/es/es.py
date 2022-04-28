@@ -4,9 +4,9 @@ from typing import Optional
 
 import numpy as np
 
-from suprb2.rule import Rule, RuleInit
-from suprb2.rule.initialization import MeanInit
-from suprb2.utils import RandomState
+from suprb.rule import Rule, RuleInit
+from suprb.rule.initialization import MeanInit
+from suprb.utils import RandomState
 from ..mutation import RuleMutation, Normal
 from ..selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
@@ -14,6 +14,7 @@ from ..acceptance import Variance
 from ..base import ParallelSingleRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import Matching, RuleOriginGeneration
+
 
 
 class ES1xLambda(ParallelSingleRuleGeneration):
