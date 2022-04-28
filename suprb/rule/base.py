@@ -81,12 +81,15 @@ class Rule(SolutionBase):
 
     def matched_data(self, X: np.ndarray):
         """Returns a boolean array that is True for data points the rule matches."""
-        return np.all((self.bounds[:, 0] <= X) & (X <= self.bounds[:, 1]), axis=1)
+        lower = np.min(self.bounds, axis=1)
+        upper = np.max(self.bounds, axis=1)
+        return np.all((lower <= X) & (X <= upper), axis=1)
 
     @property
     def volume_(self):
         """Calculates the volume of the interval."""
         diff = self.bounds[:, 1] - self.bounds[:, 0]
+        diff = np.maximum(diff, -diff)
         return np.prod(diff)
 
     def predict(self, X: np.ndarray):
