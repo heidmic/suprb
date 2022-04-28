@@ -44,7 +44,7 @@ if __name__ == '__main__':
                 n_iter=100,
                 operator='&',
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
+                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma_lower=1, sigma_prop=0.2)
             ),
             solution_composition=ga.GeneticAlgorithm(
                 n_iter=128,
