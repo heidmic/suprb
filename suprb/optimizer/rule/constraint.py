@@ -63,6 +63,7 @@ class MinRange(RuleConstraint):
         diff = upper - lower
         if self.min_range > 0:
             invalid_indices = np.argwhere(diff < self.min_range)
+            # Approximate increasing the width by min_range
             rule.bounds[invalid_indices, 0] -= self.min_range / 2
             rule.bounds[invalid_indices, 1] += self.min_range
         return rule

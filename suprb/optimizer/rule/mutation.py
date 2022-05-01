@@ -1,4 +1,3 @@
-
 from abc import ABCMeta
 
 import numpy as np
@@ -22,10 +21,6 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
 
         # Mutation
         self.mutate_bounds(mutated_rule, random_state)
-
-        # Sort the bounds, because they could possibly be swapped
-        mutated_rule.bounds = np.sort(mutated_rule.bounds, axis=1)
-
         return mutated_rule
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
@@ -76,4 +71,5 @@ class UniformIncrease(RuleMutation):
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
-        rule.bounds[:, 0] += random_state.normal(scale=self.sigma_lower, size=rule.bounds.shape)
+        rule.bounds[:, 0] += \
+            random_state.uniform(-self.sigma_lower, self.sigma_lower, size=rule.bounds.shape[0])
