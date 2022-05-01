@@ -66,11 +66,12 @@ class HalfnormIncrease(RuleMutation):
 
 
 class UniformIncrease(RuleMutation):
-    """Increase the spread with uniform noise and moves the center with normal noise."""
+    """Increase the spread with uniform noise and moves the center with uniform noise."""
 
     def mutation(self, rule: Rule, random_state: RandomState):
         return random_state.uniform(0, self.sigma_spread, size=rule.bounds.shape[0])
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        rule.bounds[:, 0] += random_state.normal(scale=self.sigma_center, size=rule.bounds.shape[0])
+        rule.bounds[:, 0] += \
+            random_state.uniform(-self.sigma_center, self.sigma_center, size=rule.bounds.shape[0])
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
