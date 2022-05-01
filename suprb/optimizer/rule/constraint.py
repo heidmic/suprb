@@ -59,12 +59,16 @@ class MinRange(RuleConstraint):
         diff = rule.bounds[:, 1] - rule.bounds[:, 0]
         if self.min_range > 0:
             invalid_indices = np.argwhere((diff < self.min_range) & (-diff < self.min_range))
+            # Tuple of shape (lower, upper)
             invalid_indices_l = np.argwhere((diff[invalid_indices] > -diff[invalid_indices]))
+            # Tuple of shape (upper, lower)
             invalid_indices_r = np.argwhere((diff[invalid_indices] <= -diff[invalid_indices]))
 
+            # Increase Range for tuples of shape (lower, upper)
             rule.bounds[invalid_indices_l, 0] += self.min_range / 2
             rule.bounds[invalid_indices_l, 1] -= self.min_range / 2
 
+            # Increase Range for tuples of shape (upper, lower)
             rule.bounds[invalid_indices_r, 0] -= self.min_range / 2
             rule.bounds[invalid_indices_r, 1] += self.min_range / 2
         return rule
