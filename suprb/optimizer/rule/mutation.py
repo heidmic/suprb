@@ -47,29 +47,30 @@ class Normal(RuleMutation):
     weighed with a factor of sigma_lower and sigma_prop respectively."""
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        rule.bounds[:, 0] = random_state.normal(scale=self.sigma_lower, size=rule.bounds.shape)
-        rule.bounds[:, 1] = random_state.normal(scale=self.sigma_prop, size=rule.bounds.shape)
+        rule.bounds[:, 0] += random_state.normal(scale=self.sigma_lower, size=rule.bounds.shape[0])
+        rule.bounds[:, 1] += random_state.normal(scale=self.sigma_prop, size=rule.bounds.shape[0])
 
 
 class HalfnormIncrease(RuleMutation):
     """Increases the distance proportion with
-    (half)normal noise and moves the lower bound using normal noise."""
+    (half)normal noise and decreases the lower bound with (half)normal noise."""
 
     def mutation(self, rule: Rule, random_state: RandomState):
         return halfnorm.rvs(scale=self.sigma_prop / 2, size=rule.bounds.shape[0], random_state=random_state)
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
-        rule.bounds[:, 0] += random_state.normal(scale=self.sigma_lower, size=rule.bounds.shape[0])
+        rule.bounds[:, 0] -= \
+            halfnorm.rvs(scale=self.sigma_lower / 2, size=rule.bounds.shape[0], random_state=random_state)
 
 
 class UniformIncrease(RuleMutation):
-    """Increase the distances proportion with uniform noise and moves the lower bound using normal noise."""
+    """Increase the distances proportion with uniform noise and decreases the lower bound using normal noise."""
 
     def mutation(self, rule: Rule, random_state: RandomState):
         return random_state.uniform(0, self.sigma_prop, size=rule.bounds.shape[0])
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
         rule.bounds[:, 1] += self.mutation(rule=rule, random_state=random_state)
-        rule.bounds[:, 0] += \
-            random_state.uniform(-self.sigma_lower, self.sigma_lower, size=rule.bounds.shape[0])
+        rule.bounds[:, 0] -= \
+            random_state.uniform(0, self.sigma_lower, size=rule.bounds.shape[0])
