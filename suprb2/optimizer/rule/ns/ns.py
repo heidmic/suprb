@@ -264,11 +264,9 @@ class NoveltySearch(RuleGeneration):
     def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
         # calculate the 25th percentile value and if it's lower than MNCS_threshold_matched use it instead to filter
         # a maximum of 25% of the population (to prevent empty populations)
-        maximum_threshold = np.percentile([np.count_nonzero(rule.match_) for rule in rules], 25)
-        if maximum_threshold < self.MCNS_threshold_matched:
-            rules = [rule for rule in rules if np.count_nonzero(rule.match_) >= maximum_threshold]
-        else:
-            rules = [rule for rule in rules if np.count_nonzero(rule.match_) >= self.MCNS_threshold_matched]
+        maximum_threshold = min(
+            np.percentile(self.MCNS_threshold_matched, [np.count_nonzero(rule.match_) for rule in rules], 25))
+        rules = [rule for rule in rules if np.count_nonzero(rule.match_) >= maximum_threshold]
         return rules
 
     def _filter_for_progressive_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
