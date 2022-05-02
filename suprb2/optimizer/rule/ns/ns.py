@@ -1,5 +1,4 @@
 import math
-import pstats
 
 import numpy as np
 from scipy.spatial.distance import hamming
@@ -8,14 +7,13 @@ from suprb2.rule import Rule, RuleInit
 from suprb2.rule.initialization import HalfnormInit
 from suprb2.utils import check_random_state
 from .crossover import RuleCrossover, UniformCrossover
-from suprb2.optimizer.rule.mutation import Normal, RuleMutation, UniformIncrease
+from suprb2.optimizer.rule.mutation import Normal, RuleMutation
 from suprb2.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import RuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import RuleOriginGeneration, UniformSamplesOrigin, SquaredError, Matching
-import cProfile
+from ..origin import RuleOriginGeneration, UniformSamplesOrigin, SquaredError
 
 
 class NoveltySearch(RuleGeneration):
@@ -64,29 +62,28 @@ class NoveltySearch(RuleGeneration):
         """
 
     last_iter_inner: bool
-    profiler = cProfile.Profile()
 
     def __init__(self,
-                 n_iter: int = 25,
-                 mu: int = 12,
-                 lm_ratio: int = 24,
+                 n_iter: int = 10,
+                 mu: int = 16,
+                 lm_ratio: int = 10,
 
-                 origin_generation: RuleOriginGeneration = Matching(),
+                 origin_generation: RuleOriginGeneration = SquaredError(),
                  init: RuleInit = HalfnormInit(),
                  crossover: RuleCrossover = UniformCrossover(),
-                 mutation: RuleMutation = UniformIncrease(sigma=1.5625137985336355),
+                 mutation: RuleMutation = Normal(sigma=0.1),
                  selection: RuleSelection = Random(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
                  random_state: int = None,
                  n_jobs: int = 1,
 
-                 ns_type: str = 'NSLC',  # NS, NSLC or MCNS
+                 ns_type: str = 'MCNS',  # NS, NSLC or MCNS
 
                  MCNS_threshold_matched: int = 30,
 
-                 archive: str = 'none',  # novelty, random or none
-                 novelty_fitness_combination: str = 'pmcns'  # novelty, 50/50, 75/25, pmcns or pareto
+                 archive: str = 'novelty',  # novelty, random or none
+                 novelty_fitness_combination: str = 'novelty'  # novelty, 50/50, 75/25, pmcns or pareto
                  ):
         super().__init__(
             n_iter=n_iter,
@@ -125,9 +122,6 @@ class NoveltySearch(RuleGeneration):
         self.random_state_ = check_random_state(self.random_state)
 
         rules = self._optimize(X=X, y=y, n_rules=n_rules)
-
-        stats = pstats.Stats(self.profiler).sort_stats('tottime')
-        stats.print_stats()
 
         return self._filter_invalid_rules(X=X, y=y, rules=rules)
 
@@ -192,10 +186,7 @@ class NoveltySearch(RuleGeneration):
 
         # main loop with option for local competition
         for rule in rules:
-            self.profiler.enable()
-            rules_w_distances = [(B, hamming(rule.match_, B.match_)) for B in archive]
-            rules_w_distances = sorted(rules_w_distances, key=lambda a: a[1])
-            self.profiler.disable()
+            rules_w_distances = sorted([(B, hamming(rule.match_, B.match_)) for B in archive], key=lambda a: a[1])
 
             distances = [a[1] for a in rules_w_distances]
             novelty_score = sum(distances[:k]) / len(distances[:k])
@@ -273,9 +264,11 @@ class NoveltySearch(RuleGeneration):
     def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
         # calculate the 25th percentile value and if it's lower than MNCS_threshold_matched use it instead to filter
         # a maximum of 25% of the population (to prevent empty populations)
-        maximum_threshold = min(np.percentile(self.MCNS_threshold_matched, [np.count_nonzero(rule.match_)
-                                                                            for rule in rules], 25))
-        rules = [rule for rule in rules if np.count_nonzero(rule.match_) >= maximum_threshold]
+        maximum_threshold = np.percentile([np.count_nonzero(rule.match_) for rule in rules], 25)
+        if maximum_threshold < self.MCNS_threshold_matched:
+            rules = [rule for rule in rules if np.count_nonzero(rule.match_) >= maximum_threshold]
+        else:
+            rules = [rule for rule in rules if np.count_nonzero(rule.match_) >= self.MCNS_threshold_matched]
         return rules
 
     def _filter_for_progressive_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
