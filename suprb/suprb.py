@@ -186,7 +186,7 @@ class SupRB(BaseRegressor):
                 "The population is empty, even after generating rules. "
                 "Dummy rules will be generated.",
                 PopulationEmptyWarning)
-            dummy_rules = self.rule_generation_.optimize(X, y, n_rules=new_rules, dummy_rules=True)
+            dummy_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules, dummy_rules=True)
             self.pool_.extend(dummy_rules)
 
 
