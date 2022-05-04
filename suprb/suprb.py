@@ -170,7 +170,6 @@ class SupRB(BaseRegressor):
         """Performs the rule discovery / rule generation (RG) process."""
 
         self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
-
         # Update the current elitist
         self.rule_generation_.elitist_ = self.solution_composition_.elitist()
 
@@ -182,12 +181,14 @@ class SupRB(BaseRegressor):
 
         # Extend the pool with the new rules
         self.pool_.extend(new_rules)
-
         if not self.pool_:
             warnings.warn(
                 "The population is empty, even after generating rules. "
-                "Solution optimization will be skipped.",
+                "Dummy rules will be generated.",
                 PopulationEmptyWarning)
+            dummy_rules = self.rule_generation_.optimize(X, y, n_rules=new_rules, dummy_rules=True)
+            self.pool_.extend(dummy_rules)
+
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""
