@@ -186,8 +186,10 @@ class SupRB(BaseRegressor):
         if not self.pool_:
             warnings.warn(
                 "The population is empty, even after generating rules. "
-                "Solution optimization will be skipped.",
+                "Dummy rules will be generated.",
                 PopulationEmptyWarning)
+            dummy_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules, dummy_rules=True)
+            self.pool_.extend(dummy_rules)
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""
