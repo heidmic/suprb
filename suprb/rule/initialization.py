@@ -93,11 +93,3 @@ class HalfnormInit(RuleInit):
         low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
         high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
         return np.stack((low.T, high.T), axis=1)
-
-
-class CreateDummy(RuleInit):
-    """Creates Dummy-Rules to fill population when first iteration created no rules"""
-    def generate_bounds(self, mean: np.ndarray, _random_state: RandomState) -> np.ndarray:
-        low = np.full(mean.shape[0], 1)
-        high = np.full(mean.shape[0], 1)
-        return np.stack((low.T, high.T), axis=1)
