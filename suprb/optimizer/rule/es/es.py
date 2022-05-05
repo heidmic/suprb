@@ -98,8 +98,9 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 warnings.warn("No valid children were generated during this iteration.", UserWarning)
                 continue
 
-            # Different operators
-            # return is a list[Rule] of one rule, but selection can only take type Rule as input.
+            # Different operators for replacement
+            # 'selection' returns a list of rules. Either unordered or
+            # descending, we thus take the first element for our new parent
             if self.operator == '+':
                 children.append(elitist)
                 elitist = self.selection(children, random_state=random_state)[0]
