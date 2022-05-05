@@ -51,8 +51,8 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         bounds = np.sort(bounds, axis=1)
 
         if dummy_rules:
-            low = np.full(mean.shape[0], -1.0)
-            high = np.full(mean.shape[0], 1.0)
+            low = np.full(mean.shape[0], 0)
+            high = np.full(mean.shape[0], 0)
             bounds = np.stack((low, high), axis=1)
 
         return Rule(bounds=bounds, input_space=self.bounds, model=clone(self.model), fitness=self.fitness)
