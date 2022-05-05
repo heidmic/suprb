@@ -52,8 +52,8 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         bounds = self.generate_bounds(mean, random_state_)
 
         if dummy_rules:
-            center = np.full(mean.shape[0], 1.0)
-            spread = np.full(mean.shape[0], 2.0)
+            center = np.full(mean.shape[0], 0.0)
+            spread = np.full(mean.shape[0], 0.0)
             bounds = np.stack((center, spread), axis=1)
 
         return Rule(bounds=bounds, input_space=self.bounds, model=clone(self.model), fitness=self.fitness)
