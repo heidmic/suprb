@@ -1,13 +1,13 @@
 import numpy as np
 
 from suprb.rule import Rule
-from suprb.rule.initialization import HalfnormInit
+from suprb.rule.initialization import RuleInit, HalfnormInit
 from suprb.utils import RandomState, check_random_state
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import RuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import RuleOriginGeneration, UniformSamplesOrigin
+from ..origin import RuleOriginGeneration, UniformSamplesOrigin, Matching
 from ..selection import RuleSelection, Fittest
 
 
