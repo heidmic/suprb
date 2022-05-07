@@ -40,8 +40,11 @@ class DefaultLogger(BaseLogger):
 
         # Needed to parse genome (array consisting of boolean values) into Integer-value
         def parse_genome(genome: np.ndarray):
-            str1 = ''.join(genome)
-            return int(str1)
+            genome = genome.astype(dtype="int")
+            genome_str = ""
+            for digit in genome:
+                genome_str += str(digit)
+            return int(genome_str)
 
         # Log pool
         pool = estimator.pool_
@@ -78,20 +81,21 @@ class DefaultLogger(BaseLogger):
             log_metric(metric_name + '_max', max(lst))
 
         def get_convergence(lst: list, threshold: int):
-            final_genome = lst.pop()
+            copied_lst = lst.copy()
+            final_genome = copied_lst.pop()
             length_final = final_genome.shape[0]
-            thresh = 0
-            for i in reversed(lst):
-                length_current = i.shape[0]
+            for i, gen in zip(range(len(copied_lst)), reversed(copied_lst)):
+                thresh = 0
+                length_current = gen.shape[0]
                 for x in range(length_final):
                     if x > length_current - 1:
                         if final_genome[x] != 0:
                             thresh += 1
-                    elif final_genome[x] != i[x]:
+                    elif final_genome[x] != gen[x]:
                         thresh += 1
                     if thresh > threshold:
-                        return i + 1
-            return len(lst) + 1
+                        return i
+            return len(lst) - 1
 
         # Log delay
         log_metric_min_max_mean("delay", estimator.final_iterations)
@@ -99,5 +103,5 @@ class DefaultLogger(BaseLogger):
         # Log elitist convergence
         genomes = estimator.global_elitist_genomes
         log_metric("elitist_convergence_thresh_0", get_convergence(genomes, 0))
-        log_metric("elitist_convergence_thresh_1", get_convergence(genomes, 0))
-        log_metric("elitist_convergence_thresh_2", get_convergence(genomes, 0))
+        log_metric("elitist_convergence_thresh_1", get_convergence(genomes, 1))
+        log_metric("elitist_convergence_thresh_2", get_convergence(genomes, 2))
