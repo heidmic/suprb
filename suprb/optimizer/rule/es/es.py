@@ -76,10 +76,11 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         self.selection = selection
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
-
         elitist = initial_rule
 
         elitists = deque(maxlen=self.delay)
+
+        used_iter = self.n_iter
 
         # Main iteration
         for iteration in range(self.n_iter):
@@ -109,6 +110,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             if self.operator == '&':
                 if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
                     elitist = elitists[0]
+                    used_iter = iteration - self.delay
                     break
 
-        return elitist
+        return elitist, used_iter

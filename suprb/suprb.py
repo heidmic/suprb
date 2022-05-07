@@ -51,6 +51,8 @@ class SupRB(BaseRegressor):
 
     step_: int = 0
 
+    final_iterations: list[int]
+
     pool_: list[Rule]
     elitist_: Solution
 
@@ -121,6 +123,7 @@ class SupRB(BaseRegressor):
 
         # Initialise components
         self.pool_ = []
+        self.final_iterations = []
 
         self._validate_rule_generation(default=ES1xLambda())
         self._validate_solution_composition(default=GeneticAlgorithm())
@@ -178,10 +181,12 @@ class SupRB(BaseRegressor):
         self.rule_generation_.random_state = self.rule_generation_seeds_[self.step_]
 
         # Generate new rules
-        new_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules)
+        new_rules, final_iterations = self.rule_generation_.optimize(X, y, n_rules=n_rules)
 
         # Extend the pool with the new rules
         self.pool_.extend(new_rules)
+
+        self.final_iterations.append(final_iterations)
 
         if not self.pool_:
             warnings.warn(

@@ -39,6 +39,11 @@ class DefaultLogger(BaseLogger):
             log_metric(metric_name + '_mean', sum(comprehension) / len(comprehension))
             log_metric(metric_name + '_max', max(comprehension))
 
+        # Needed to parse genome (array consisting of boolean values) into Integer-value
+        def parse_genome(genome: np.ndarray):
+            str1 = ''.join(genome)
+            return int(str1)
+
         # Log pool
         pool = estimator.pool_
         log_metric("pool_size", len(pool))
@@ -59,9 +64,20 @@ class DefaultLogger(BaseLogger):
         log_metric("elitist_error", elitist.error_)
         log_metric("elitist_complexity", elitist.complexity_)
         log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))
+        log_metric("elitist_genome", parse_genome(elitist.genome))
 
         # Log performance
         log_metric("training_score", elitist.score(X, y))
 
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: SupRB):
-        pass
+        def log_metric(key, value):
+            self.log_metric(key=key, value=value, step=estimator.step_)
+
+        def log_metric_min_max_mean(metric_name: str, attribute_name: str, lst: list):
+            comprehension = [getattr(e, attribute_name) for e in lst]
+            log_metric(metric_name + '_min', min(comprehension))
+            log_metric(metric_name + '_mean', sum(comprehension) / len(comprehension))
+            log_metric(metric_name + '_max', max(comprehension))
+
+        # Log delay
+        log_metric_min_max_mean("delay", estimator.final_iterations)
