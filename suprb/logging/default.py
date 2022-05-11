@@ -28,6 +28,7 @@ class DefaultLogger(BaseLogger):
     def log_init(self, X: np.ndarray, y: np.ndarray, estimator: SupRB):
         self.params_ = {}
         self.metrics_ = defaultdict(dict)
+        self.genomes_ = {}
         self.log_params(**estimator.get_params())
 
     def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: SupRB, iteration: int):
@@ -73,6 +74,12 @@ class DefaultLogger(BaseLogger):
             log_metric(metric_name + '_mean', sum(lst) / len(lst))
             log_metric(metric_name + '_max', max(lst))
 
+        def parse_genome(genome_lst):
+            str_genomes = []
+            for x in genome_lst:
+                str_genomes.append(''.join((str(int(e))) for e in x))
+            return str_genomes
+
         def get_convergence(lst: list, threshold: int):
             copied_lst = lst.copy()
             final_genome = copied_lst.pop()
@@ -95,7 +102,8 @@ class DefaultLogger(BaseLogger):
 
         # Log elitist convergence
         genomes = estimator.global_elitist_genomes
-        genome_dict = {genomes[i]: i for i in range(0, len(genomes))}
+        str_genomes = parse_genome(genomes)
+        genome_dict = {i : str_genomes[i] for i in range(0, len(str_genomes))}
         self.genomes_ = genome_dict
         log_metric("elitist_convergence_thresh_0", get_convergence(genomes, 0))
         log_metric("elitist_convergence_thresh_1", get_convergence(genomes, 1))
