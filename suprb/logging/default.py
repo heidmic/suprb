@@ -12,6 +12,8 @@ class DefaultLogger(BaseLogger):
 
     params_: dict
     metrics_: dict
+    genomes_: dict
+    pool_: dict
 
     def log_param(self, key, value):
         self.params_[key] = value
@@ -38,14 +40,6 @@ class DefaultLogger(BaseLogger):
             log_metric(metric_name + '_mean', sum(comprehension) / len(comprehension))
             log_metric(metric_name + '_max', max(comprehension))
 
-        # Needed to parse genome (array consisting of boolean values) into Integer-value
-        def parse_genome(genome: np.ndarray):
-            genome = genome.astype(dtype="int")
-            genome_str = ""
-            for digit in genome:
-                genome_str += str(digit)
-            return int(genome_str)
-
         # Log pool
         pool = estimator.pool_
         log_metric("pool_size", len(pool))
@@ -66,7 +60,6 @@ class DefaultLogger(BaseLogger):
         log_metric("elitist_error", elitist.error_)
         log_metric("elitist_complexity", elitist.complexity_)
         log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))
-        log_metric("elitist_genome", parse_genome(elitist.genome))
 
         # Log performance
         log_metric("training_score", elitist.score(X, y))
@@ -102,6 +95,8 @@ class DefaultLogger(BaseLogger):
 
         # Log elitist convergence
         genomes = estimator.global_elitist_genomes
+        genome_dict = {genomes[i]: i for i in range(0, len(genomes))}
+        self.genomes_ = genome_dict
         log_metric("elitist_convergence_thresh_0", get_convergence(genomes, 0))
         log_metric("elitist_convergence_thresh_1", get_convergence(genomes, 1))
         log_metric("elitist_convergence_thresh_2", get_convergence(genomes, 2))
