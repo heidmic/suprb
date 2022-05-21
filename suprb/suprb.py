@@ -145,7 +145,7 @@ class SupRB(BaseRegressor):
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-            self._discover_rules(X, y, self.n_rules)
+            empty_pool = self._discover_rules(X, y, self.n_rules)
 
             # Optimize solutions
             self._compose_solution(X, y)
@@ -153,6 +153,13 @@ class SupRB(BaseRegressor):
             # Log Iteration
             if self.logger_ is not None:
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
+
+            # Abort if no rules could be found and set fitness to 0
+            if empty_pool:
+                self.elitist_ = self.solution_composition_.elitist().clone()
+                self.elitist_.fitness_ = 0.0
+                self.is_fitted_ = True
+                return self
 
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
@@ -170,6 +177,7 @@ class SupRB(BaseRegressor):
         """Performs the rule discovery / rule generation (RG) process."""
 
         self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
+
         # Update the current elitist
         self.rule_generation_.elitist_ = self.solution_composition_.elitist()
 
@@ -181,14 +189,18 @@ class SupRB(BaseRegressor):
 
         # Extend the pool with the new rules
         self.pool_.extend(new_rules)
+
         if not self.pool_:
             warnings.warn(
                 "The population is empty, even after generating rules. "
-                "1 Empty dummy rule will be generated.",
+                "The run will be terminated.",
                 PopulationEmptyWarning)
-            dummy_rules = self.rule_generation_.optimize(X, y, n_rules=1, dummy_rules=True)
-            self.pool_.extend(dummy_rules)
-
+            # Needed to avoid errors about solution being empty/having no fitness
+            dummy_rule = self.rule_generation_.init(random_state=self.random_state)
+            dummy_rule.fit(X, y)
+            self.pool_.extend([dummy_rule])
+            return True
+        return False
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""

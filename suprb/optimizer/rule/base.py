@@ -15,7 +15,6 @@ from ...utils import check_random_state, RandomState, spawn_random_states
 
 class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
     """ Base class of different methods to generate `Rule`s.
-
     Parameters
     ----------
     n_iter: int
@@ -55,7 +54,7 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
         return list(filter(lambda rule: rule is not None and self.acceptance(rule=rule, X=X, y=y), rules))
 
     @abstractmethod
-    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1, dummy_rules: bool = False) -> list[Rule]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
         pass
 
 
@@ -65,7 +64,7 @@ class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
     The optimization process is assumed to generate exactly one rule for every origin data sample.
     """
 
-    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1, dummy_rules: bool = False) -> list[Rule]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
         self.random_state_ = check_random_state(self.random_state)
         random_states = spawn_random_states(self.random_state_, n=n_rules)
 
@@ -74,11 +73,8 @@ class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
 
         initial_rules = []
         for origin in origins:
-            initial_rule = self.init(mean=origin, random_state=self.random_state_, dummy_rules=dummy_rules)
+            initial_rule = self.init(mean=origin, random_state=self.random_state_)
             initial_rules.append(self.constraint(initial_rule).fit(X, y))
-
-        if dummy_rules:
-            return initial_rules
 
         with Parallel(n_jobs=self.n_jobs) as parallel:
             rules = parallel(delayed(self._optimize)(X=X, y=y, initial_rule=initial_rule, random_state=random_state)
