@@ -95,7 +95,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             if valid_children:
                 children = valid_children
             else:
-                warnings.warn("No valid children were generated during this iteration.", UserWarning)
+                # warnings.warn("No valid children were generated during this iteration.", UserWarning)
                 continue
 
             # Different operators for replacement

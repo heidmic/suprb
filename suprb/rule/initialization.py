@@ -31,7 +31,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
         self._validate_components(model=Ridge(alpha=0.01), fitness=VolumeWu())
 
-    def __call__(self, random_state: RandomState, mean: np.ndarray = None, dummy_rules: bool = False) -> Rule:
+    def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
 
         Parameters
@@ -50,11 +50,6 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
         # Sample the bounds
         bounds = self.generate_bounds(mean, random_state_)
-
-        if dummy_rules:
-            center = np.full(mean.shape[0], 0.0)
-            spread = np.full(mean.shape[0], 2.0)
-            bounds = np.stack((center, spread), axis=1)
 
         return Rule(bounds=bounds, input_space=self.bounds, model=clone(self.model), fitness=self.fitness)
 
