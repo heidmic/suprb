@@ -19,7 +19,6 @@ from .utils import check_random_state, estimate_bounds
 
 class SupRB(BaseRegressor):
     """ The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
-
     Parameters
     ----------
     rule_generation: RuleGeneration
@@ -89,7 +88,6 @@ class SupRB(BaseRegressor):
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
         """ Fit SupRB.2.
-
             Parameters
             ----------
             X : {array-like, sparse matrix}, shape (n_samples, n_features)
@@ -99,7 +97,6 @@ class SupRB(BaseRegressor):
             cleanup : bool
                 Optional cleanup of unused rules and components after fitting. Can be used to reduce size if only the
                 final model is relevant. Note that all information about the fitting process itself is removed.
-
             Returns
             -------
             self : BaseEstimator
@@ -145,7 +142,7 @@ class SupRB(BaseRegressor):
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-            self._discover_rules(X, y, self.n_rules)
+            empty_pool = self._discover_rules(X, y, self.n_rules)
 
             # Optimize solutions
             self._compose_solution(X, y)
@@ -153,6 +150,13 @@ class SupRB(BaseRegressor):
             # Log Iteration
             if self.logger_ is not None:
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
+
+            # Abort if no rules could be found and set fitness to 0
+            if empty_pool:
+                self.elitist_ = self.solution_composition_.elitist().clone()
+                self.elitist_.fitness_ = 0.0
+                self.is_fitted_ = True
+                return self
 
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
@@ -186,10 +190,14 @@ class SupRB(BaseRegressor):
         if not self.pool_:
             warnings.warn(
                 "The population is empty, even after generating rules. "
-                "Dummy rules will be generated.",
+                "The run will be terminated.",
                 PopulationEmptyWarning)
-            dummy_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules, dummy_rules=True)
-            self.pool_.extend(dummy_rules)
+            # Needed to avoid errors about solution being empty/having no fitness
+            dummy_rule = self.rule_generation_.init(random_state=self.random_state)
+            dummy_rule.fit(X, y)
+            self.pool_.extend([dummy_rule])
+            return True
+        return False
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""
