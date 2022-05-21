@@ -74,11 +74,8 @@ class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
 
         initial_rules = []
         for origin in origins:
-            initial_rule = self.init(mean=origin, random_state=self.random_state_, dummy_rules = dummy_rules)
+            initial_rule = self.init(mean=origin, random_state=self.random_state_)
             initial_rules.append(self.constraint(initial_rule).fit(X, y))
-
-        if dummy_rules:
-            return initial_rules
 
         with Parallel(n_jobs=self.n_jobs) as parallel:
             rules = parallel(delayed(self._optimize)(X=X, y=y, initial_rule=initial_rule, random_state=random_state)
