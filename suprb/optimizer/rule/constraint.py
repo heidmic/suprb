@@ -44,7 +44,7 @@ class Clip(RuleConstraint):
 
     def __call__(self, rule: Rule) -> Rule:
         low, high = self.bounds[None].T
-        rule.bounds[:, 0] = rule.bounds[:, 0].clip(low, high)[0, :]
+        # rule.bounds[:, 0] = rule.bounds[:, 0].clip(low, high)[0, :]
         rule.bounds[:, 1] = rule.bounds[:, 1].clip(0, 1)
         return rule
 
