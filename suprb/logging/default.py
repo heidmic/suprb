@@ -97,14 +97,28 @@ class DefaultLogger(BaseLogger):
                         return i
             return len(lst) - 1
 
+        def get_fit_convergence(lst: list, threshold: float):
+            copied_lst = lst.copy()
+            final_elitist = copied_lst.pop()
+            thresh = 1 + threshold
+            for i, elitist in zip(range(len(copied_lst)), reversed(copied_lst)):
+                if final_elitist.fitness_ < (elitist.fitness_ * thresh):
+                    return i
+
+
         # Log delay
         log_metric_min_max_mean("delay", estimator.final_iterations)
 
         # Log elitist convergence
-        genomes = estimator.global_elitist_genomes
+        genomes = [o.genome for o in estimator.global_elitists]
         str_genomes = parse_genome(genomes)
         genome_dict = {i : str_genomes[i] for i in range(0, len(str_genomes))}
         self.genomes_ = genome_dict
         log_metric("elitist_convergence_thresh_0", get_convergence(genomes, 0))
         log_metric("elitist_convergence_thresh_1", get_convergence(genomes, 1))
         log_metric("elitist_convergence_thresh_2", get_convergence(genomes, 2))
+
+        # Log fitness convergence
+        log_metric("fit_convergence_0", get_fit_convergence(estimator.global_elitists, 1.0))
+        log_metric("fit_convergence_1", get_fit_convergence(estimator.global_elitists, 0.1))
+        log_metric("fit_convergence_2", get_fit_convergence(estimator.global_elitists, 0.01))
