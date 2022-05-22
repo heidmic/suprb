@@ -101,10 +101,14 @@ class DefaultLogger(BaseLogger):
             copied_lst = lst.copy()
             final_elitist = copied_lst.pop()
             thresh = 1 + threshold
+            print(f"NEW ITER WITH THRESH {threshold}")
             for i, elitist in zip(range(len(copied_lst)), reversed(copied_lst)):
-                if final_elitist.fitness_ < (elitist.fitness_ * thresh):
+                print(f"FINAL FITNESS {final_elitist.fitness_}")
+                print(f"CURRENT ELITIST FITNESS {elitist.fitness_}")
+                print(f"CURRENT ITER {i}")
+                if final_elitist.fitness_ > (elitist.fitness_ * thresh):
                     return i
-
+            return len(copied_lst)
 
         # Log delay
         log_metric_min_max_mean("delay", estimator.final_iterations)
@@ -119,6 +123,7 @@ class DefaultLogger(BaseLogger):
         log_metric("elitist_convergence_thresh_2", get_convergence(genomes, 2))
 
         # Log fitness convergence
-        log_metric("fit_convergence_0", get_fit_convergence(estimator.global_elitists, 1.0))
-        log_metric("fit_convergence_1", get_fit_convergence(estimator.global_elitists, 0.1))
-        log_metric("fit_convergence_2", get_fit_convergence(estimator.global_elitists, 0.01))
+        log_metric("fit_convergence_0", get_fit_convergence(estimator.global_elitists, 0.01))
+        log_metric("fit_convergence_1", get_fit_convergence(estimator.global_elitists, 0.001))
+        log_metric("fit_convergence_2", get_fit_convergence(estimator.global_elitists, 0.0001))
+        log_metric("fit_convergence_3", get_fit_convergence(estimator.global_elitists, 0.00001))
