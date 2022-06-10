@@ -7,7 +7,7 @@ from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import RuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import RuleOriginGeneration, UniformSamplesOrigin, Matching
+from ..origin import RuleOriginGeneration, SquaredError
 from ..selection import RuleSelection, Fittest
 
 
@@ -43,7 +43,7 @@ class RandomSearch(RuleGeneration):
                  n_iter: int = 1,
                  rules_generated_ratio: float = 7,
 
-                 origin_generation: RuleOriginGeneration = Matching(),
+                 origin_generation: RuleOriginGeneration = SquaredError(),
                  init: RuleInit = HalfnormInit(),
 
                  selection: RuleSelection = Fittest(),
