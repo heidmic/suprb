@@ -12,7 +12,7 @@ from suprb.logging.default import DefaultLogger
 from suprb.logging.stdout import StdoutLogger
 from suprb.optimizer import rule as rule_opt
 from suprb.optimizer.solution import ga
-from suprb.optimizer.rule import es
+from suprb.optimizer.rule import es, rs
 from suprb.utils import check_random_state
 from suprb.optimizer.rule.mutation import HalfnormIncrease
 
