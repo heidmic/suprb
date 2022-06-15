@@ -90,7 +90,7 @@ class RandomSearch(RuleGeneration):
             rule = self.init(mean=origin, random_state=self.random_state_)
             rules.append(self.constraint(rule).fit(X, y))
 
-        rules = self.selection(rules, random_state=self.random_state,
+        rules = self.selection(rules, random_state=self.random_state_,
                                size=n_rules)
 
         return self._filter_invalid_rules(X=X, y=y, rules=rules)
