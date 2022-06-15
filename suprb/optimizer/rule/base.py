@@ -79,7 +79,7 @@ class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
 
         with Parallel(n_jobs=self.n_jobs) as parallel:
             ret_val = parallel(delayed(self._optimize)(X=X, y=y, initial_rule=initial_rule, random_state=random_state)
-                             for initial_rule, random_state in zip(initial_rules, random_states))
+                               for initial_rule, random_state in zip(initial_rules, random_states))
 
         rules, final_iter = zip(*ret_val)
 

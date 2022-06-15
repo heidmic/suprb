@@ -101,11 +101,7 @@ class DefaultLogger(BaseLogger):
             copied_lst = lst.copy()
             final_elitist = copied_lst.pop()
             thresh = 1 + threshold
-            print(f"NEW ITER WITH THRESH {threshold}")
             for i, elitist in zip(range(len(copied_lst)), reversed(copied_lst)):
-                print(f"FINAL FITNESS {final_elitist.fitness_}")
-                print(f"CURRENT ELITIST FITNESS {elitist.fitness_}")
-                print(f"CURRENT ITER {i}")
                 if final_elitist.fitness_ > (elitist.fitness_ * thresh):
                     return i
             return len(copied_lst)
@@ -116,7 +112,7 @@ class DefaultLogger(BaseLogger):
         # Log elitist convergence
         genomes = [o.genome for o in estimator.global_elitists]
         str_genomes = parse_genome(genomes)
-        genome_dict = {i : str_genomes[i] for i in range(0, len(str_genomes))}
+        genome_dict = {i: str_genomes[i] for i in range(0, len(str_genomes))}
         self.genomes_ = genome_dict
         log_metric("elitist_convergence_thresh_0", get_convergence(genomes, 0))
         log_metric("elitist_convergence_thresh_1", get_convergence(genomes, 1))
