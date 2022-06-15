@@ -1,4 +1,3 @@
-
 import warnings
 
 import numpy as np
@@ -20,6 +19,7 @@ from .utils import check_random_state, estimate_bounds
 
 class SupRB(BaseRegressor):
     """ The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
+
     Parameters
     ----------
     rule_generation: RuleGeneration
@@ -51,6 +51,9 @@ class SupRB(BaseRegressor):
 
     step_: int = 0
 
+    final_iterations: list[int]
+    global_elitists: list[np.ndarray]
+    fitness_iter: list[np.ndarray]
     pool_: list[Rule]
     elitist_: Solution
 
@@ -89,6 +92,7 @@ class SupRB(BaseRegressor):
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
         """ Fit SupRB.2.
+
             Parameters
             ----------
             X : {array-like, sparse matrix}, shape (n_samples, n_features)
@@ -98,6 +102,7 @@ class SupRB(BaseRegressor):
             cleanup : bool
                 Optional cleanup of unused rules and components after fitting. Can be used to reduce size if only the
                 final model is relevant. Note that all information about the fitting process itself is removed.
+
             Returns
             -------
             self : BaseEstimator
@@ -119,6 +124,9 @@ class SupRB(BaseRegressor):
 
         # Initialise components
         self.pool_ = []
+        self.final_iterations = []
+        self.global_genomes = []
+        self.fitness_iter = []
 
         self._validate_rule_generation(default=ES1xLambda())
         self._validate_solution_composition(default=GeneticAlgorithm())
@@ -183,10 +191,12 @@ class SupRB(BaseRegressor):
         self.rule_generation_.random_state = self.rule_generation_seeds_[self.step_]
 
         # Generate new rules
-        new_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules)
+        new_rules, final_iterations = self.rule_generation_.optimize(X, y, n_rules=n_rules)
 
         # Extend the pool with the new rules
         self.pool_.extend(new_rules)
+
+        self.final_iterations.extend(final_iterations)
 
         if not self.pool_:
             warnings.warn(
@@ -210,6 +220,10 @@ class SupRB(BaseRegressor):
 
         # Optimize
         self.solution_composition_.optimize(X, y)
+
+        # Fetch current global elitist genome
+        self.global_genomes.append(self.solution_composition_.elitist().genome)
+        self.fitness_iter.append(self.solution_composition_.elitist().fitness_)
 
     def predict(self, X: np.ndarray):
         # Check is fit had been called
