@@ -53,7 +53,7 @@ class SupRB(BaseRegressor):
 
     final_iterations: list[int]
     global_elitists: list[np.ndarray]
-
+    fitness_iter: list[np.ndarray]
     pool_: list[Rule]
     elitist_: Solution
 
@@ -125,7 +125,8 @@ class SupRB(BaseRegressor):
         # Initialise components
         self.pool_ = []
         self.final_iterations = []
-        self.global_elitists = []
+        self.global_genomes = []
+        self.fitness_iter = []
 
         self._validate_rule_generation(default=ES1xLambda())
         self._validate_solution_composition(default=GeneticAlgorithm())
@@ -221,7 +222,8 @@ class SupRB(BaseRegressor):
         self.solution_composition_.optimize(X, y)
 
         # Fetch current global elitist genome
-        self.global_elitists.append(self.solution_composition_.elitist())
+        self.global_genomes.append(self.solution_composition_.elitist().genome)
+        self.fitness_iter.append(self.solution_composition_.elitist().fitness_)
 
     def predict(self, X: np.ndarray):
         # Check is fit had been called
