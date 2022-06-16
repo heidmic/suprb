@@ -145,7 +145,7 @@ class SupRB(BaseRegressor):
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-            empty_pool = self._discover_rules(X, y, self.n_rules)
+            self._discover_rules(X, y, self.n_rules)
 
             # Optimize solutions
             self._compose_solution(X, y)
@@ -155,7 +155,7 @@ class SupRB(BaseRegressor):
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
             # Abort if no rules could be found and set fitness to 0
-            if empty_pool:
+            if not self.pool_:
                 self.elitist_ = self.solution_composition_.elitist().clone()
                 self.elitist_.fitness_ = 0.0
                 self.is_fitted_ = True
@@ -193,14 +193,27 @@ class SupRB(BaseRegressor):
         if not self.pool_:
             warnings.warn(
                 "The population is empty, even after generating rules. "
-                "The run will be terminated.",
+                "Rule generation will be attempted another four times.",
                 PopulationEmptyWarning)
             # Needed to avoid errors about solution being empty/having no fitness
-            dummy_rule = self.rule_generation_.init(random_state=self.random_state)
-            dummy_rule.fit(X, y)
-            self.pool_.extend([dummy_rule])
-            return True
-        return False
+            for i in range(4):
+                new_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules)
+                if new_rules:
+                    warnings.warn(
+                        f"It took another {i + 1} discovery-phases to find suitable rules. ",
+                        PopulationEmptyWarning)
+                    self.pool_.extend(new_rules)
+                    break
+
+            if not self.pool_:
+                warnings.warn(
+                    "Population is still empty even after four attempts. "
+                    "One maximally general rule will be added into the pool.",
+                    PopulationEmptyWarning)
+                general_rule = self.rule_generation_.init(random_state=self.random_state)
+                general_rule.bounds[:, :] = -1, 1
+                general_rule.fit(X, y)
+                self.pool_.extend([general_rule])
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""
