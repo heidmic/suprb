@@ -48,6 +48,8 @@ class NoveltySearch(RuleGeneration):
             with Local Competition or 'MCNS' for Minimal Criteria Novelty Search.
         MCNS_threshold_matched: int
             The amount of samples a rule must match when using MCNS. Otherwise this parameter has no effect.
+        NSLC_threshold: int
+            The range in which rules are considered being in the locality of another rule
         archive: str
             The type of archive to be used by the algorithm. Can be 'novelty' for an archive with the most novel
             individuals of each call of _optimize, 'random' where individuals will be chosen randomly from the final
@@ -81,6 +83,7 @@ class NoveltySearch(RuleGeneration):
                  ns_type: str = 'MCNS',  # NS, NSLC or MCNS
 
                  MCNS_threshold_matched: int = 30,
+                 NSLC_threshold: int = 15,
 
                  archive: str = 'novelty',  # novelty, random or none
                  novelty_fitness_combination: str = 'novelty'  # novelty, 50/50, 75/25, pmcns or pareto
@@ -107,6 +110,7 @@ class NoveltySearch(RuleGeneration):
 
         # parameter only for MCNS
         self.MCNS_threshold_matched = MCNS_threshold_matched
+        self.NSLC_threshold = NSLC_threshold
 
         self.archive = archive
         self.novelty_fitness_combination = novelty_fitness_combination
@@ -276,10 +280,10 @@ class NoveltySearch(RuleGeneration):
 
     def _get_local_score(self, rule: Rule, rules_w_distances: list[tuple[Rule, float]]) -> float:
         count_worse = 0
-        for x, _ in rules_w_distances[:15]:
+        for x, _ in rules_w_distances[:self.NSLC_threshold]:
             if x.fitness_ < rule.fitness_:
                 count_worse += 1
-        local_score = count_worse / len(rules_w_distances[:15])
+        local_score = count_worse / len(rules_w_distances[:self.NSLC_threshold])
         return local_score
 
     def _get_pareto_front(self, rules_with_novelty_score: list[tuple[Rule, float, int]]) -> list[tuple[Rule, float,
