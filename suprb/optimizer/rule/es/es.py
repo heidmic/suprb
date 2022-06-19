@@ -16,7 +16,6 @@ from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import Matching, RuleOriginGeneration
 
 
-
 class ES1xLambda(ParallelSingleRuleGeneration):
     """ The 1xLambda Evolutionary Strategy, where x is in {,+&}.
 
@@ -53,7 +52,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  delay: int = 146,
                  origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = MeanInit(),
-                 mutation: RuleMutation = Normal(sigma=1.22),
+                 mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
                  selection: RuleSelection = Fittest(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
@@ -77,10 +76,11 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         self.selection = selection
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
-
         elitist = initial_rule
 
         elitists = deque(maxlen=self.delay)
+
+        used_iter = self.n_iter
 
         # Main iteration
         for iteration in range(self.n_iter):
@@ -96,7 +96,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             if valid_children:
                 children = valid_children
             else:
-                #warnings.warn("No valid children were generated during this iteration.", UserWarning)
+                # warnings.warn("No valid children were generated during this iteration.", UserWarning)
                 continue
 
             # Different operators for replacement
@@ -110,6 +110,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             if self.operator == '&':
                 if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
                     elitist = elitists[0]
+                    used_iter = iteration - self.delay
                     break
 
-        return elitist
+        return elitist, used_iter

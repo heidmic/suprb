@@ -15,6 +15,7 @@ from ...utils import check_random_state, RandomState, spawn_random_states
 
 class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
     """ Base class of different methods to generate `Rule`s.
+
     Parameters
     ----------
     n_iter: int
@@ -77,10 +78,12 @@ class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
             initial_rules.append(self.constraint(initial_rule).fit(X, y))
 
         with Parallel(n_jobs=self.n_jobs) as parallel:
-            rules = parallel(delayed(self._optimize)(X=X, y=y, initial_rule=initial_rule, random_state=random_state)
-                             for initial_rule, random_state in zip(initial_rules, random_states))
+            ret_val = parallel(delayed(self._optimize)(X=X, y=y, initial_rule=initial_rule, random_state=random_state)
+                               for initial_rule, random_state in zip(initial_rules, random_states))
 
-        return self._filter_invalid_rules(X=X, y=y, rules=rules)
+        rules, final_iter = zip(*ret_val)
+
+        return self._filter_invalid_rules(X=X, y=y, rules=rules), final_iter
 
     @abstractmethod
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
