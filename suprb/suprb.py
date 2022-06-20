@@ -147,8 +147,12 @@ class SupRB(BaseRegressor):
             # Insert new rules into population
             self._discover_rules(X, y, self.n_rules)
 
-            # Optimize solutions
-            self._compose_solution(X, y)
+            try:
+                # Optimize solutions
+                self._compose_solution(X, y)
+            except ValueError:
+                self._log_to_stdout(f"Solution Composition failed with "
+                                    f"config: {self}")
 
             # Log Iteration
             if self.logger_ is not None:
