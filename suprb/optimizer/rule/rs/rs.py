@@ -17,9 +17,9 @@ class RandomSearch(RuleGeneration):
         Parameters
         ----------
         n_iter: int
-            Iterations to evolve rules.
-        rules_generated_ratio: float
-            Number of rules generated
+            Has no effect
+        rules_generated: float
+            Number of random rules generated per rule added to the pool
         origin_generation: RuleOriginGeneration
             The selection process which decides on the next initial points.
         init: RuleInit
@@ -41,7 +41,7 @@ class RandomSearch(RuleGeneration):
 
     def __init__(self,
                  n_iter: int = 1,
-                 rules_generated_ratio: float = 7,
+                 rules_generated: float = 7,
 
                  origin_generation: RuleOriginGeneration = SquaredError(),
                  init: RuleInit = HalfnormInit(),
@@ -65,32 +65,34 @@ class RandomSearch(RuleGeneration):
         )
 
         self.selection = selection
-        self.rules_generated_ratio = rules_generated_ratio
+        self.rules_generated = rules_generated
 
     def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
         """
-        Generates n_rules * rules_generated_ratio rules randomly and
+        Generates n_rules * self.rules_generated rules randomly and
         returns the best n_rules candidates according to the selection
-        criterion
+        criterion. Generation and selection occur independently for each
+        returned rule
 
         Return: A list of filtered Rules.
         """
-        # self._validate_params(n_rules)
 
-        self.random_state_ = check_random_state(self.random_state)
+        rules_out = []
 
-        n_rules_generated = np.round(n_rules * self.rules_generated_ratio)
+        for _ in range(n_rules):
+            self.random_state_ = check_random_state(self.random_state)
 
-        origins = self.origin_generation(n_rules=n_rules_generated, X=X, y=y,
-                                         pool=self.pool_, elitist=self.elitist_,
-                                         random_state=self.random_state_)
+            origins = self.origin_generation(n_rules=self.rules_generated, X=X,
+                                             y=y, pool=self.pool_,
+                                             elitist=self.elitist_,
+                                             random_state=self.random_state_)
 
-        rules = []
-        for origin in origins:
-            rule = self.init(mean=origin, random_state=self.random_state_)
-            rules.append(self.constraint(rule).fit(X, y))
+            rules = []
+            for origin in origins:
+                rule = self.init(mean=origin, random_state=self.random_state_)
+                rules.append(self.constraint(rule).fit(X, y))
 
-        rules = self.selection(rules, random_state=self.random_state_,
-                               size=n_rules)
+            rules_out.append(self.selection(rules, random_state=self.random_state_,
+                             size=1))
 
-        return self._filter_invalid_rules(X=X, y=y, rules=rules)
+        return self._filter_invalid_rules(X=X, y=y, rules=rules_out)
