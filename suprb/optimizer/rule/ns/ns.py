@@ -22,7 +22,7 @@ class NoveltySearch(RuleGeneration):
         Parameters
         ----------
         n_iter: int
-            Iterations to evolve rules.
+            Iterations to evolve rules. Must be greater than zero.
         mu: int
             The amount of offspring from each population that get selected for the next generation.
         lm_ratio: int
