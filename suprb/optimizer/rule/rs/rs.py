@@ -41,7 +41,7 @@ class RandomSearch(RuleGeneration):
 
     def __init__(self,
                  n_iter: int = 1,
-                 rules_generated: float = 7,
+                 rules_generated: int = 7,
 
                  origin_generation: RuleOriginGeneration = SquaredError(),
                  init: RuleInit = HalfnormInit(),
