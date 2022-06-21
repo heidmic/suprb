@@ -76,12 +76,10 @@ class RandomSearch(RuleGeneration):
 
         Return: A list of filtered Rules.
         """
+        self.random_state_ = check_random_state(self.random_state)
 
         rules_out = []
-
         for _ in range(n_rules):
-            self.random_state_ = check_random_state(self.random_state)
-
             origins = self.origin_generation(n_rules=self.rules_generated, X=X,
                                              y=y, pool=self.pool_,
                                              elitist=self.elitist_,
