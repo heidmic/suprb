@@ -98,6 +98,25 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             else:
                 # warnings.warn("No valid children were generated during this iteration.", UserWarning)
                 continue
+            # print(f"The amount of children attempted {self.lmbda}")
+            # print(f"NUMBER OF GENERATED (VALID) Children {len(children)}")
+            p = sum([1 for child in children if child.fitness_ > elitist.fitness_])
+            # print(f"NUMBER OF Children with higher fitness {p}")
+            p = p / self.lmbda
+            # print(f"THE PROPORTION OF BETTER CHILDREN {p}")
+            if p > 0.2:
+                self.mutation.sigma_lower /= random_state.normal(loc=0.85, scale=0.01)
+                self.mutation.sigma_prop /= 0.85
+            elif 0.05 <= p < 0.2:
+                self.mutation.sigma_lower *= random_state.normal(loc=0.85, scale=0.01)
+                self.mutation.sigma_prop *= 0.85
+            elif p < 0.05:
+                self.mutation.sigma_lower *= random_state.normal(loc=2, scale=0.01)
+                self.mutation.sigma_prop *= 2
+            # print(f"Lower: {self.mutation.sigma_lower}")
+            # print(f"Prop: {self.mutation.sigma_prop}")
+            self.mutation.sigma_lower = np.clip(self.mutation.sigma_lower, 0.001, 3)
+            self.mutation.sigma_prop = np.clip(self.mutation.sigma_prop, 0.001, 3)
 
             # Different operators for replacement
             # 'selection' returns a list of rules. Either unordered or
