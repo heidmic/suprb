@@ -223,7 +223,7 @@ class SupRB(BaseRegressor):
 
     def retry_rule_discovery(self, X: np.ndarray, y: np.ndarray, n_rules: int, n_attempts: int = 4):
         for i in range(n_attempts):
-            new_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules)
+            new_rules, iterations = self.rule_generation_.optimize(X, y, n_rules=n_rules)
             if new_rules:
                 warnings.warn(
                     f"It took another {i + 1} discovery-phases to find suitable rules. ",
