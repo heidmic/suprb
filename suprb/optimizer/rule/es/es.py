@@ -99,6 +99,19 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 # warnings.warn("No valid children were generated during this iteration.", UserWarning)
                 continue
 
+            p = sum([1 for child in children if child.fitness_ > elitist.fitness_])
+
+            p = p / self.lmbda
+
+            if p > 0.2:
+                self.mutation.sigma_spread /= 0.85
+            elif 0.05 <= p < 0.2:
+                self.mutation.sigma_spread *= 0.85
+            elif p < 0.05:
+                self.mutation.sigma_spread *= 2
+            # print(f"New mutation rate: {self.mutation.sigma_spread}")
+            self.mutation.sigma_spread = np.clip(self.mutation.sigma_spread, 0.001, 3)
+
             # Different operators for replacement
             # 'selection' returns a list of rules. Either unordered or
             # descending, we thus take the first element for our new parent
