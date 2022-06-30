@@ -151,7 +151,7 @@ class SupRB(BaseRegressor):
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-            empty_pool = self._discover_rules(X, y, self.n_rules)
+            self._discover_rules(X, y, self.n_rules)
 
             # Optimize solutions
             self._compose_solution(X, y)
@@ -159,13 +159,6 @@ class SupRB(BaseRegressor):
             # Log Iteration
             if self.logger_ is not None:
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
-
-            # Abort if no rules could be found and set fitness to 0
-            if empty_pool:
-                self.elitist_ = self.solution_composition_.elitist().clone()
-                self.elitist_.fitness_ = 0.0
-                self.is_fitted_ = True
-                return self
 
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
@@ -201,14 +194,9 @@ class SupRB(BaseRegressor):
         if not self.pool_:
             warnings.warn(
                 "The population is empty, even after generating rules. "
-                "The run will be terminated.",
+                "Rule generation will be attempted another four times.",
                 PopulationEmptyWarning)
-            # Needed to avoid errors about solution being empty/having no fitness
-            dummy_rule = self.rule_generation_.init(random_state=self.random_state)
-            dummy_rule.fit(X, y)
-            self.pool_.extend([dummy_rule])
-            return True
-        return False
+            self.retry_rule_discovery(X, y, n_rules=n_rules, n_attempts=4)  # TODO: make n_attempts a parameter?
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""
@@ -232,6 +220,29 @@ class SupRB(BaseRegressor):
         X = check_array(X)
 
         return self.elitist_.predict(X)
+
+    def retry_rule_discovery(self, X: np.ndarray, y: np.ndarray, n_rules: int, n_attempts: int = 4):
+        for i in range(n_attempts):
+            new_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules)
+            if new_rules:
+                warnings.warn(
+                    f"It took another {i + 1} discovery-phases to find suitable rules. ",
+                    PopulationEmptyWarning)
+                self.pool_.extend(new_rules)
+                return
+
+        if not self.pool_:
+            warnings.warn(
+                "Population is still empty even after four attempts. "
+                "One maximally general rule will be added into the pool.",
+                PopulationEmptyWarning)
+            self.add_general_rule(X, y)
+
+    def add_general_rule(self, X: np.ndarray, y: np.ndarray):
+        general_rule = self.rule_generation_.init(random_state=self.random_state)
+        general_rule.bounds[:, :] = -1, 1
+        general_rule.fit(X, y)
+        self.pool_.extend([general_rule])
 
     def _validate_rule_generation(self, default=None):
         self.rule_generation_ = clone(self.rule_generation) if self.rule_generation is not None else clone(default)
