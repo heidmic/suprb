@@ -4,24 +4,40 @@
 
 ## What is SupRB?
 
-SupRB is a Learning Classifier System (LCS) that utilises two separate optimizers that discover new rules and create global solutions to the learning problem, respectively. Those rules are stored in a Pool that expands during runtime and provides rules for solution creation.
+SupRB is a rule-set learning algorithm (or Learning Classifier System (LCS)) that utilises two separate optimizers that discover new rules and create global solutions to the learning problem, respectively. Those rules are stored in a Pool that expands during runtime and provides rules for solution creation.
 
+<!---
 ![SupRB statemachine](./docs/suprb.png)
+-->
 
-Classifiers or Rules use interval bounds for matching and a simple local model for outputs.
+<img src="./docs/suprb.png" alt="SupRB statemachine" width="500"/>
 
-![Classifier/Rule](./docs/rule.png)
+Rules use interval bounds for matching and a simple local model for outputs.
+
+<img src="./docs/rule.png" alt="Rule" width="700"/>
 
 Solutions of the problem select classifiers from the unchanging pool.
 
-<img src="./docs/solution.png" alt="Solutions and Pool of classifiers" width="600"/>
+<img src="./docs/solution.png" alt="Solutions and Pool of classifiers" width="500"/>
 
 
 ## Publications
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. Separating Rule Discovery and Global Solution Composition in a Learning Classifier System. In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
+### The Concept
 
-Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System. In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014 https://arxiv.org/abs/2202.01677
+
+### Comparisons with other Systems
+
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** https://arxiv.org/abs/2207.02300
+
+### Investigating Components
+
+Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. **Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
+
+### Explainability of LCS
+
+Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. Learning Classifier Systems for Self-explaining Socio-Technical-Systems." arXiv preprint arXiv:2207.02300 (2022).
 
 ## Experiments
 
