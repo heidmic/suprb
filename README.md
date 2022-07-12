@@ -29,7 +29,7 @@ Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 
 
 ### Comparisons with other Systems
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** https://arxiv.org/abs/2207.02300
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** To appear. A comparison with XCSF.
 
 ### Investigating Components
 
@@ -37,7 +37,7 @@ Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 
 
 ### Explainability of LCS
 
-Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. Learning Classifier Systems for Self-explaining Socio-Technical-Systems." arXiv preprint arXiv:2207.02300 (2022).
+Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. 2022 Learning Classifier Systems for Self-explaining Socio-Technical-Systems." arXiv preprint arXiv:2207.02300. https://arxiv.org/abs/2207.02300
 
 ## Experiments
 
