@@ -29,7 +29,7 @@ Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 
 
 ### Comparisons with other Systems
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** To appear. A comparison with XCSF.
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** http://arxiv.org/abs/2207.05582 A comparison with XCSF.
 
 ### Investigating Components
 
