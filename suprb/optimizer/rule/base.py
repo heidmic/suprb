@@ -7,6 +7,7 @@ from joblib import Parallel, delayed
 from suprb.solution import Solution
 from suprb.optimizer import BaseOptimizer
 from suprb.rule import Rule, RuleInit
+from suprb.rule.matching import MatchingFunction
 from .acceptance import RuleAcceptance
 from .constraint import RuleConstraint
 from .origin import RuleOriginGeneration
@@ -20,6 +21,8 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
     ----------
     n_iter: int
         Iterations to evolve a rule.
+    matching_type: MatchingFunction
+        The type of matching function that rules to be optimized are using
     origin_generation: RuleOriginGeneration
         The selection process which decides on the next initial points.
     init: RuleInit
@@ -36,6 +39,7 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
 
     def __init__(self,
                  n_iter: int,
+                 matching_type: MatchingFunction,
                  origin_generation: RuleOriginGeneration,
                  init: RuleInit,
                  acceptance: RuleAcceptance,
@@ -46,6 +50,10 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
         super().__init__(random_state=random_state, n_jobs=n_jobs)
 
         self.n_iter = n_iter
+        if matching_type is None:
+            raise(Exception("The type of MatchingFunction used in rules needs "
+                            "to be specified for ES inits"))
+        self.matching_type = matching_type
         self.origin_generation = origin_generation
         self.init = init
         self.acceptance = acceptance

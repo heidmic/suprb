@@ -5,6 +5,7 @@ from typing import Optional
 import numpy as np
 
 from suprb.rule import Rule, RuleInit
+from suprb.rule.matching import MatchingFunction
 from suprb.rule.initialization import MeanInit
 from suprb.utils import RandomState
 from ..mutation import RuleMutation, HalfnormIncrease
@@ -23,8 +24,8 @@ class ES1xLambda(ParallelSingleRuleGeneration):
     ----------
     n_iter: int
         Iterations to evolve a rule.
-    origin_generation: RuleOriginGeneration
-        The selection process which decides on the next initial points.
+    matching_type: MatchingFunction
+        The type of matching function that rules to be optimized are using
     lmbda: int
         Children to generate in every iteration.
     operator: str
@@ -34,8 +35,11 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         '&' behaves similar to '+' and ends the optimization process, if no improvement is found in a generation.
     delay: int
         Only relevant if operator is '&'. Controls the number of elitists which need to be worse before stopping.
+    origin_generation: RuleOriginGeneration
+        The selection process which decides on the next initial points.
     init: RuleInit
     mutation: RuleMutation
+        Default is HalfnormIncrease(sigma=1.22)
     selection: RuleSelection
     acceptance: RuleAcceptance
     constraint: RuleConstraint
@@ -47,12 +51,13 @@ class ES1xLambda(ParallelSingleRuleGeneration):
 
     def __init__(self,
                  n_iter: int = 10_000,
+                 matching_type: MatchingFunction = None,
                  lmbda: int = 20,
                  operator: str = '&',
                  delay: int = 146,
                  origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = MeanInit(),
-                 mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
+                 mutation: RuleMutation = None,
                  selection: RuleSelection = Fittest(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
@@ -61,6 +66,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  ):
         super().__init__(
             n_iter=n_iter,
+            matching_type=matching_type,
             origin_generation=origin_generation,
             init=init,
             acceptance=acceptance,
@@ -74,6 +80,8 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         self.operator = operator
         self.mutation = mutation
         self.selection = selection
+        self._validate_components(mutation=
+                                  HalfnormIncrease(matching_type, sigma=1.22))
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
 

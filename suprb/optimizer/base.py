@@ -4,13 +4,12 @@ from abc import ABCMeta, abstractmethod
 from typing import Union
 
 import numpy as np
-from sklearn.base import BaseEstimator
 
-from suprb.base import SolutionBase
+from suprb.base import SolutionBase, BaseComponent
 from suprb.utils import RandomState
 
 
-class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
+class BaseOptimizer(BaseComponent, metaclass=ABCMeta):
     """Finds an optimal `Solution`."""
 
     def __init__(self, random_state: int, n_jobs: int):

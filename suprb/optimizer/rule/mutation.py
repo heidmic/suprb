@@ -27,10 +27,6 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
         # Mutation
         self.mutate_bounds(mutated_rule, random_state)
 
-        #### TODO move to OrderedBound components
-        # Sort the bounds, because they could possibly be swapped
-        mutated_rule.bounds = np.sort(mutated_rule.bounds, axis=1)
-
         return mutated_rule
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
@@ -67,6 +63,7 @@ class Normal(RuleMutation):
         # code inspection gives you a warning here but it is ineffectual
         rule.match.bounds += random_state.normal(scale=self.sigma,
                                         size=rule.match.bounds.shape)
+        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
 
 class Halfnorm(RuleMutation):
@@ -87,6 +84,7 @@ class Halfnorm(RuleMutation):
         mean = np.mean(bounds, axis=1)
         bounds[:, 0] = mean - self.mutation(dimensions=bounds.shape[0], random_state=random_state)
         bounds[:, 1] = mean + self.mutation(dimensions=bounds.shape[0], random_state=random_state)
+        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
 
 class HalfnormIncrease(RuleMutation):
@@ -106,6 +104,7 @@ class HalfnormIncrease(RuleMutation):
         bounds = rule.match.bounds
         bounds[:, 0] -= self.mutation(dimensions=bounds.shape[0], random_state=random_state)
         bounds[:, 1] += self.mutation(dimensions=bounds.shape[0], random_state=random_state)
+        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
 
 class Uniform(RuleMutation):
@@ -120,6 +119,7 @@ class Uniform(RuleMutation):
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         rule.match.bounds += random_state.uniform(-self.sigma, self.sigma,
                                             size=rule.match.bounds.shape)
+        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
 
 class UniformIncrease(RuleMutation):
@@ -134,7 +134,8 @@ class UniformIncrease(RuleMutation):
     def mutation(self, dimensions: int, random_state: RandomState):
         return random_state.uniform(0, self.sigma, size=dimensions)
 
-    def mutate_bounds(self, rule: Rule, random_state: RandomState):
+    def ordered_bound(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
         bounds[:, 0] -= self.mutation(dimensions=bounds.shape[0], random_state=random_state)
         bounds[:, 1] += self.mutation(dimensions=bounds.shape[0], random_state=random_state)
+        rule.match.bounds = np.sort(rule.match.bounds, axis=1)

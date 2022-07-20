@@ -23,8 +23,25 @@ class MatchingFunction(BaseComponent, metaclass=ABCMeta):
         """Return a deep copy"""
         pass
 
+    @abstractmethod
+    def clip(self, bounds: np.ndarray):
+        """Clip a rules outer most matched examples to some value"""
+        pass
+
+    @abstractmethod
+    def min_range(self, min_range: float):
+        """Increase the rules matching in each dimension to avoid very small
+        and long rules"""
+        pass
+
 
 class OrderedBound(MatchingFunction):
+    """
+    A standard interval-based matching function producing multi-dimensional
+    hyperrectangular conditions. In effect, a lower (l) and upper bound (u) are
+    specified for each dimension. Those bounds always fulfill l <= u
+    An example x is matched iff l_i <= x_i <= u_i for all dimensions i
+    """
     def __init__(self, bounds: np.ndarray):
         self.bounds = bounds
 
@@ -49,6 +66,17 @@ class OrderedBound(MatchingFunction):
 
         if self.bounds.shape[0] != X.shape[1]:
             raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
+
+    def clip(self, bounds: np.ndarray):
+        low, high = self.bounds[None].T
+        self.bounds.clip(low, high)
+
+    def min_range(self, min_range: float):
+        diff = self.bounds[:, 1] - self.bounds[:, 0]
+        if min_range > 0:
+            invalid_indices = np.argwhere(diff < min_range)
+            self.bounds[invalid_indices, 0] -= min_range / 2
+            self.bounds[invalid_indices, 1] += min_range / 2
 
 
 

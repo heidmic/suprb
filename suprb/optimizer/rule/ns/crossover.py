@@ -27,6 +27,10 @@ class UniformCrossover(RuleCrossover):
     """Decide for every bound tuple with uniform probability if the bound tuple in rule A or B is used."""
 
     def _crossover(self, A: Rule, B: Rule, random_state: RandomState) -> list[Rule]:
+        # This broke in issue #111, however as there is a refactoring in
+        # progress (with issue #112), we did not fix it in #111
+
+
         # For each dimension both parents have equal chances of supplying the respective pair of bounds. This equates
         # to a threshold of .5 for the random generator values.
         indices = random_state.random(size=len(A.bounds)) <= 0.5
