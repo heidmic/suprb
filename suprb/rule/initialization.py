@@ -50,7 +50,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
         # Sample the bounds
         bounds = self.generate_bounds(mean, random_state_)
-        bounds = np.sort(bounds, axis=1)
+
         return Rule(bounds=bounds, input_space=self.bounds, model=clone(self.model), fitness=self.fitness)
 
     @abstractmethod
@@ -59,33 +59,23 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
 
 class MeanInit(RuleInit):
-    """Initializes both bounds with the mean."""
+    """Initializes the center with the mean and sets the deviations to 0."""
 
     def generate_bounds(self, mean: np.ndarray, _random_state: RandomState) -> np.ndarray:
-        return np.stack((mean.T, mean.T), axis=1)
+        return np.stack((mean.T, np.zeros((mean.shape[0]))), axis=1)
 
 
 class NormalInit(RuleInit):
-    """Initializes both bounds with points drawn from a normal distribution."""
+    """Initializes center with points drawn from a normal distribution and deviations with
+    a halfnorm distribution scaled with sigma_deviations ."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
+                 sigma_center: float = 0.1, sigma_deviations: float = 0.01):
         super().__init__(bounds=bounds, model=model, fitness=fitness)
-        self.sigma = sigma
+        self.sigma_center = sigma_center
+        self.sigma_deviations = sigma_deviations
 
     def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        return random_state.normal(loc=mean, scale=self.sigma, size=(2, mean.shape[0])).T
-
-
-class HalfnormInit(RuleInit):
-    """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
-
-    def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
-        super().__init__(bounds=bounds, model=model, fitness=fitness)
-        self.sigma = sigma
-
-    def generate_bounds(self, mean: np.ndarray, random_state: RandomState) -> np.ndarray:
-        low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
-        high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
-        return np.stack((low.T, high.T), axis=1)
+        center = random_state.normal(loc=mean, scale=self.sigma_center, size=(mean.shape[0]))
+        deviations = halfnorm.rvs(scale=self.sigma_deviations / 2, size=mean.shape[0], random_state=random_state)
+        return np.stack((center.T, deviations.T), axis=1)
