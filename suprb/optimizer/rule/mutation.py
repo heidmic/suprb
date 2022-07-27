@@ -1,4 +1,4 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 from typing import Union
 
@@ -19,6 +19,8 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
                  sigma: Union[float, np.ndarray] = 0.1):
         self.matching_type = matching_type
         self.sigma = sigma
+        if self.matching_type is OrderedBound:
+            self.mutate_bounds = self.ordered_bound
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:
         # Create copy of the rule
@@ -30,6 +32,10 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
         return mutated_rule
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
+        pass
+
+    @abstractmethod
+    def ordered_bound(self, rule: Rule, random_state: RandomState):
         pass
 
 
@@ -52,12 +58,6 @@ class SigmaRange(RuleMutation):
 
 class Normal(RuleMutation):
     """Normal noise on both bounds."""
-    def __init__(self,
-                 matching_type: MatchingFunction,
-                 sigma: Union[float, np.ndarray]):
-        super().__init__(matching_type, sigma)
-        if self.matching_type is OrderedBound:
-            self.mutate_bounds = self.ordered_bound
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         # code inspection gives you a warning here but it is ineffectual
@@ -68,12 +68,6 @@ class Normal(RuleMutation):
 
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""
-    def __init__(self,
-                 matching_type: MatchingFunction,
-                 sigma: Union[float, np.ndarray]):
-        super().__init__(matching_type, sigma)
-        if self.matching_type is OrderedBound:
-            self.mutate_bounds = self.ordered_bound
 
     def mutation(self, dimensions: int, random_state: RandomState):
         return halfnorm.rvs(scale=self.sigma / 2, size=dimensions,
@@ -89,12 +83,6 @@ class Halfnorm(RuleMutation):
 
 class HalfnormIncrease(RuleMutation):
     """Increase bounds with (half)normal noise."""
-    def __init__(self,
-                 matching_type: MatchingFunction,
-                 sigma: Union[float, np.ndarray]):
-        super().__init__(matching_type, sigma)
-        if self.matching_type is OrderedBound:
-            self.mutate_bounds = self.ordered_bound
 
     def mutation(self, dimensions: int, random_state: RandomState):
         return halfnorm.rvs(scale=self.sigma / 2, size=dimensions,
@@ -109,12 +97,6 @@ class HalfnormIncrease(RuleMutation):
 
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""
-    def __init__(self,
-                 matching_type: MatchingFunction,
-                 sigma: Union[float, np.ndarray]):
-        super().__init__(matching_type, sigma)
-        if self.matching_type is OrderedBound:
-            self.mutate_bounds = self.ordered_bound
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         rule.match.bounds += random_state.uniform(-self.sigma, self.sigma,
@@ -124,12 +106,6 @@ class Uniform(RuleMutation):
 
 class UniformIncrease(RuleMutation):
     """Increase bounds with uniform noise."""
-    def __init__(self,
-                 matching_type: MatchingFunction,
-                 sigma: Union[float, np.ndarray]):
-        super().__init__(matching_type, sigma)
-        if self.matching_type is OrderedBound:
-            self.mutate_bounds = self.ordered_bound
 
     def mutation(self, dimensions: int, random_state: RandomState):
         return random_state.uniform(0, self.sigma, size=dimensions)
