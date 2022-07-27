@@ -190,7 +190,9 @@ class NoveltySearch(RuleGeneration):
 
         # main loop with option for local competition
         for rule in rules:
-            rules_w_distances = sorted([(B, hamming(rule.match_, B.match_)) for B in archive], key=lambda a: a[1])
+            rules_w_distances = sorted([(B, hamming(rule.match_set_,
+                                                    B.match_set_)) for B in
+                                        archive], key=lambda a: a[1])
 
             distances = [a[1] for a in rules_w_distances]
             novelty_score = sum(distances[:k]) / len(distances[:k])
@@ -200,7 +202,7 @@ class NoveltySearch(RuleGeneration):
                 novelty_score = novelty_score + self._get_local_score(rule, rules_w_distances)
 
             # matched_data_count is the secondary key which decides what rule is better if novelty is the same
-            matched_data_count = np.count_nonzero(rule.match_)
+            matched_data_count = np.count_nonzero(rule.match_set_)
 
             # linear combination of fitness and novelty
             # any changes to fitness scaling would need to be also applied here
@@ -268,9 +270,11 @@ class NoveltySearch(RuleGeneration):
     def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
         # calculate the 25th percentile value and if it's lower than MNCS_threshold_matched use it instead to filter
         # a maximum of 25% of the population (to prevent empty populations)
-        maximum_threshold = min(np.percentile([np.count_nonzero(rule.match_) for rule in rules], 
+        maximum_threshold = min(np.percentile([np.count_nonzero(rule.match_set_)
+                                               for rule in rules],
                                               self.MCNS_threshold_matched), 25)
-        rules = [rule for rule in rules if np.count_nonzero(rule.match_) >= maximum_threshold]
+        rules = [rule for rule in rules if np.count_nonzero(rule.match_set_) >=
+                 maximum_threshold]
         return rules
 
     def _filter_for_progressive_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:

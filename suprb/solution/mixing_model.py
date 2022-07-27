@@ -26,12 +26,12 @@ class ErrorExperienceHeuristic(MixingModel):
 
         if cache:
             # Use the precalculated matches and predictions from fit()
-            matches = [rule.match_ for rule in subpopulation]
+            matches = [rule.match_set_ for rule in subpopulation]
             for i, rule in enumerate(subpopulation):
                 local_pred[i][matches[i]] = rule.pred_
         else:
             # Generate all data new
-            matches = [rule.matched_data(X) for rule in subpopulation]
+            matches = [rule.match(X) for rule in subpopulation]
             for i, rule in enumerate(subpopulation):
                 if not matches[i].any():
                     continue
