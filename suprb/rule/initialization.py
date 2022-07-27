@@ -35,8 +35,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         self.matching_type = matching_type
 
         self._validate_components(model=Ridge(alpha=0.01),
-                                  fitness=VolumeWu(),
-                                  matching_type=OrderedBound(np.array([])))
+                                  fitness=VolumeWu())
 
     @property
     def matching_type(self):

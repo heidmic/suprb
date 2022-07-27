@@ -20,8 +20,6 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
         self.matching_type = matching_type
         self.sigma = sigma
 
-        self._validate_components(matching_type=OrderedBound(np.array([])))
-
     @property
     def matching_type(self):
         return self._matching_type
