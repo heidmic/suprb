@@ -24,8 +24,6 @@ class ES1xLambda(ParallelSingleRuleGeneration):
     ----------
     n_iter: int
         Iterations to evolve a rule.
-    matching_type: MatchingFunction
-        The type of matching function that rules to be optimized are using
     lmbda: int
         Children to generate in every iteration.
     operator: str
@@ -51,7 +49,6 @@ class ES1xLambda(ParallelSingleRuleGeneration):
 
     def __init__(self,
                  n_iter: int = 10_000,
-                 matching_type: MatchingFunction = None,
                  lmbda: int = 20,
                  operator: str = '&',
                  delay: int = 146,
@@ -66,7 +63,6 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  ):
         super().__init__(
             n_iter=n_iter,
-            matching_type=matching_type,
             origin_generation=origin_generation,
             init=init,
             acceptance=acceptance,
