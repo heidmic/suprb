@@ -20,7 +20,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     Parameters
         ----------
         bounds: np.ndarray
-            The generated interval will lie within the absolute bounds.
+            The absolute bounds of the feature space.
         model: RegressorMixin
             Local model used for fitting the intervals.
     """
@@ -47,6 +47,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         mean: np.ndarray
             Mean of the normal distribution to draw from. If none was
             provided it is drawn randomly from a uniform distribution.
+            Should lie within the absolute bounds of the feature space.
         random_state : int, RandomState instance or None, default=None
             Pass an int for reproducible results across multiple function calls.
         """
