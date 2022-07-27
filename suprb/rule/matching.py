@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 
 import numpy as np
 
@@ -14,7 +14,7 @@ class MatchingFunction(BaseComponent, metaclass=ABCMeta):
         """
         pass
 
-    @property
+    @abstractproperty
     def volume_(self):
         return None
 
