@@ -15,11 +15,21 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
     """Mutates the bounds of a rule with the strength defined by sigma."""
 
     def __init__(self,
-                 matching_type: MatchingFunction = OrderedBound,
+                 matching_type: MatchingFunction = None,
                  sigma: Union[float, np.ndarray] = 0.1):
         self.matching_type = matching_type
         self.sigma = sigma
-        if self.matching_type is OrderedBound:
+
+        self._validate_components(matching_type=OrderedBound(np.array([])))
+
+    @property
+    def matching_type(self):
+        return self._matching_type
+
+    @matching_type.setter
+    def matching_type(self, matching_type):
+        self._matching_type = matching_type
+        if isinstance(self.matching_type, OrderedBound):
             self.mutate_bounds = self.ordered_bound
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:

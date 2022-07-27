@@ -28,16 +28,25 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     def __init__(self, bounds: np.ndarray = None,
                  model: RegressorMixin = None,
                  fitness: RuleFitness = None,
-                 matching_type: MatchingFunction = OrderedBound):
+                 matching_type: MatchingFunction = None):
         self.bounds = bounds
         self.model = model
         self.fitness = fitness
         self.matching_type = matching_type
 
-        if self.matching_type is OrderedBound:
-            self.generate_matchf = self.ordered_bound
+        self._validate_components(model=Ridge(alpha=0.01),
+                                  fitness=VolumeWu(),
+                                  matching_type=OrderedBound(np.array([])))
 
-        self._validate_components(model=Ridge(alpha=0.01), fitness=VolumeWu())
+    @property
+    def matching_type(self):
+        return self._matching_type
+
+    @matching_type.setter
+    def matching_type(self, matching_type):
+        self._matching_type = matching_type
+        if isinstance(self.matching_type, OrderedBound):
+            self.generate_matchf = self.ordered_bound
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
