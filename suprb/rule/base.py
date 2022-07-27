@@ -36,11 +36,12 @@ class Rule(SolutionBase):
     match_: np.ndarray
     pred_: Union[np.ndarray, None]  # only the prediction of matching points, so of x[match_]
 
-    def __init__(self, bounds: np.ndarray, input_space: np.ndarray, model: RegressorMixin, fitness: RuleFitness):
+    def __init__(self, bounds: np.ndarray, input_space: np.ndarray, model: RegressorMixin, fitness: RuleFitness, threshold: float = 0.7):
         self.bounds = bounds
         self.input_space = input_space
         self.model = model
         self.fitness = fitness
+        self.threshold = threshold
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Rule:
 
@@ -81,13 +82,21 @@ class Rule(SolutionBase):
 
     def matched_data(self, X: np.ndarray):
         """Returns a boolean array that is True for data points the rule matches."""
-        return np.all((self.bounds[:, 0] <= X) & (X <= self.bounds[:, 1]), axis=1)
+
+        center_point = self.bounds[:, 0]
+        deviations = self.bounds[:, 1]
+
+        temp = np.all(np.exp(-1 * ((X - center_point)**2 / 2 * deviations**2)) > self.threshold, axis=1)
+
+        return temp
 
     @property
     def volume_(self):
         """Calculates the volume of the interval."""
-        diff = self.bounds[:, 1] - self.bounds[:, 0]
-        return np.prod(diff)
+        deviations = self.bounds[:, 1]
+        volume = 4/3 * np.pi * np.prod(deviations)
+
+        return volume
 
     def predict(self, X: np.ndarray):
         return self.model.predict(X)
