@@ -5,6 +5,7 @@ from typing import Optional
 import numpy as np
 
 from suprb.rule import Rule, RuleInit
+from suprb.rule.matching import MatchingFunction, OrderedBound
 from suprb.rule.initialization import MeanInit
 from suprb.utils import RandomState
 from ..mutation import RuleMutation, HalfnormIncrease
@@ -23,8 +24,6 @@ class ES1xLambda(ParallelSingleRuleGeneration):
     ----------
     n_iter: int
         Iterations to evolve a rule.
-    origin_generation: RuleOriginGeneration
-        The selection process which decides on the next initial points.
     lmbda: int
         Children to generate in every iteration.
     operator: str
@@ -34,8 +33,11 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         '&' behaves similar to '+' and ends the optimization process, if no improvement is found in a generation.
     delay: int
         Only relevant if operator is '&'. Controls the number of elitists which need to be worse before stopping.
+    origin_generation: RuleOriginGeneration
+        The selection process which decides on the next initial points.
     init: RuleInit
     mutation: RuleMutation
+        Default is HalfnormIncrease(sigma=1.22)
     selection: RuleSelection
     acceptance: RuleAcceptance
     constraint: RuleConstraint

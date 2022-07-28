@@ -14,6 +14,7 @@ from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
+from .rule.matching import MatchingFunction, OrderedBound
 from .utils import check_random_state, estimate_bounds
 
 
@@ -69,6 +70,7 @@ class SupRB(BaseRegressor):
     def __init__(self,
                  rule_generation: RuleGeneration = None,
                  solution_composition: SolutionComposition = None,
+                 matching_type: MatchingFunction = OrderedBound(np.array([])),
                  n_iter: int = 32,
                  n_initial_rules: int = 0,
                  n_rules: int = 4,
@@ -80,6 +82,7 @@ class SupRB(BaseRegressor):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
         self.n_rules = n_rules
+        self.matching_type = matching_type
         self.rule_generation = rule_generation
         self.solution_composition = solution_composition
         self.random_state = random_state
@@ -127,6 +130,7 @@ class SupRB(BaseRegressor):
 
         self._propagate_component_parameters()
         self._init_bounds(X)
+        self._init_matching_type()
 
         # Init optimizers
         self.solution_composition_.pool_ = self.pool_
@@ -235,6 +239,11 @@ class SupRB(BaseRegressor):
             if key.endswith('bounds') and value is None:
                 self._log_to_stdout(f"Found empty bounds for {key}, estimating from data")
                 self.rule_generation_.set_params(**{key: bounds})
+
+    def _init_matching_type(self):
+        for key, value in self.rule_generation_.get_params().items():
+            if 'matching_type' in key:
+                self.rule_generation_.set_params(**{key: self.matching_type})
 
     def _cleanup(self):
         """

@@ -2,6 +2,11 @@
 figs/*
 */figs/*
 
+# TeX
+*.bak
+*.aux
+*.gz
+
 # MlFlow
 */mlruns/*
 mlruns/*
@@ -227,6 +232,7 @@ celerybeat.pid
 .venv
 env/
 venv/
+venv*/
 ENV/
 env.bak/
 venv.bak/
