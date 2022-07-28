@@ -67,16 +67,16 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
             mean = random_state_.uniform(self.bounds[:, 0], self.bounds[:, 1])
 
         # Sample the bounds
-        matchf = self.generate_matchf(mean, random_state_)
-        return Rule(match=matchf, input_space=self.bounds, model=clone(
+        matching_function = self.generate_matching_function(mean, random_state_)
+        return Rule(match=matching_function, input_space=self.bounds, model=clone(
             self.model), fitness=self.fitness)
 
-    def generate_matchf(self, mean: np.ndarray, random_state: RandomState) -> \
+    def generate_matching_function(self, mean: np.ndarray, random_state: RandomState) -> \
             MatchingFunction:
         pass
 
     @abstractmethod
-    def ordered_bound(self, mean: np.ndarray, random_state: RandomState):
+    def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
 
 

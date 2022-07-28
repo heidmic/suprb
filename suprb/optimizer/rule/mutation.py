@@ -57,9 +57,8 @@ class SigmaRange(RuleMutation):
         self.high = high
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:
-        self.sigma = random_state.uniform(self.low, self.high) \
-            if self.sigma is float \
-            else random_state.uniform(self.low, self.high, len(self.sigma))
+        uniform_size = None if isinstance(self.sigma, float) else len(self.sigma)
+        self.sigma = random_state.uniform(self.low, self.high, uniform_size)
         self.mutation.sigma = self.sigma
         return self.mutation(rule, random_state)
 
