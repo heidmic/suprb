@@ -50,7 +50,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
 
         # Sample the bounds
         bounds = self.generate_bounds(mean, random_state_)
-
+        bounds = np.sort(bounds, axis=1)
         return Rule(bounds=bounds, input_space=self.bounds, model=clone(self.model), fitness=self.fitness)
 
     @abstractmethod

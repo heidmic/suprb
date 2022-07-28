@@ -52,7 +52,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  delay: int = 146,
                  origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = MeanInit(),
-                 mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
+                 mutation: RuleMutation = HalfnormIncrease(sigma=1.22, sigma_deviations=0.01),
                  selection: RuleSelection = Fittest(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
