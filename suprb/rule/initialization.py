@@ -45,7 +45,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     def matching_type(self, matching_type):
         self._matching_type = matching_type
         if isinstance(self.matching_type, OrderedBound):
-            self.generate_matchf = self.ordered_bound
+            self.generate_matching_function = self.ordered_bound
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
