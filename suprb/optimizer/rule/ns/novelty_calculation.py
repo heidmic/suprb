@@ -1,0 +1,104 @@
+from abc import ABCMeta, abstractmethod
+
+import numpy as np
+from suprb.rule import Rule
+from suprb.base import BaseComponent
+from scipy.spatial.distance import hamming
+from .novelty_search_type import NoveltySearchType
+from .archive import Archive
+from .novelty_search_rule import NoveltySearchRule
+
+
+class NoveltySearchRuleWithDistance():
+    def __init__(self, ns_rule: NoveltySearchRule, distance: float):
+        self.ns_rule = ns_rule
+        self.distance = distance
+
+
+class NoveltyCalculation(BaseComponent, metaclass=ABCMeta):
+    def __init__(self, novelty_search_type: NoveltySearchType, archive: Archive, k_neighbor: int):
+        self.novelty_search_type = novelty_search_type
+        self.archive = archive
+        self.k_neighbor = k_neighbor
+
+    def __call__(self, rules: list[Rule]) -> list[NoveltySearchRule]:
+        return self._novelty_score(rules=rules)
+
+    def _novelty_score(self, rules: list[Rule]) -> list[NoveltySearchRule]:
+        """ The basic novely calculation based on the hamming distance. 
+            Takes every rule and calculates the hamming distance to each rule contained in the archive
+            and averages the distances of the k-nearest neighbors to get the novelty score.
+        """
+        novelty_search_rules = []
+        archive = self.archive.get_archive()[:]
+        archive.extend(rules)
+
+        for rule in self.novelty_search_type.filter_rules(rules):
+            rules_with_distances = [
+                NoveltySearchRuleWithDistance(archive_rule, hamming(rule.match_, archive_rule.match_))
+                for archive_rule in archive]
+
+            sorted_rules = sorted(rules_with_distances, key=lambda ns_rule: ns_rule.distance)
+            distances = [sorted_rule.distance for sorted_rule in sorted_rules]
+
+            local_competition = self.novelty_search_type.local_competition(rule, sorted_rules)
+            novelty_score = local_competition + self._novelty_score_calculation(distances, rule.fitness_)
+
+            novelty_search_rules.append(NoveltySearchRule(rule=rule, novelty_score=novelty_score))
+
+        return novelty_search_rules
+
+    def _novelty_score_calculation(self, distances: list[float], fitness: float):
+        return sum(distances[:self.k_neighbor]) / len(distances[:self.k_neighbor])
+
+
+class ProgressiveMinimalCriteria(NoveltyCalculation):
+    """Uses the basic novelty score calculation, but only with rules that are above the median fitness."""
+
+    def _novelty_score(self, rules: list[Rule]) -> list[NoveltySearchRule]:
+        median_fitness = np.median([rule.fitness_ for rule in rules])
+        filtered_rules = [rule for rule in rules if rule.fitness_ >= median_fitness]
+
+        return super()._novelty_score(rules=filtered_rules)
+
+
+class NovelityFitnessPareto(NoveltyCalculation):
+    """Uses the basic novelty score calculation and return only the pareto front of it."""
+
+    def _novelty_score(self, rules: list[Rule]) -> list[NoveltySearchRule]:
+        novelty_search_rules = super()._novelty_score(rules=rules)
+
+        return self._get_pareto_front(novelty_search_rules)
+
+    def _get_pareto_front(self, novelty_search_rules: list[NoveltySearchRule]) -> list[NoveltySearchRule]:
+        novelty_search_rules = sorted(novelty_search_rules,
+                                      key=lambda ns_rule: (ns_rule.novelty_score, ns_rule.rule.fitness_),
+                                      reverse=True)
+
+        pareto_front = [novelty_search_rules[0]]
+
+        for rule in novelty_search_rules[1:]:
+            if rule[0].fitness_ >= pareto_front[-1].rule.fitness_:
+                pareto_front.append(rule)
+
+        return pareto_front
+
+
+class NoveltyFitnessBiased(NoveltyCalculation):
+    """Uses the basic novelty score calculation with weighted novelty and fitness."""
+
+    def __init__(self, novelty_bias: float, novelty_search_type: NoveltySearchType, archive: Archive):
+        self.novelty_bias = novelty_bias
+        self.fitness_bias = 1 - novelty_bias
+
+        super().__init__(novelty_search_type=novelty_search_type, archive=archive)
+
+    def _novelty_score(self, rules: list[Rule]) -> list[NoveltySearchRule]:
+        return super()._novelty_score(rules=rules)
+
+    def _novelty_score_calculation(self, distances: list[float], fitness: float):
+        basic_novelty_score = super()._novelty_score_calculation(distances, fitness)
+        scaled_fitness = fitness / 100
+        novelty_score = (self.novelty_bias * basic_novelty_score) + (self.fitness_bias * scaled_fitness)
+
+        return novelty_score
