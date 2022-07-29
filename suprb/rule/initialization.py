@@ -6,9 +6,8 @@ from sklearn.base import RegressorMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 
-
 from suprb.base import BaseComponent
-from suprb.rule.matching import MatchingFunction, OrderedBound
+from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CentreSpread, MinPercentage
 from suprb.utils import check_random_state, RandomState
 from . import Rule, RuleFitness
 from .fitness import VolumeWu
@@ -46,6 +45,12 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         self._matching_type = matching_type
         if isinstance(self.matching_type, OrderedBound):
             self.generate_matching_function = self.ordered_bound
+        elif isinstance(self.matching_type, UnorderedBound):
+            self.generate_matching_function = self.unordered_bound
+        elif isinstance(self.matching_type, CentreSpread):
+            self.generate_matching_function = self.centre_spread
+        elif isinstance(self.matching_type, MinPercentage):
+            self.generate_matching_function = self.min_percentage
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
@@ -79,6 +84,18 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
 
+    @abstractmethod
+    def unordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
+
+    @abstractmethod
+    def centre_spread(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
+
+    @abstractmethod
+    def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
+
 
 class MeanInit(RuleInit):
     """Initializes both bounds with the mean."""
@@ -86,20 +103,44 @@ class MeanInit(RuleInit):
     def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return OrderedBound(np.stack((mean.T, mean.T), axis=1))
 
+    def unordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return UnorderedBound(np.stack((mean.T, mean.T), axis=1))
+
+    def centre_spread(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return CentreSpread(np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1))
+
+    def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return MinPercentage(np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1))
+
 
 class NormalInit(RuleInit):
     """Initializes both bounds with points drawn from a normal distribution."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1):
+                 sigma: float = 0.1, sigma_two: float = 0.1):
         super().__init__(bounds=bounds, model=model, fitness=fitness)
         self.sigma = sigma
+        self.sigma_two = sigma_two
 
     def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return OrderedBound(np.sort(random_state.normal(loc=mean,
                                                         scale=self.sigma,
-                                                        size=(2, mean.shape[0])).T,
-                                    axis=1))
+                                                        size=(2, mean.shape[0])).T, axis=1))
+
+    def unordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return UnorderedBound(random_state.normal(loc=mean,
+                                                  scale=self.sigma,
+                                                  size=(2, mean.shape[0])))
+
+    def centre_spread(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        centre = random_state.normal(loc=mean, scale=self.sigma, size=(mean.shape[0]))
+        spread = halfnorm.rvs(scale=self.sigma_two / 2, size=mean.shape[0], random_state=random_state)
+        return CentreSpread(np.stack((centre.T, spread.T), axis=1))
+
+    def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        lower = random_state.normal(loc=mean, scale=self.sigma, size=(mean.shape[0]))
+        prop = halfnorm.rvs(scale=self.sigma_two / 2, size=mean.shape[0], random_state=random_state)
+        return MinPercentage(np.stack((lower.T, prop.T), axis=1))
 
 
 class HalfnormInit(RuleInit):
@@ -114,3 +155,14 @@ class HalfnormInit(RuleInit):
         low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
         high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
         return OrderedBound(np.stack((low.T, high.T), axis=1))
+
+    def unordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
+        high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
+        return UnorderedBound(np.stack((low.T, high.T), axis=1))
+
+    def centre_spread(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
+
+    def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
