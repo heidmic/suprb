@@ -125,7 +125,13 @@ class Halfnorm(RuleMutation):
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        pass
+        bounds = rule.match.bounds
+        mean = np.mean(bounds, axis=1)
+        bounds[:, 0] = mean - \
+            halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+
+        bounds[:, 1] = mean + \
+            halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
 
     def centre_spread(self, rule: Rule, random_state: RandomState):
         pass
