@@ -29,7 +29,7 @@ Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 
 
 ### Comparisons with other Systems
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** http://arxiv.org/abs/2207.05582 A comparison with XCSF.
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** Accepted for publication in the Proceedings of BIOMA'22 http://arxiv.org/abs/2207.05582 A comparison with XCSF.
 
 ### Investigating Components
 
@@ -56,7 +56,7 @@ Tested with Python 3.9.4.
 
 Newly created branch should follow a pattern that allows easy comprehension of what is being done and why, e.g.:
 
-**<Issue_number>\_<short_description_of_PR>**, e.g. *issue_3_introduce_volume_for_rule_discovery*.
+**<Issue_number>\_<short_description_of_PR>**, e.g. *3_introduce_volume_for_rule_discovery*.
 
 If there is no open issue the branch name should just reflect a short description of the feature/fix, e.g. *introduce_volume_for_rule_discovery*.
 
