@@ -1,8 +1,7 @@
-from copy import deepcopy
 import json
 import numpy as np
-from suprb.rule.matching import OrderedBound
 
+from copy import deepcopy
 from suprb.suprb import SupRB
 from .solution import Solution
 
