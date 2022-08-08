@@ -162,7 +162,7 @@ class HalfnormInit(RuleInit):
         return UnorderedBound(np.stack((low.T, high.T), axis=1))
 
     def centre_spread(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        pass
+        raise TypeError("Halform Init is not implemented for CSR")
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        pass
+        raise TypeError("Halform Init is not implemented for MPR")

@@ -118,26 +118,26 @@ class Halfnorm(RuleMutation):
         bounds = rule.match.bounds
         mean = np.mean(bounds, axis=1)
         bounds[:, 0] = mean - \
-            halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+            halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
 
         bounds[:, 1] = mean + \
-            halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+            halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
         mean = np.mean(bounds, axis=1)
         bounds[:, 0] = mean - \
-            halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+            halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
 
         bounds[:, 1] = mean + \
-            halfnorm.rvs(scale=self.sigma / 2, size=rule.bounds.shape[0], random_state=random_state)
+            halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
 
     def centre_spread(self, rule: Rule, random_state: RandomState):
-        pass
+        raise TypeError("Halform Mutation is not implemented for CSR")
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
-        pass
+        raise TypeError("Halform Mutation is not implemented for MPR")
 
 
 class HalfnormIncrease(RuleMutation):
@@ -150,7 +150,7 @@ class HalfnormIncrease(RuleMutation):
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        pass
+        raise TypeError("HalformIncrease would cause UBR to behave like OBR")
 
     def centre_spread(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
@@ -199,7 +199,7 @@ class UniformIncrease(RuleMutation):
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        pass
+        raise TypeError("UniformIncrease would cause UBR to behave like OBR")
 
     def centre_spread(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
