@@ -3,7 +3,6 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from suprb.rule import Rule
 from suprb.base import BaseComponent
-from .novelty_search_rule import NoveltySearchRule
 
 
 class NoveltySearchType(BaseComponent, metaclass=ABCMeta):
@@ -12,7 +11,7 @@ class NoveltySearchType(BaseComponent, metaclass=ABCMeta):
     def filter_rules(self, rules: list[Rule]):
         pass
 
-    def local_competition(self, rule: Rule, ns_rules: list[NoveltySearchRule]) -> float:
+    def local_competition(self, rule: Rule, ns_rules: list[Rule]) -> float:
         pass
 
 
@@ -22,7 +21,7 @@ class BasicNoveltySearchType(NoveltySearchType):
     def filter_rules(self, rules: list[Rule]):
         return rules
 
-    def local_competition(self, rule: Rule, ns_rules: list[NoveltySearchRule]) -> float:
+    def local_competition(self, rule: Rule, ns_rules: list[Rule]) -> float:
         return 0
 
 
@@ -47,7 +46,7 @@ class LocalCompetition(NoveltySearchType):
     def __init__(self, max_neighborhood_range: int):
         self.max_neighborhood_range = max_neighborhood_range
 
-    def local_competition(self, rule: Rule, ns_rules: list[NoveltySearchRule]) -> float:
+    def local_competition(self, rule: Rule, ns_rules: list[Rule]) -> float:
         count_worse = 0
         for ns_rule, _ in ns_rules[:self.max_neighborhood_range]:
             if ns_rule.fitness_ < rule.fitness_:

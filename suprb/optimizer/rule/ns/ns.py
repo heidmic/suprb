@@ -7,7 +7,7 @@ from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import HalfnormInit
 from suprb.utils import check_random_state
 from .crossover import RuleCrossover, UniformCrossover
-from .novelty_calculation import NoveltyCalculation, NoveltySearchRule, ProgressiveMinimalCriteria, NoveltyFitnessBiased, NovelityFitnessPareto
+from .novelty_calculation import NoveltyCalculation, ProgressiveMinimalCriteria, NoveltyFitnessBiased, NovelityFitnessPareto
 from .novelty_search_type import BasicNoveltySearchType, LocalCompetition, MinimalCriteria
 from .archive import Archive, ArchiveNone, ArchiveNovel, ArchiveRandom
 from suprb.optimizer.rule.mutation import Normal, RuleMutation
@@ -179,8 +179,8 @@ class NoveltySearch(RuleGeneration):
 
         return children
 
-    def _get_n_best_rules(self, rules: list[NoveltySearchRule], n: int):
+    def _get_n_best_rules(self, rules: list[Rule], n: int):
         sorted_rules = sorted(rules,
-                              key=lambda ns_rule: (ns_rule.novelty_score, ns_rule.rule.experience_),
+                              key=lambda ns_rule: (ns_rule.novelty_score, ns_rule.experience_),
                               reverse=True)
-        return [sorted_rule.rule for sorted_rule in sorted_rules][:n]
+        return [sorted_rule for sorted_rule in sorted_rules][:n]
