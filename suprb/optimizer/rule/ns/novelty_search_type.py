@@ -11,7 +11,7 @@ class NoveltySearchType(BaseComponent, metaclass=ABCMeta):
     def filter_rules(self, rules: list[Rule]):
         pass
 
-    def local_competition(self, rule: Rule, ns_rules: list[Rule]) -> float:
+    def local_competition(self, rule: Rule, rules: list[Rule]) -> float:
         pass
 
 
@@ -21,7 +21,7 @@ class BasicNoveltySearchType(NoveltySearchType):
     def filter_rules(self, rules: list[Rule]):
         return rules
 
-    def local_competition(self, rule: Rule, ns_rules: list[Rule]) -> float:
+    def local_competition(self, rule: Rule, rules: list[Rule]) -> float:
         return 0
 
 
@@ -39,6 +39,9 @@ class MinimalCriteria(NoveltySearchType):
 
         return [rule for rule in rules if np.count_nonzero(rule.match_) >= maximum_threshold]
 
+    def local_competition(self, rule: Rule, rules: list[Rule]) -> float:
+        return 0
+
 
 class LocalCompetition(NoveltySearchType):
     """Local Competition Novelty Search, where only rules are considered that are in the vicinity of another rule"""
@@ -46,11 +49,14 @@ class LocalCompetition(NoveltySearchType):
     def __init__(self, max_neighborhood_range: int):
         self.max_neighborhood_range = max_neighborhood_range
 
-    def local_competition(self, rule: Rule, ns_rules: list[Rule]) -> float:
+    def filter_rules(self, rules: list[Rule]):
+        return rules
+
+    def local_competition(self, rule: Rule, rules: list[Rule]) -> float:
         count_worse = 0
-        for ns_rule, _ in ns_rules[:self.max_neighborhood_range]:
-            if ns_rule.fitness_ < rule.fitness_:
+        for rule in rules[:self.max_neighborhood_range]:
+            if rule.fitness_ < rule.fitness_:
                 count_worse += 1
-        local_score = count_worse / len(ns_rules[:self.max_neighborhood_range])
+        local_score = count_worse / len(rules[:self.max_neighborhood_range])
 
         return local_score
