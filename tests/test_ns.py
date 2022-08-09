@@ -16,7 +16,7 @@ import numpy as np
 
 from suprb.utils import check_random_state
 from suprb.optimizer.rule.ns.novelty_calculation import NoveltyCalculation, ProgressiveMinimalCriteria, NoveltyFitnessBiased, NovelityFitnessPareto
-from suprb.optimizer.rule.ns.novelty_search_type import BasicNoveltySearchType, LocalCompetition, MinimalCriteria
+from suprb.optimizer.rule.ns.novelty_search_type import NoveltySearchType, LocalCompetition, MinimalCriteria
 from suprb.optimizer.rule.ns.archive import ArchiveNone, ArchiveNovel, ArchiveRandom
 import inspect
 import itertools
@@ -57,8 +57,8 @@ class TestNoveltySearch(unittest.TestCase):
                                      NovelityFitnessPareto,
                                      NoveltyFitnessBiased]
 
-        novelty_search_types = [BasicNoveltySearchType(),
-                                MinimalCriteria(min_samples_matched=10),
+        novelty_search_types = [NoveltySearchType(),
+                                MinimalCriteria(min_examples_matched=10),
                                 LocalCompetition(max_neighborhood_range=15)]
 
         archive_types = [ArchiveNovel(), ArchiveRandom(), ArchiveNone()]

@@ -1,22 +1,21 @@
-import math
-
 import numpy as np
-from scipy.spatial.distance import hamming
+
+from copy import deepcopy
 
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import HalfnormInit
 from suprb.utils import check_random_state
 from .crossover import RuleCrossover, UniformCrossover
-from .novelty_calculation import NoveltyCalculation, ProgressiveMinimalCriteria, NoveltyFitnessBiased, NovelityFitnessPareto
-from .novelty_search_type import BasicNoveltySearchType, LocalCompetition, MinimalCriteria
-from .archive import Archive, ArchiveNone, ArchiveNovel, ArchiveRandom
+from .novelty_calculation import NoveltyCalculation
+from .novelty_search_type import NoveltySearchType
+from .archive import ArchiveNovel
 from suprb.optimizer.rule.mutation import Normal, RuleMutation
 from suprb.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import RuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import RuleOriginGeneration, UniformSamplesOrigin, SquaredError
+from ..origin import RuleOriginGeneration, SquaredError
 
 
 class NoveltySearch(RuleGeneration):
@@ -30,12 +29,15 @@ class NoveltySearch(RuleGeneration):
             The amount of offspring from each population that get selected for the next generation.
         lmbda: int
             Each generation lambda children will be generated.
+        roh: int
+            Each generation roh rules will be added to the archive (depending on archive type)
         random_state : int, RandomState instance or None, default=None
             Pass an int for reproducible results across multiple function calls.
         n_jobs: int
             The number of threads / processes the optimization uses. Currently not used for this optimizer.
         n_elitists: int
-            The number of parents that get added to the population each generation
+            The number of parents that get added to the population each generation. 
+            For better performance this should be greater than the n_rules parameter of the optimize calls.
         origin_generation: RuleOriginGeneration
             The selection process which decides on the next initial points.
         init: RuleInit
@@ -57,7 +59,7 @@ class NoveltySearch(RuleGeneration):
                  n_iter: int = 10,
                  mu: int = 16,
                  lmbda: int = 160,
-                 roh: int = 10,
+                 roh: int = 2,
                  random_state: int = None,
                  n_jobs: int = 1,
                  n_elitists=10,
@@ -68,9 +70,8 @@ class NoveltySearch(RuleGeneration):
                  mutation: RuleMutation = Normal(sigma=0.1),
                  selection: RuleSelection = Random(),
                  acceptance: RuleAcceptance = Variance(),
-                 constraint: RuleConstraint = CombinedConstraint(MinRange(),
-                                                                 Clip()),
-                 novelty_calculation: NoveltyCalculation = NoveltyCalculation(novelty_search_type=BasicNoveltySearchType(),
+                 constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
+                 novelty_calculation: NoveltyCalculation = NoveltyCalculation(novelty_search_type=NoveltySearchType(),
                                                                               archive=ArchiveNovel(),
                                                                               k_neighbor=15)):
         super().__init__(
@@ -101,7 +102,7 @@ class NoveltySearch(RuleGeneration):
         self._validate_params(n_rules)
         self.random_state_ = check_random_state(self.random_state)
         self.novelty_calculation.archive.set_random_state(self.random_state_)
-        self.novelty_calculation.archive.set_archive(self.pool_)
+        self.novelty_calculation.archive.set_archive(deepcopy(self.pool_))
 
         rules = self._optimize(X=X, y=y, n_rules=n_rules)
 
@@ -138,11 +139,11 @@ class NoveltySearch(RuleGeneration):
 
                 population = best_children + best_parents
 
-        return [ns_rule for ns_rule in self.novelty_calculation.archive.get_archive() + best_children][:n_rules]
+        return self._get_optimized_rules(best_children, n_rules)
 
     def _init_population(self, X: np.ndarray, y: np.ndarray) -> list[Rule]:
         population = []
-        half_mu = int(math.ceil(self.mu / 2))
+        half_mu = int(np.ceil(self.mu / 2))
 
         if len(self.pool_) < half_mu:
             population = self.pool_
@@ -181,6 +182,19 @@ class NoveltySearch(RuleGeneration):
 
     def _get_n_best_rules(self, rules: list[Rule], n: int):
         sorted_rules = sorted(rules,
-                              key=lambda ns_rule: (ns_rule.novelty_score, ns_rule.experience_),
+                              key=lambda ns_rule: (ns_rule.novelty_score_, ns_rule.experience_),
                               reverse=True)
         return [sorted_rule for sorted_rule in sorted_rules][:n]
+
+    def _get_optimized_rules(self, best_children: list[Rule], n_rules: int):
+        chosen_rules = []
+
+        for rule in (self.novelty_calculation.archive.get_archive() + best_children)[:n_rules]:
+            if hasattr(rule, 'novelty_score_'):
+                del rule.novelty_score_
+            if hasattr(rule, 'distance_'):
+                del rule.distance_
+
+            chosen_rules.append(rule)
+
+        return chosen_rules

@@ -6,6 +6,8 @@ from suprb.utils import RandomState
 
 
 class Archive(BaseComponent, metaclass=ABCMeta):
+    """Base Archive Class to store the rules from previous populations"""
+
     def __init__(self):
         self.archive = []
 
@@ -26,13 +28,15 @@ class Archive(BaseComponent, metaclass=ABCMeta):
 
 
 class ArchiveNovel(Archive):
+    """Archive Class that adds n rules with the best novelty scores to the archive"""
 
     def _add_rules_to_archive(self, rules: list[Rule], n: int):
-        sorted_rules = sorted(rules, key=lambda x: (x.novelty_score, x.experience_), reverse=True)
+        sorted_rules = sorted(rules, key=lambda x: (x.novelty_score_, x.experience_), reverse=True)
         self.archive.extend([x for x in sorted_rules][:n])
 
 
 class ArchiveRandom(Archive):
+    """Archive Class that adds n random rules to the archive"""
 
     def _add_rules_to_archive(self, rules: list[Rule], n: int):
         self.random_state_.shuffle(rules)
@@ -40,6 +44,7 @@ class ArchiveRandom(Archive):
 
 
 class ArchiveNone(Archive):
+    """Archive Class where no archive is saved"""
 
     def set_archive(self, pool: list[Rule]):
         self.archive = []

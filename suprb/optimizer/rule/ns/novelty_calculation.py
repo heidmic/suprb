@@ -19,7 +19,7 @@ class NoveltyCalculation(BaseComponent, metaclass=ABCMeta):
 
     def _add_distances_to_archive_rules(self, rule: Rule, archive: list[Rule]):
         for i, _ in enumerate(archive):
-            archive[i].distance = hamming(rule.match_, archive[i].match_)
+            archive[i].distance_ = hamming(rule.match_, archive[i].match_)
 
     def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
         """ The basic novely calculation based on the hamming distance. 
@@ -33,23 +33,25 @@ class NoveltyCalculation(BaseComponent, metaclass=ABCMeta):
         for rule in self.novelty_search_type.filter_rules(rules):
             self._add_distances_to_archive_rules(rule, archive)
 
-            archive = sorted(archive, key=lambda archive_rule: archive_rule.distance)
-            distances = [sorted_rule.distance for sorted_rule in archive]
+            archive = sorted(archive, key=lambda archive_rule: archive_rule.distance_)
+            distances = [sorted_rule.distance_ for sorted_rule in archive]
 
             local_competition = self.novelty_search_type.local_competition(rule, archive)
             novelty_score = local_competition + self._novelty_score_calculation(distances, rule.fitness_)
 
-            rule.novelty_score = novelty_score
+            rule.novelty_score_ = novelty_score
             novelty_search_rules.append(rule)
 
         return novelty_search_rules
 
     def _novelty_score_calculation(self, distances: list[float], fitness: float):
-        return sum(distances[:self.k_neighbor]) / len(distances[:self.k_neighbor])
+        return sum(distances[:self.k_neighbor]) / self.k_neighbor
 
 
 class ProgressiveMinimalCriteria(NoveltyCalculation):
-    """Uses the basic novelty score calculation, but only with rules that are above the median fitness."""
+    """ Uses the basic novelty score calculation, but only with rules that are above the median fitness.
+        The returned list of rules will be shorter than the original input 
+    """
 
     def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
         median_fitness = np.median([rule.fitness_ for rule in rules])
@@ -68,7 +70,7 @@ class NovelityFitnessPareto(NoveltyCalculation):
 
     def _get_pareto_front(self, rules: list[Rule]) -> list[Rule]:
         rules = sorted(rules,
-                       key=lambda rule: (rule.novelty_score, rule.fitness_),
+                       key=lambda rule: (rule.novelty_score_, rule.fitness_),
                        reverse=True)
 
         pareto_front = [rules[0]]
@@ -87,10 +89,7 @@ class NoveltyFitnessBiased(NoveltyCalculation):
         self.novelty_bias = novelty_bias
         self.fitness_bias = 1 - novelty_bias
 
-        super().__init__(novelty_search_type=novelty_search_type, archive=archive, k_neighbor=None)
-
-    def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
-        return super()._novelty_score(rules=rules)
+        super().__init__(novelty_search_type=novelty_search_type, archive=archive, k_neighbor=1)
 
     def _novelty_score_calculation(self, distances: list[float], fitness: float):
         basic_novelty_score = super()._novelty_score_calculation(distances, fitness)
