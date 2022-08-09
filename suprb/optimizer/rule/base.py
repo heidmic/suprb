@@ -7,6 +7,7 @@ from joblib import Parallel, delayed
 from suprb.solution import Solution
 from suprb.optimizer import BaseOptimizer
 from suprb.rule import Rule, RuleInit
+from suprb.rule.matching import MatchingFunction
 from .acceptance import RuleAcceptance
 from .constraint import RuleConstraint
 from .origin import RuleOriginGeneration

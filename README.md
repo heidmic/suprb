@@ -4,24 +4,40 @@
 
 ## What is SupRB?
 
-SupRB is a Learning Classifier System (LCS) that utilises two separate optimizers that discover new rules and create global solutions to the learning problem, respectively. Those rules are stored in a Pool that expands during runtime and provides rules for solution creation.
+SupRB is a rule-set learning algorithm (or Learning Classifier System (LCS)) that utilises two separate optimizers that discover new rules and create global solutions to the learning problem, respectively. Those rules are stored in a Pool that expands during runtime and provides rules for solution creation.
 
+<!---
 ![SupRB statemachine](./docs/suprb.png)
+-->
 
-Classifiers or Rules use interval bounds for matching and a simple local model for outputs.
+<img src="./docs/suprb.png" alt="SupRB statemachine" width="500"/>
 
-![Classifier/Rule](./docs/rule.png)
+Rules use interval bounds for matching and a simple local model for outputs.
+
+<img src="./docs/rule.png" alt="Rule" width="700"/>
 
 Solutions of the problem select classifiers from the unchanging pool.
 
-<img src="./docs/solution.png" alt="Solutions and Pool of classifiers" width="600"/>
+<img src="./docs/solution.png" alt="Solutions and Pool of classifiers" width="500"/>
 
 
 ## Publications
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. Separating Rule Discovery and Global Solution Composition in a Learning Classifier System. In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
+### The Concept
 
-Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System. In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
+
+### Comparisons with other Systems
+
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** Accepted for publication in the Proceedings of BIOMA'22 http://arxiv.org/abs/2207.05582 A comparison with XCSF.
+
+### Investigating Components
+
+Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. **Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
+
+### Explainability of LCS
+
+Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. 2022 Learning Classifier Systems for Self-explaining Socio-Technical-Systems." arXiv preprint arXiv:2207.02300. https://arxiv.org/abs/2207.02300
 
 ## Experiments
 
@@ -40,7 +56,7 @@ Tested with Python 3.9.4.
 
 Newly created branch should follow a pattern that allows easy comprehension of what is being done and why, e.g.:
 
-**<Issue_number>\_<short_description_of_PR>**, e.g. *issue_3_introduce_volume_for_rule_discovery*.
+**<Issue_number>\_<short_description_of_PR>**, e.g. *3_introduce_volume_for_rule_discovery*.
 
 If there is no open issue the branch name should just reflect a short description of the feature/fix, e.g. *introduce_volume_for_rule_discovery*.
 

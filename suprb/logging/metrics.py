@@ -24,6 +24,6 @@ def matched_training_samples(pool: list[Rule]):
     if not pool:
         return 0
 
-    matched = np.stack([rule.match_ for rule in pool]).any(axis=0).nonzero()[0].shape[0]
-    total = pool[0].match_.shape[0]
+    matched = np.stack([rule.match_set_ for rule in pool]).any(axis=0).nonzero()[0].shape[0]
+    total = pool[0].match_set_.shape[0]
     return matched / total

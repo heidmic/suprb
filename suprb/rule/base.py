@@ -9,6 +9,7 @@ from sklearn.metrics import mean_squared_error
 
 from suprb.base import SolutionBase
 from suprb.fitness import BaseFitness
+from .matching import MatchingFunction
 
 
 class RuleFitness(BaseFitness, metaclass=ABCMeta):
@@ -24,8 +25,9 @@ class Rule(SolutionBase):
 
     Parameters
     ----------
-    bounds: np.ndarray
-        The interval this rule will be fitted on.
+    match: MatchingFunction
+        The function this rule will use the determine the subset of input
+        data that this rule governs (will be fitted on and predict)
     input_space: np.ndarray
         The bounds of the input space `X`.
     model: RegressorMixin
@@ -33,41 +35,40 @@ class Rule(SolutionBase):
     """
 
     experience_: float
-    match_: np.ndarray
+    match_set_: np.ndarray
     pred_: Union[np.ndarray, None]  # only the prediction of matching points, so of x[match_]
 
-    def __init__(self, bounds: np.ndarray, input_space: np.ndarray, model: RegressorMixin, fitness: RuleFitness, threshold: float = 0.7):
-        self.bounds = bounds
+    def __init__(self, match: MatchingFunction, input_space: np.ndarray, model: RegressorMixin, fitness: RuleFitness):
+        self.match = match
         self.input_space = input_space
         self.model = model
         self.fitness = fitness
-        self.threshold = threshold
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Rule:
 
         # Match input data
-        match = self.matched_data(X)
+        match_set = self.match(X)
 
         # No reason to fit if no data point matches
-        if not np.any(match):
+        if not np.any(match_set):
             self.is_fitted_ = False
             self.error_ = np.inf
             self.fitness_ = -np.inf
             self.experience_ = 0
             self.pred_ = np.array([])
-            self.match_ = match
+            self.match_set_ = match_set
             return self
 
         # No reason to refit if matched data points did not change
-        if hasattr(self, 'match_'):
-            if (self.match_ == match).all():
+        if hasattr(self, 'match_set_'):
+            if (self.match_set_ == match_set).all():
                 self.is_fitted_ = True
                 return self
 
-        self.match_ = match
+        self.match_set_ = match_set
 
         # Get all data points which match the bounds.
-        X, y = X[self.match_], y[self.match_]
+        X, y = X[self.match_set_], y[self.match_set_]
 
         # Create and fit the model
         self.model.fit(X, y)
@@ -80,44 +81,21 @@ class Rule(SolutionBase):
         self.is_fitted_ = True
         return self
 
-    def matched_data(self, X: np.ndarray):
-        """Returns a boolean array that is True for data points the rule matches."""
-
-        center_point = self.bounds[:, 0]
-        deviations = self.bounds[:, 1]
-
-        temp = np.all(np.exp(-1 * ((X - center_point)**2 / 2 * deviations**2)) > self.threshold, axis=1)
-
-        return temp
-
     @property
     def volume_(self):
-        """Calculates the volume of the interval."""
-        deviations = self.bounds[:, 1]
-        volume = 4/3 * np.pi * np.prod(deviations)
-
-        return volume
+        return self.match.volume_
 
     def predict(self, X: np.ndarray):
         return self.model.predict(X)
 
     def clone(self, **kwargs) -> Rule:
         args = dict(
-            bounds=self.bounds.copy() if 'bounds' not in kwargs else None,
+            match=self.match.copy() if 'match' not in kwargs else None,
             input_space=self.input_space,
             model=clone(self.model) if 'model' not in kwargs else None,
             fitness=self.fitness
         )
         return Rule(**(args | kwargs))
-
-    def _validate_bounds(self, X: np.ndarray):
-        """Validates that bounds have the correct shape."""
-
-        if self.bounds.shape[1] != 2:
-            raise ValueError(f"specified bounds are not of shape (-1, 2), but {self.bounds.shape}")
-
-        if self.bounds.shape[0] != X.shape[1]:
-            raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
 
     def _more_str_attributes(self) -> dict:
         return {'experience': self.experience_}

@@ -69,7 +69,8 @@ class Matching(RouletteWheelOrigin):
     """Bias the examples that were matched less than others by rules to have a higher probability to be selected."""
 
     def _calculate_weights(self, subgroup: list[Rule], **kwargs) -> np.ndarray:
-        return np.count_nonzero(np.stack([rule.match_ for rule in subgroup], axis=0) == 0, axis=0)
+        return np.count_nonzero(np.stack([rule.match_set_ for rule in subgroup],
+                                         axis=0) == 0, axis=0)
 
 
 class SquaredError(RouletteWheelOrigin):

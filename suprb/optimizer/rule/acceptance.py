@@ -36,6 +36,6 @@ class Variance(RuleAcceptance):
     def __call__(self, rule: Rule, X: np.ndarray, y: np.ndarray) -> bool:
         if rule.experience_ < 1:
             return False
-        local_y = y[rule.match_]
+        local_y = y[rule.match_set_]
         default_error = np.sum(local_y ** 2) / (len(local_y) * self.beta)
         return rule.error_ <= default_error
