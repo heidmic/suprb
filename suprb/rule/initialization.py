@@ -8,7 +8,7 @@ from sklearn.linear_model import Ridge
 
 
 from suprb.base import BaseComponent
-from suprb.rule.matching import MatchingFunction, OrderedBound
+from suprb.rule.matching import MatchingFunction, OrderedBound, GaussianKernelFunction
 from suprb.utils import check_random_state, RandomState
 from . import Rule, RuleFitness
 from .fitness import VolumeWu
@@ -46,6 +46,8 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         self._matching_type = matching_type
         if isinstance(self.matching_type, OrderedBound):
             self.generate_matching_function = self.ordered_bound
+        if isinstance(self.matching_type, GaussianKernelFunction):
+            self.generate_matching_function = self.gaussian_kernel_function
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
@@ -79,12 +81,19 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
 
+    @abstractmethod
+    def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
+
 
 class MeanInit(RuleInit):
     """Initializes both bounds with the mean."""
 
     def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return OrderedBound(np.stack((mean.T, mean.T), axis=1))
+
+    def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return GaussianKernelFunction(np.stack((mean.T, mean.T), axis=1))
 
 
 class NormalInit(RuleInit):
@@ -101,6 +110,13 @@ class NormalInit(RuleInit):
                                                         size=(2, mean.shape[0])).T,
                                     axis=1))
 
+    def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return GaussianKernelFunction(np.sort(random_state.normal(loc=mean,
+                                                                  scale=self.sigma,
+                                                                  size=(2, mean.shape[0])).T,
+                                              axis=1))
+
+
 
 class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
@@ -114,3 +130,8 @@ class HalfnormInit(RuleInit):
         low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
         high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
         return OrderedBound(np.stack((low.T, high.T), axis=1))
+
+    def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        low = mean - halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
+        high = mean + halfnorm.rvs(scale=self.sigma, size=mean.shape[0], random_state=random_state)
+        return GaussianKernelFunction(np.stack((low.T, high.T), axis=1))
