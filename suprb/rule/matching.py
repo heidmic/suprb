@@ -68,8 +68,8 @@ class OrderedBound(MatchingFunction):
             raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
 
     def clip(self, bounds: np.ndarray):
-        low, high = self.bounds[None].T
-        self.bounds.clip(low, high)
+        low, high = bounds[None].T
+        self.bounds.clip(low, high, out=self.bounds)
 
     def min_range(self, min_range: float):
         diff = self.bounds[:, 1] - self.bounds[:, 0]
