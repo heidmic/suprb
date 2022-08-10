@@ -16,11 +16,9 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
 
     def __init__(self,
                  matching_type: MatchingFunction = None,
-                 sigma: Union[float, np.ndarray] = 0.1,
-                 sigma_two: Union[float, np.ndarray] = 0.1):
+                 sigma: Union[float, np.ndarray] = 0.1):
         self.matching_type = matching_type
         self.sigma = sigma
-        self.sigma_two = sigma_two
 
     @property
     def matching_type(self):
@@ -97,17 +95,19 @@ class Normal(RuleMutation):
                                                  size=rule.match.bounds.shape)
 
     def centre_spread(self, rule: Rule, random_state: RandomState):
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
-        bounds[:, 0] += random_state.normal(scale=self.sigma,
+        bounds[:, 0] += random_state.normal(scale=self.sigma[0],
                                             size=rule.match.bounds.shape[0])
-        bounds[:, 1] += random_state.normal(scale=self.sigma_two,
+        bounds[:, 1] += random_state.normal(scale=self.sigma[1],
                                             size=rule.match.bounds.shape[0])
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
-        bounds[:, 0] += random_state.normal(scale=self.sigma,
+        bounds[:, 0] += random_state.normal(scale=self.sigma[0],
                                             size=rule.match.bounds.shape[0])
-        bounds[:, 1] += random_state.normal(scale=self.sigma_two,
+        bounds[:, 1] += random_state.normal(scale=self.sigma[1],
                                             size=rule.match.bounds.shape[0])
 
 
@@ -153,14 +153,16 @@ class HalfnormIncrease(RuleMutation):
         raise TypeError("HalformIncrease would cause UBR to behave like OBR")
 
     def centre_spread(self, rule: Rule, random_state: RandomState):
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
-        bounds[:, 0] += random_state.normal(scale=self.sigma, size=bounds.shape[0])
-        bounds[:, 1] += halfnorm.rvs(scale=self.sigma_two / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 0] += random_state.normal(scale=self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
-        bounds[:, 0] -= halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += halfnorm.rvs(scale=self.sigma_two / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 0] -= halfnorm.rvs(scale=self.sigma[0] / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
 
 
 class Uniform(RuleMutation):
@@ -176,14 +178,16 @@ class Uniform(RuleMutation):
                                                   size=rule.match.bounds.shape)
 
     def centre_spread(self, rule: Rule, random_state: RandomState):
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
-        bounds[:, 0] += random_state.uniform(-self.sigma, self.sigma, size=bounds.shape[0])
-        bounds[:, 1] += random_state.uniform(-self.sigma_two, self.sigma_two, size=bounds.shape[0])
+        bounds[:, 0] += random_state.uniform(-self.sigma[0], self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += random_state.uniform(-self.sigma[1], self.sigma[1], size=bounds.shape[0])
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
-        bounds[:, 0] += random_state.uniform(-self.sigma, self.sigma, size=bounds.shape[0])
-        bounds[:, 1] += random_state.uniform(-self.sigma_two, self.sigma_two, size=bounds.shape[0])
+        bounds[:, 0] += random_state.uniform(-self.sigma[0], self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += random_state.uniform(-self.sigma[1], self.sigma[1], size=bounds.shape[0])
 
 
 class UniformIncrease(RuleMutation):
@@ -202,13 +206,15 @@ class UniformIncrease(RuleMutation):
         raise TypeError("UniformIncrease would cause UBR to behave like OBR")
 
     def centre_spread(self, rule: Rule, random_state: RandomState):
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
-        bounds[:, 0] -= random_state.uniform(-self.sigma, self.sigma, size=bounds.shape[0])
-        bounds[:, 1] += random_state.uniform(0, self.sigma_two, size=bounds.shape[0])
+        bounds[:, 0] -= random_state.uniform(-self.sigma[0], self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
-        bounds[:, 0] -= random_state.uniform(0, self.sigma, size=bounds.shape[0])
-        bounds[:, 1] += random_state.uniform(0, self.sigma_two, size=bounds.shape[0])
+        bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)

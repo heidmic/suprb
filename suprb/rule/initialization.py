@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-
+from typing import Union
 import numpy as np
 from scipy.stats import halfnorm
 from sklearn.base import RegressorMixin, clone
@@ -117,10 +117,9 @@ class NormalInit(RuleInit):
     """Initializes both bounds with points drawn from a normal distribution."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 sigma: float = 0.1, sigma_two: float = 0.1):
+                 sigma: Union[float, np.ndarray] = 0.1):
         super().__init__(bounds=bounds, model=model, fitness=fitness)
         self.sigma = sigma
-        self.sigma_two = sigma_two
 
     def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return OrderedBound(np.sort(random_state.normal(loc=mean,
@@ -133,13 +132,15 @@ class NormalInit(RuleInit):
                                                   size=(2, mean.shape[0])))
 
     def centre_spread(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        centre = random_state.normal(loc=mean, scale=self.sigma, size=(mean.shape[0]))
-        spread = halfnorm.rvs(scale=self.sigma_two / 2, size=mean.shape[0], random_state=random_state)
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
+        centre = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
+        spread = halfnorm.rvs(scale=self.sigma[1] / 2, size=mean.shape[0], random_state=random_state)
         return CentreSpread(np.stack((centre.T, spread.T), axis=1))
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        lower = random_state.normal(loc=mean, scale=self.sigma, size=(mean.shape[0]))
-        prop = halfnorm.rvs(scale=self.sigma_two / 2, size=mean.shape[0], random_state=random_state)
+        assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
+        lower = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
+        prop = halfnorm.rvs(scale=self.sigma[1] / 2, size=mean.shape[0], random_state=random_state)
         return MinPercentage(np.stack((lower.T, prop.T), axis=1))
 
 
