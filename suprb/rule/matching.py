@@ -124,9 +124,20 @@ class GaussianKernelFunction(MatchingFunction):
             raise ValueError(f"bounds- and input data dimension mismatch: {parameters.shape[0]} != {X.shape[1]}")
 
     def clip(self, bounds: np.ndarray):
-        #TODO: implement
-        pass
+        # TODO: Noch abzuklären was hier genau gemacht werden soll -> ob dann die implementierung passt
+        low, high = self.center[None].T, self.deviations[None].T
+        diff = np.abs(high - low)
+
+        self.center = self.center.clip(low, high)[0, :]
+        self.deviations = self.deviations.clip(0, diff)[0, :]
 
     def min_range(self, min_range: float):
-        #TODO: implement
-        pass
+        # TODO: Noch abzuklären was hier genau gemacht werden soll -> ob dann die implementierung passt
+        # beschreibt min_range den Durchmesser oder Radius?
+        low, high = self.center - self.deviations, self.center + self.deviations
+        diff = high - low
+
+        if min_range > 0:
+            invalid_indices = np.argwhere(diff < self.min_range)
+            self.center[invalid_indices] -= min_range / 4
+            self.deviations[invalid_indices] += min_range / 4
