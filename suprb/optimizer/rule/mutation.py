@@ -210,11 +210,9 @@ class UniformIncrease(RuleMutation):
         bounds = rule.match.bounds
         bounds[:, 0] -= random_state.uniform(-self.sigma[0], self.sigma[0], size=bounds.shape[0])
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
-        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
         bounds = rule.match.bounds
         bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
-        rule.match.bounds = np.sort(rule.match.bounds, axis=1)

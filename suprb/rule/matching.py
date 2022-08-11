@@ -116,8 +116,7 @@ class UnorderedBound(MatchingFunction):
             raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
 
     def clip(self, bounds: np.ndarray):
-        low, high = self.bounds[None].T
-        self.bounds.clip(low, high)
+        self.bounds.clip(-1, 1)
 
     def min_range(self, min_range: float):
         diff = self.bounds[:, 1] - self.bounds[:, 0]
@@ -175,11 +174,8 @@ class CentreSpread(MatchingFunction):
             raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
 
     def clip(self, bounds: np.ndarray):
-        low, high = self.bounds[None].T
-        diff = np.abs(high - low)
-        self.bounds[:, 0] = self.bounds[:, 0].clip(low, high)[0, :]
-        self.bounds[:, 1] = self.bounds[:, 1].clip(0, diff)[0, :]
-        self.bounds.clip(low, high)
+        self.bounds[:, 0] = self.bounds[:, 0].clip(-1, 1)
+        self.bounds[:, 1] = self.bounds[:, 1].clip(0, 2)
 
     def min_range(self, min_range: float):
         low = self.bounds[:, 0] - self.bounds[:, 1]
@@ -212,9 +208,8 @@ class MinPercentage(MatchingFunction):
     @property
     def volume_(self):
         """Calculates the volume of the interval."""
-        low, high = self.bounds[None].T
         lower = self.bounds[:, 0]
-        upper = lower + self.bounds[:, 1] * (high - lower)
+        upper = lower + self.bounds[:, 1] * (1 - (-1))
         diff = upper - lower
         return np.prod(diff)
 
@@ -231,8 +226,7 @@ class MinPercentage(MatchingFunction):
             raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
 
     def clip(self, bounds: np.ndarray):
-        low, high = self.bounds[None].T
-        self.bounds[:, 0] = self.bounds[:, 0].clip(low, high)[0, :]
+        self.bounds[:, 0] = self.bounds[:, 0].clip(-1, 1)
         self.bounds[:, 1] = self.bounds[:, 1].clip(0, 1)
 
     def min_range(self, min_range: float):
