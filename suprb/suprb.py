@@ -14,7 +14,7 @@ from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
-from .rule.matching import MatchingFunction, OrderedBound
+from .rule.matching import MatchingFunction, OrderedBound, GaussianKernelFunction
 from .utils import check_random_state, estimate_bounds
 
 
@@ -70,7 +70,7 @@ class SupRB(BaseRegressor):
     def __init__(self,
                  rule_generation: RuleGeneration = None,
                  solution_composition: SolutionComposition = None,
-                 matching_type: MatchingFunction = OrderedBound(np.array([])),
+                 matching_type: MatchingFunction = GaussianKernelFunction(np.array([])),
                  n_iter: int = 32,
                  n_initial_rules: int = 0,
                  n_rules: int = 4,
