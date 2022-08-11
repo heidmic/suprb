@@ -44,6 +44,8 @@ class OrderedBound(MatchingFunction):
     An example x is matched iff l_i <= x_i <= u_i for all dimensions i
     """
     def __init__(self, bounds: np.ndarray):
+        # lower_bound = bounds[:, 0]
+        # upper_bound = bounds[:, 1]
         self.bounds = bounds
 
     def __call__(self, X: np.ndarray):
@@ -68,8 +70,8 @@ class OrderedBound(MatchingFunction):
             raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
 
     def clip(self, bounds: np.ndarray):
-        low, high = self.bounds[None].T
-        self.bounds.clip(low, high)
+        low, high = bounds[None].T
+        bounds.clip(low, high)
 
     def min_range(self, min_range: float):
         diff = self.bounds[:, 1] - self.bounds[:, 0]
@@ -87,13 +89,15 @@ class GaussianKernelFunction(MatchingFunction):
     are specified for each dimension. A threshhold (t) defines if a rule is matched or not.
     An example x is matched iff exp((x_i - c_i)^2 / 2*(d_i^2)) > t for all dimensions i
     """
-    def __init__(self, parameters: np.ndarray, threshold: float = 0.7):
-        self.center = parameters[:, 0]
-        self.deviations = parameters[:, 1]
+    def __init__(self, bounds: np.ndarray, threshold: float = 0.7):
+        # center = bounds[:, 0]
+        # deviations = bounds[:, 1]
+        self.bounds = bounds
         self.threshold = threshold
 
     def __call__(self, X: np.ndarray):
-        return np.exp(np.sum(((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
+        return np.exp(np.sum(
+                ((X - self.bounds[:, 0]) ** 2) / (2 * (self.bounds[:, 1] ** 2)), axis=1) * -1) > self.threshold
 
     @property
     def volume_(self):
@@ -103,41 +107,42 @@ class GaussianKernelFunction(MatchingFunction):
         https://analyticphysics.com/Higher%20Dimensions/Ellipsoids%20in%20Higher%20Dimensions.htm
         """
 
-        dim = self.center.shape
+        dim = self.bounds[:, 0].shape[0]
         pre_factor = (2 * (np.pi ** (dim / 2))) / (dim * math.gamma(dim / 2))
-        prod_deviations = np.prod(self.deviations)
+        prod_deviations = np.prod(self.bounds[:, 1])
 
         return pre_factor * prod_deviations
 
     def copy(self):
-        return GaussianKernelFunction(parameters=np.stack((self.center, self.deviations), axis=1),
-                                      threshold=self.threshold)
+        return GaussianKernelFunction(bounds=self.bounds, threshold=self.threshold)
 
     def _validate_bounds(self, X: np.ndarray):
         """Validates that bounds have the correct shape."""
-        parameters = np.stack((self.center, self.deviations), axis=1)
 
-        if parameters.shape[1] != 2:
-            raise ValueError(f"specified bounds are not of shape (-1, 2), but {parameters.shape}")
+        if self.bounds.shape[1] != 2:
+            raise ValueError(f"specified bounds are not of shape (-1, 2), but {self.bounds.shape}")
 
-        if parameters.shape[0] != X.shape[1]:
-            raise ValueError(f"bounds- and input data dimension mismatch: {parameters.shape[0]} != {X.shape[1]}")
+        if self.bounds.shape[0] != X.shape[1]:
+            raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
 
     def clip(self, bounds: np.ndarray):
         # TODO: Noch abzuklären was hier genau gemacht werden soll -> ob dann die implementierung passt
-        low, high = self.center[None].T, self.deviations[None].T
-        diff = np.abs(high - low)
+        low, high = bounds[:, 0] - bounds[:, 1], bounds[:, 0] + bounds[:, 1]
+        radius = np.abs(high - low) / 2
 
-        self.center = self.center.clip(low, high)[0, :]
-        self.deviations = self.deviations.clip(0, diff)[0, :]
+        bounds[:, 0] = bounds[:, 0].clip(low, high)[0, :]
+        bounds[:, 1] = bounds[:, 1].clip(0, radius)[0, :]
 
     def min_range(self, min_range: float):
         # TODO: Noch abzuklären was hier genau gemacht werden soll -> ob dann die implementierung passt
         # beschreibt min_range den Durchmesser oder Radius?
-        low, high = self.center - self.deviations, self.center + self.deviations
-        diff = high - low
+        low, high = self.bounds[:, 0] - self.bounds[:, 1], self.bounds[:, 0] + self.bounds[:, 1]
+
+        #low = low.clip(-1, 1)
+        #high = high.clip(-1, 1)
+
+        diameter = high - low
 
         if min_range > 0:
-            invalid_indices = np.argwhere(diff < self.min_range)
-            self.center[invalid_indices] -= min_range / 4
-            self.deviations[invalid_indices] += min_range / 4
+            invalid_indices = np.argwhere(diameter < min_range)
+            self.bounds[invalid_indices, 1] += min_range / 2
