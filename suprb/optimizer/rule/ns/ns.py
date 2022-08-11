@@ -59,7 +59,7 @@ class NoveltySearch(RuleGeneration):
                  n_iter: int = 10,
                  mu: int = 16,
                  lmbda: int = 160,
-                 roh: int = 2,
+                 roh: int = 15,
                  random_state: int = None,
                  n_jobs: int = 1,
                  n_elitists=10,
@@ -99,7 +99,6 @@ class NoveltySearch(RuleGeneration):
 
             Return: A list of filtered Rules.
         """
-        self._validate_params(n_rules)
         self.random_state_ = check_random_state(self.random_state)
         self.novelty_calculation.archive.set_random_state(self.random_state_)
         self.novelty_calculation.archive.set_archive(deepcopy(self.pool_))
@@ -107,10 +106,6 @@ class NoveltySearch(RuleGeneration):
         rules = self._optimize(X=X, y=y, n_rules=n_rules)
 
         return self._filter_invalid_rules(X=X, y=y, rules=rules)
-
-    def _validate_params(self, n_rules: int):
-        if n_rules > (self.mu + self.lmbda):
-            raise ValueError(f"n_rules={n_rules} must be less or equal to mu+lambda={self.mu+self.lmbda}.")
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
         """ Steps of the novelty Search Algorithm containing:
@@ -129,13 +124,8 @@ class NoveltySearch(RuleGeneration):
             valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
             if valid_children:
-                ns_children = self.novelty_calculation(rules=children)
-                ns_parents = self.novelty_calculation(rules=parents)
-
-                self.novelty_calculation.archive.extend_archive(ns_children, self.roh)
-
-                best_children = self._get_n_best_rules(ns_children, self.mu)
-                best_parents = self._get_n_best_rules(ns_parents, self.n_elitists)
+                best_children = self._rule_selection(rules=children, n_rules=self.mu, roh=self.roh)
+                best_parents = self._rule_selection(rules=parents, n_rules=self.n_elitists)
 
                 population = best_children + best_parents
 
@@ -179,6 +169,12 @@ class NoveltySearch(RuleGeneration):
                     for child in children]
 
         return children
+
+    def _rule_selection(self, rules: list[Rule], n_rules: int, roh: int = 0):
+        ns_rules = self.novelty_calculation(rules=rules)
+        self.novelty_calculation.archive.extend_archive(ns_rules, roh)
+
+        return self._get_n_best_rules(ns_rules, n_rules)
 
     def _get_n_best_rules(self, rules: list[Rule], n: int):
         sorted_rules = sorted(rules,
