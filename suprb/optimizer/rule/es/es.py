@@ -51,6 +51,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  lmbda: int = 20,
                  operator: str = '&',
                  delay: int = 146,
+                 adaptive_sigma: bool = False,
                  origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = MeanInit(),
                  mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
@@ -69,6 +70,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             random_state=random_state,
             n_jobs=n_jobs,
         )
+        self.adaptive_sigma = adaptive_sigma
         self.lmbda = lmbda
         self.delay = delay
         self.operator = operator
@@ -104,6 +106,39 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             else:
                 warnings.warn("No valid children were generated during this iteration.", UserWarning)
                 continue
+
+            # For CSR only the spread mutation rate gets altered, for MPR both rate are altered
+            if self.adaptive_sigma:
+                matching_type = elitist.match.__class__.__name__
+                fitter_children = sum([1 for child in children if child.fitness_ > elitist.fitness_])
+                proportion = fitter_children / self.lmbda
+
+                if proportion > 0.2:
+                    if matching_type in ("OrderedBound", "UnorderedBound"):
+                        self.mutation.sigma /= 0.85
+                    elif matching_type == "CentreSpread":
+                        self.mutation.sigma[1] /= 0.85
+                    elif matching_type == "MinPercentage":
+                        self.mutation.sigma[0] /= random_state.normal(loc=0.85, scale=0.01)
+                        self.mutation.sigma[1] /= 0.85
+                elif 0.05 <= proportion < 0.2:
+                    if matching_type in ("OrderedBound", "UnorderedBound"):
+                        self.mutation.sigma *= 0.85
+                    elif matching_type == "CentreSpread":
+                        self.mutation.sigma[1] *= 0.85
+                    elif matching_type == "MinPercentage":
+                        self.mutation.sigma[0] *= random_state.normal(loc=0.85, scale=0.01)
+                        self.mutation.sigma[1] *= 0.85
+                elif proportion < 0.05:
+                    if matching_type in ("OrderedBound", "UnorderedBound"):
+                        self.mutation.sigma *= 2
+                    elif matching_type == "CentreSpread":
+                        self.mutation.sigma[1] *= 2
+                    elif matching_type == "MinPercentage":
+                        self.mutation.sigma[0] *= random_state.normal(loc=2, scale=0.01)
+                        self.mutation.sigma[1] *= 2
+
+                self.mutation.sigma = np.clip(self.mutation.sigma, 0.001, 3)
 
             # Different operators for replacement
             # 'selection' returns a list of rules. Either unordered or
