@@ -230,9 +230,8 @@ class MinPercentage(MatchingFunction):
         self.bounds[:, 1] = self.bounds[:, 1].clip(0, 1)
 
     def min_range(self, min_range: float):
-        low, high = self.bounds[None].T
         lower = self.bounds[:, 0]
-        upper = lower + self.bounds[:, 1] * (high - lower)
+        upper = lower + self.bounds[:, 1] * (1 - lower)
         diff = upper - lower
         if min_range > 0:
             invalid_indices = np.argwhere(diff < min_range)
