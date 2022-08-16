@@ -5,7 +5,6 @@ from typing import Optional
 import numpy as np
 
 from suprb.rule import Rule, RuleInit
-from suprb.rule.matching import OrderedBound, UnorderedBound, CentreSpread, MinPercentage
 from suprb.rule.initialization import MeanInit
 from suprb.utils import RandomState
 from ..mutation import RuleMutation, HalfnormIncrease
