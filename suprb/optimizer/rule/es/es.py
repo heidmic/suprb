@@ -1,6 +1,7 @@
 import warnings
 from collections import deque
 from typing import Optional
+import operator
 
 import numpy as np
 
@@ -32,6 +33,10 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         '&' behaves similar to '+' and ends the optimization process, if no improvement is found in a generation.
     delay: int
         Only relevant if operator is '&'. Controls the number of elitists which need to be worse before stopping.
+    adaptive_sigma: bool
+        Determines whether heuristic for adapting the mutation rate is used
+    adaption_rate: float
+        Only relevant when using adaptive heuristic, determines how much sigma is altered
     origin_generation: RuleOriginGeneration
         The selection process which decides on the next initial points.
     init: RuleInit
@@ -51,7 +56,8 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  lmbda: int = 20,
                  operator: str = '&',
                  delay: int = 146,
-                 adaptive_sigma: bool = False,
+                 adaptive_sigma: bool = True,
+                 adaption_rate: float = 0.85,
                  origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = MeanInit(),
                  mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
@@ -71,11 +77,26 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             n_jobs=n_jobs,
         )
         self.adaptive_sigma = adaptive_sigma
+        self.adaption_rate = adaption_rate
         self.lmbda = lmbda
         self.delay = delay
         self.operator = operator
         self.mutation = mutation
         self.selection = selection
+
+    # Alters sigma by applying math_operator to sigma and the factor
+    def alter_sigma(self, factor: float, math_operator: str, matching_type: str, random_state: RandomState):
+        operator_dict = {'/': operator.truediv, '*': operator.mul}
+
+        op = operator_dict.get(math_operator)
+
+        if matching_type in ("OrderedBound", "UnorderedBound"):
+            self.mutation.sigma = op(self.mutation.sigma, factor)
+        elif matching_type == "CenterSpread":
+            self.mutation.sigma[1] = op(self.mutation.sigma[1], factor)
+        elif matching_type == "MinPercentage":
+            self.mutation.sigma[0] = op(self.mutation.sigma[0], random_state.normal(loc=factor, scale=0.01))
+            self.mutation.sigma[1] = op(self.mutation.sigma[1], factor)
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
 
@@ -100,36 +121,22 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 warnings.warn("No valid children were generated during this iteration.", UserWarning)
                 continue
 
-            # For CSR only the spread mutation rate gets altered, for MPR both rate are altered
+            """Use the adapted version of the 1/5th-Rule as introduced in:
+               https://direct.mit.edu/evco/article-abstract/9/2/147/898/Convergence-in-Evolutionary-Programs-with-Self 
+               proportion: float 
+                    How many of the lmbda children create are fitter than their parent
+            """
             if self.adaptive_sigma:
                 matching_type = elitist.match.__class__.__name__
                 fitter_children = sum([1 for child in children if child.fitness_ > elitist.fitness_])
                 proportion = fitter_children / self.lmbda
 
                 if proportion > 0.2:
-                    if matching_type in ("OrderedBound", "UnorderedBound"):
-                        self.mutation.sigma /= 0.85
-                    elif matching_type == "CentreSpread":
-                        self.mutation.sigma[1] /= 0.85
-                    elif matching_type == "MinPercentage":
-                        self.mutation.sigma[0] /= random_state.normal(loc=0.85, scale=0.01)
-                        self.mutation.sigma[1] /= 0.85
+                    self.alter_sigma(self.adaption_rate, "/", matching_type, random_state)
                 elif 0.05 <= proportion < 0.2:
-                    if matching_type in ("OrderedBound", "UnorderedBound"):
-                        self.mutation.sigma *= 0.85
-                    elif matching_type == "CentreSpread":
-                        self.mutation.sigma[1] *= 0.85
-                    elif matching_type == "MinPercentage":
-                        self.mutation.sigma[0] *= random_state.normal(loc=0.85, scale=0.01)
-                        self.mutation.sigma[1] *= 0.85
+                    self.alter_sigma(self.adaption_rate, "*", matching_type, random_state)
                 elif proportion < 0.05:
-                    if matching_type in ("OrderedBound", "UnorderedBound"):
-                        self.mutation.sigma *= 2
-                    elif matching_type == "CentreSpread":
-                        self.mutation.sigma[1] *= 2
-                    elif matching_type == "MinPercentage":
-                        self.mutation.sigma[0] *= random_state.normal(loc=2, scale=0.01)
-                        self.mutation.sigma[1] *= 2
+                    self.alter_sigma(2, "*", matching_type, random_state)
 
                 self.mutation.sigma = np.clip(self.mutation.sigma, 0.001, 3)
 
