@@ -96,10 +96,10 @@ class HalfnormIncrease(RuleMutation):
                             random_state=random_state)
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
-        bounds = rule.match.bounds
-        bounds[:, 0] -= self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += self.mutation(dimensions=bounds.shape[0], random_state=random_state)
+        rule.match.bounds[:, 0] -= self.mutation(dimensions=rule.match.bounds.shape[0], random_state=random_state)
+        rule.match.bounds[:, 1] += self.mutation(dimensions=rule.match.bounds.shape[0], random_state=random_state)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
+
 
 
 class Uniform(RuleMutation):

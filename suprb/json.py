@@ -27,7 +27,10 @@ class NumpyEncoder(json.JSONEncoder):
 def dump(suprb, filename):
     json_config = {"config": None, "pool": []}
 
-    suprb._cleanup()
+    try:
+        suprb._cleanup()
+    except AttributeError:
+        pass
     json_config = _save_config(suprb)
     _save_pool(suprb.pool_, json_config)
     _save_input_space(suprb.pool_, json_config)
