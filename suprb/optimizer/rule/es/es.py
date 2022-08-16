@@ -142,6 +142,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                     self.alter_sigma(self.adaption_rate, "/", matching_type, random_state)
                 elif 0.05 <= proportion < 0.2:
                     self.alter_sigma(self.adaption_rate, "*", matching_type, random_state)
+                # Double the current mutation rate if proportion < 0.05 to escape any local minima
                 elif proportion < 0.05:
                     self.alter_sigma(2, "*", matching_type, random_state)
 
