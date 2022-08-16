@@ -14,7 +14,7 @@ from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
-from .rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CentreSpread, MinPercentage
+from .rule.matching import MatchingFunction, OrderedBound
 from .utils import check_random_state, estimate_bounds
 
 
