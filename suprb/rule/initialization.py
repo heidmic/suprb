@@ -123,6 +123,11 @@ class NormalInit(RuleInit):
         if self.matching_type in (CenterSpread, MinPercentage):
             assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
 
+    def sample_individual_bounds(self, mean: np.ndarray, random_state: RandomState):
+        allele_1 = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
+        allele_2 = halfnorm.rvs(scale=self.sigma[1] / 2, size=mean.shape[0], random_state=random_state)
+        return np.stack((allele_1, allele_2), axis=1)
+
     def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return OrderedBound(np.sort(random_state.normal(loc=mean,
                                                         scale=self.sigma,
@@ -134,14 +139,10 @@ class NormalInit(RuleInit):
                                                   size=(2, mean.shape[0])))
 
     def centre_spread(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        centre = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
-        spread = halfnorm.rvs(scale=self.sigma[1] / 2, size=mean.shape[0], random_state=random_state)
-        return CenterSpread(np.stack((centre.T, spread.T), axis=1))
+        return CenterSpread(self.sample_individual_bounds(mean, random_state))
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        lower = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
-        prop = halfnorm.rvs(scale=self.sigma[1] / 2, size=mean.shape[0], random_state=random_state)
-        return MinPercentage(np.stack((lower.T, prop.T), axis=1))
+        return MinPercentage(self.sample_individual_bounds(mean, random_state))
 
 
 class HalfnormInit(RuleInit):
