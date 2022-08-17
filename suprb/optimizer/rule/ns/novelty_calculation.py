@@ -37,15 +37,16 @@ class NoveltyCalculation(BaseComponent, metaclass=ABCMeta):
             distances = [sorted_rule.distance_ for sorted_rule in archive]
 
             local_competition = self.novelty_search_type.local_competition(rule, archive)
-            novelty_score = local_competition + self._novelty_score_calculation(distances, rule.fitness_)
+            kwargs = {"distances": distances, "fitness": rule.fitness_}
+            novelty_score = local_competition + self._novelty_score_calculation(**kwargs)
 
             rule.novelty_score_ = novelty_score
             novelty_search_rules.append(rule)
 
         return novelty_search_rules
 
-    def _novelty_score_calculation(self, distances: list[float], fitness: float):
-        return sum(distances[:self.k_neighbor]) / self.k_neighbor
+    def _novelty_score_calculation(self, **kwargs: dict()):
+        return sum(kwargs["distances"][:self.k_neighbor]) / self.k_neighbor
 
 
 class ProgressiveMinimalCriteria(NoveltyCalculation):
@@ -91,9 +92,9 @@ class NoveltyFitnessBiased(NoveltyCalculation):
 
         super().__init__(novelty_search_type=novelty_search_type, archive=archive, k_neighbor=1)
 
-    def _novelty_score_calculation(self, distances: list[float], fitness: float):
-        basic_novelty_score = super()._novelty_score_calculation(distances, fitness)
-        scaled_fitness = fitness / 100
+    def _novelty_score_calculation(self, **kwargs: dict()):
+        basic_novelty_score = super()._novelty_score_calculation(**kwargs)
+        scaled_fitness = kwargs["fitness"] / 100
         novelty_score = (self.novelty_bias * basic_novelty_score) + (self.fitness_bias * scaled_fitness)
 
         return novelty_score
