@@ -7,7 +7,7 @@ import numpy as np
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import MeanInit
 from suprb.utils import RandomState
-from ..generation_operator.mutation import RuleMutation, HalfnormIncrease
+from ..mutation import RuleMutation, HalfnormIncrease
 from ..selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance

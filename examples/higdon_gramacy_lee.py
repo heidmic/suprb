@@ -14,7 +14,7 @@ from suprb.optimizer import rule as rule_opt
 from suprb.optimizer.solution import ga
 from suprb.optimizer.rule import es, rs
 from suprb.utils import check_random_state
-from suprb.optimizer.rule.generation_operator.mutation import HalfnormIncrease
+from suprb.optimizer.rule.mutation import HalfnormIncrease
 
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state=None):

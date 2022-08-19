@@ -8,21 +8,27 @@ from suprb.utils import RandomState
 class Archive(BaseComponent, metaclass=ABCMeta):
     """Base Archive Class to store the rules from previous populations"""
 
-    def __init__(self):
-        self.archive = []
-
-    def set_archive(self, pool: list[Rule]):
-        self.archive = pool
-
-    def set_random_state(self, random_state: RandomState):
-        self.random_state_ = random_state
-
-    def get_archive(self):
-        return self.archive
-
-    def extend_archive(self, rules: list[Rule], n: int):
+    def __call__(self, rules: list[Rule], n: int):
+        """Adds n rules to the existing archive. Rules added depend on archive type"""
         self._add_rules_to_archive(rules, n)
 
+    @property
+    def archive(self):
+        return self._archive
+
+    @archive.setter
+    def archive(self, archive: list[Rule]):
+        self._archive = archive
+
+    @property
+    def random_state(self):
+        return self._random_state
+
+    @random_state.setter
+    def random_state(self, random_state: RandomState):
+        self._random_state = random_state
+
+    @abstractmethod
     def _add_rules_to_archive(self, rules: list[Rule], n: int):
         pass
 
@@ -39,15 +45,15 @@ class ArchiveRandom(Archive):
     """Archive Class that adds n random rules to the archive"""
 
     def _add_rules_to_archive(self, rules: list[Rule], n: int):
-        self.random_state_.shuffle(rules)
+        self.random_state.shuffle(rules)
         self.archive.extend([x for x in rules][:n])
 
 
 class ArchiveNone(Archive):
-    """Archive Class where no archive is saved"""
+    """
+        Archive Class where no archive is saved.
+        Since we don't want to use an archive, the set_archive and extend_archive functions 
+    """
 
-    def set_archive(self, pool: list[Rule]):
-        self.archive = []
-
-    def extend_archive(self, rules: list[Rule], n: int):
-        self.archive = []
+    def _add_rules_to_archive(self, rules: list[Rule], n: int):
+        pass

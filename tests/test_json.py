@@ -10,7 +10,7 @@ from suprb import rule
 from suprb.optimizer.solution import ga
 from suprb.optimizer.rule import es
 from suprb.utils import check_random_state
-from suprb.optimizer.rule.generation_operator.mutation import HalfnormIncrease
+from suprb.optimizer.rule.mutation import HalfnormIncrease
 import suprb.json as json
 
 

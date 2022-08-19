@@ -27,7 +27,7 @@ class NoveltyCalculation(BaseComponent, metaclass=ABCMeta):
             and averages the distances of the k-nearest neighbors to get the novelty score.
         """
         novelty_search_rules = []
-        archive = self.archive.get_archive()[:]
+        archive = self.archive.archive[:]
         archive.extend(rules)
 
         for rule in self.novelty_search_type.filter_rules(rules):

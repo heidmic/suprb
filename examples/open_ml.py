@@ -10,7 +10,7 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
-import suprb.optimizer.rule.generation_operator.mutation
+import suprb.optimizer.rule.mutation
 from suprb import SupRB
 from suprb import rule
 from suprb.logging.stdout import StdoutLogger
@@ -43,7 +43,7 @@ if __name__ == '__main__':
             rule_generation=es.ES1xLambda(
                 operator='&',
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.generation_operator.mutation.HalfnormIncrease(sigma=2)
+                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
             ),
             solution_composition=ga.GeneticAlgorithm(
                 n_iter=128,

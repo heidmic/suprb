@@ -16,11 +16,11 @@ class RuleCrossover(GenerationOperator):
 
     def __call__(self, A: Rule, B: Rule, random_state: RandomState) -> list[Rule]:
         if random_state.random() < self.crossover_rate:
-            return self._crossover(A=A, B=B, random_state=random_state)
+            return self.execute(A=A, B=B, random_state=random_state)
 
         return [A, B]
 
-    def _crossover(self, A: Rule, B: Rule, random_state: RandomState):
+    def execute(self, A: Rule, B: Rule, random_state: RandomState):
         pass
 
 

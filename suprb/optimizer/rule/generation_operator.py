@@ -7,7 +7,7 @@ from suprb.utils import RandomState
 
 class GenerationOperator(BaseComponent, metaclass=ABCMeta):
     def __init__(self, matching_type: MatchingFunction = None):
-        self.matching_type = matching_type
+        self._matching_type = matching_type
 
     @property
     def matching_type(self):
@@ -17,8 +17,7 @@ class GenerationOperator(BaseComponent, metaclass=ABCMeta):
     def matching_type(self, matching_type):
         self._matching_type = matching_type
         if isinstance(self.matching_type, OrderedBound):
-            self.mutate_bounds = self.ordered_bound
-            self._crossover = self.ordered_bound
+            self.execute = self.ordered_bound
 
     @abstractmethod
     def ordered_bound(self, rule: Rule, random_state: RandomState):

@@ -5,11 +5,11 @@ from copy import deepcopy
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import HalfnormInit
 from suprb.utils import check_random_state
-from ..generation_operator.crossover import RuleCrossover, UniformCrossover
+from ..crossover import RuleCrossover, UniformCrossover
 from .novelty_calculation import NoveltyCalculation
 from .novelty_search_type import NoveltySearchType
 from .archive import ArchiveNovel
-from suprb.optimizer.rule.generation_operator.mutation import Normal, RuleMutation
+from suprb.optimizer.rule.mutation import Normal, RuleMutation
 from suprb.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
@@ -102,8 +102,8 @@ class NoveltySearch(RuleGeneration):
             Return: A list of filtered Rules.
         """
         self.random_state_ = check_random_state(self.random_state)
-        self.novelty_calculation.archive.set_random_state(self.random_state_)
-        self.novelty_calculation.archive.set_archive(deepcopy(self.pool_))
+        self.novelty_calculation.archive.random_state = self.random_state_
+        self.novelty_calculation.archive.archive = deepcopy(self.pool_)
 
         rules = self._optimize(X=X, y=y, n_rules=n_rules)
 
@@ -174,7 +174,7 @@ class NoveltySearch(RuleGeneration):
 
     def _rule_selection(self, rules: list[Rule], n_rules: int, roh: int = 0):
         ns_rules = self.novelty_calculation(rules=rules)
-        self.novelty_calculation.archive.extend_archive(ns_rules, roh)
+        self.novelty_calculation.archive(ns_rules, roh)
 
         return self._get_n_best_rules(ns_rules, n_rules)
 
@@ -187,7 +187,7 @@ class NoveltySearch(RuleGeneration):
     def _get_optimized_rules(self, best_children: list[Rule], n_rules: int):
         chosen_rules = []
 
-        for rule in (self.novelty_calculation.archive.get_archive() + best_children)[:n_rules]:
+        for rule in (self.novelty_calculation.archive.archive + best_children)[:n_rules]:
             if hasattr(rule, 'novelty_score_'):
                 del rule.novelty_score_
             if hasattr(rule, 'distance_'):

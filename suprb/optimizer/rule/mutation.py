@@ -24,11 +24,11 @@ class RuleMutation(GenerationOperator):
         mutated_rule = rule.clone()
 
         # Mutation
-        self.mutate_bounds(mutated_rule, random_state)
+        self.execute(mutated_rule, random_state)
 
         return mutated_rule
 
-    def mutate_bounds(self, rule: Rule, random_state: RandomState):
+    def execute(self, rule: Rule, random_state: RandomState):
         pass
 
 
