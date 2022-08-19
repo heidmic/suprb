@@ -19,7 +19,7 @@ class NoveltyCalculation(BaseComponent, metaclass=ABCMeta):
 
     def _add_distances_to_archive_rules(self, rule: Rule, archive: list[Rule]):
         for i, _ in enumerate(archive):
-            archive[i].distance_ = hamming(rule.match_, archive[i].match_)
+            archive[i].distance_ = hamming(rule.match_set_, archive[i].match_set_)
 
     def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
         """ The basic novely calculation based on the hamming distance. 

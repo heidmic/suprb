@@ -5,11 +5,11 @@ from copy import deepcopy
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import HalfnormInit
 from suprb.utils import check_random_state
-from .crossover import RuleCrossover, UniformCrossover
+from ..generation_operator.crossover import RuleCrossover, UniformCrossover
 from .novelty_calculation import NoveltyCalculation
 from .novelty_search_type import NoveltySearchType
 from .archive import ArchiveNovel
-from suprb.optimizer.rule.mutation import Normal, RuleMutation
+from suprb.optimizer.rule.generation_operator.mutation import Normal, RuleMutation
 from suprb.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance

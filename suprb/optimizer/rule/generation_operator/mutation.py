@@ -1,34 +1,23 @@
-from abc import ABCMeta, abstractmethod
 
 from typing import Union
 
 import numpy as np
 from scipy.stats import halfnorm
 
-from suprb.base import BaseComponent
 from suprb.rule import Rule
 from suprb.utils import RandomState
-from suprb.rule.matching import MatchingFunction, OrderedBound
+from suprb.optimizer.rule.generation_operator import GenerationOperator
+from suprb.rule.matching import MatchingFunction
 
 
-class RuleMutation(BaseComponent, metaclass=ABCMeta):
+class RuleMutation(GenerationOperator):
     """Mutates the bounds of a rule with the strength defined by sigma."""
 
     def __init__(self,
                  matching_type: MatchingFunction = None,
                  sigma: Union[float, np.ndarray] = 0.1):
-        self.matching_type = matching_type
+        super().__init__(matching_type=matching_type)
         self.sigma = sigma
-
-    @property
-    def matching_type(self):
-        return self._matching_type
-
-    @matching_type.setter
-    def matching_type(self, matching_type):
-        self._matching_type = matching_type
-        if isinstance(self.matching_type, OrderedBound):
-            self.mutate_bounds = self.ordered_bound
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:
         # Create copy of the rule
@@ -40,10 +29,6 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
         return mutated_rule
 
     def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        pass
-
-    @abstractmethod
-    def ordered_bound(self, rule: Rule, random_state: RandomState):
         pass
 
 
@@ -69,7 +54,7 @@ class Normal(RuleMutation):
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         # code inspection gives you a warning here but it is ineffectual
         rule.match.bounds += random_state.normal(scale=self.sigma,
-                                        size=rule.match.bounds.shape)
+                                                 size=rule.match.bounds.shape)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
 
@@ -101,13 +86,12 @@ class HalfnormIncrease(RuleMutation):
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
 
-
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         rule.match.bounds += random_state.uniform(-self.sigma, self.sigma,
-                                            size=rule.match.bounds.shape)
+                                                  size=rule.match.bounds.shape)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
 

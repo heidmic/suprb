@@ -1,4 +1,3 @@
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
@@ -9,6 +8,7 @@ from suprb.logging.default import DefaultLogger
 from suprb.logging.stdout import StdoutLogger
 from suprb.optimizer.solution import ga
 from suprb.optimizer.rule import ns
+from suprb.rule.matching import OrderedBound
 from suprb.utils import check_random_state
 import unittest
 
@@ -45,6 +45,7 @@ class TestNoveltySearch(unittest.TestCase):
     def setup_base_model(self):
         self.model = SupRB(rule_generation=ns.NoveltySearch(init=rule.initialization.HalfnormInit()),
                            solution_composition=ga.GeneticAlgorithm(),
+                           matching_type=OrderedBound(np.array([])),
                            n_iter=2,
                            n_rules=8,
                            verbose=10,
