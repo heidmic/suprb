@@ -30,7 +30,9 @@ class NoveltySearch(RuleGeneration):
         lmbda: int
             Each generation lambda children will be generated.
         roh: int
-            Each generation roh rules will be added to the archive (depending on archive type)
+            Each generation roh rules will be added to the archive (depending on archive type). 
+            For population sizes of 200, a value of 15 is generally recommended. However, this value is highly sensitive
+            to a multitude of factors (and novelty search mechanisms, such as the specific archiving technique)
         random_state : int, RandomState instance or None, default=None
             Pass an int for reproducible results across multiple function calls.
         n_jobs: int
