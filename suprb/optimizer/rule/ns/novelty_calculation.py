@@ -3,11 +3,12 @@ from suprb.rule import Rule
 from suprb.base import BaseComponent
 from scipy.spatial.distance import hamming
 from .novelty_search_type import NoveltySearchType
-from .archive import Archive
+from .archive import Archive, ArchiveNovel
 
 
 class NoveltyCalculation(BaseComponent):
-    def __init__(self, novelty_search_type: NoveltySearchType, archive: Archive, k_neighbor: int):
+    def __init__(self, novelty_search_type: NoveltySearchType = NoveltySearchType(),
+                 archive: Archive = ArchiveNovel(), k_neighbor: int = 15):
         self.novelty_search_type = novelty_search_type
         self.archive = archive
         self.k_neighbor = k_neighbor
