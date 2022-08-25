@@ -1,11 +1,9 @@
-from abc import ABCMeta, abstractmethod
-
 import numpy as np
 from suprb.rule import Rule
 from suprb.base import BaseComponent
 
 
-class NoveltySearchType(BaseComponent, metaclass=ABCMeta):
+class NoveltySearchType(BaseComponent):
     """Basic Novelty Search without any modifications"""
 
     def filter_rules(self, rules: list[Rule]):

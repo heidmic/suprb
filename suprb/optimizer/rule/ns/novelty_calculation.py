@@ -1,5 +1,3 @@
-from abc import ABCMeta, abstractmethod
-
 import numpy as np
 from suprb.rule import Rule
 from suprb.base import BaseComponent
@@ -8,7 +6,7 @@ from .novelty_search_type import NoveltySearchType
 from .archive import Archive
 
 
-class NoveltyCalculation(BaseComponent, metaclass=ABCMeta):
+class NoveltyCalculation(BaseComponent):
     def __init__(self, novelty_search_type: NoveltySearchType, archive: Archive, k_neighbor: int):
         self.novelty_search_type = novelty_search_type
         self.archive = archive
