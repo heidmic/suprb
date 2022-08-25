@@ -16,7 +16,7 @@ class NoveltySearchType(BaseComponent):
 class MinimalCriteria(NoveltySearchType):
     """Minimal Criteria Novelty Search, where a rule needs to be matched by a minimum amount of examples to be considered as matched"""
 
-    def __init__(self, min_examples_matched: int):
+    def __init__(self, min_examples_matched: int = 15):
         self.min_examples_matched = min_examples_matched
 
     def filter_rules(self, rules: list[Rule]) -> list[Rule]:
@@ -31,7 +31,7 @@ class MinimalCriteria(NoveltySearchType):
 class LocalCompetition(NoveltySearchType):
     """Local Competition Novelty Search, where only rules are considered that are in the vicinity of another rule"""
 
-    def __init__(self, max_neighborhood_range: int):
+    def __init__(self, max_neighborhood_range: int = 15):
         self.max_neighborhood_range = max_neighborhood_range
 
     def local_competition(self, rule: Rule, rules: list[Rule]) -> float:
