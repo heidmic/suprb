@@ -79,7 +79,8 @@ class TestNoveltySearch(unittest.TestCase):
         return {filter_key: dict_to_filter[filter_key] for filter_key in filter_keys}
 
     def setup_kwargs(self, ns_search_type, archive_type, novelty_calculation_type):
-        kwargs_dict = dict(novelty_bias=33, novelty_search_type=ns_search_type,
+        kwargs_dict = dict(novelty_bias=0.33,
+                           novelty_search_type=ns_search_type,
                            archive=archive_type, k_neighbor=20)
 
         self.kwargs = self.filter_kwargs(kwargs_dict, novelty_calculation_type)

@@ -83,13 +83,19 @@ class NovelityFitnessPareto(NoveltyCalculation):
 
 
 class NoveltyFitnessBiased(NoveltyCalculation):
-    """Uses the basic novelty score calculation with weighted novelty and fitness."""
+    """
+    Uses the basic novelty score calculation with weighted novelty and fitness.
+    novelty_bias: float
+        Percentage value [0, 1]
+    """
 
-    def __init__(self, novelty_bias: float, novelty_search_type: NoveltySearchType, archive: Archive):
+    def __init__(self, novelty_bias: float = 0.5, novelty_search_type:
+                 NoveltySearchType = NoveltySearchType(),
+                 archive: Archive = ArchiveNovel()):
         self.novelty_bias = novelty_bias
         self.fitness_bias = 1 - novelty_bias
 
-        super().__init__(novelty_search_type=novelty_search_type, archive=archive, k_neighbor=1)
+        super().__init__(novelty_search_type=novelty_search_type, archive=archive)
 
     def _novelty_score_calculation(self, **kwargs: dict()):
         basic_novelty_score = super()._novelty_score_calculation(**kwargs)
