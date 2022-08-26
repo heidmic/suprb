@@ -55,8 +55,6 @@ class NoveltySearch(RuleGeneration):
             Class to calculate the novelty score based on NoveltySearchType, Archive and k_neigbor
         """
 
-    last_iter_inner: bool
-
     def __init__(self,
                  n_iter: int = 10,
                  mu: int = 16,
@@ -93,7 +91,7 @@ class NoveltySearch(RuleGeneration):
         self.n_elitists = n_elitists
         self.novelty_calculation = novelty_calculation
 
-    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: = 1) -> list[Rule]:
         """ Validation of the parameters and checking the random_state.
             Then _optimize is called, where the Novelty Search algorithm is implemented.
 
@@ -134,16 +132,8 @@ class NoveltySearch(RuleGeneration):
 
     def _init_population(self, X: np.ndarray, y: np.ndarray) -> list[Rule]:
         population = []
-        half_mu = int(np.ceil(self.mu / 2))
-
-        if len(self.pool_) < half_mu:
-            population = self.pool_
-            n_rules = self.mu - len(self.pool_)
-        else:
-            population = self.random_state_.choice(self.pool_, size=half_mu, replace=False).tolist()
-            n_rules = half_mu
-
-        origins = self.origin_generation(n_rules=n_rules, X=X, y=y, pool=self.pool_,
+        origins = self.origin_generation(n_rules=self.mu, X=X, y=y,
+                                         pool=self.pool_,
                                          elitist=self.elitist_, random_state=self.random_state_)
         for origin in origins:
             initialized_rules = self.init(mean=origin, random_state=self.random_state_)
