@@ -91,7 +91,8 @@ class NoveltySearch(RuleGeneration):
         self.n_elitists = n_elitists
         self.novelty_calculation = novelty_calculation
 
-    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: = 1) -> list[Rule]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[
+        Rule]:
         """ Validation of the parameters and checking the random_state.
             Then _optimize is called, where the Novelty Search algorithm is implemented.
 
