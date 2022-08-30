@@ -136,7 +136,7 @@ class NormalInit(RuleInit):
     def unordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return UnorderedBound(random_state.normal(loc=mean,
                                                   scale=self.sigma,
-                                                  size=(2, mean.shape[0])))
+                                                  size=(2, mean.shape[0])).T)
 
     def centre_spread(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return CenterSpread(self.sample_individual_bounds(mean, random_state))
