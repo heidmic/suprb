@@ -36,7 +36,6 @@ class MatchingFunction(BaseComponent, metaclass=ABCMeta):
 
     def _validate_bounds(self, X: np.ndarray):
         """Validates that bounds have the correct shape."""
-        print("YUUUH")
         if self.bounds.shape[1] != 2:
             raise ValueError(f"specified bounds are not of shape (-1, 2), but {self.bounds.shape}")
 
