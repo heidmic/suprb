@@ -27,10 +27,23 @@ class RouletteWheel(RuleSelection):
     """Selection probability is proportional to fitness."""
 
     def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> list[Rule]:
-        fitness = np.array([rule.fitness_ for rule in rules])
-        fitness /= np.sum(fitness)
+        try:
+            fitnesses = np.array([rule.fitness_ for rule in rules])
+            weights = fitnesses / np.sum(fitnesses)
 
-        return random_state.choice(rules, p=fitness, size=size)
+            return random_state.choice(rules, p=weights, size=size)
+        except ValueError:  # occurs if one or more rules did not match anything
+            rules = [rule for rule in rules if rule.fitness_ != -np.inf]
+            if rules == []:
+                # if all rules didn't match anything we select randomly
+                return random_state.choice(rules, size=size)
+            else:
+                # if some rules matched something we perform roulette wheel
+                # only among those rules
+                fitnesses = np.array([rule.fitness_ for rule in rules])
+                weights = fitnesses / np.sum(fitnesses)
+
+                return random_state.choice(rules, p=weights, size=size)
 
 
 class NondominatedSort(RuleSelection):
