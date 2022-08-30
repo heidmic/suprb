@@ -102,7 +102,8 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
         if self.pool_:
             self._optimize(X, y)
         else:
-            self.population_ = [self.init(self.pool_, self.random_state_)]
+            self.population_ = [self.init(self.pool_,
+                                          self.random_state_).fit(X, y)]
 
         # Check if new solutions should be stored in the archive, store them and refit
         if self.archive is not None:
