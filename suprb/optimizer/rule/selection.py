@@ -27,10 +27,14 @@ class RouletteWheel(RuleSelection):
     """Selection probability is proportional to fitness."""
 
     def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> list[Rule]:
-        fitness = np.array([rule.fitness_ for rule in rules])
-        fitness /= np.sum(fitness)
+        rules_ = [rule for rule in rules if rule.fitness_ != -np.inf]
+        if rules_:
+            fitnesses = np.array([rule.fitness_ for rule in rules_])
+            weights = fitnesses / np.sum(fitnesses)
 
-        return random_state.choice(rules, p=fitness, size=size)
+            return random_state.choice(rules_, p=weights, size=size)
+        else:
+            return random_state.choice(rules, size=size)
 
 
 class NondominatedSort(RuleSelection):

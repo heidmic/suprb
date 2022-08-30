@@ -41,7 +41,6 @@ if __name__ == '__main__':
         KNeighborsRegressor(),
         SupRB(
             rule_generation=es.ES1xLambda(
-                n_iter=100,
                 operator='&',
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
                 mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
@@ -52,8 +51,8 @@ if __name__ == '__main__':
                 selection=ga.selection.Tournament(),
                 mutation=ga.mutation.BitFlips(),
             ),
-            n_iter=16,
-            n_rules=16,
+            n_iter=32,
+            n_rules=4,
             logger=StdoutLogger(),
             random_state=random_state,
         )

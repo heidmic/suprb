@@ -1,19 +1,21 @@
-import math
-
 import numpy as np
-from scipy.spatial.distance import hamming
+
+from copy import deepcopy
 
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import HalfnormInit
 from suprb.utils import check_random_state
-from .crossover import RuleCrossover, UniformCrossover
+from ..crossover import RuleCrossover, UniformCrossover
+from .novelty_calculation import NoveltyCalculation
+from .novelty_search_type import NoveltySearchType
+from .archive import ArchiveNovel
 from suprb.optimizer.rule.mutation import Normal, RuleMutation
 from suprb.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import RuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import RuleOriginGeneration, UniformSamplesOrigin, SquaredError
+from ..origin import RuleOriginGeneration, SquaredError
 
 
 class NoveltySearch(RuleGeneration):
@@ -25,9 +27,19 @@ class NoveltySearch(RuleGeneration):
             Iterations to evolve rules. Must be greater than zero.
         mu: int
             The amount of offspring from each population that get selected for the next generation.
-        lm_ratio: int
-            The ratio of lambda and mu. Each generation lambda=lm_ration*mu children will be generated but only mu will
-            survive.
+        lmbda: int
+            Each generation lambda children will be generated.
+        roh: int
+            Each generation roh rules will be added to the archive (depending on archive type). 
+            For population sizes of 200, a value of 15 is generally recommended. However, this value is highly sensitive
+            to a multitude of factors (and novelty search mechanisms, such as the specific archiving technique)
+        random_state : int, RandomState instance or None, default=None
+            Pass an int for reproducible results across multiple function calls.
+        n_jobs: int
+            The number of threads / processes the optimization uses. Currently not used for this optimizer.
+        n_elitists: int
+            The number of parents that get added to the population each generation. 
+            For better performance this should be greater than the n_rules parameter of the optimize calls.
         origin_generation: RuleOriginGeneration
             The selection process which decides on the next initial points.
         init: RuleInit
@@ -39,36 +51,18 @@ class NoveltySearch(RuleGeneration):
         selection: RuleSelection
         acceptance: RuleAcceptance
         constraint: RuleConstraint
-        random_state : int, RandomState instance or None, default=None
-            Pass an int for reproducible results across multiple function calls.
-        n_jobs: int
-            The number of threads / processes the optimization uses. Currently not used for this optimizer.
-        ns_type: str
-            The type of Novelty Search to be used. Can be 'NS' for standard Novelty Search, 'NSLC' for Novelty Search
-            with Local Competition or 'MCNS' for Minimal Criteria Novelty Search.
-        MCNS_threshold_matched: int
-            The amount of samples a rule must match when using MCNS. Otherwise this parameter has no effect.
-        NSLC_threshold: int
-            The range in which rules are considered being in the locality of another rule
-        archive: str
-            The type of archive to be used by the algorithm. Can be 'novelty' for an archive with the most novel
-            individuals of each call of _optimize, 'random' where individuals will be chosen randomly from the final
-            population or  'none' where there is no archive and only the current generation is used to calculate
-            novelty.
-        novelty_fitness_combination: str
-            The type of novelty-fitness combination. Can be 'novelty' where only novelty affects the score of an
-            individual, '50/50' or '75/25' which gives a linear combination of novelty and fitness with the according
-            weights, 'pmcns' which stands for progressive MCNS and only allows the best 50% of the current population
-            in fitness to be considered for the final offspring of a generation or 'pareto' which calculates the pareto
-            front of each generation and assigns each individual a score through that.
+        novelty_calculation: NoveltyCalculation
+            Class to calculate the novelty score based on NoveltySearchType, Archive and k_neigbor
         """
-
-    last_iter_inner: bool
 
     def __init__(self,
                  n_iter: int = 10,
                  mu: int = 16,
-                 lm_ratio: int = 10,
+                 lmbda: int = 160,
+                 roh: int = 15,
+                 random_state: int = None,
+                 n_jobs: int = 1,
+                 n_elitists=10,
 
                  origin_generation: RuleOriginGeneration = SquaredError(),
                  init: RuleInit = HalfnormInit(),
@@ -77,17 +71,7 @@ class NoveltySearch(RuleGeneration):
                  selection: RuleSelection = Random(),
                  acceptance: RuleAcceptance = Variance(),
                  constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-
-                 ns_type: str = 'MCNS',  # NS, NSLC or MCNS
-
-                 MCNS_threshold_matched: int = 30,
-                 NSLC_threshold: int = 15,
-
-                 archive: str = 'novelty',  # novelty, random or none
-                 novelty_fitness_combination: str = 'novelty'  # novelty, 50/50, 75/25, pmcns or pareto
-                 ):
+                 novelty_calculation: NoveltyCalculation = NoveltyCalculation()):
         super().__init__(
             n_iter=n_iter,
             origin_generation=origin_generation,
@@ -97,33 +81,26 @@ class NoveltySearch(RuleGeneration):
             random_state=random_state,
             n_jobs=n_jobs,
         )
-
+        self.n_iter = n_iter
         self.mu = mu
-        self.lm_ratio = lm_ratio
-        self.lmbda = self.lm_ratio * mu
+        self.lmbda = lmbda
+        self.roh = roh
         self.crossover = crossover
         self.mutation = mutation
         self.selection = selection
-        self.n_iter = n_iter
+        self.n_elitists = n_elitists
+        self.novelty_calculation = novelty_calculation
 
-        self.ns_type = ns_type
-
-        # parameter only for MCNS
-        self.MCNS_threshold_matched = MCNS_threshold_matched
-        self.NSLC_threshold = NSLC_threshold
-
-        self.archive = archive
-        self.novelty_fitness_combination = novelty_fitness_combination
-
-    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[
+        Rule]:
         """ Validation of the parameters and checking the random_state.
             Then _optimize is called, where the Novelty Search algorithm is implemented.
 
             Return: A list of filtered Rules.
         """
-        self._validate_params(n_rules)
-
         self.random_state_ = check_random_state(self.random_state)
+        self.novelty_calculation.archive.random_state = self.random_state_
+        self.novelty_calculation.archive.archive = deepcopy(self.pool_)
 
         rules = self._optimize(X=X, y=y, n_rules=n_rules)
 
@@ -138,175 +115,74 @@ class NoveltySearch(RuleGeneration):
             Return: n_rules generated by the algorithm
         """
         population = self._init_population(X, y)
-        self.last_iter_inner = False
+        best_children = []
 
-        # main loop
         for i in range(self.n_iter):
+            parents = self._select_shuffled_parents(population)
+            children = self._crossover_and_mutate(X, y, parents)
 
-            if i == self.n_iter - 1:
-                self.last_iter_inner = True
-
-            # select lambda parents from population for crossover
-            parents = self.selection(population, random_state=self.random_state_, size=self.lmbda)
-
-            self.random_state_.shuffle(parents)
-
-            # from parents generate children through crossover and mutation
-            children = []
-            for j in range(0, len(parents) - 1, 2):
-                children.extend(self.crossover(A=parents[j], B=parents[j + 1], random_state=self.random_state_))
-            children = [self.constraint(self.mutation(child, random_state=self.random_state_))
-                            .fit(X, y) for child in children]
-
-            # filter children
             valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
-            # fill population for new iteration with mu children and n_rules elitists except for last iteration
-            # where children and parents will be combined and n_rules are chosen
             if valid_children:
-                population = self._new_population(valid_children, parents, n_rules)
+                best_children = self._rule_selection(rules=valid_children, n_rules=self.mu, roh=self.roh)
+                best_parents = self._rule_selection(rules=parents, n_rules=self.n_elitists)
 
-        return population
+                population = best_children + best_parents
 
-    def _calculate_novelty_score(self, rules: list[Rule], archive: list[Rule], k: int) -> list[tuple[Rule, float, int]]:
-        """ Calculation of the Novelty Score based on the hamming distance.
-
-            Takes every rule and calculates the hamming distance to each rule contained in the archive and averages the
-            distances of the k-nearest neighbors to get the novelty score.
-
-            Return: A list of tuples containing each rule with its corresponding novelty score and also the amount of
-            matched data points, which is used as the tiebreaker in case of equal novelty score.
-        """
-        rules_with_novelty_score = []
-
-        # filter rules for minimal criteria
-        if self.ns_type == 'MCNS' and self.pool_:
-            rules = self._filter_for_minimal_criteria(rules)
-
-        if self.novelty_fitness_combination == 'pmcns':
-            rules = self._filter_for_progressive_minimal_criteria(rules)
-
-        valid_archive = list(filter(lambda r: r.is_fitted_ and r.experience_ > 0, archive))
-
-        # main loop with option for local competition
-        for rule in rules:
-            rules_w_distances = sorted([(B, hamming(rule.match_set_,
-                                                    B.match_set_)) for B in
-                                        archive], key=lambda a: a[1])
-
-            distances = [a[1] for a in rules_w_distances]
-            novelty_score = sum(distances[:k]) / len(distances[:k])
-
-            # no need to enter if there is no valid_archive
-            if self.ns_type == 'NSLC' and valid_archive:
-                novelty_score = novelty_score + self._get_local_score(rule, rules_w_distances)
-
-            # matched_data_count is the secondary key which decides what rule is better if novelty is the same
-            matched_data_count = np.count_nonzero(rule.match_set_)
-
-            # linear combination of fitness and novelty
-            # any changes to fitness scaling would need to be also applied here
-            scaled_fitness = rule.fitness_ / 100
-            if self.novelty_fitness_combination == '50/50':
-                novelty_score = 0.5 * novelty_score + 0.5 * scaled_fitness
-            elif self.novelty_fitness_combination == '75/25':
-                novelty_score = 0.75 * novelty_score + 0.25 * scaled_fitness
-
-            rules_with_novelty_score.append((rule, novelty_score, matched_data_count))
-
-        if self.novelty_fitness_combination == 'pareto' and self.pool_:
-            rules_with_novelty_score = self._get_pareto_front(rules_with_novelty_score)
-
-        return rules_with_novelty_score
+        return self._get_optimized_rules(best_children, n_rules)
 
     def _init_population(self, X: np.ndarray, y: np.ndarray) -> list[Rule]:
         population = []
-
-        if len(self.pool_) < int(math.ceil(self.mu / 2)):
-            n_rules = self.mu - len(self.pool_)
-        else:
-            n_rules = int(math.ceil(self.mu / 2))
-
-        origins = self.origin_generation(n_rules=n_rules, X=X, y=y, pool=self.pool_,
+        origins = self.origin_generation(n_rules=self.mu, X=X, y=y,
+                                         pool=self.pool_,
                                          elitist=self.elitist_, random_state=self.random_state_)
-
         for origin in origins:
-            population.append(self.constraint(self.init(mean=origin, random_state=self.random_state_)).fit(X, y))
-
-        if len(self.pool_) < int(math.ceil(self.mu / 2)):
-            population.extend(self.pool_)
-        else:
-            population.extend(self.random_state_.choice(self.pool_, size=int(self.mu / 2), replace=False))
+            initialized_rules = self.init(mean=origin, random_state=self.random_state_)
+            constrained_rules = self.constraint(initialized_rules)
+            fitted_rules = constrained_rules.fit(X, y)
+            population.append(fitted_rules)
 
         return population
 
-    def _new_population(self, children: list[Rule], parents: list[Rule], n_rules: int) -> list[Rule]:
-        population = []
+    def _select_shuffled_parents(self, population: list[Rule]) -> list[Rule]:
+        parents = self.selection(population, random_state=self.random_state_, size=self.lmbda)
+        self.random_state_.shuffle(parents)
 
-        if self.pool_ and self.archive != 'none':
-            archive_children = self.pool_
-            archive_parents = self.pool_
-        else:
-            archive_children = children
-            archive_parents = parents
+        return parents
 
-        children_w_ns = self._calculate_novelty_score(rules=children, archive=archive_children, k=15)
-        parents_w_ns = self._calculate_novelty_score(rules=parents, archive=archive_parents, k=15)
+    def _crossover_and_mutate(self, X: np.ndarray, y: np.ndarray, parents: list[Rule]) -> list[Rule]:
+        children = []
 
-        if self.last_iter_inner:
-            population = children_w_ns + parents_w_ns
-            if self.archive == "random":
-                self.random_state_.shuffle(population)
-            else:
-                population = sorted(population, key=lambda x: (x[1], x[2]), reverse=True)
-            return [x[0] for x in population][:n_rules]
-        else:
-            children_w_ns = sorted(children_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-            parents_w_ns = sorted(parents_w_ns, key=lambda x: (x[1], x[2]), reverse=True)
-            population.extend([x[0] for x in children_w_ns][:self.mu])
-            population.extend([x[0] for x in parents_w_ns][:n_rules])
-            return population
+        parent_combinations = zip(*[iter(parents)] * 2)
+        for parent_A, parent_B in parent_combinations:
+            children.extend(self.crossover(A=parent_A, B=parent_B, random_state=self.random_state_))
 
-    def _filter_for_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
-        # calculate the 25th percentile value and if it's lower than MNCS_threshold_matched use it instead to filter
-        # a maximum of 25% of the population (to prevent empty populations)
-        maximum_threshold = min(np.percentile([np.count_nonzero(rule.match_set_)
-                                               for rule in rules],
-                                              self.MCNS_threshold_matched), 25)
-        rules = [rule for rule in rules if np.count_nonzero(rule.match_set_) >=
-                 maximum_threshold]
-        return rules
+        children = [self.constraint(self.mutation(child, random_state=self.random_state_)).fit(X, y)
+                    for child in children]
 
-    def _filter_for_progressive_minimal_criteria(self, rules: list[Rule]) -> list[Rule]:
-        threshold_fitness = np.median([rule.fitness_ for rule in rules])
-        rules = [rule for rule in rules if rule.fitness_ >= threshold_fitness]
-        return rules
+        return children
 
-    def _get_local_score(self, rule: Rule, rules_w_distances: list[tuple[Rule, float]]) -> float:
-        count_worse = 0
-        for x, _ in rules_w_distances[:self.NSLC_threshold]:
-            if x.fitness_ < rule.fitness_:
-                count_worse += 1
-        local_score = count_worse / len(rules_w_distances[:self.NSLC_threshold])
-        return local_score
+    def _rule_selection(self, rules: list[Rule], n_rules: int, roh: int = 0):
+        ns_rules = self.novelty_calculation(rules=rules)
+        self.novelty_calculation.archive(ns_rules, roh)
 
-    def _get_pareto_front(self, rules_with_novelty_score: list[tuple[Rule, float, int]]) -> list[tuple[Rule, float,
-                                                                                                       int]]:
-        rules_with_novelty_score = sorted(rules_with_novelty_score, key=lambda a: (a[1], a[0].fitness_), reverse=True)
-        p_front = [rules_with_novelty_score[0]]
+        return self._get_n_best_rules(ns_rules, n_rules)
 
-        for r in rules_with_novelty_score[1:]:
-            if r[0].fitness_ >= p_front[-1][0].fitness_:
-                p_front.append(r)
+    def _get_n_best_rules(self, rules: list[Rule], n: int):
+        sorted_rules = sorted(rules,
+                              key=lambda ns_rule: (ns_rule.novelty_score_, ns_rule.experience_),
+                              reverse=True)
+        return [sorted_rule for sorted_rule in sorted_rules][:n]
 
-        return p_front
+    def _get_optimized_rules(self, best_children: list[Rule], n_rules: int):
+        chosen_rules = []
 
-    def _validate_params(self, n_rules: int):
-        if self.ns_type not in ["NS", "NSLC", "MCNS"]:
-            raise ValueError(f"{self.ns_type} is no valid NS-Type.")
-        if self.archive not in ["novelty", "random", "none"]:
-            raise ValueError(f"{self.archive} is no valid Archive-Type.")
-        if self.novelty_fitness_combination not in ["novelty", "50/50", "75/25", "pmcns", "pareto"]:
-            raise ValueError(f"{self.novelty_fitness_combination} is no valid Fitness-Novelty Combination.")
-        if n_rules > (self.mu + self.lmbda):
-            raise ValueError(f"n_rules={n_rules} must be less or equal to mu+lambda={self.mu+self.lmbda}.")
+        for rule in (self.novelty_calculation.archive.archive + best_children)[:n_rules]:
+            if hasattr(rule, 'novelty_score_'):
+                del rule.novelty_score_
+            if hasattr(rule, 'distance_'):
+                del rule.distance_
+
+            chosen_rules.append(rule)
+
+        return chosen_rules

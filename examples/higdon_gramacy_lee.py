@@ -48,7 +48,6 @@ if __name__ == '__main__':
     # Prepare the model
     model = SupRB(
         rule_generation=es.ES1xLambda(
-            n_iter=100,
             operator='&',
             origin_generation=rule_opt.origin.Matching(),
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
@@ -67,7 +66,7 @@ if __name__ == '__main__':
     )
 
     # Do cross-validation
-    scores = cross_validate(model, X_train, y_train, cv=4, n_jobs=1, verbose=10,
+    scores = cross_validate(model, X_train, y_train, cv=4, n_jobs=4, verbose=10,
                             scoring=['r2', 'neg_mean_squared_error'],
                             return_estimator=True, fit_params={'cleanup': True})
     models = scores['estimator']
