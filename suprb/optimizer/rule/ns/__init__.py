@@ -1,2 +1,2 @@
 from .ns import NoveltySearch
-from .crossover import RuleCrossover
+from ..crossover import RuleCrossover

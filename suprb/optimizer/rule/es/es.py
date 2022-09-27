@@ -5,7 +5,6 @@ from typing import Optional
 import numpy as np
 
 from suprb.rule import Rule, RuleInit
-from suprb.rule.matching import MatchingFunction, OrderedBound
 from suprb.rule.initialization import MeanInit
 from suprb.utils import RandomState
 from ..mutation import RuleMutation, HalfnormIncrease
@@ -76,6 +75,13 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         self.operator = operator
         self.mutation = mutation
         self.selection = selection
+
+        if self.operator == '&':
+            assert self.delay < self.n_iter, f"n_iter {self.n_iter} must be " \
+                                             f"greater than delay {self.delay}"
+        if self.operator == ',' and isinstance(self.mutation,
+                                               HalfnormIncrease):
+            raise ValueError("',' operator and HalfnormIncrease mutation lead to collapsing populations")
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
 

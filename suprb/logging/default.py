@@ -43,7 +43,8 @@ class DefaultLogger(BaseLogger):
         pool = estimator.pool_
         log_metric("pool_size", len(pool))
         log_metric("pool_matched", matched_training_samples(pool))
-        log_metric_min_max_mean("pool_fitness", 'fitness_', pool)
+        if pool:
+            log_metric_min_max_mean("pool_fitness", 'fitness_', pool)
 
         # Log population
         # Note that this technically is `PopulationBasedSolutionComposition` specific.

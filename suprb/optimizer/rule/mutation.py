@@ -5,19 +5,19 @@ from typing import Union
 import numpy as np
 from scipy.stats import halfnorm
 
-from suprb.base import BaseComponent
 from suprb.rule import Rule
 from suprb.utils import RandomState
+from suprb.optimizer.rule.generation_operator import GenerationOperator
 from suprb.rule.matching import MatchingFunction, OrderedBound, GaussianKernelFunction
 
 
-class RuleMutation(BaseComponent, metaclass=ABCMeta):
+class RuleMutation(GenerationOperator):
     """Mutates the bounds of a rule with the strength defined by sigma."""
 
     def __init__(self,
                  matching_type: MatchingFunction = None,
                  sigma: Union[float, np.ndarray] = 0.1):
-        self.matching_type = matching_type
+        super().__init__(matching_type=matching_type)
         self.sigma = sigma
 
     @property
@@ -37,19 +37,11 @@ class RuleMutation(BaseComponent, metaclass=ABCMeta):
         mutated_rule = rule.clone()
 
         # Mutation
-        self.mutate_bounds(mutated_rule, random_state)
+        self.execute(mutated_rule, random_state)
 
         return mutated_rule
 
-    def mutate_bounds(self, rule: Rule, random_state: RandomState):
-        pass
-
-    @abstractmethod
-    def ordered_bound(self, rule: Rule, random_state: RandomState):
-        pass
-
-    @abstractmethod
-    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
+    def execute(self, rule: Rule, random_state: RandomState):
         pass
 
 
@@ -81,7 +73,7 @@ class Normal(RuleMutation):
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
         # code inspection gives you a warning here but it is ineffectual
         rule.match.bounds += random_state.normal(scale=self.sigma,
-                                        size=rule.match.bounds.shape)
+                                                 size=rule.match.bounds.shape)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
 
@@ -115,9 +107,8 @@ class HalfnormIncrease(RuleMutation):
                             random_state=random_state)
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
-        bounds = rule.match.bounds
-        bounds[:, 0] -= self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += self.mutation(dimensions=bounds.shape[0], random_state=random_state)
+        rule.match.bounds[:, 0] -= self.mutation(dimensions=rule.match.bounds.shape[0], random_state=random_state)
+        rule.match.bounds[:, 1] += self.mutation(dimensions=rule.match.bounds.shape[0], random_state=random_state)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
