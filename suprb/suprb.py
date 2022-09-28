@@ -70,7 +70,7 @@ class SupRB(BaseRegressor):
     def __init__(self,
                  rule_generation: RuleGeneration = None,
                  solution_composition: SolutionComposition = None,
-                 matching_type: MatchingFunction = GaussianKernelFunction(np.array([])),
+                 matching_type: MatchingFunction = OrderedBound(np.array([])),
                  n_iter: int = 32,
                  n_initial_rules: int = 0,
                  n_rules: int = 4,
