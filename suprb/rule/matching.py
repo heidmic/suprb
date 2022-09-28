@@ -25,7 +25,7 @@ class MatchingFunction(BaseComponent, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def clip(self, bounds: np.ndarray):
+    def clip(self, rule_parameter: np.ndarray):
         """Clip a rules outer most matched examples to some value"""
         pass
 
@@ -63,6 +63,8 @@ class OrderedBound(MatchingFunction):
     def _validate_bounds(self, X: np.ndarray):
         """Validates that bounds have the correct shape."""
 
+        # Question: is that function ever used?
+
         if self.bounds.shape[1] != 2:
             raise ValueError(f"specified bounds are not of shape (-1, 2), but {self.bounds.shape}")
 
@@ -86,57 +88,57 @@ class GaussianKernelFunction(MatchingFunction):
     """
     A standard kernel-based matching function producing multi-dimensional
     hyperellipsoidal conditions. In effect, a center point (c) and deviations (d)
-    are specified for each dimension. A threshhold (t) defines if a rule is matched or not.
+    are specified for each dimension. A threshold (t) defines if a rule is matched or not.
     An example x is matched iff exp((x_i - c_i)^2 / 2*(d_i^2)) > t for all dimensions i
     """
-    def __init__(self, bounds: np.ndarray, threshold: float = 0.7):
-        # center = bounds[:, 0]
-        # deviations = bounds[:, 1]
-        self.bounds = bounds
+    def __init__(self, center: np.ndarray, deviations: np.ndarray, threshold: float = 0.7):
+        self.center = center
+        self.deviations = deviations
         self.threshold = threshold
 
     def __call__(self, X: np.ndarray):
+        """
+        Gaussian Kernel Function > threshold as matching function
+        """
         return np.exp(np.sum(
-                ((X - self.bounds[:, 0]) ** 2) / (2 * (self.bounds[:, 1] ** 2)), axis=1) * -1) > self.threshold
+                ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
 
     @property
     def volume_(self):
         """
-        Calculates the volume of the ellipsoid.
-        Reference how to calculate the volume of an n-dim ellipsoid:
-        https://analyticphysics.com/Higher%20Dimensions/Ellipsoids%20in%20Higher%20Dimensions.htm
+        Calculates the volume of the n-dim ellipsoid
         """
 
-        dim = self.bounds[:, 0].shape[0]
+        dim = self.center.shape[0]
         pre_factor = (2 * (np.pi ** (dim / 2))) / (dim * math.gamma(dim / 2))
-        prod_deviations = np.prod(self.bounds[:, 1])
+        prod_deviations = np.prod(self.deviations)
 
         return pre_factor * prod_deviations
 
     def copy(self):
-        return GaussianKernelFunction(bounds=self.bounds, threshold=self.threshold)
+        return GaussianKernelFunction(center=self.center, deviations=self.deviations, threshold=self.threshold)
 
-    def _validate_bounds(self, X: np.ndarray):
-        """Validates that bounds have the correct shape."""
+    def _validate_inputs(self, X: np.ndarray):
+        """Validates that inputs have the correct shape."""
 
-        if self.bounds.shape[1] != 2:
-            raise ValueError(f"specified bounds are not of shape (-1, 2), but {self.bounds.shape}")
+        # TN: is that function ever used?
 
-        if self.bounds.shape[0] != X.shape[1]:
-            raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
+        pass
 
-    def clip(self, bounds: np.ndarray):
-        # TODO: Noch abzuklären was hier genau gemacht werden soll -> ob dann die implementierung passt
-        low, high = bounds[:, 0] - bounds[:, 1], bounds[:, 0] + bounds[:, 1]
+    def clip(self, rule_parameter: np.ndarray):
+        center = rule_parameter[:, 0]
+        deviations = rule_parameter[:, 1]
+
+        low, high = center - deviations, center + deviations
         radius = np.abs(high - low) / 2
 
-        bounds[:, 0] = bounds[:, 0].clip(low, high)[0, :]
-        bounds[:, 1] = bounds[:, 1].clip(0, radius)[0, :]
+        rule_parameter[:, 0] = center.clip(low, high)[0, :]
+        rule_parameter[:, 1] = deviations.clip(0, radius)[0, :]
 
     def min_range(self, min_range: float):
         # TODO: Noch abzuklären was hier genau gemacht werden soll -> ob dann die implementierung passt
         # beschreibt min_range den Durchmesser oder Radius?
-        low, high = self.bounds[:, 0] - self.bounds[:, 1], self.bounds[:, 0] + self.bounds[:, 1]
+        low, high = self.center - self.deviations, self.center + self.deviations
 
         #low = low.clip(-1, 1)
         #high = high.clip(-1, 1)
