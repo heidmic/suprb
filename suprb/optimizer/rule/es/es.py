@@ -105,6 +105,20 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             self.mutation.sigma[0] = op(self.mutation.sigma[0], random_state.normal(loc=factor, scale=0.01))
             self.mutation.sigma[1] = op(self.mutation.sigma[1], factor)
 
+    # Alters sigma by applying math_operator to sigma and the factor
+    def alter_sigma(self, factor: float, math_operator: str, matching_type: str, random_state: RandomState):
+        operator_dict = {'/': operator.truediv, '*': operator.mul}
+
+        op = operator_dict.get(math_operator)
+
+        if matching_type in ("OrderedBound", "UnorderedBound"):
+            self.mutation.sigma = op(self.mutation.sigma, factor)
+        elif matching_type == "CenterSpread":
+            self.mutation.sigma[1] = op(self.mutation.sigma[1], factor)
+        elif matching_type == "MinPercentage":
+            self.mutation.sigma[0] = op(self.mutation.sigma[0], random_state.normal(loc=factor, scale=0.01))
+            self.mutation.sigma[1] = op(self.mutation.sigma[1], factor)
+
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
 
         elitist = initial_rule
