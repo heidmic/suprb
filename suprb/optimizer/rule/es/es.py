@@ -1,7 +1,7 @@
 import warnings
 from collections import deque
 from typing import Optional
-import operator
+import operator as operator_module
 
 import numpy as np
 
@@ -56,7 +56,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  lmbda: int = 20,
                  operator: str = '&',
                  delay: int = 146,
-                 adaptive_sigma: bool = True,
+                 adaptive_sigma: bool = False,
                  adaption_rate: float = 0.85,
                  origin_generation: RuleOriginGeneration = Matching(),
                  init: RuleInit = MeanInit(),
@@ -93,21 +93,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
 
     # Alters sigma by applying math_operator to sigma and the factor
     def alter_sigma(self, factor: float, math_operator: str, matching_type: str, random_state: RandomState):
-        operator_dict = {'/': operator.truediv, '*': operator.mul}
-
-        op = operator_dict.get(math_operator)
-
-        if matching_type in ("OrderedBound", "UnorderedBound"):
-            self.mutation.sigma = op(self.mutation.sigma, factor)
-        elif matching_type == "CenterSpread":
-            self.mutation.sigma[1] = op(self.mutation.sigma[1], factor)
-        elif matching_type == "MinPercentage":
-            self.mutation.sigma[0] = op(self.mutation.sigma[0], random_state.normal(loc=factor, scale=0.01))
-            self.mutation.sigma[1] = op(self.mutation.sigma[1], factor)
-
-    # Alters sigma by applying math_operator to sigma and the factor
-    def alter_sigma(self, factor: float, math_operator: str, matching_type: str, random_state: RandomState):
-        operator_dict = {'/': operator.truediv, '*': operator.mul}
+        operator_dict = {'/': operator_module.truediv, '*': operator_module.mul}
 
         op = operator_dict.get(math_operator)
 
