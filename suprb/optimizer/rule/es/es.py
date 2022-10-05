@@ -69,7 +69,6 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             random_state=random_state,
             n_jobs=n_jobs,
         )
-
         self.lmbda = lmbda
         self.delay = delay
         self.operator = operator
