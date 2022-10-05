@@ -93,8 +93,6 @@ class TestMatchingFunction(unittest.TestCase):
                 self.assertTrue(True),
                 print("PASSED [Model Generation]\n")
             except:
-                print(matching_func)
-                print(mutation)
                 self.assertTrue(False), f"FAILED! Model generation with this config:" \
                                         f" {matching_func} with {mutation} and {initialization}"
 
