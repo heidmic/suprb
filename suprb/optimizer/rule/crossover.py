@@ -1,7 +1,7 @@
 import numpy as np
 from suprb.rule import Rule
 from suprb.optimizer.rule.generation_operator import GenerationOperator
-from suprb.rule.matching import MatchingFunction
+from suprb.rule.matching import MatchingFunction, OrderedBound
 from suprb.utils import RandomState
 from copy import deepcopy
 
@@ -9,7 +9,7 @@ from copy import deepcopy
 class RuleCrossover(GenerationOperator):
 
     def __init__(self,
-                 matching_type: MatchingFunction = None,
+                 matching_type: MatchingFunction = OrderedBound(np.array([])),
                  crossover_rate: float = 0.2):
         super().__init__(matching_type=matching_type)
         self.crossover_rate = crossover_rate

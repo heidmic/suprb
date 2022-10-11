@@ -27,7 +27,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     def __init__(self, bounds: np.ndarray = None,
                  model: RegressorMixin = None,
                  fitness: RuleFitness = None,
-                 matching_type: MatchingFunction = None):
+                 matching_type: MatchingFunction = OrderedBound(np.array([]))):
         self.bounds = bounds
         self.model = model
         self.fitness = fitness
@@ -117,7 +117,7 @@ class NormalInit(RuleInit):
     """Initializes both bounds with points drawn from a normal distribution."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 matching_type: MatchingFunction = None, sigma: Union[float, np.ndarray] = 0.1):
+                 matching_type: MatchingFunction = OrderedBound(np.array([])), sigma: Union[float, np.ndarray] = 0.1):
         super().__init__(bounds=bounds, model=model, fitness=fitness, matching_type=matching_type)
         self.sigma = sigma
         if self.matching_type in (CenterSpread, MinPercentage):
@@ -149,7 +149,7 @@ class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
 
     def __init__(self, bounds: np.ndarray = None, model: RegressorMixin = None, fitness: RuleFitness = None,
-                 matching_type: MatchingFunction = None, sigma: float = 0.1):
+                 matching_type: MatchingFunction = OrderedBound(np.array([])), sigma: float = 0.1):
         super().__init__(bounds=bounds, model=model, fitness=fitness, matching_type=matching_type)
         self.sigma = sigma
 

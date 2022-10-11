@@ -7,14 +7,14 @@ from scipy.stats import halfnorm
 from suprb.rule import Rule
 from suprb.utils import RandomState
 from suprb.optimizer.rule.generation_operator import GenerationOperator
-from suprb.rule.matching import MatchingFunction
+from suprb.rule.matching import MatchingFunction, OrderedBound
 
 
 class RuleMutation(GenerationOperator):
     """Mutates the bounds of a rule with the strength defined by sigma."""
 
     def __init__(self,
-                 matching_type: MatchingFunction = None,
+                 matching_type: MatchingFunction = OrderedBound(np.array([])),
                  sigma: Union[float, np.ndarray] = 0.1):
         super().__init__(matching_type=matching_type)
         self.sigma = sigma
@@ -79,7 +79,6 @@ class Halfnorm(RuleMutation):
         bounds = rule.match.bounds
         mean = np.mean(bounds, axis=1)
         bounds[:, 0] = mean - halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
-
         bounds[:, 1] = mean + halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
