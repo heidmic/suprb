@@ -123,7 +123,4 @@ class ES1xLambda(ParallelSingleRuleGeneration):
 
             mutation = mutation.adapt(elitist.fitness_)
 
-            # self.mutation = adapt_mutation(elitist.fitness_)
-            print(iteration, type(mutation), elitist.match.bounds, elitist.fitness_)
-
         return elitist
