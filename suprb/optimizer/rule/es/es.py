@@ -77,7 +77,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         self.selection = selection
 
         if self.delay < 2:
-            warnings.warn("Delay too low! Volume of rules will not increase!")
+            warnings.warn("Delay too low! Volume of rules will not increase! A delay of one does not allow mutation to happen")
 
         if self.operator == '&':
             assert self.delay < self.n_iter, f"n_iter {self.n_iter} must be " \
