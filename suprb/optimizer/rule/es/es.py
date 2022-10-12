@@ -1,3 +1,4 @@
+from copy import deepcopy
 import warnings
 from collections import deque
 from typing import Optional
@@ -8,36 +9,13 @@ import warnings
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import MeanInit
 from suprb.utils import RandomState
-from ..mutation import RuleMutation, HalfnormIncrease, UniformIncrease, Normal
+from ..mutation import RuleMutation, HalfnormIncrease
 from ..selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import ParallelSingleRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import Matching, RuleOriginGeneration
-
-
-class AdaptMutation:
-    def __init__(self, mutation: RuleMutation):
-        self.mutation = mutation
-        self.best_elitist_fitness = 0
-        self.number_of_worse_iterations = 0
-        self.worse_iteration_tolerance = 5
-        self.adapt_mutation = isinstance(self.mutation, HalfnormIncrease) or isinstance(self.mutation, UniformIncrease)
-
-    def __call__(self, elitist_fitness: float):
-        if self.adapt_mutation:
-            if elitist_fitness < self.best_elitist_fitness:
-                self.number_of_worse_iterations += 1
-
-                if self.number_of_worse_iterations > self.worse_iteration_tolerance:
-                    self.mutation = Normal(matching_type=self.mutation.matching_type, sigma=self.mutation.sigma)
-                    self.adapt_mutation = False
-            else:
-                self.number_of_worse_iterations = 0
-                self.best_elitist_fitness = elitist_fitness
-
-        return self.mutation
 
 
 class ES1xLambda(ParallelSingleRuleGeneration):
@@ -111,14 +89,14 @@ class ES1xLambda(ParallelSingleRuleGeneration):
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
         elitist = initial_rule
         elitists = deque(maxlen=self.delay)
-        adapt_mutation = AdaptMutation(self.mutation)
+        mutation = deepcopy(self.mutation)
 
         # Main iteration
         for iteration in range(self.n_iter):
             elitists.append(elitist)
 
             # Generate, fit and evaluate lambda children
-            children = [self.constraint(self.mutation(elitist, random_state=random_state))
+            children = [self.constraint(mutation(elitist, random_state=random_state))
                             .fit(X, y) for _ in range(self.lmbda)]
 
             # Filter children that do not match any data samples
@@ -143,6 +121,9 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                     elitist = elitists[0]
                     break
 
-            self.mutation = adapt_mutation(elitist.fitness_)
+            mutation = mutation.adapt(elitist.fitness_)
+
+            # self.mutation = adapt_mutation(elitist.fitness_)
+            print(iteration, type(mutation), elitist.match.bounds, elitist.fitness_)
 
         return elitist
