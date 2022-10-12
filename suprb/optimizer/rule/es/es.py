@@ -8,13 +8,36 @@ import warnings
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import MeanInit
 from suprb.utils import RandomState
-from ..mutation import RuleMutation, HalfnormIncrease
+from ..mutation import RuleMutation, HalfnormIncrease, UniformIncrease, Normal
 from ..selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import ParallelSingleRuleGeneration
 from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import Matching, RuleOriginGeneration
+
+
+class AdaptMutation:
+    def __init__(self, mutation: RuleMutation):
+        self.mutation = mutation
+        self.best_elitist_fitness = 0
+        self.number_of_worse_iterations = 0
+        self.worse_iteration_tolerance = 5
+        self.adapt_mutation = isinstance(self.mutation, HalfnormIncrease) or isinstance(self.mutation, UniformIncrease)
+
+    def __call__(self, elitist_fitness: float):
+        if self.adapt_mutation:
+            if elitist_fitness < self.best_elitist_fitness:
+                self.number_of_worse_iterations += 1
+
+                if self.number_of_worse_iterations > self.worse_iteration_tolerance:
+                    self.mutation = Normal(matching_type=self.mutation.matching_type, sigma=self.mutation.sigma)
+                    self.adapt_mutation = False
+            else:
+                self.number_of_worse_iterations = 0
+                self.best_elitist_fitness = elitist_fitness
+
+        return self.mutation
 
 
 class ES1xLambda(ParallelSingleRuleGeneration):
@@ -86,10 +109,9 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             warnings.warn("',' operator and HalfnormIncrease mutation lead to collapsing populations")
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
-
         elitist = initial_rule
-
         elitists = deque(maxlen=self.delay)
+        adapt_mutation = AdaptMutation(self.mutation)
 
         # Main iteration
         for iteration in range(self.n_iter):
@@ -120,5 +142,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
                     elitist = elitists[0]
                     break
+
+            self.mutation = adapt_mutation(elitist.fitness_)
 
         return elitist
