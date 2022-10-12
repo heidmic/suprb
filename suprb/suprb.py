@@ -63,6 +63,8 @@ class SupRB(BaseRegressor):
     solution_composition_: SolutionComposition
     solution_composition_seeds_: list[int]
 
+    matching_type_: MatchingFunction
+
     n_features_in_: int
 
     logger_: BaseLogger
@@ -70,7 +72,7 @@ class SupRB(BaseRegressor):
     def __init__(self,
                  rule_generation: RuleGeneration = None,
                  solution_composition: SolutionComposition = None,
-                 matching_type: MatchingFunction = OrderedBound(np.array([])),
+                 matching_type: MatchingFunction = None,
                  n_iter: int = 32,
                  n_initial_rules: int = 0,
                  n_rules: int = 4,
@@ -127,6 +129,7 @@ class SupRB(BaseRegressor):
 
         self._validate_rule_generation(default=ES1xLambda())
         self._validate_solution_composition(default=GeneticAlgorithm())
+        self._validate_matching_type(default=OrderedBound(np.array([])))
 
         self._propagate_component_parameters()
         self._init_bounds(X)
@@ -219,6 +222,9 @@ class SupRB(BaseRegressor):
         self.solution_composition_ = clone(self.solution_composition) \
             if self.solution_composition is not None else clone(default)
 
+    def _validate_matching_type(self, default=None):
+        self.matching_type_ = clone(self.matching_type) if self.matching_type is not None else clone(default)
+
     def _log_to_stdout(self, message, priority=1):
         if self.verbose >= priority:
             message = f"[{self.step_ + 1}/{self.n_iter}] {message}"
@@ -243,7 +249,7 @@ class SupRB(BaseRegressor):
     def _init_matching_type(self):
         for key, value in self.rule_generation_.get_params().items():
             if 'matching_type' in key:
-                self.rule_generation_.set_params(**{key: self.matching_type})
+                self.rule_generation_.set_params(**{key: self.matching_type_})
 
     def _cleanup(self):
         """
