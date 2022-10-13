@@ -43,3 +43,7 @@ class GenerationOperator(BaseComponent, metaclass=ABCMeta):
     @abstractmethod
     def min_percentage(self, rule: Rule, random_state: RandomState):
         pass
+
+    @abstractmethod
+    def adapt(self, elitist_fitness: float):
+        pass
