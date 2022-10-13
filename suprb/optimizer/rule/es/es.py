@@ -123,6 +123,5 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                     break
 
             mutation.adapt(elitist.fitness_)
-            print(iteration, type(mutation.operator_), elitist.fitness_)
 
         return elitist
