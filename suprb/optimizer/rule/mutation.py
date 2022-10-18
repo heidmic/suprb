@@ -1,8 +1,6 @@
 
-from ast import operator
 from typing import Union
 from sklearn import clone
-from copy import deepcopy
 
 import numpy as np
 from scipy.stats import halfnorm
@@ -10,7 +8,7 @@ from scipy.stats import halfnorm
 from suprb.rule import Rule
 from suprb.utils import RandomState
 from suprb.optimizer.rule.generation_operator import GenerationOperator
-from suprb.rule.matching import MatchingFunction, OrderedBound
+from suprb.rule.matching import MatchingFunction
 
 
 class RuleMutation(GenerationOperator):
@@ -32,9 +30,6 @@ class RuleMutation(GenerationOperator):
         return mutated_rule
 
     def execute(self, rule: Rule, random_state: RandomState):
-        pass
-
-    def adapt(self, elitist_fitness: float):
         pass
 
 
@@ -186,47 +181,49 @@ class UniformIncrease(RuleMutation):
 
 
 class AdaptiveMutation(RuleMutation):
-    """Mutate with given operator until a peak is reached and then switch the mutation operator to Normal"""
+    """Start off by using a given operator until the fitness decreased
+       more than self.number_of_worse_iterations times. Then change the mutation operator
+       to Normal
+    """
 
     def __init__(self, matching_type: MatchingFunction = None,
                  sigma: Union[float, np.ndarray] = 0.1,
-                 operator: RuleMutation = HalfnormIncrease()):
+                 operator: RuleMutation = HalfnormIncrease(),
+                 worse_iteration_tolerance: int = 5,
+                 sigma_normal: Union[float, np.ndarray] = 0.1):
 
         super().__init__(matching_type=matching_type, sigma=sigma)
-        self.adapt_mutation = True
         self.best_elitist_fitness = 0
         self.number_of_worse_iterations = 0
-        self.worse_iteration_tolerance = 5
+        self.worse_iteration_tolerance = worse_iteration_tolerance
+        self.sigma_normal = sigma_normal
+
+        # This is necessary because of sklearn guidelines
         self.operator = operator
         self.operator_ = clone(self.operator)
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:
-        mutated_rule = rule.clone()
-        self.operator_.execute(mutated_rule, random_state)
-
-        return mutated_rule
+        return self.operator_(rule, random_state)
 
     def adapt(self, elitist_fitness: float):
-        if self.adapt_mutation:
+        if not isinstance(self.operator_, Normal):
             if elitist_fitness < self.best_elitist_fitness:
                 self.number_of_worse_iterations += 1
 
                 if self.number_of_worse_iterations > self.worse_iteration_tolerance:
-                    self.adapt_mutation = False
-                    self.operator_ = Normal(matching_type=self.matching_type, sigma=self.sigma)
+                    self.operator_ = Normal(matching_type=self.matching_type, sigma=self.sigma_normal)
             else:
-                self.number_of_worse_iterations = 0
                 self.best_elitist_fitness = elitist_fitness
                 self.operator_ = self.operator
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        raise TypeError("HalformIncrease would cause UBR to behave like OBR")
+        raise TypeError("AdaptiveMutation has no implementation for unordered_bound")
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
-        pass
+        raise TypeError("AdaptiveMutation has no implementation for ordered_bound")
 
     def center_spread(self, rule: Rule, random_state: RandomState):
-        pass
+        raise TypeError("AdaptiveMutation has no implementation for center_spread")
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
-        pass
+        raise TypeError("AdaptiveMutation has no implementation for min_percentage")
