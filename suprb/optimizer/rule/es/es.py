@@ -5,7 +5,7 @@ from typing import Optional
 import numpy as np
 
 from suprb.rule import Rule, RuleInit
-from suprb.rule.initialization import MeanInit
+from suprb.rule.initialization import MeanInit, NormalInit
 from suprb.utils import RandomState
 from ..mutation import RuleMutation, HalfnormIncrease
 from ..selection import RuleSelection, Fittest
@@ -52,7 +52,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                  operator: str = '&',
                  delay: int = 146,
                  origin_generation: RuleOriginGeneration = Matching(),
-                 init: RuleInit = MeanInit(),
+                 init: RuleInit = NormalInit(),
                  mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
                  selection: RuleSelection = Fittest(),
                  acceptance: RuleAcceptance = Variance(),
