@@ -73,13 +73,12 @@ class OrderedBound(MatchingFunction):
 
     def clip(self, bounds: np.ndarray):
         low, high = bounds[None].T
-        bounds.clip(low, high)
+        self.bounds.clip(low, high, out=self.bounds)
 
     def min_range(self, min_range: float):
         diff = self.bounds[:, 1] - self.bounds[:, 0]
         if min_range > 0:
             invalid_indices = np.argwhere(diff < min_range)
-
             self.bounds[invalid_indices, 0] -= min_range / 2
             self.bounds[invalid_indices, 1] += min_range / 2
 
@@ -126,25 +125,21 @@ class GaussianKernelFunction(MatchingFunction):
         pass
 
     def clip(self, rule_parameter: np.ndarray):
+        """Clip the center into space of diameter and the deviations into [0, radius] """
         center = rule_parameter[:, 0]
         deviations = rule_parameter[:, 1]
 
         low, high = center - deviations, center + deviations
         radius = np.abs(high - low) / 2
 
-        rule_parameter[:, 0] = center.clip(low, high)[0, :]
-        rule_parameter[:, 1] = deviations.clip(0, radius)[0, :]
+        self.center.clip(low, high, out=self.center)
+        self.deviations.clip(0, radius, out=self.deviations)
 
     def min_range(self, min_range: float):
-        # TODO: Noch abzuklären was hier genau gemacht werden soll -> ob dann die implementierung passt
-        # beschreibt min_range den Durchmesser oder Radius?
         low, high = self.center - self.deviations, self.center + self.deviations
-
-        #low = low.clip(-1, 1)
-        #high = high.clip(-1, 1)
 
         diameter = high - low
 
         if min_range > 0:
             invalid_indices = np.argwhere(diameter < min_range)
-            self.bounds[invalid_indices, 1] += min_range / 2
+            self.deviations[invalid_indices] += min_range / 2
