@@ -3,6 +3,7 @@ from collections import deque
 from typing import Optional
 
 import numpy as np
+import warnings
 
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import MeanInit, NormalInit
@@ -69,12 +70,14 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             random_state=random_state,
             n_jobs=n_jobs,
         )
-
         self.lmbda = lmbda
         self.delay = delay
         self.operator = operator
         self.mutation = mutation
         self.selection = selection
+
+        if self.delay < 2:
+            warnings.warn("Delay too low! Volume of rules will not increase! A delay of one does not allow mutation to happen")
 
         if self.operator == '&':
             assert self.delay < self.n_iter, f"n_iter {self.n_iter} must be " \

@@ -1,4 +1,3 @@
-from abc import ABCMeta, abstractmethod
 
 from typing import Union
 
@@ -8,7 +7,7 @@ from scipy.stats import halfnorm
 from suprb.rule import Rule
 from suprb.utils import RandomState
 from suprb.optimizer.rule.generation_operator import GenerationOperator
-from suprb.rule.matching import MatchingFunction, OrderedBound, GaussianKernelFunction
+from suprb.rule.matching import MatchingFunction
 
 
 class RuleMutation(GenerationOperator):
@@ -19,18 +18,6 @@ class RuleMutation(GenerationOperator):
                  sigma: Union[float, np.ndarray] = 0.1):
         super().__init__(matching_type=matching_type)
         self.sigma = sigma
-
-    @property
-    def matching_type(self):
-        return self._matching_type
-
-    @matching_type.setter
-    def matching_type(self, matching_type):
-        self._matching_type = matching_type
-        if isinstance(self.matching_type, OrderedBound):
-            self.mutate_bounds = self.ordered_bound
-        if isinstance(self.matching_type, GaussianKernelFunction):
-            self.mutate_bounds = self.gaussian_kernel_function
 
     def __call__(self, rule: Rule, random_state: RandomState) -> Rule:
         # Create copy of the rule
@@ -64,88 +51,112 @@ class SigmaRange(RuleMutation):
 class Normal(RuleMutation):
     """Normal noise on both bounds."""
 
+    def individual_mutate(self, rule: Rule, random_state: RandomState):
+        bounds = rule.match.bounds
+        for index in range(0, self.sigma.shape[0]):
+            bounds[:, index] += random_state.normal(scale=self.sigma[index], size=rule.match.bounds.shape[0])
+
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
+        rule.match.bounds += random_state.normal(scale=self.sigma,
+                                                 size=rule.match.bounds.shape)
+
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         # code inspection gives you a warning here but it is ineffectual
-        rule.match.bounds += random_state.normal(scale=self.sigma,
-                                                 size=rule.match.bounds.shape)
+        self.unordered_bound(rule, random_state)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
-    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
-        # code inspection gives you a warning here but it is ineffectual
-        rule.match.bounds += random_state.normal(scale=self.sigma,
-                                                 size=rule.match.bounds.shape)
-        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
+    def center_spread(self, rule: Rule, random_state: RandomState):
+        self.individual_mutate(rule, random_state)
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        self.individual_mutate(rule, random_state)
 
 
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""
 
-    def mutation(self, dimensions: int, random_state: RandomState):
-        return halfnorm.rvs(scale=self.sigma / 2, size=dimensions,
-                            random_state=random_state)
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
+        bounds = rule.match.bounds
+        mean = np.mean(bounds, axis=1)
+        bounds[:, 0] = mean - halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
+
+        bounds[:, 1] = mean + halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
-        bounds = rule.match.bounds
-        mean = np.mean(bounds, axis=1)
-        bounds[:, 0] = mean - self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] = mean + self.mutation(dimensions=bounds.shape[0], random_state=random_state)
+        self.unordered_bound(rule, random_state)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
-    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
-        bounds = rule.match.bounds
-        mean = np.mean(bounds, axis=1)
-        bounds[:, 0] = mean - self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] = mean + self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
+    def center_spread(self, rule: Rule, random_state: RandomState):
+        raise TypeError("Halform Mutation is not implemented for CSR")
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        raise TypeError("Halform Mutation is not implemented for MPR")
 
 
 class HalfnormIncrease(RuleMutation):
     """Increase bounds with (half)normal noise."""
 
-    def mutation(self, dimensions: int, random_state: RandomState):
-        return halfnorm.rvs(scale=self.sigma / 2, size=dimensions,
-                            random_state=random_state)
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
+        raise TypeError("HalformIncrease would cause UBR to behave like OBR")
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
-        rule.match.bounds[:, 0] -= self.mutation(dimensions=rule.match.bounds.shape[0], random_state=random_state)
-        rule.match.bounds[:, 1] += self.mutation(dimensions=rule.match.bounds.shape[0], random_state=random_state)
+        bounds = rule.match.bounds
+        bounds[:, 0] -= halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 1] += halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
-    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
+    def center_spread(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
-        bounds[:, 0] -= self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
+        bounds[:, 0] += random_state.normal(scale=self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        bounds = rule.match.bounds
+        bounds[:, 0] -= halfnorm.rvs(scale=self.sigma[0] / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
 
 
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""
 
-    def ordered_bound(self, rule: Rule, random_state: RandomState):
+    def individual_mutate(self, rule: Rule, random_state: RandomState):
+        bounds = rule.match.bounds
+        for index in range(0, self.sigma.shape[0]):
+            bounds[:, index] += random_state.uniform(-self.sigma[index], self.sigma[index], size=bounds.shape[0])
+
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
         rule.match.bounds += random_state.uniform(-self.sigma, self.sigma,
                                                   size=rule.match.bounds.shape)
+
+    def ordered_bound(self, rule: Rule, random_state: RandomState):
+        self.unordered_bound(rule, random_state)
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
-    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
-        rule.match.bounds += random_state.uniform(-self.sigma, self.sigma,
-                                            size=rule.match.bounds.shape)
-        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
+    def center_spread(self, rule: Rule, random_state: RandomState):
+        self.individual_mutate(rule, random_state)
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        self.individual_mutate(rule, random_state)
 
 
 class UniformIncrease(RuleMutation):
     """Increase bounds with uniform noise."""
 
-    def mutation(self, dimensions: int, random_state: RandomState):
-        return random_state.uniform(0, self.sigma, size=dimensions)
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
+        raise TypeError("UniformIncrease would cause UBR to behave like OBR")
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
-        bounds[:, 0] -= self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += self.mutation(dimensions=bounds.shape[0], random_state=random_state)
+        bounds[:, 0] -= random_state.uniform(0, self.sigma, size=bounds.shape[0])
+        bounds[:, 1] += random_state.uniform(0, self.sigma, size=bounds.shape[0])
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
-    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
+    def center_spread(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
-        bounds[:, 0] -= self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += self.mutation(dimensions=bounds.shape[0], random_state=random_state)
-        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
+        bounds[:, 0] -= random_state.uniform(-self.sigma[0], self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        bounds = rule.match.bounds
+        bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
