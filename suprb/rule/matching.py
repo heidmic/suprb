@@ -210,3 +210,4 @@ class MinPercentage(MatchingFunction):
             # Approximate increasing the width by min_range
             self.bounds[invalid_indices, 0] -= min_range / 2
             self.bounds[invalid_indices, 1] += min_range
+
