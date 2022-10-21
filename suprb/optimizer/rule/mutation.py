@@ -71,6 +71,9 @@ class Normal(RuleMutation):
     def min_percentage(self, rule: Rule, random_state: RandomState):
         self.individual_mutate(rule, random_state)
 
+    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
+        self.individual_mutate(rule, random_state)
+
 
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""
@@ -91,6 +94,9 @@ class Halfnorm(RuleMutation):
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         raise TypeError("Halform Mutation is not implemented for MPR")
+
+    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
+        raise TypeError("Halfnorm Mutation is not implemented for GKF")
 
 
 class HalfnormIncrease(RuleMutation):
@@ -115,6 +121,12 @@ class HalfnormIncrease(RuleMutation):
         bounds[:, 0] -= halfnorm.rvs(scale=self.sigma[0] / 2, size=bounds.shape[0], random_state=random_state)
         bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
 
+    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
+        center = rule.match.center
+        deviations = rule.match.deviations
+        center -= halfnorm.rvs(scale=self.sigma[0] / 2, size=center.shape, random_state=random_state)
+        deviations += halfnorm.rvs(scale=self.sigma[1] / 2, size=deviations.shape, random_state=random_state)
+
 
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""
@@ -138,6 +150,9 @@ class Uniform(RuleMutation):
     def min_percentage(self, rule: Rule, random_state: RandomState):
         self.individual_mutate(rule, random_state)
 
+    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
+        self.individual_mutate(rule, random_state)
+
 
 class UniformIncrease(RuleMutation):
     """Increase bounds with uniform noise."""
@@ -157,6 +172,11 @@ class UniformIncrease(RuleMutation):
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
+        bounds = rule.match.bounds
+        bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
+        bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
+
+    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
         bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])

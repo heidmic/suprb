@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 import numpy as np
-from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage
+from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage, \
+    GaussianKernelFunction
 from suprb.rule import Rule
 from suprb.base import BaseComponent
 from suprb.utils import RandomState
@@ -27,6 +28,9 @@ class GenerationOperator(BaseComponent, metaclass=ABCMeta):
         elif isinstance(self.matching_type, MinPercentage):
             self.execute = self.min_percentage
             assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
+        elif isinstance(self.matching_type, GaussianKernelFunction):
+            self.execute = self.gaussian_kernel_function
+            assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
 
     @abstractmethod
     def ordered_bound(self, rule: Rule, random_state: RandomState):
@@ -42,4 +46,8 @@ class GenerationOperator(BaseComponent, metaclass=ABCMeta):
 
     @abstractmethod
     def min_percentage(self, rule: Rule, random_state: RandomState):
+        pass
+
+    @abstractmethod
+    def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
         pass

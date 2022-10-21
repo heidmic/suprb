@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from sklearn.datasets import fetch_openml
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, \
     HistGradientBoostingRegressor, AdaBoostRegressor
@@ -10,6 +11,8 @@ from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
+from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage, \
+    GaussianKernelFunction
 import suprb.optimizer.rule.mutation
 from suprb import SupRB
 from suprb import rule
@@ -43,7 +46,7 @@ if __name__ == '__main__':
             rule_generation=es.ES1xLambda(
                 operator='&',
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
+                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=np.array([2, 2]))
             ),
             solution_composition=ga.GeneticAlgorithm(
                 n_iter=128,
@@ -51,6 +54,7 @@ if __name__ == '__main__':
                 selection=ga.selection.Tournament(),
                 mutation=ga.mutation.BitFlips(),
             ),
+            matching_type=GaussianKernelFunction(np.array([]), np.array([])),
             n_iter=32,
             n_rules=4,
             logger=StdoutLogger(),

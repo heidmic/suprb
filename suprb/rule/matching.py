@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 import numpy as np
+import math as math
 
 from suprb.base import BaseComponent
 
@@ -211,3 +212,61 @@ class MinPercentage(MatchingFunction):
             self.bounds[invalid_indices, 0] -= min_range / 2
             self.bounds[invalid_indices, 1] += min_range
 
+
+class GaussianKernelFunction(MatchingFunction):
+    """
+    A standard kernel-based matching function producing multi-dimensional
+    hyperellipsoidal conditions. In effect, a center point (c) and deviations (d)
+    are specified for each dimension. A threshold (t) defines if a rule is matched or not.
+    An example x is matched iff exp((x_i - c_i)^2 / 2*(d_i^2)) > t for all dimensions i
+    """
+    def __init__(self, center: np.ndarray, deviations: np.ndarray, threshold: float = 0.7):
+        self.center = center
+        self.deviations = deviations
+        self.threshold = threshold
+
+    def __call__(self, X: np.ndarray):
+        """
+        Gaussian Kernel Function > threshold as matching function
+        """
+        # WHEN: DEVIATIONS 0, THEN: X=CENTER
+        # DEVIATIONS DARF NICHT 0 WERDEn, VLLT IN MUTATION
+        # ODER WENN DEVIATION 0 WERDEN WÜRDE, NUTZE UNENDLICH KLEINE ZAHL --
+        # -- nutze properties -> Mutatation bewegt sich in falsche richtung
+        return np.exp(np.sum(
+                ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
+
+    @property
+    def volume_(self):
+        """
+        Calculates the volume of the n-dim ellipsoid
+        """
+
+        dim = self.center.shape[0]
+        pre_factor = (2 * (np.pi ** (dim / 2))) / (dim * math.gamma(dim / 2))
+        prod_deviations = np.prod(self.deviations)
+
+        return pre_factor * prod_deviations
+
+    def copy(self):
+        return GaussianKernelFunction(center=self.center, deviations=self.deviations, threshold=self.threshold)
+
+    def clip(self, rule_parameter: np.ndarray):
+        """Clip the center into space of diameter and the deviations into [0, radius] """
+        center = rule_parameter[:, 0]
+        deviations = rule_parameter[:, 1]
+
+        low, high = center - deviations, center + deviations
+        radius = np.abs(high - low) / 2
+
+        self.center.clip(low, high, out=self.center)
+        self.deviations.clip(0, radius, out=self.deviations)
+
+    def min_range(self, min_range: float):
+        low, high = self.center - self.deviations, self.center + self.deviations
+
+        diameter = high - low
+
+        if min_range > 0:
+            invalid_indices = np.argwhere(diameter < min_range)
+            self.deviations[invalid_indices] += min_range / 2

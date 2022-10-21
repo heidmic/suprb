@@ -7,7 +7,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 
 from suprb.base import BaseComponent
-from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage
+from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage, \
+    GaussianKernelFunction
 from suprb.utils import check_random_state, RandomState
 from . import Rule, RuleFitness
 from .fitness import VolumeWu
@@ -51,6 +52,8 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
             self.generate_matching_function = self.centre_spread
         elif isinstance(self.matching_type, MinPercentage):
             self.generate_matching_function = self.min_percentage
+        elif isinstance(self.matching_type, GaussianKernelFunction):
+            self.generate_matching_function = self.gaussian_kernel_function
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
@@ -96,6 +99,10 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
 
+    @abstractmethod
+    def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
+
 
 class MeanInit(RuleInit):
     """Initializes both bounds with the mean."""
@@ -111,6 +118,9 @@ class MeanInit(RuleInit):
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return MinPercentage(np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1))
+
+    def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return GaussianKernelFunction(center=mean.T, deviations=mean.T)
 
 
 class NormalInit(RuleInit):
@@ -144,6 +154,10 @@ class NormalInit(RuleInit):
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return MinPercentage(self.sample_individual_bounds(mean, random_state))
 
+    def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return GaussianKernelFunction(center=self.sample_individual_bounds(mean, random_state)[0],
+                                      deviations=self.sample_individual_bounds(mean, random_state)[1])
+
 
 class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
@@ -169,3 +183,6 @@ class HalfnormInit(RuleInit):
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         raise TypeError("Halform Init is not implemented for MPR")
+
+    def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        raise TypeError("Halform Init is not implemented for GKF")

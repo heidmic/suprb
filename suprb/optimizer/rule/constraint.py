@@ -38,12 +38,12 @@ class CombinedConstraint(RuleConstraint):
 class Clip(RuleConstraint):
     """Clip the rule into bounds."""
 
-    def __init__(self, rule_parameter: np.ndarray = None):
+    def __init__(self, bounds: np.ndarray = None):
         # if not set here it is set during SupRB._init_bounds()
-        self.rule_parameter = rule_parameter
+        self.bounds = bounds
 
     def __call__(self, rule: Rule) -> Rule:
-        rule.match.clip(self.rule_parameter)
+        rule.match.clip(self.bounds)
         return rule
 
 
