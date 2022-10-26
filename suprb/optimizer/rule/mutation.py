@@ -181,18 +181,17 @@ class UniformIncrease(RuleMutation):
 
 
 class AdaptiveMutation(RuleMutation):
-    """Start off by using a given operator until the fitness decreased
-       more than self.number_of_worse_iterations times. Then change the mutation operator
+    """Start off by using a given operator until the fitness has not increased for
+       more than self.number_of_worse_iterations. Then change the mutation operator
        to Normal
     """
 
     def __init__(self, matching_type: MatchingFunction = None,
-                 sigma: Union[float, np.ndarray] = 0.1,
                  operator: RuleMutation = HalfnormIncrease(),
                  worse_iteration_tolerance: int = 5,
                  sigma_normal: Union[float, np.ndarray] = 0.1):
 
-        super().__init__(matching_type=matching_type, sigma=sigma)
+        super().__init__(matching_type=matching_type, sigma=operator.sigma)
         self.best_elitist_fitness = 0
         self.number_of_worse_iterations = 0
         self.worse_iteration_tolerance = worse_iteration_tolerance
@@ -214,16 +213,19 @@ class AdaptiveMutation(RuleMutation):
                     self.operator_ = Normal(matching_type=self.matching_type, sigma=self.sigma_normal)
             else:
                 self.best_elitist_fitness = elitist_fitness
-                self.operator_ = self.operator
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        raise TypeError("AdaptiveMutation has no implementation for unordered_bound")
+        raise NotImplementedError(
+            "AdaptiveMutation has no implementation for unordered_bound as it is only used as a wrapper for other mutation types")
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
-        raise TypeError("AdaptiveMutation has no implementation for ordered_bound")
+        raise NotImplementedError(
+            "AdaptiveMutation has no implementation for ordered_bound as it is only used as a wrapper for other mutation types")
 
     def center_spread(self, rule: Rule, random_state: RandomState):
-        raise TypeError("AdaptiveMutation has no implementation for center_spread")
+        raise NotImplementedError(
+            "AdaptiveMutation has no implementation for center_spread as it is only used as a wrapper for other mutation types")
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
-        raise TypeError("AdaptiveMutation has no implementation for min_percentage")
+        raise NotImplementedError(
+            "AdaptiveMutation has no implementation for min_percentage as it is only used as a wrapper for other mutation types")

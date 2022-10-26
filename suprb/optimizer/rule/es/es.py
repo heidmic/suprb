@@ -89,6 +89,7 @@ class ES1xLambda(ParallelSingleRuleGeneration):
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
         elitist = initial_rule
         elitists = deque(maxlen=self.delay)
+        # This is needed for AdaptiveMutation as the initial mutation type needs to be resetted each RuleDiscovery cycle
         mutation = deepcopy(self.mutation)
 
         # Main iteration
