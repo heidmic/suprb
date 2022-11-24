@@ -36,7 +36,7 @@ if __name__ == '__main__':
         SupRB(
             rule_generation=es.ES1xLambda(
                 operator='&',
-                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
+                init=rule.initialization.NormalInit(sigma=np.array([2, 2]), fitness=rule.fitness.VolumeWu(alpha=0.8)),
                 mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=np.array([2, 2]))
             ),
             solution_composition=ga.GeneticAlgorithm(
@@ -46,6 +46,7 @@ if __name__ == '__main__':
                 mutation=ga.mutation.BitFlips(),
             ),
             matching_type=GaussianKernelFunction(np.array([]), np.array([])),
+            #matching_type=OrderedBound(np.array([])),
             n_iter=32,
             n_rules=4,
             logger=StdoutLogger(),
