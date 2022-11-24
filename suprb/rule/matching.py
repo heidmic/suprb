@@ -2,7 +2,6 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 
 import numpy as np
 import math as math
-import sys
 
 from suprb.base import BaseComponent
 
@@ -230,14 +229,7 @@ class GaussianKernelFunction(MatchingFunction):
         """
         Gaussian Kernel Function > threshold as matching function
         """
-        # WHEN: DEVIATIONS 0, THEN: X=CENTER
-        # DEVIATIONS DARF NICHT 0 WERDEn, VLLT IN MUTATION
-        # ODER WENN DEVIATION 0 WERDEN WÜRDE, NUTZE UNENDLICH KLEINE ZAHL --
-        # -- nutze properties -> Mutatation bewegt sich in falsche richtung
-        self.deviations[self.deviations == 0] = math.sqrt(sys.float_info.min)
-
-        hallo = self.deviations ** 2
-        test1 = 2 * (self.deviations ** 2)
+        self.deviations[self.deviations == 0] = 0.000000000000001
         return np.exp(np.sum(
                 ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
 
@@ -246,9 +238,6 @@ class GaussianKernelFunction(MatchingFunction):
         """
         Calculates the volume of the n-dim ellipsoid
         """
-        if self.deviations == 0:
-            self.deviations = sys.float_info.min
-
         dim = self.center.shape[0]
         pre_factor = (2 * (np.pi ** (dim / 2))) / (dim * math.gamma(dim / 2))
         prod_deviations = np.prod(self.deviations)
