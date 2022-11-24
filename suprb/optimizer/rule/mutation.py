@@ -124,8 +124,13 @@ class HalfnormIncrease(RuleMutation):
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
         center = rule.match.center
         deviations = rule.match.deviations
-        center -= halfnorm.rvs(scale=self.sigma[0] / 2, size=center.shape, random_state=random_state)
-        deviations += halfnorm.rvs(scale=self.sigma[1] / 2, size=deviations.shape, random_state=random_state)
+
+        numb1 = halfnorm.rvs(scale=self.sigma[0] / 2, size=center.shape, random_state=random_state)
+        numb2 = halfnorm.rvs(scale=self.sigma[1] / 2, size=deviations.shape, random_state=random_state)
+        diff = numb1 - numb2
+
+        center -= diff / 2
+        deviations += diff / 2
 
 
 class Uniform(RuleMutation):
