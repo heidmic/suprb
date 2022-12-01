@@ -62,6 +62,7 @@ class DefaultLogger(BaseLogger):
         log_metric("elitist_error", elitist.error_)
         log_metric("elitist_complexity", elitist.complexity_)
         log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))
+        log_metric("elitist_rules", elitist.pool)
 
         # Log performance
         log_metric("training_score", elitist.score(X, y))
