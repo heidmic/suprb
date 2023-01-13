@@ -67,7 +67,7 @@ class TestNoveltySearch(unittest.TestCase):
                                 LocalCompetition(max_neighborhood_range=15)
                                 ]
 
-        archive_types = [ArchiveNovel()]
+        archive_types = [ArchiveNovel(), ArchiveRandom(), ArchiveNone()]
 
         self.combined_ns_params = list(itertools.product(
             novelty_calculation_types, novelty_search_types, archive_types))
