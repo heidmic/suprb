@@ -91,8 +91,7 @@ class NoveltySearch(RuleGeneration):
         self.n_elitists = n_elitists
         self.novelty_calculation = novelty_calculation
 
-    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[
-        Rule]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
         """ Validation of the parameters and checking the random_state.
             Then _optimize is called, where the Novelty Search algorithm is implemented.
 
@@ -169,15 +168,15 @@ class NoveltySearch(RuleGeneration):
         return self._get_n_best_rules(ns_rules, n_rules)
 
     def _get_n_best_rules(self, rules: list[Rule], n: int):
-        sorted_rules = sorted(rules,
-                              key=lambda ns_rule: (ns_rule.novelty_score_, ns_rule.experience_),
-                              reverse=True)
-        return [sorted_rule for sorted_rule in sorted_rules][:n]
+        novelty_scores = np.array([rule.novelty_score_ for rule in rules])
+        best_rules_indices = np.argpartition(novelty_scores, n)[:n]
+
+        return [rules[i] for i in best_rules_indices]
 
     def _get_optimized_rules(self, best_children: list[Rule], n_rules: int):
         chosen_rules = []
 
-        for rule in (self.novelty_calculation.archive.archive + best_children)[:n_rules]:
+        for rule in best_children[:n_rules]:
             if hasattr(rule, 'novelty_score_'):
                 del rule.novelty_score_
             if hasattr(rule, 'distance_'):

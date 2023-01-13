@@ -47,12 +47,12 @@ class TestNoveltySearch(unittest.TestCase):
         self.model = SupRB(rule_generation=ns.NoveltySearch(
             init=rule.initialization.HalfnormInit(),
             selection=optimizer.rule.selection.RouletteWheel()),
-                           solution_composition=ga.GeneticAlgorithm(),
-                           matching_type=OrderedBound(np.array([])),
-                           n_iter=2,
-                           n_rules=8,
-                           verbose=10,
-                           logger=CombinedLogger([('stdout', StdoutLogger()), ('default', DefaultLogger())]))
+            solution_composition=ga.GeneticAlgorithm(),
+            matching_type=OrderedBound(np.array([])),
+            n_iter=2,
+            n_rules=8,
+            verbose=10,
+            logger=CombinedLogger([('stdout', StdoutLogger()), ('default', DefaultLogger())]))
 
     def setup_novelty_search_params(self):
 
