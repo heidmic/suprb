@@ -58,8 +58,8 @@ class TestNoveltySearch(unittest.TestCase):
 
         novelty_calculation_types = [NoveltyCalculation,
                                      ProgressiveMinimalCriteria,
-                                     # NoveltyFitnessPareto,
-                                     # NoveltyFitnessBiased
+                                     NoveltyFitnessPareto,
+                                     NoveltyFitnessBiased
                                      ]
 
         novelty_search_types = [NoveltySearchType(),

@@ -170,10 +170,10 @@ class NoveltySearch(RuleGeneration):
         return self._get_n_best_rules(ns_rules, n_rules)
 
     def _get_n_best_rules(self, rules: list[Rule], n: int):
-        novelty_scores = np.array([rule.novelty_score_ for rule in rules])
-        best_rules_indices = np.argpartition(novelty_scores, n)[:n]
-
-        return [rules[i] for i in best_rules_indices]
+        sorted_rules = sorted(rules,
+                              key=lambda ns_rule: (ns_rule.novelty_score_, ns_rule.experience_),
+                              reverse=True)
+        return [sorted_rule for sorted_rule in sorted_rules][:n]
 
     def _get_optimized_rules(self, best_children: list[Rule], n_rules: int):
         chosen_rules = []

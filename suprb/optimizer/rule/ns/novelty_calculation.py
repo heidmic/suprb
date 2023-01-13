@@ -38,17 +38,19 @@ class NoveltyCalculation(BaseComponent):
 
             archive.append(rule)
 
+        distances = [distance for distance in sorted(rule.distances_)]
+
         for i, rule in enumerate(filtered_rules):
             local_competition = self.novelty_search_type.local_competition(rule, archive)
-            rule.novelty_score_ = local_competition + self._novelty_score_calculation(rule.distances_)
+            kwargs = {"distances": distances, "fitness": rule.fitness_}
+
+            rule.novelty_score_ = local_competition + self._novelty_score_calculation(**kwargs)
             novelty_search_rules.append(rule)
 
         return novelty_search_rules
 
-    def _novelty_score_calculation(self, array: np.array):
-        num_neighbors = min(self.k_neighbor, len(array) - 1)
-        k_closest_neighbors = np.partition(array, num_neighbors)[:num_neighbors]
-        return sum(k_closest_neighbors) / num_neighbors
+    def _novelty_score_calculation(self, **kwargs: dict()):
+        return sum(kwargs["distances"][:self.k_neighbor]) / self.k_neighbor
 
 
 class ProgressiveMinimalCriteria(NoveltyCalculation):
