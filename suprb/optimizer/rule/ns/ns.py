@@ -1,14 +1,13 @@
 import numpy as np
 
 from copy import deepcopy
+from itertools import product
 
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import HalfnormInit
 from suprb.utils import check_random_state
 from ..crossover import RuleCrossover, UniformCrossover
 from .novelty_calculation import NoveltyCalculation
-from .novelty_search_type import NoveltySearchType
-from .archive import ArchiveNovel
 from suprb.optimizer.rule.mutation import Normal, RuleMutation
 from suprb.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
@@ -90,6 +89,9 @@ class NoveltySearch(RuleGeneration):
         self.selection = selection
         self.n_elitists = n_elitists
         self.novelty_calculation = novelty_calculation
+
+        assert self.novelty_calculation.k_neighbor + \
+            2 < self.lmbda, f"Insert reason here {self.novelty_calculation.k_neighbor} {self.lmbda}"
 
     def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
         """ Validation of the parameters and checking the random_state.

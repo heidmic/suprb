@@ -36,11 +36,7 @@ class LocalCompetition(NoveltySearchType):
 
     def local_competition(self, rule: Rule, rules: list[Rule]) -> float:
         count_worse = 0
-        k_closest_neighbors = np.argpartition(
-            rule.distances_[:-1], self.max_neighborhood_range)[
-            : self.max_neighborhood_range]
-
-        for archive_rule in [rules[i] for i in k_closest_neighbors]:
+        for archive_rule in rules[:self.max_neighborhood_range]:
             if rule.fitness_ < archive_rule.fitness_:
                 count_worse += 1
         local_score = count_worse / self.max_neighborhood_range

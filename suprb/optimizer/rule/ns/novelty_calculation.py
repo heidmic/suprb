@@ -35,18 +35,20 @@ class NoveltyCalculation(BaseComponent):
 
                 rule.distances_.append(0)
                 rule.idx_ = len(archive)
-                archive.append(rule)
 
-            if len(archive) > self.k_neighbor + 1:
-                local_competition = self.novelty_search_type.local_competition(rule, archive)
-                rule.novelty_score_ = local_competition + self._novelty_score_calculation(rule.distances_)
-                novelty_search_rules.append(rule)
+            archive.append(rule)
+
+        for i, rule in enumerate(filtered_rules):
+            local_competition = self.novelty_search_type.local_competition(rule, archive)
+            rule.novelty_score_ = local_competition + self._novelty_score_calculation(rule.distances_)
+            novelty_search_rules.append(rule)
 
         return novelty_search_rules
 
     def _novelty_score_calculation(self, array: np.array):
-        k_closest_neighbors = np.partition(array, self.k_neighbor)[:self.k_neighbor]
-        return sum(k_closest_neighbors) / self.k_neighbor
+        num_neighbors = min(self.k_neighbor, len(array) - 1)
+        k_closest_neighbors = np.partition(array, num_neighbors)[:num_neighbors]
+        return sum(k_closest_neighbors) / num_neighbors
 
 
 class ProgressiveMinimalCriteria(NoveltyCalculation):
@@ -61,7 +63,7 @@ class ProgressiveMinimalCriteria(NoveltyCalculation):
         return super()._novelty_score(rules=filtered_rules)
 
 
-class NovelityFitnessPareto(NoveltyCalculation):
+class NoveltyFitnessPareto(NoveltyCalculation):
     """Uses the basic novelty score calculation and return only the pareto front of it."""
 
     def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
