@@ -39,7 +39,7 @@ Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and J
 
 ### Explainability of LCS
 
-Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. 2022. **Learning Classifier Systems for Self-explaining Socio-Technical-Systems.** arXiv preprint arXiv:2207.02300. https://arxiv.org/abs/2207.02300
+Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. 2022. **Learning Classifier Systems for Self-explaining Socio-Technical-Systems.** Accepted for publication in the Journal of Artificial Life. MIT press. arXiv preprint arXiv:2207.02300. https://arxiv.org/abs/2207.02300
 
 ## Experiments
 
