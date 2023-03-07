@@ -1,10 +1,12 @@
 from collections import defaultdict
 
+import json
 import numpy as np
 
 from . import BaseLogger
 from .metrics import matched_training_samples, genome_diversity
 from .. import SupRB
+from .. import json as suprb_json
 
 
 class DefaultLogger(BaseLogger):
@@ -63,6 +65,11 @@ class DefaultLogger(BaseLogger):
 
         # Log performance
         log_metric("training_score", elitist.score(X, y))
+
+    def get_elitist(self, estimator: SupRB):
+        json_data = {}
+        suprb_json._save_pool(estimator.solution_composition_.elitist().pool, json_data)
+        return json_data
 
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: SupRB):
         pass

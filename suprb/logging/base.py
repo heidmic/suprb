@@ -3,6 +3,7 @@ from abc import abstractmethod
 import numpy as np
 
 from suprb.base import BaseComponent, BaseRegressor
+from suprb import SupRB
 
 
 class BaseLogger(BaseComponent):
@@ -21,4 +22,9 @@ class BaseLogger(BaseComponent):
     @abstractmethod
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
         """Log the final state of the estimator. It is assumed that the fitting process is already completed."""
+        pass
+
+    @abstractmethod
+    def get_elitist(self, estimator: SupRB):
+        """Log the final elitist"""
         pass
