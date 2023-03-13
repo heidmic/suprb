@@ -25,13 +25,13 @@ class DefaultLogger(BaseLogger):
         for key, value in kwargs.items():
             self.log_param(key=key, value=value)
 
-    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: SupRB):
+    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
         self.params_ = {}
         self.metrics_ = defaultdict(dict)
 
         self.log_params(**estimator.get_params())
 
-    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: SupRB, iteration: int):
+    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
         def log_metric(key, value):
             self.log_metric(key=key, value=value, step=estimator.step_)
 
