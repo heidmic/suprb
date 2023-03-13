@@ -5,8 +5,8 @@ import numpy as np
 
 from . import BaseLogger
 from .metrics import matched_training_samples, genome_diversity
-from .. import SupRB
 from .. import json as suprb_json
+from suprb.base import BaseRegressor
 
 
 class DefaultLogger(BaseLogger):
@@ -25,13 +25,13 @@ class DefaultLogger(BaseLogger):
         for key, value in kwargs.items():
             self.log_param(key=key, value=value)
 
-    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: SupRB):
+    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
         self.params_ = {}
         self.metrics_ = defaultdict(dict)
 
         self.log_params(**estimator.get_params())
 
-    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: SupRB, iteration: int):
+    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
         def log_metric(key, value):
             self.log_metric(key=key, value=value, step=estimator.step_)
 
@@ -62,14 +62,15 @@ class DefaultLogger(BaseLogger):
         log_metric("elitist_error", elitist.error_)
         log_metric("elitist_complexity", elitist.complexity_)
         log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))
+        log_metric("elitist_rules", elitist.pool)
 
         # Log performance
         log_metric("training_score", elitist.score(X, y))
 
-    def get_elitist(self, estimator: SupRB):
+    def get_elitist(self, estimator: BaseRegressor):
         json_data = {}
         suprb_json._save_pool(estimator.solution_composition_.elitist().pool, json_data)
         return json_data
 
-    def log_final(self, X: np.ndarray, y: np.ndarray, estimator: SupRB):
+    def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
         pass

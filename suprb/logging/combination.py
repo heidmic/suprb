@@ -3,7 +3,6 @@ import warnings
 import numpy as np
 from sklearn import clone
 
-from suprb import SupRB
 from suprb.base import BaseRegressor
 from . import BaseLogger
 
@@ -72,5 +71,5 @@ class CombinedLogger(BaseLogger):
                 break
         self.loggers = new_loggers
 
-    def get_elitist(self, estimator: SupRB):
+    def get_elitist(self, estimator: BaseRegressor):
         pass
