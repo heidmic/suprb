@@ -15,6 +15,7 @@ from suprb.optimizer.solution import ga
 from suprb.utils import check_random_state
 from suprb.optimizer.rule.mutation import HalfnormIncrease
 from sklearn.linear_model import Ridge
+from suprb.optimizer.rule.ns.novelty_calculation import NoveltyFitnessBiased
 
 from suprb.optimizer.rule import ns, origin
 
@@ -54,7 +55,8 @@ if __name__ == '__main__':
                                               model=Ridge(alpha=0.01,
                                                           random_state=random_state)),
             origin_generation=origin.SquaredError(),
-            mutation=HalfnormIncrease()
+            mutation=HalfnormIncrease(),
+            novelty_calculation=NoveltyFitnessBiased()
         ),
         solution_composition=ga.GeneticAlgorithm(n_iter=32, population_size=32),
         n_iter=32,
