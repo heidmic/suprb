@@ -48,6 +48,9 @@ class NoveltyCalculation(BaseComponent):
     def _novelty_score_calculation(self, rule: Rule) -> float:
         num_neighbors = min(self.k_neighbor, len(rule.distances_) - 1)
         k_closest_neighbors = np.partition(rule.distances_, num_neighbors)[:num_neighbors]
+        if num_neighbors == 0:
+            return 0
+
         return sum(k_closest_neighbors) / num_neighbors
 
 
