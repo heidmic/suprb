@@ -120,6 +120,8 @@ class NoveltySearch(RuleGeneration):
 
         for i in range(self.n_iter):
             parents = self._select_shuffled_parents(population)
+            if not parents:
+                print("Main loop Error", i)
             children = self._crossover_and_mutate(X, y, parents)
 
             valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
