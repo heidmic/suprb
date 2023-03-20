@@ -120,7 +120,7 @@ class NoveltySearch(RuleGeneration):
 
         for i in range(self.n_iter):
             parents = self._select_shuffled_parents(population)
-            if not parents:
+            if len(parents) == 0:
                 print("Main loop Error", i)
             children = self._crossover_and_mutate(X, y, parents)
 
