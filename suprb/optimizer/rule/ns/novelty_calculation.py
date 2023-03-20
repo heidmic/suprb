@@ -40,17 +40,14 @@ class NoveltyCalculation(BaseComponent):
 
         for i, rule in enumerate(filtered_rules):
             local_competition = self.novelty_search_type.local_competition(rule, archive)
-            rule.novelty_score_ = local_competition + self._novelty_score_calculation(rule)
+            rule.novelty_score_ = local_competition + self._novelty_score_calculation(rule.distances_)
             novelty_search_rules.append(rule)
 
         return novelty_search_rules
 
-    def _novelty_score_calculation(self, rule: Rule) -> float:
-        num_neighbors = min(self.k_neighbor, len(rule.distances_) - 1)
-        k_closest_neighbors = np.partition(rule.distances_, num_neighbors)[:num_neighbors]
-        if num_neighbors == 0:
-            return 0
-
+    def _novelty_score_calculation(self, array: np.array):
+        num_neighbors = min(self.k_neighbor, len(array) - 1)
+        k_closest_neighbors = np.partition(array, num_neighbors)[:num_neighbors]
         return sum(k_closest_neighbors) / num_neighbors
 
 
@@ -103,9 +100,9 @@ class NoveltyFitnessBiased(NoveltyCalculation):
 
         super().__init__(novelty_search_type=novelty_search_type, archive=archive)
 
-    def _novelty_score_calculation(self, rule: Rule) -> float:
-        basic_novelty_score = super()._novelty_score_calculation(rule)
-        scaled_fitness = rule.fitness_ / 100
+    def _novelty_score_calculation(self, **kwargs: dict()):
+        basic_novelty_score = super()._novelty_score_calculation(**kwargs)
+        scaled_fitness = kwargs["fitness"] / 100
         novelty_score = (self.novelty_bias * basic_novelty_score) + (self.fitness_bias * scaled_fitness)
 
         return novelty_score

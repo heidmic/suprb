@@ -121,7 +121,8 @@ class NoveltySearch(RuleGeneration):
         for i in range(self.n_iter):
             parents = self._select_shuffled_parents(population)
             if len(parents) == 0:
-                print("Main loop Error", i)
+                print(f"n_iter {i}: No parents selected. Skip rule selection")
+                continue
             children = self._crossover_and_mutate(X, y, parents)
 
             valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))

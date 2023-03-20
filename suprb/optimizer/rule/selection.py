@@ -28,17 +28,13 @@ class RouletteWheel(RuleSelection):
 
     def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> list[Rule]:
         rules_ = [rule for rule in rules if rule.fitness_ != -np.inf]
-        try:
-            if rules_:
-                fitnesses = np.array([rule.fitness_ for rule in rules_])
-                weights = fitnesses / np.sum(fitnesses)
+        if rules_:
+            fitnesses = np.array([rule.fitness_ for rule in rules_])
+            weights = fitnesses / np.sum(fitnesses)
 
-                return random_state.choice(rules_, p=weights, size=size)
-            else:
-                return random_state.choice(rules, size=size)
-        except ValueError:
-            print("Roulettewheel Error:", len(rules_), rules_)
-            return []
+            return random_state.choice(rules_, p=weights, size=size)
+        else:
+            return random_state.choice(rules, size=size)
 
 
 class NondominatedSort(RuleSelection):
