@@ -47,6 +47,9 @@ class NoveltyCalculation(BaseComponent):
 
     def _novelty_score_calculation(self, array: np.array):
         num_neighbors = min(self.k_neighbor, len(array) - 1)
+        if num_neighbors == 0:
+            return 0
+
         k_closest_neighbors = np.partition(array, num_neighbors)[:num_neighbors]
         return sum(k_closest_neighbors) / num_neighbors
 
