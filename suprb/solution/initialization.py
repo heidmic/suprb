@@ -6,7 +6,6 @@ from suprb.base import BaseComponent
 from suprb.rule import Rule
 from . import Solution, MixingModel, SolutionFitness
 from .fitness import ComplexityWu
-from .mixing_model import ErrorExperienceHeuristic
 from ..utils import RandomState
 
 
@@ -29,7 +28,7 @@ class SolutionInit(BaseComponent, metaclass=ABCMeta):
         self.mixing = mixing
         self.fitness = fitness
 
-        self._validate_components(mixing=ErrorExperienceHeuristic(), fitness=ComplexityWu())
+        self._validate_components(mixing=self.mixing, fitness=ComplexityWu())
 
     @abstractmethod
     def __call__(self, pool: list[Rule], random_state: RandomState) -> Solution:
