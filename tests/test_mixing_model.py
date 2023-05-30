@@ -29,38 +29,13 @@ from suprb.optimizer.rule.mutation import HalfnormIncrease
 from suprb.solution.initialization import RandomInit
 import suprb.solution.mixing_model as mixing_model
 
-random_state = 42
-
-model = SupRB(
-    rule_generation=es.ES1xLambda(
-        operator='&',
-        origin_generation=rule_opt.origin.Matching(),
-        init=rule.initialization.MeanInit(
-            fitness=rule.fitness.VolumeWu(alpha=0.05)),
-        mutation=HalfnormIncrease(sigma=0.1),
-    ),
-    solution_composition=ga.GeneticAlgorithm(
-        n_iter=1,
-        crossover=ga.crossover.Uniform(),
-        selection=ga.selection.Tournament(),
-        init=RandomInit(mixing=mixing_model.NBestFitness(
-            random_state=random_state, rule_amount=4))
-    ),
-    n_iter=1,
-    n_rules=4,
-    verbose=10,
-    logger=CombinedLogger(
-        [('stdout', StdoutLogger()), ('default', DefaultLogger())]),
-    random_state=random_state,
-)
-
 
 class TestMixingModel(unittest.TestCase):
 
     def create_rule(self, fitness, experience, error):
         rule = Rule(match=OrderedBound(np.array([[-1, 1]])),
                     input_space=[-1.0, 1.0],
-                    model=model,
+                    model=SupRB(),
                     fitness=VolumeWu)
 
         rule.fitness_ = fitness
@@ -69,73 +44,78 @@ class TestMixingModel(unittest.TestCase):
 
         return rule
 
-    def disabled_test_base_mixing_model(self):
-        random_state = 42
-        rule_amount = 1
+    def create_subpopulation(self):
         subpopulation = []
-        X = np.linspace(0, 20, num=50)
-        X = X.reshape((-1, 1))
+        random_state = check_random_state(42)
 
-        model.fit(X, X)
+        for i in range(100):
+            subpopulation.append(self.create_rule(i/100, 1, 0.01))
 
-        rule = Rule(match=matching,
-                    input_space=[-1.0, 1.0], model=model, fitness=VolumeWu)
-        rule.fitness_ = 0.1
-        rule.experience_ = 1
-        rule.error_ = 0.01
+        random_state.shuffle(subpopulation)
 
-        subpopulation.append(rule)
-
-        rule2 = Rule(match=matching,
-                     input_space=[-1.0, 1.0], model=model, fitness=VolumeWu)
-        rule2.fitness_ = 0.5
-        rule.experience_ = 1
-        rule.error_ = 0.01
-
-        subpopulation.append(rule)
-
-        mixing = mixing_model.NRandom(random_state, rule_amount)
-
-        result = mixing(X, subpopulation)
-
-        print(result)
+        return subpopulation
 
     def test_NBestFitness_filter_subpopulation(self):
-        random_state = 42
         rule_amount = 4
-        subpopulation = []
+        random_state = 42
 
-        X = np.linspace(0, 20, num=50)
-        X = X.reshape((-1, 1))
+        subpopulation = self.create_subpopulation()
 
-        subpopulation.append(self.create_rule(0.8, 1, 0.01))
-        subpopulation.append(self.create_rule(0.1, 1, 0.01))
-        subpopulation.append(self.create_rule(0.2, 1, 0.01))
-        subpopulation.append(self.create_rule(0.3, 1, 0.01))
-        subpopulation.append(self.create_rule(0.4, 1, 0.01))
-        subpopulation.append(self.create_rule(0.5, 1, 0.01))
-        subpopulation.append(self.create_rule(0.6, 1, 0.01))
-        subpopulation.append(self.create_rule(0.7, 1, 0.01))
+        mixing = mixing_model.NBestFitness(rule_amount, random_state)
+        result = mixing(subpopulation)
 
-        for i in range(50):
-            mixing = mixing_model.NRandom(i, rule_amount)
-            result = mixing.filter_subpopulation(subpopulation)
-            print(result[0].fitness_)
+        self.assertEqual(len(result), 4)
+        self.assertEqual(result[0].fitness_, 0.96)
+        self.assertEqual(result[1].fitness_, 0.97)
+        self.assertEqual(result[2].fitness_, 0.98)
+        self.assertEqual(result[3].fitness_, 0.99)
 
-        print("--------------------")
-        mixing = mixing_model.NBestFitness(i, rule_amount)
-        result = mixing.filter_subpopulation(subpopulation)
-        print(result[0].fitness_)
-        print(result[1].fitness_)
-        print(result[2].fitness_)
-        print(result[3].fitness_)
+    def test_NRandom_filter_subpopulation(self):
+        rule_amount = 4
+        random_state = 42
 
-        print("--------------------")
-        for i in range(50):
-            mixing = mixing_model.RouletteWheel(i, rule_amount)
-            result = mixing.filter_subpopulation(subpopulation)
-            print(result[0].fitness_)
-            print(result[1].fitness_)
-            print(result[2].fitness_)
-            print(result[3].fitness_)
-            print("--------")
+        subpopulation = self.create_subpopulation()
+
+        mixing = mixing_model.NRandom(rule_amount, random_state)
+        result = mixing(subpopulation)
+
+        self.assertEqual(len(result), 4)
+        self.assertEqual(result[0].fitness_, 0.92)
+        self.assertEqual(result[1].fitness_, 0.88)
+        self.assertEqual(result[2].fitness_, 0.09)
+        self.assertEqual(result[3].fitness_, 0.05)
+
+        random_state = 1
+        mixing = mixing_model.NRandom(rule_amount, random_state)
+        result = mixing(subpopulation)
+
+        self.assertEqual(len(result), 4)
+        self.assertEqual(result[0].fitness_, 0.84)
+        self.assertEqual(result[1].fitness_, 0.93)
+        self.assertEqual(result[2].fitness_, 0.58)
+        self.assertEqual(result[3].fitness_, 0.66)
+
+    def test_RouletteWheel_filter_subpopulation(self):
+        rule_amount = 4
+        random_state = 42
+
+        subpopulation = self.create_subpopulation()
+
+        mixing = mixing_model.RouletteWheel(rule_amount, random_state)
+        result = mixing(subpopulation)
+
+        self.assertEqual(len(result), 4)
+        self.assertEqual(result[0].fitness_, 0.74)
+        self.assertEqual(result[1].fitness_, 0.68)
+        self.assertEqual(result[2].fitness_, 0.90)
+        self.assertEqual(result[3].fitness_, 0.72)
+
+        random_state = 1
+        mixing = mixing_model.RouletteWheel(rule_amount, random_state)
+        result = mixing(subpopulation)
+
+        self.assertEqual(len(result), 4)
+        self.assertEqual(result[0].fitness_, 0.93)
+        self.assertEqual(result[1].fitness_, 0.66)
+        self.assertEqual(result[2].fitness_, 0.99)
+        self.assertEqual(result[3].fitness_, 0.13)

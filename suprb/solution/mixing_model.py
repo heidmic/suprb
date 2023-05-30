@@ -5,6 +5,35 @@ from suprb.utils import check_random_state, RandomState
 from . import MixingModel
 
 
+class FilterSubpopulation():
+    def __init__(self, rule_amount: int, random_state: RandomState):
+        self.rule_amount = rule_amount
+        self.random_state = check_random_state(random_state)
+
+    def __call__(self, subpopulation: list[Rule]):
+        return subpopulation
+
+
+class NBestFitness(FilterSubpopulation):
+    def __call__(self, subpopulation: list[Rule]):
+        fitnesses = np.array([rule.fitness_ for rule in subpopulation])
+        ind = sorted(range(len(fitnesses)),
+                     key=lambda i: fitnesses[i])[-self.rule_amount:]
+        return [subpopulation[i] for i in ind]
+
+
+class NRandom(FilterSubpopulation):
+    def __call__(self, subpopulation: list[Rule]):
+        return self.random_state.choice(subpopulation, self.rule_amount)
+
+
+class RouletteWheel(FilterSubpopulation):
+    def __call__(self, subpopulation: list[Rule]):
+        fitnesses = np.array([rule.fitness_ for rule in subpopulation])
+        weights = fitnesses / np.sum(fitnesses)
+        return self.random_state.choice(subpopulation, p=weights, size=self.rule_amount, replace=False)
+
+
 class BaseMixingModel(MixingModel):
     """
     Performs mixing similar to the Inverse Variance Heuristic from
@@ -12,10 +41,9 @@ class BaseMixingModel(MixingModel):
     but using (error / experience) as a mixing function.
     """
 
-    def __init__(self, random_state: RandomState, rule_amount: int = 4):
-        self.random_state = check_random_state(random_state)
-        self.rule_amount = rule_amount
+    def __init__(self, filter_subpopulation: FilterSubpopulation = None):
         self.input_size = None
+        self.filter_subpopulation = filter_subpopulation
 
     def __call__(self, X: np.ndarray, subpopulation: list[Rule], cache=False) -> np.ndarray:
         self.input_size = X.shape[0]
@@ -36,9 +64,6 @@ class BaseMixingModel(MixingModel):
         tau_sum = self._get_tau_sum(subpopulation, matches, taus)
         out = pred / tau_sum
         return out
-
-    def filter_subpopulation(self, subpopulation: list[Rule]):
-        return subpopulation
 
     def _get_local_pred(self, X: np.ndarray, subpopulation: list[Rule], cache: bool):
         local_pred = np.zeros((len(subpopulation), self.input_size))
@@ -75,23 +100,3 @@ class BaseMixingModel(MixingModel):
         tau_sum[tau_sum == 0] = 1  # Needed
 
         return tau_sum
-
-
-class NBestFitness(BaseMixingModel):
-    def filter_subpopulation(self, subpopulation: list[Rule]):
-        fitnesses = np.array([rule.fitness_ for rule in subpopulation])
-        ind = sorted(range(len(fitnesses)),
-                     key=lambda i: fitnesses[i])[-self.rule_amount:]
-        return [subpopulation[i] for i in ind]
-
-
-class NRandom(BaseMixingModel):
-    def filter_subpopulation(self, subpopulation: list[Rule]):
-        return self.random_state.choice(subpopulation, self.rule_amount)
-
-
-class RouletteWheel(BaseMixingModel):
-    def filter_subpopulation(self, subpopulation: list[Rule]):
-        fitnesses = np.array([rule.fitness_ for rule in subpopulation])
-        weights = fitnesses / np.sum(fitnesses)
-        return self.random_state.choice(subpopulation, p=weights, size=self.rule_amount, replace=False)
