@@ -34,7 +34,7 @@ class RouletteWheel(FilterSubpopulation):
         return self.random_state.choice(subpopulation, p=weights, size=self.rule_amount, replace=False)
 
 
-class BaseMixingModel(MixingModel):
+class ErrorExperienceHeuristic(MixingModel):
     """
     Performs mixing similar to the Inverse Variance Heuristic from
     https://researchportal.bath.ac.uk/en/studentTheses/learning-classifier-systems-from-first-principles-a-probabilistic,

@@ -1,32 +1,12 @@
 import unittest
 import numpy as np
 
-import suprb.solution.mixing_model as mixing_model
-
+from suprb import SupRB
+from suprb.utils import check_random_state
 from suprb.rule import Rule
 from suprb.rule.matching import OrderedBound
 from suprb.rule.fitness import VolumeWu
-from sklearn.base import RegressorMixin
 
-
-import matplotlib.pyplot as plt
-import mlflow
-import numpy as np
-from sklearn.model_selection import cross_validate, train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.utils import shuffle as apply_shuffle
-
-from suprb import SupRB
-from suprb import rule
-from suprb.logging.combination import CombinedLogger
-from suprb.logging.default import DefaultLogger
-from suprb.logging.stdout import StdoutLogger
-from suprb.optimizer import rule as rule_opt
-from suprb.optimizer.solution import ga
-from suprb.optimizer.rule import es, rs
-from suprb.utils import check_random_state
-from suprb.optimizer.rule.mutation import HalfnormIncrease
-from suprb.solution.initialization import RandomInit
 import suprb.solution.mixing_model as mixing_model
 
 
