@@ -34,6 +34,27 @@ class RouletteWheel(FilterSubpopulation):
         return self.random_state.choice(subpopulation, p=weights, size=self.rule_amount, replace=False)
 
 
+class ExperienceCalculation():
+    def __init__(self, lower_bound: float = -np.inf, upper_bound: float = np.inf):
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+
+    def __call__(self, subpopulation: list[Rule], dim: int = None):
+        return np.array([rule.experience_ for rule in subpopulation])
+
+
+class CapExperience(ExperienceCalculation):
+    def __call__(self, subpopulation: list[Rule], dim: int = None):
+        experiences = np.array([rule.experience_ for rule in subpopulation])
+        return np.clip(experiences, self.lower_bound, self.upper_bound)
+
+
+class CapExperienceWithDimensionality(ExperienceCalculation):
+    def __call__(self, subpopulation: list[Rule], dim: int = None):
+        experiences = np.array([rule.experience_ for rule in subpopulation])
+        return np.clip(experiences, self.lower_bound * dim, self.upper_bound * dim)
+
+
 class ErrorExperienceHeuristic(MixingModel):
     """
     Performs mixing similar to the Inverse Variance Heuristic from
@@ -41,9 +62,11 @@ class ErrorExperienceHeuristic(MixingModel):
     but using (error / experience) as a mixing function.
     """
 
-    def __init__(self, filter_subpopulation: FilterSubpopulation = None):
+    def __init__(self, filter_subpopulation: FilterSubpopulation = None, experience_calculation: ExperienceCalculation = None, experience_weight: float = 1):
         self.input_size = None
         self.filter_subpopulation = filter_subpopulation
+        self.experience_calculation = experience_calculation
+        self.experience_weight = experience_weight
 
     def __call__(self, X: np.ndarray, subpopulation: list[Rule], cache=False) -> np.ndarray:
         self.input_size = X.shape[0]
@@ -55,7 +78,7 @@ class ErrorExperienceHeuristic(MixingModel):
         subpopulation = list(self.filter_subpopulation(subpopulation))
 
         local_pred, matches = self._get_local_pred(X, subpopulation, cache)
-        taus = self._get_taus(subpopulation)
+        taus = self._get_taus(subpopulation, X.shape[1])
 
         # Stack all local predictions and sum them weighted with tau
         pred = np.sum(local_pred * taus[:, None], axis=0)
@@ -83,12 +106,12 @@ class ErrorExperienceHeuristic(MixingModel):
 
         return local_pred, matches
 
-    def _get_taus(self, subpopulation: list[Rule]):
+    def _get_taus(self, subpopulation: list[Rule], dim: int):
         # Get errors and experience of all rules in subpopulation
-        experiences = np.array([rule.experience_ for rule in subpopulation])
+        experiences = self.experience_calculation(subpopulation, dim)
         errors = np.array([rule.error_ for rule in subpopulation])
 
-        return (1 / errors) * experiences
+        return (1 / errors) * (experiences * self.experience_weight)
 
     def _get_tau_sum(self, subpopulation: list[Rule], matches: list[Rule], taus: list[int]):
         # Sum all taus
