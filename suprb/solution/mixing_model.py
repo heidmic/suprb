@@ -10,12 +10,12 @@ class FilterSubpopulation():
         self.rule_amount = rule_amount
         self.random_state = check_random_state(random_state)
 
-    def __call__(self, subpopulation: list[Rule]):
+    def __call__(self, subpopulation: list[Rule]) -> list[Rule]:
         return subpopulation
 
 
 class NBestFitness(FilterSubpopulation):
-    def __call__(self, subpopulation: list[Rule]):
+    def __call__(self, subpopulation: list[Rule]) -> list[Rule]:
         fitnesses = np.array([rule.fitness_ for rule in subpopulation])
         ind = sorted(range(len(fitnesses)),
                      key=lambda i: fitnesses[i])[-self.rule_amount:]
@@ -23,12 +23,12 @@ class NBestFitness(FilterSubpopulation):
 
 
 class NRandom(FilterSubpopulation):
-    def __call__(self, subpopulation: list[Rule]):
+    def __call__(self, subpopulation: list[Rule]) -> list[Rule]:
         return self.random_state.choice(subpopulation, self.rule_amount)
 
 
 class RouletteWheel(FilterSubpopulation):
-    def __call__(self, subpopulation: list[Rule]):
+    def __call__(self, subpopulation: list[Rule]) -> list[Rule]:
         fitnesses = np.array([rule.fitness_ for rule in subpopulation])
         weights = fitnesses / np.sum(fitnesses)
         choice_size = min(len(subpopulation), self.rule_amount)
@@ -40,18 +40,18 @@ class ExperienceCalculation():
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
-    def __call__(self, subpopulation: list[Rule], dim: int = None):
+    def __call__(self, subpopulation: list[Rule], dim: int = None) -> list[Rule]:
         return np.array([rule.experience_ for rule in subpopulation])
 
 
 class CapExperience(ExperienceCalculation):
-    def __call__(self, subpopulation: list[Rule], dim: int = None):
+    def __call__(self, subpopulation: list[Rule], dim: int = None) -> list[Rule]:
         experiences = np.array([rule.experience_ for rule in subpopulation])
         return np.clip(experiences, self.lower_bound, self.upper_bound)
 
 
 class CapExperienceWithDimensionality(ExperienceCalculation):
-    def __call__(self, subpopulation: list[Rule], dim: int = None):
+    def __call__(self, subpopulation: list[Rule], dim: int = None) -> list[Rule]:
         experiences = np.array([rule.experience_ for rule in subpopulation])
         return np.clip(experiences, self.lower_bound * dim, self.upper_bound * dim)
 
@@ -78,7 +78,7 @@ class ErrorExperienceHeuristic(MixingModel):
         if not subpopulation:
             return np.zeros(self.input_size)
 
-        subpopulation = list(self.filter_subpopulation(subpopulation))
+        subpopulation = self.filter_subpopulation(subpopulation)
 
         local_pred, matches = self._get_local_pred(X, subpopulation, cache)
         taus = self._get_taus(subpopulation, X.shape[1])
@@ -123,6 +123,6 @@ class ErrorExperienceHeuristic(MixingModel):
             local_taus[i][matches[i]] = taus[i]
 
         tau_sum = np.sum(local_taus, axis=0)
-        tau_sum[tau_sum == 0] = 1  # Needed
+        tau_sum[tau_sum == 0] = 1  # Needed, otherwise "out = pred / tau_sum" might become a divison by 0
 
         return tau_sum
