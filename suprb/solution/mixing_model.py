@@ -6,7 +6,7 @@ from . import MixingModel
 
 
 class FilterSubpopulation():
-    def __init__(self, rule_amount: int, random_state: RandomState):
+    def __init__(self, rule_amount: int = 6, random_state: RandomState = 42):
         self.rule_amount = rule_amount
         self.random_state = check_random_state(random_state)
 
@@ -31,7 +31,8 @@ class RouletteWheel(FilterSubpopulation):
     def __call__(self, subpopulation: list[Rule]):
         fitnesses = np.array([rule.fitness_ for rule in subpopulation])
         weights = fitnesses / np.sum(fitnesses)
-        return self.random_state.choice(subpopulation, p=weights, size=self.rule_amount, replace=False)
+        choice_size = min(len(subpopulation), self.rule_amount)
+        return self.random_state.choice(subpopulation, p=weights, size=choice_size, replace=False)
 
 
 class ExperienceCalculation():
@@ -62,7 +63,9 @@ class ErrorExperienceHeuristic(MixingModel):
     but using (error / experience) as a mixing function.
     """
 
-    def __init__(self, filter_subpopulation: FilterSubpopulation = None, experience_calculation: ExperienceCalculation = None, experience_weight: float = 1):
+    def __init__(self, filter_subpopulation: FilterSubpopulation = FilterSubpopulation(),
+                 experience_calculation: ExperienceCalculation = ExperienceCalculation(),
+                 experience_weight: float = 1):
         self.input_size = None
         self.filter_subpopulation = filter_subpopulation
         self.experience_calculation = experience_calculation
