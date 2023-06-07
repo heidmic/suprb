@@ -13,6 +13,11 @@ class FilterSubpopulation():
     def __call__(self, subpopulation: list[Rule]) -> list[Rule]:
         return subpopulation
 
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
+        return self
+
 
 class NBestFitness(FilterSubpopulation):
     def __call__(self, subpopulation: list[Rule]) -> list[Rule]:
@@ -42,6 +47,11 @@ class ExperienceCalculation():
 
     def __call__(self, subpopulation: list[Rule], dim: int = None) -> list[Rule]:
         return np.array([rule.experience_ for rule in subpopulation])
+
+    def set_params(self, **parameters):
+        for parameter, value in parameters.items():
+            setattr(self, parameter, value)
+        return self
 
 
 class CapExperience(ExperienceCalculation):
