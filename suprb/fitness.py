@@ -12,7 +12,7 @@ class BaseFitness(BaseComponent, metaclass=ABCMeta):
         pass
 
 
-def pseudo_accuracy(error: float, beta=1) -> float:
+def pseudo_accuracy(error: float, beta=2) -> float:
     """
     Calculates the pseudo accuracy PACC, which maps the (possibly unbounded) error into the [0, 1] domain with
     a PACC of 1 corresponding to an error of 0.
