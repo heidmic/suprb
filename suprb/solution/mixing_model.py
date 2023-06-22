@@ -29,7 +29,8 @@ class NBestFitness(FilterSubpopulation):
 
 class NRandom(FilterSubpopulation):
     def __call__(self, subpopulation: list[Rule]) -> list[Rule]:
-        return self.random_state.choice(subpopulation, self.rule_amount)
+        choice_size = min(len(subpopulation), self.rule_amount)
+        return self.random_state.choice(subpopulation, size=choice_size, replace=False)
 
 
 class RouletteWheel(FilterSubpopulation):
