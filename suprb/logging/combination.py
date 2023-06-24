@@ -70,3 +70,6 @@ class CombinedLogger(BaseLogger):
                 new_loggers[i] = (name, new_val)
                 break
         self.loggers = new_loggers
+
+    def get_elitist(self, estimator: BaseRegressor):
+        pass

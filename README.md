@@ -29,17 +29,17 @@ Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 
 
 ### Comparisons with other Systems
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** Accepted for publication in the Proceedings of BIOMA'22 http://arxiv.org/abs/2207.05582 A comparison with XCSF.
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** In: Mernik, M., Eftimov, T., Črepinšek, M. (eds) Bioinspired Optimization Methods and Their Applications. BIOMA 2022. Lecture Notes in Computer Science, vol 13627. Springer, Cham. https://doi.org/10.1007/978-3-031-21094-5_11 http://arxiv.org/abs/2207.05582 A comparison with XCSF.
 
 ### Investigating Components
 
 Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. **Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
 
-Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and Jörg Hähner. 2022. **Approaches for Rule Discovery in a Learning Classifier System.** Accepted for publication in the Proceedings of ECTA ‘22.
+Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and Jörg Hähner. 2022. **Approaches for Rule Discovery in a Learning Classifier System.** In Proceedings of the 14th International Joint Conference on Computational Intelligence - ECTA. https://doi.org/10.5220/0011542000003332
 
 ### Explainability of LCS
 
-Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. 2022. **Learning Classifier Systems for Self-explaining Socio-Technical-Systems.** arXiv preprint arXiv:2207.02300. https://arxiv.org/abs/2207.02300
+Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. 2022. **Learning Classifier Systems for Self-explaining Socio-Technical-Systems.** Accepted for publication in the Journal of Artificial Life. MIT press. arXiv preprint arXiv:2207.02300. https://arxiv.org/abs/2207.02300
 
 ## Experiments
 

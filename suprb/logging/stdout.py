@@ -47,3 +47,6 @@ class StdoutLogger(BaseLogger):
             self.iterator_.write(message)
         else:
             print(message)
+
+    def get_elitist(self, estimator: SupRB):
+        pass

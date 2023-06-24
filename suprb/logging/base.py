@@ -22,3 +22,8 @@ class BaseLogger(BaseComponent):
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
         """Log the final state of the estimator. It is assumed that the fitting process is already completed."""
         pass
+
+    @abstractmethod
+    def get_elitist(self, estimator: BaseRegressor):
+        """Log the final elitist"""
+        pass
