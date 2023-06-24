@@ -56,6 +56,8 @@ class OrderedBound(MatchingFunction):
         self.bounds = bounds
 
     def __call__(self, X: np.ndarray):
+
+
         return np.all((self.bounds[:, 0] <= X) &
                       (X <= self.bounds[:, 1]), axis=1)
 
@@ -229,7 +231,15 @@ class GaussianKernelFunction(MatchingFunction):
         """
         Gaussian Kernel Function > threshold as matching function
         """
+        # WHEN: DEVIATIONS 0, THEN: X=CENTER
+        # DEVIATIONS DARF NICHT 0 WERDEn, VLLT IN MUTATION
+        # ODER WENN DEVIATION 0 WERDEN WÜRDE, NUTZE UNENDLICH KLEINE ZAHL --
+        # -- nutze properties -> Mutatation bewegt sich in falsche richtung
         self.deviations[self.deviations == 0] = 0.000000000000001
+
+        count = np.count_nonzero(np.exp(np.sum(
+                ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold)
+
         return np.exp(np.sum(
                 ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
 

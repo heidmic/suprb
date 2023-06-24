@@ -127,7 +127,7 @@ class HalfnormIncrease(RuleMutation):
 
         numb1 = halfnorm.rvs(scale=self.sigma[0] / 2, size=center.shape, random_state=random_state)
         numb2 = halfnorm.rvs(scale=self.sigma[1] / 2, size=deviations.shape, random_state=random_state)
-        diff = numb1 - numb2
+        diff = abs(numb1 - numb2)
 
         center -= diff / 2
         deviations += diff / 2

@@ -55,8 +55,6 @@ if __name__ == '__main__':
     ]
     models = {model.__class__.__name__: model for model in models}
 
-    print(type(sys.float_info.min))
-
     def run(name, model):
         print(f"[EVALUATION] {name}")
         return pd.Series(
