@@ -124,13 +124,21 @@ class HalfnormIncrease(RuleMutation):
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
         center = rule.match.center
         deviations = rule.match.deviations
+        threshold = rule.match.threshold
 
-        numb1 = halfnorm.rvs(scale=self.sigma[0] / 2, size=center.shape, random_state=random_state)
-        numb2 = halfnorm.rvs(scale=self.sigma[1] / 2, size=deviations.shape, random_state=random_state)
-        diff = abs(numb1 - numb2)
+        numb = halfnorm.rvs(scale=self.sigma[1], size=deviations.shape, random_state=random_state)
 
-        center -= diff / 2
-        deviations += diff / 2
+        low, high = center - deviations, center + deviations
+
+        numerator = high - low
+        denominator = np.sqrt(-2 * np.log(threshold))
+        critical_value = numerator / denominator
+
+        deviations += numb / 2
+
+        invalid_indices = np.argwhere(deviations > critical_value)
+
+        deviations[invalid_indices] = critical_value[invalid_indices]
 
 
 class Uniform(RuleMutation):
@@ -156,7 +164,21 @@ class Uniform(RuleMutation):
         self.individual_mutate(rule, random_state)
 
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
-        self.individual_mutate(rule, random_state)
+        center = rule.match.center
+        deviations = rule.match.deviations
+        threshold = rule.match.threshold
+
+        low, high = center - deviations, center + deviations
+        numerator = high - low
+        denominator = np.sqrt(-2 * np.log(threshold))
+        critical_value = numerator / denominator
+
+
+        deviations = deviations + random_state.uniform(-self.sigma[0], self.sigma[1], size=deviations.shape)
+
+
+        invalid_indices = np.argwhere(deviations > critical_value)
+        deviations[invalid_indices] = critical_value[invalid_indices]
 
 
 class UniformIncrease(RuleMutation):

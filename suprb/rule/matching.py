@@ -237,9 +237,6 @@ class GaussianKernelFunction(MatchingFunction):
         # -- nutze properties -> Mutatation bewegt sich in falsche richtung
         self.deviations[self.deviations == 0] = 0.000000000000001
 
-        count = np.count_nonzero(np.exp(np.sum(
-                ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold)
-
         return np.exp(np.sum(
                 ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
 
@@ -249,24 +246,27 @@ class GaussianKernelFunction(MatchingFunction):
         Calculates the volume of the n-dim ellipsoid
         """
         dim = self.center.shape[0]
-        pre_factor = (2 * (np.pi ** (dim / 2))) / (dim * math.gamma(dim / 2))
+        pre_factor = (np.pi ** (dim / 2)) / (math.gamma((dim/2) + 1))
         prod_deviations = np.prod(self.deviations)
 
-        return pre_factor * prod_deviations
+        ret_val = pre_factor * prod_deviations
+        return ret_val
 
     def copy(self):
         return GaussianKernelFunction(center=self.center, deviations=self.deviations, threshold=self.threshold)
 
     def clip(self, rule_parameter: np.ndarray):
         """Clip the center into space of diameter and the deviations into [0, radius] """
-        center = rule_parameter[:, 0]
-        deviations = rule_parameter[:, 1]
+        # center = rule_parameter[:, 0]
+        # deviations = rule_parameter[:, 1]
 
-        low, high = center - deviations, center + deviations
+        low, high = self.center - self.deviations, self.center + self.deviations
         radius = np.abs(high - low) / 2
 
-        self.center.clip(low, high, out=self.center)
-        self.deviations.clip(0, radius, out=self.deviations)
+        # self.center.clip(low, high, out=self.center)
+        # self.deviations.clip(0, radius, out=self.deviations)
+        self.center = self.center.clip(-1, 1)
+        self.deviations = self.deviations.clip(0, 2)
 
     def min_range(self, min_range: float):
         low, high = self.center - self.deviations, self.center + self.deviations
