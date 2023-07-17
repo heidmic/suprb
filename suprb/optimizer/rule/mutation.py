@@ -35,7 +35,7 @@ class RuleMutation(GenerationOperator):
 class SigmaRange(RuleMutation):
     """Draws the sigma used for another mutation from uniform distribution, low to high."""
 
-    def __init__(self, mutation: RuleMutation, low: float, high: float):
+    def __init__(self, mutation: RuleMutation = None, low: float = 0.001, high: float = 0.1):
         super().__init__(0)
         self.mutation = mutation
         self.low = low
@@ -46,6 +46,18 @@ class SigmaRange(RuleMutation):
         self.sigma = random_state.uniform(self.low, self.high, uniform_size)
         self.mutation.sigma = self.sigma
         return self.mutation(rule, random_state)
+
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
+        pass
+
+    def ordered_bound(self, rule: Rule, random_state: RandomState):
+        pass
+
+    def center_spread(self, rule: Rule, random_state: RandomState):
+        pass
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        pass
 
 
 class Normal(RuleMutation):

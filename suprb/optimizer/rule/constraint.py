@@ -27,7 +27,7 @@ class CombinedConstraint(RuleConstraint):
     implement the get_params() and set_params() methods for many constraints.
     """
 
-    def __init__(self, min_range: MinRange, clip: Clip):
+    def __init__(self, min_range: MinRange = None, clip: Clip = None):
         self.min_range = min_range
         self.clip = clip
 

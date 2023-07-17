@@ -24,7 +24,7 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
 
     fitness_func_: Callable
 
-    def __init__(self, alpha: float):
+    def __init__(self, alpha: float = 0.85):
         self.alpha = alpha
 
     def __call__(self, rule: Rule) -> float:
