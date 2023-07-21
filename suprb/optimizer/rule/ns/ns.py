@@ -62,6 +62,7 @@ class NoveltySearch(RuleGeneration):
                  random_state: int = None,
                  n_jobs: int = 1,
                  n_elitists=10,
+                 use_population_for_archive=False,
 
                  origin_generation: RuleOriginGeneration = SquaredError(),
                  init: RuleInit = HalfnormInit(),
@@ -89,6 +90,7 @@ class NoveltySearch(RuleGeneration):
         self.selection = selection
         self.n_elitists = n_elitists
         self.novelty_calculation = novelty_calculation
+        self.use_population_for_archive = use_population_for_archive
 
         assert self.novelty_calculation.k_neighbor + \
             2 < self.lmbda, f"Insert reason here {self.novelty_calculation.k_neighbor} {self.lmbda}"
@@ -168,7 +170,11 @@ class NoveltySearch(RuleGeneration):
 
     def _rule_selection(self, rules: list[Rule], n_rules: int, roh: int = 0):
         ns_rules = self.novelty_calculation(rules=rules)
-        self.novelty_calculation.archive(ns_rules, roh)
+        
+        if self.use_population_for_archive: 
+            self.novelty_calculation.archive.archive.extend(ns_rules)
+        else:
+            self.novelty_calculation.archive(ns_rules, roh)
 
         return self._get_n_best_rules(ns_rules, n_rules)
 
