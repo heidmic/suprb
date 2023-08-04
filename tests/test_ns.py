@@ -15,7 +15,7 @@ import unittest
 import numpy as np
 
 from suprb.utils import check_random_state
-from suprb.optimizer.rule.ns.novelty_calculation import NoveltyCalculation, ProgressiveMinimalCriteria, NoveltyFitnessBiased, NovelityFitnessPareto
+from suprb.optimizer.rule.ns.novelty_calculation import NoveltyCalculation, ProgressiveMinimalCriteria, NoveltyFitnessBiased, NoveltyFitnessPareto
 from suprb.optimizer.rule.ns.novelty_search_type import NoveltySearchType, LocalCompetition, MinimalCriteria
 from suprb.optimizer.rule.ns.archive import ArchiveNone, ArchiveNovel, ArchiveRandom
 import inspect
@@ -47,23 +47,25 @@ class TestNoveltySearch(unittest.TestCase):
         self.model = SupRB(rule_generation=ns.NoveltySearch(
             init=rule.initialization.HalfnormInit(),
             selection=optimizer.rule.selection.RouletteWheel()),
-                           solution_composition=ga.GeneticAlgorithm(),
-                           matching_type=OrderedBound(np.array([])),
-                           n_iter=2,
-                           n_rules=8,
-                           verbose=10,
-                           logger=CombinedLogger([('stdout', StdoutLogger()), ('default', DefaultLogger())]))
+            solution_composition=ga.GeneticAlgorithm(),
+            matching_type=OrderedBound(np.array([])),
+            n_iter=2,
+            n_rules=8,
+            verbose=10,
+            logger=CombinedLogger([('stdout', StdoutLogger()), ('default', DefaultLogger())]))
 
     def setup_novelty_search_params(self):
 
         novelty_calculation_types = [NoveltyCalculation,
                                      ProgressiveMinimalCriteria,
-                                     NovelityFitnessPareto,
-                                     NoveltyFitnessBiased]
+                                     NoveltyFitnessPareto,
+                                     NoveltyFitnessBiased
+                                     ]
 
         novelty_search_types = [NoveltySearchType(),
                                 MinimalCriteria(min_examples_matched=10),
-                                LocalCompetition(max_neighborhood_range=15)]
+                                LocalCompetition(max_neighborhood_range=15)
+                                ]
 
         archive_types = [ArchiveNovel(), ArchiveRandom(), ArchiveNone()]
 
