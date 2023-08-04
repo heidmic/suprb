@@ -24,7 +24,7 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
 
     fitness_func_: Callable
 
-    def __init__(self, alpha: float):
+    def __init__(self, alpha: float = None):
         self.alpha = alpha
 
     def __call__(self, rule: Rule) -> float:
@@ -42,7 +42,7 @@ class VolumeEmary(VolumeRuleFitness):
     Computed fitness is in [0, 100].
     """
 
-    def __init__(self, alpha: float = 0.85):
+    def __init__(self, alpha: float = 0.99):
         super().__init__(alpha)
         self.fitness_func_ = emary
 

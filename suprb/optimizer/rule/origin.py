@@ -60,7 +60,6 @@ class RouletteWheelOrigin(RuleOriginGeneration):
         indices = random_state.choice(np.arange(len(X)), n_rules, p=probabilities)
         return X[indices]
 
-    @abstractmethod
     def _calculate_weights(self, subgroup: list[Rule], **kwargs) -> np.ndarray:
         pass
 
