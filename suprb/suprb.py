@@ -91,6 +91,7 @@ class SupRB(BaseRegressor):
         self.verbose = verbose
         self.logger = logger
         self.n_jobs = n_jobs
+        self.is_error = False
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
         """ Fit SupRB.2.
@@ -149,8 +150,10 @@ class SupRB(BaseRegressor):
         if self.n_initial_rules > 0:
             try:
                 self._discover_rules(X, y, self.n_initial_rules)
-            except:
-                warnings.warn("Error in rule discovery first iteration")
+            except Exception as e: 
+                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
                 return self
 
         # Main loop
@@ -158,15 +161,19 @@ class SupRB(BaseRegressor):
             # Insert new rules into population
             try:
                 self._discover_rules(X, y, self.n_rules)
-            except:
-                warnings.warn("Error in rule discovery first iteration")
+            except Exception as e: 
+                warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
                 return self
 
             # Optimize solutions
             try:
                 self._compose_solution(X, y)
-            except:
-                warnings.warn("Error in rule discovery first iteration")
+            except Exception as e: 
+                warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
                 return self
 
             # Log Iteration
@@ -225,8 +232,11 @@ class SupRB(BaseRegressor):
         # Input validation
         X = check_array(X)
 
-        return self.elitist_.predict(X)
-
+        if self.is_error:
+            return [0] * len(X)
+        else:
+            return self.elitist_.predict(X)
+        
     def _validate_rule_generation(self, default=None):
         self.rule_generation_ = clone(self.rule_generation) if self.rule_generation is not None else clone(default)
 
