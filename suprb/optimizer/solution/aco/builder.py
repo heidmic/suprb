@@ -90,14 +90,14 @@ def relative_bounds_overlap(A: Rule, B: Rule) -> np.array:
     If one rule lies completely within the bounds of the other rule, the overlap is 1.
     """
 
-    intersections = (A.bounds[:, 0] <= B.bounds[:, 1]) & (B.bounds[:, 0] <= A.bounds[:, 1])
+    intersections = (A.input_space[:, 0] <= B.input_space[:, 1]) & (B.input_space[:, 0] <= A.input_space[:, 1])
 
     if not np.all(intersections):
         return np.ones(2)
 
-    ones = np.ones(A.bounds.shape[0])
-    ones[intersections] = np.min(np.stack((A.bounds[:, 1], B.bounds[:, 1]), axis=1), axis=1) - np.max(
-        np.stack((A.bounds[:, 0], B.bounds[:, 0]), axis=1), axis=1)
+    ones = np.ones(A.input_space.shape[0])
+    ones[intersections] = np.min(np.stack((A.input_space[:, 1], B.input_space[:, 1]), axis=1), axis=1) - np.max(
+        np.stack((A.input_space[:, 0], B.input_space[:, 0]), axis=1), axis=1)
     overlap = np.prod(ones)
     shared_relative_volume = overlap / (min(A.volume_, B.volume_))
 

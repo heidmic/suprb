@@ -147,15 +147,27 @@ class SupRB(BaseRegressor):
 
         # Fill population before first step
         if self.n_initial_rules > 0:
-            self._discover_rules(X, y, self.n_initial_rules)
+            try:
+                self._discover_rules(X, y, self.n_initial_rules)
+            except:
+                warnings.warn("Error in rule discovery first iteration")
+                return self
 
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-            self._discover_rules(X, y, self.n_rules)
+            try:
+                self._discover_rules(X, y, self.n_rules)
+            except:
+                warnings.warn("Error in rule discovery first iteration")
+                return self
 
             # Optimize solutions
-            self._compose_solution(X, y)
+            try:
+                self._compose_solution(X, y)
+            except:
+                warnings.warn("Error in rule discovery first iteration")
+                return self
 
             # Log Iteration
             if self.logger_ is not None:
