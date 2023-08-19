@@ -27,7 +27,7 @@ if __name__ == '__main__':
     data, _ = fetch_openml(name='Concrete_Data', version=1, return_X_y=True)
     data = data.to_numpy()
 
-    X, y = data[:, :8], data[:, 8]
+    X, y = data[:, :2], data[:, 2]
     X, y = shuffle(X, y, random_state=random_state)
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
