@@ -130,7 +130,7 @@ class NormalInit(RuleInit):
                  matching_type: MatchingFunction = None, sigma: Union[float, np.ndarray] = 0.1):
         super().__init__(bounds=bounds, model=model, fitness=fitness, matching_type=matching_type)
         self.sigma = sigma
-        if self.matching_type in (CenterSpread, MinPercentage):
+        if self.matching_type in (CenterSpread, MinPercentage, GaussianKernelFunction):
             assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
 
     def sample_individual_bounds(self, mean: np.ndarray, random_state: RandomState):

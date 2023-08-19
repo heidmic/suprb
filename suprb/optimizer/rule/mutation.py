@@ -174,7 +174,7 @@ class Uniform(RuleMutation):
         critical_value = numerator / denominator
 
 
-        deviations = deviations + random_state.uniform(-self.sigma[0], self.sigma[1], size=deviations.shape)
+        deviations = deviations * random_state.uniform(-self.sigma[0], self.sigma[1], size=deviations.shape)
 
 
         invalid_indices = np.argwhere(deviations > critical_value)
