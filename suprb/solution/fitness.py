@@ -42,7 +42,7 @@ class ComplexityEmary(ComplexitySolutionFitness):
 
     def __init__(self, alpha: float = 0.85):
         super().__init__(alpha=alpha)
-        self.fitness_func = emary
+        self.fitness_func_ = emary
 
 
 class ComplexityWu(ComplexitySolutionFitness):

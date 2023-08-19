@@ -39,3 +39,12 @@ class UniformCrossover(RuleCrossover):
         b.match.bounds = np.array([b_bounds[i] if bool_mask[i] else a_bounds[i] for i in range(len(bool_mask))])
 
         return [a, b]
+
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError
+
+    def center_spread(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError

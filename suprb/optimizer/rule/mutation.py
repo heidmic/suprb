@@ -33,9 +33,14 @@ class RuleMutation(GenerationOperator):
 
 
 class SigmaRange(RuleMutation):
-    """Draws the sigma used for another mutation from uniform distribution, low to high."""
+    """ Draws the sigma used for another mutation from uniform distribution, low to high.
+        unordered_bound, ordered_bound, center_spread and min_percentage are empty, because 
+        of the inheritance to RuleMutation (and then the inheritance to GenerationOperator),
+        which need an implementation for those functions.
+        They provide no utility, since the RuleMutation this class uses is set in the __init__ 
+    """
 
-    def __init__(self, mutation: RuleMutation, low: float, high: float):
+    def __init__(self, mutation: RuleMutation = None, low: float = 0.001, high: float = 0.1):
         super().__init__(0)
         self.mutation = mutation
         self.low = low
@@ -46,6 +51,18 @@ class SigmaRange(RuleMutation):
         self.sigma = random_state.uniform(self.low, self.high, uniform_size)
         self.mutation.sigma = self.sigma
         return self.mutation(rule, random_state)
+
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
+        pass
+
+    def ordered_bound(self, rule: Rule, random_state: RandomState):
+        pass
+
+    def center_spread(self, rule: Rule, random_state: RandomState):
+        pass
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        pass
 
 
 class Normal(RuleMutation):
