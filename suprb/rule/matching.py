@@ -222,10 +222,11 @@ class GaussianKernelFunction(MatchingFunction):
     are specified for each dimension. A threshold (t) defines if a rule is matched or not.
     An example x is matched iff exp((x_i - c_i)^2 / 2*(d_i^2)) > t for all dimensions i
     """
-    def __init__(self, center: np.ndarray, deviations: np.ndarray, threshold: float = 0.7):
+    def __init__(self, center: np.ndarray, radius: np.ndarray):
         self.center = center
-        self.deviations = deviations
-        self.threshold = threshold
+        self.radius = radius
+        self.threshold = 0.7
+        self.deviations = self.radius/np.sqrt(-2*np.log(self.threshold))
 
     def __call__(self, X: np.ndarray):
         """
@@ -235,10 +236,10 @@ class GaussianKernelFunction(MatchingFunction):
         # DEVIATIONS DARF NICHT 0 WERDEn, VLLT IN MUTATION
         # ODER WENN DEVIATION 0 WERDEN WÜRDE, NUTZE UNENDLICH KLEINE ZAHL --
         # -- nutze properties -> Mutatation bewegt sich in falsche richtung
-        self.deviations[self.deviations == 0] = 0.000000000000001
 
-        return np.exp(np.sum(
-                ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
+        test = np.exp(np.sum(
+            ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
+        return test
 
     @property
     def volume_(self):
@@ -246,33 +247,34 @@ class GaussianKernelFunction(MatchingFunction):
         Calculates the volume of the n-dim ellipsoid
         """
         dim = self.center.shape[0]
+
         pre_factor = (np.pi ** (dim / 2)) / (math.gamma((dim/2) + 1))
-        prod_deviations = np.prod(self.deviations)
+        prod_deviations = np.prod(self.radius)
 
         ret_val = pre_factor * prod_deviations
         return ret_val
 
     def copy(self):
-        return GaussianKernelFunction(center=self.center, deviations=self.deviations, threshold=self.threshold)
+        return GaussianKernelFunction(center=self.center, radius=self.radius)
 
     def clip(self, rule_parameter: np.ndarray):
-        """Clip the center into space of diameter and the deviations into [0, radius] """
-        # center = rule_parameter[:, 0]
-        # deviations = rule_parameter[:, 1]
+        low, high = self.center - self.radius, self.center + self.radius
 
-        low, high = self.center - self.deviations, self.center + self.deviations
-        radius = np.abs(high - low) / 2
+        invalid_indices_minimum = np.argwhere(low < -1)
+        invalid_indices_maximum = np.argwhere(high > 1)
 
-        # self.center.clip(low, high, out=self.center)
-        # self.deviations.clip(0, radius, out=self.deviations)
-        self.center = self.center.clip(-1, 1)
-        self.deviations = self.deviations.clip(0, 2)
+        self.radius[invalid_indices_minimum] = self.center[invalid_indices_minimum] + 1
+        self.radius[invalid_indices_maximum] = self.center[invalid_indices_maximum] - 1
+
+        self.deviations = self.radius/np.sqrt(-2*np.log(self.threshold))
 
     def min_range(self, min_range: float):
-        low, high = self.center - self.deviations, self.center + self.deviations
+        low, high = self.center - self.radius, self.center + self.radius
 
-        diameter = high - low
+        diameter = np.abs(high - low)
 
         if min_range > 0:
             invalid_indices = np.argwhere(diameter < min_range)
-            self.deviations[invalid_indices] += min_range / 2
+            self.radius[invalid_indices] += min_range / 2
+
+        self.deviations = self.radius/np.sqrt(-2*np.log(self.threshold))

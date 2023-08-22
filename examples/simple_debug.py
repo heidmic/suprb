@@ -27,7 +27,7 @@ if __name__ == '__main__':
     data, _ = fetch_openml(name='Concrete_Data', version=1, return_X_y=True)
     data = data.to_numpy()
 
-    X, y = data[:, :2], data[:, 2]
+    X, y = data[:, :8], data[:, 8]
     X, y = shuffle(X, y, random_state=random_state)
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
@@ -36,18 +36,18 @@ if __name__ == '__main__':
         SupRB(
             rule_generation=es.ES1xLambda(
                 operator='&',
-                init=rule.initialization.NormalInit(sigma=np.array([5, 5]), fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.mutation.Uniform(sigma=np.array([0.5, 0.5])),
+                init=rule.initialization.NormalInit(sigma=np.array([1,1]), fitness=rule.fitness.VolumeWu(alpha=0.8)),
+                mutation=suprb.optimizer.rule.mutation.Uniform(sigma=np.array([1,1]))
             ),
             solution_composition=ga.GeneticAlgorithm(
-                n_iter=128,
+                n_iter=64,
                 crossover=ga.crossover.Uniform(),
                 selection=ga.selection.Tournament(),
                 mutation=ga.mutation.BitFlips(),
             ),
             matching_type=GaussianKernelFunction(np.array([]), np.array([])),
             #matching_type=OrderedBound(np.array([])),
-            n_iter=32,
+            n_iter=16,
             n_rules=4,
             logger=StdoutLogger(),
             random_state=random_state,

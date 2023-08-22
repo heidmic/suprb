@@ -155,20 +155,11 @@ class NormalInit(RuleInit):
         return MinPercentage(self.sample_individual_bounds(mean, random_state))
 
     def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        #center = halfnorm.rvs(scale=self.sigma[0] / 2, size=mean.shape[0], random_state=random_state)
-        #deviations = halfnorm.rvs(scale=self.sigma[1] / 2, size=mean.shape[0], random_state=random_state)
-
         center = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
-        deviations = halfnorm.rvs(scale=self.sigma[1] / 2, size=mean.shape[0], random_state=random_state)
-
-        test1 = random_state.normal(loc=mean, scale=0.25, size=(mean.shape[0]))
-        test2 = halfnorm.rvs(scale=0.25, size=mean.shape[0], random_state=random_state)
-
-        test3 = random_state.normal(loc=mean, scale=1000, size=(mean.shape[0]))
-        test4 = halfnorm.rvs(scale=1000, size=mean.shape[0], random_state=random_state)
+        radius = 1 - np.random.random_sample(size=(mean.shape[0]))
 
         return GaussianKernelFunction(center=center,
-                                      deviations=deviations)
+                                      radius=radius)
 
 
 class HalfnormInit(RuleInit):

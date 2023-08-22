@@ -1,5 +1,7 @@
+import sys
+import traceback
 import warnings
-
+ 
 import numpy as np
 from sklearn import clone
 from sklearn.utils import check_X_y
@@ -161,7 +163,8 @@ class SupRB(BaseRegressor):
             # Insert new rules into population
             try:
                 self._discover_rules(X, y, self.n_rules)
-            except Exception as e: 
+            except Exception as e:
+                print(traceback.format_exc())
                 warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
