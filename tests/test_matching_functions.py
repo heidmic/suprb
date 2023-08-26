@@ -1,7 +1,7 @@
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
-from suprb.rule.matching import OrderedBound, UnorderedBound, CenterSpread, MinPercentage
+from suprb.rule.matching import OrderedBound, UnorderedBound, CenterSpread, MinPercentage, GaussianKernelFunction
 import unittest
 from suprb import SupRB
 from suprb import rule

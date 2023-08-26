@@ -237,8 +237,16 @@ class GaussianKernelFunction(MatchingFunction):
         # ODER WENN DEVIATION 0 WERDEN WÜRDE, NUTZE UNENDLICH KLEINE ZAHL --
         # -- nutze properties -> Mutatation bewegt sich in falsche richtung
 
+        test4 = np.sum(
+            ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1)
+        asdkfl = ((X - self.center) ** 2) / (2 * (self.deviations ** 2))
+
+        hallo = X - self.center
+        hallo2 = (2 * (self.deviations ** 2))
         test = np.exp(np.sum(
             ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
+        test2 = np.exp(np.sum(
+            ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1)
         return test
 
     @property

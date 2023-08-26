@@ -156,6 +156,7 @@ class NormalInit(RuleInit):
 
     def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         center = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
+        # radius = interval ]0,1]
         radius = 1 - np.random.random_sample(size=(mean.shape[0]))
 
         return GaussianKernelFunction(center=center,
