@@ -232,21 +232,19 @@ class GaussianKernelFunction(MatchingFunction):
         """
         Gaussian Kernel Function > threshold as matching function
         """
-        # WHEN: DEVIATIONS 0, THEN: X=CENTER
-        # DEVIATIONS DARF NICHT 0 WERDEn, VLLT IN MUTATION
-        # ODER WENN DEVIATION 0 WERDEN WÜRDE, NUTZE UNENDLICH KLEINE ZAHL --
-        # -- nutze properties -> Mutatation bewegt sich in falsche richtung
 
-        test4 = np.sum(
-            ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1)
-        asdkfl = ((X - self.center) ** 2) / (2 * (self.deviations ** 2))
+        out1 =((X - self.center) ** 2)
+        out2 = (2 * (self.deviations ** 2))
 
-        hallo = X - self.center
-        hallo2 = (2 * (self.deviations ** 2))
-        test = np.exp(np.sum(
-            ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
+        out3 = ((X - self.center) ** 2) / (2 * (self.deviations ** 2))
+
+        test4 = np.sum(((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1)
+
         test2 = np.exp(np.sum(
             ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1)
+        test = np.exp(np.sum(
+            ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
+
         return test
 
     @property
@@ -266,13 +264,22 @@ class GaussianKernelFunction(MatchingFunction):
         return GaussianKernelFunction(center=self.center, radius=self.radius)
 
     def clip(self, rule_parameter: np.ndarray):
+        self.radius = np.abs(self.radius).copy()
+
         low, high = self.center - self.radius, self.center + self.radius
 
-        invalid_indices_minimum = np.argwhere(low < -1)
-        invalid_indices_maximum = np.argwhere(high > 1)
+        distance_low = np.abs(-1 - self.center)
+        distance_high = np.abs(1 - self.center)
 
-        self.radius[invalid_indices_minimum] = self.center[invalid_indices_minimum] + 1
-        self.radius[invalid_indices_maximum] = self.center[invalid_indices_maximum] - 1
+        invalid_indices_min = np.squeeze(np.argwhere(low < -1))
+        invalid_indices_max = np.squeeze(np.argwhere(high > 1))
+
+        temp_array = np.ndarray(shape=self.radius.shape)
+
+        np.put(a=temp_array, ind=invalid_indices_min, v=np.minimum(distance_low, distance_high).take(invalid_indices_min))
+        self.radius = temp_array
+        np.put(a=temp_array, ind=invalid_indices_max, v=np.minimum(distance_low, distance_high).take(invalid_indices_max))
+        self.radius = temp_array
 
         self.deviations = self.radius/np.sqrt(-2*np.log(self.threshold))
 
