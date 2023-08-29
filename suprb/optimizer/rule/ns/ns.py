@@ -1,14 +1,13 @@
 import numpy as np
 
 from copy import deepcopy
+from itertools import product
 
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import HalfnormInit
 from suprb.utils import check_random_state
 from ..crossover import RuleCrossover, UniformCrossover
 from .novelty_calculation import NoveltyCalculation
-from .novelty_search_type import NoveltySearchType
-from .archive import ArchiveNovel
 from suprb.optimizer.rule.mutation import Normal, RuleMutation
 from suprb.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
@@ -63,6 +62,7 @@ class NoveltySearch(RuleGeneration):
                  random_state: int = None,
                  n_jobs: int = 1,
                  n_elitists=10,
+                 use_population_for_archive=False,
 
                  origin_generation: RuleOriginGeneration = SquaredError(),
                  init: RuleInit = HalfnormInit(),
@@ -90,9 +90,12 @@ class NoveltySearch(RuleGeneration):
         self.selection = selection
         self.n_elitists = n_elitists
         self.novelty_calculation = novelty_calculation
+        self.use_population_for_archive = use_population_for_archive
 
-    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[
-        Rule]:
+        assert self.novelty_calculation.k_neighbor + \
+            2 < self.lmbda, f"Insert reason here {self.novelty_calculation.k_neighbor} {self.lmbda}"
+
+    def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
         """ Validation of the parameters and checking the random_state.
             Then _optimize is called, where the Novelty Search algorithm is implemented.
 
@@ -119,6 +122,9 @@ class NoveltySearch(RuleGeneration):
 
         for i in range(self.n_iter):
             parents = self._select_shuffled_parents(population)
+            if len(parents) == 0:
+                print(f"n_iter {i}: No parents selected. Skip rule selection")
+                continue
             children = self._crossover_and_mutate(X, y, parents)
 
             valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
@@ -164,7 +170,11 @@ class NoveltySearch(RuleGeneration):
 
     def _rule_selection(self, rules: list[Rule], n_rules: int, roh: int = 0):
         ns_rules = self.novelty_calculation(rules=rules)
-        self.novelty_calculation.archive(ns_rules, roh)
+        
+        if self.use_population_for_archive: 
+            self.novelty_calculation.archive.archive.extend(ns_rules)
+        else:
+            self.novelty_calculation.archive(ns_rules, roh)
 
         return self._get_n_best_rules(ns_rules, n_rules)
 
@@ -177,7 +187,7 @@ class NoveltySearch(RuleGeneration):
     def _get_optimized_rules(self, best_children: list[Rule], n_rules: int):
         chosen_rules = []
 
-        for rule in (self.novelty_calculation.archive.archive + best_children)[:n_rules]:
+        for rule in best_children[:n_rules]:
             if hasattr(rule, 'novelty_score_'):
                 del rule.novelty_score_
             if hasattr(rule, 'distance_'):

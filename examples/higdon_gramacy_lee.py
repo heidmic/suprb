@@ -15,6 +15,10 @@ from suprb.optimizer.solution import saga2
 from suprb.optimizer.rule import es, rs
 from suprb.utils import check_random_state
 from suprb.optimizer.rule.mutation import HalfnormIncrease
+from sklearn.linear_model import Ridge
+from suprb.optimizer.rule.ns.novelty_calculation import NoveltyFitnessBiased
+
+from suprb.optimizer.rule import ns, origin
 
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state=None):
@@ -47,11 +51,13 @@ if __name__ == '__main__':
 
     # Prepare the model
     model = SupRB(
-        rule_generation=es.ES1xLambda(
-            operator='&',
-            origin_generation=rule_opt.origin.Matching(),
-            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
-            mutation=HalfnormIncrease(sigma=0.1),
+        rule_generation=ns.NoveltySearch(
+            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(),
+                                              model=Ridge(alpha=0.01,
+                                                          random_state=random_state)),
+            origin_generation=origin.SquaredError(),
+            mutation=HalfnormIncrease(),
+            novelty_calculation=NoveltyFitnessBiased()
         ),
         solution_composition=saga2.SelfAdaptingGeneticAlgorithm(
             n_iter=64,
@@ -61,8 +67,8 @@ if __name__ == '__main__':
         n_iter=4,
         n_rules=16,
         verbose=10,
-        logger=CombinedLogger([('stdout', StdoutLogger()), ('default', DefaultLogger())]),
-        random_state=random_state,
+        logger=CombinedLogger(
+            [('stdout', StdoutLogger()), ('default', DefaultLogger())]),
     )
 
     # Do cross-validation

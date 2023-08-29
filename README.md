@@ -41,6 +41,11 @@ Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and J
 
 Michael Heider, Helena Stegherr, Richard Nordsieck, Jörg Hähner. 2022. **Learning Classifier Systems for Self-explaining Socio-Technical-Systems.** Accepted for publication in the Journal of Artificial Life. MIT press. arXiv preprint arXiv:2207.02300. https://arxiv.org/abs/2207.02300
 
+### A general description of LCS and its optimizers
+
+Michael Heider, David Pätzel, Helena Stegherr, Jörg Hähner. 2023. **A Metaheuristic Perspective on Learning Classifier Systems.** In: Eddaly, M., Jarboui, B., Siarry, P. (eds) Metaheuristics for Machine Learning. Computational Intelligence Methods and Applications. Springer, Singapore. https://doi.org/10.1007/978-981-19-3888-7_3
+
+
 ## Experiments
 
 We provide the experiment scripts used in associated publications under: https://github.com/heidmic/suprb-experimentation

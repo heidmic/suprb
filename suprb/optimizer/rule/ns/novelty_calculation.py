@@ -16,10 +16,6 @@ class NoveltyCalculation(BaseComponent):
     def __call__(self, rules: list[Rule]) -> list[Rule]:
         return self._novelty_score(rules=rules)
 
-    def _add_distances_to_archive_rules(self, rule: Rule, archive: list[Rule]):
-        for i, _ in enumerate(archive):
-            archive[i].distance_ = hamming(rule.match_set_, archive[i].match_set_)
-
     def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
         """ The basic novely calculation based on the hamming distance. 
             Takes every rule and calculates the hamming distance to each rule contained in the archive
@@ -27,25 +23,36 @@ class NoveltyCalculation(BaseComponent):
         """
         novelty_search_rules = []
         archive = self.archive.archive[:]
-        archive.extend(rules)
+        filtered_rules = self.novelty_search_type.filter_rules(rules)
 
-        for rule in self.novelty_search_type.filter_rules(rules):
-            self._add_distances_to_archive_rules(rule, archive)
+        for i, rule in enumerate(filtered_rules):
+            if not hasattr(rule, 'idx_') or rule.idx_ > len(archive):
+                rule.distances_ = []
+                for archive_rule in archive:
+                    hamming_distance = hamming(rule.match_set_, archive_rule.match_set_)
+                    archive_rule.distances_.append(hamming_distance)
+                    rule.distances_.append(hamming_distance)
 
-            archive = sorted(archive, key=lambda archive_rule: archive_rule.distance_)
-            distances = [sorted_rule.distance_ for sorted_rule in archive]
+                rule.distances_.append(0)
+                rule.idx_ = len(archive)
 
+            archive.append(rule)
+
+        for i, rule in enumerate(filtered_rules):
             local_competition = self.novelty_search_type.local_competition(rule, archive)
-            kwargs = {"distances": distances, "fitness": rule.fitness_}
-            novelty_score = local_competition + self._novelty_score_calculation(**kwargs)
-
-            rule.novelty_score_ = novelty_score
+            rule.novelty_score_ = local_competition + self._novelty_score_calculation(rule)
             novelty_search_rules.append(rule)
 
         return novelty_search_rules
 
-    def _novelty_score_calculation(self, **kwargs: dict()):
-        return sum(kwargs["distances"][:self.k_neighbor]) / self.k_neighbor
+    def _novelty_score_calculation(self, rule: Rule):
+        array = rule.distances_
+        num_neighbors = min(self.k_neighbor, len(array) - 1)
+        if num_neighbors == 0:
+            return 0
+
+        k_closest_neighbors = np.partition(array, num_neighbors)[:num_neighbors]
+        return sum(k_closest_neighbors) / num_neighbors
 
 
 class ProgressiveMinimalCriteria(NoveltyCalculation):
@@ -60,7 +67,7 @@ class ProgressiveMinimalCriteria(NoveltyCalculation):
         return super()._novelty_score(rules=filtered_rules)
 
 
-class NovelityFitnessPareto(NoveltyCalculation):
+class NoveltyFitnessPareto(NoveltyCalculation):
     """Uses the basic novelty score calculation and return only the pareto front of it."""
 
     def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
@@ -97,9 +104,9 @@ class NoveltyFitnessBiased(NoveltyCalculation):
 
         super().__init__(novelty_search_type=novelty_search_type, archive=archive)
 
-    def _novelty_score_calculation(self, **kwargs: dict()):
-        basic_novelty_score = super()._novelty_score_calculation(**kwargs)
-        scaled_fitness = kwargs["fitness"] / 100
+    def _novelty_score_calculation(self, rule: Rule):
+        basic_novelty_score = super()._novelty_score_calculation(rule)
+        scaled_fitness = rule.fitness_ / 100
         novelty_score = (self.novelty_bias * basic_novelty_score) + (self.fitness_bias * scaled_fitness)
 
         return novelty_score

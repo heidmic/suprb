@@ -5,7 +5,7 @@ from suprb import Solution
 from suprb.base import BaseComponent
 from suprb.utils import RandomState
 
-from suprbopt.solution.utils import sigmoid_binarize
+from suprb.optimizer.solution.utils import sigmoid_binarize
 
 
 class Particle(metaclass=ABCMeta):
