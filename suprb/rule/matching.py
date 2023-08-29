@@ -226,26 +226,22 @@ class GaussianKernelFunction(MatchingFunction):
         self.center = center
         self.radius = radius
         self.threshold = 0.7
-        self.deviations = self.radius/np.sqrt(-2*np.log(self.threshold))
+        self.deviations = self.radius*2/np.sqrt(-2*np.log(self.threshold))
 
     def __call__(self, X: np.ndarray):
         """
         Gaussian Kernel Function > threshold as matching function
         """
-
-        out1 =((X - self.center) ** 2)
-        out2 = (2 * (self.deviations ** 2))
-
-        out3 = ((X - self.center) ** 2) / (2 * (self.deviations ** 2))
-
-        test4 = np.sum(((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1)
+        self.radius = np.abs(self.radius).copy()
+        self.deviations = self.radius*2/np.sqrt(-2*np.log(self.threshold))
 
         test2 = np.exp(np.sum(
             ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1)
-        test = np.exp(np.sum(
+        out = np.amax(test2)
+        result = np.exp(np.sum(
             ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
 
-        return test
+        return result
 
     @property
     def volume_(self):
@@ -271,17 +267,16 @@ class GaussianKernelFunction(MatchingFunction):
         distance_low = np.abs(-1 - self.center)
         distance_high = np.abs(1 - self.center)
 
-        invalid_indices_min = np.squeeze(np.argwhere(low < -1))
-        invalid_indices_max = np.squeeze(np.argwhere(high > 1))
+        invalid_indices_min = np.squeeze(np.argwhere(low <= -1))
+        invalid_indices_max = np.squeeze(np.argwhere(high >= 1))
 
         temp_array = np.ndarray(shape=self.radius.shape)
-
         np.put(a=temp_array, ind=invalid_indices_min, v=np.minimum(distance_low, distance_high).take(invalid_indices_min))
         self.radius = temp_array
         np.put(a=temp_array, ind=invalid_indices_max, v=np.minimum(distance_low, distance_high).take(invalid_indices_max))
         self.radius = temp_array
 
-        self.deviations = self.radius/np.sqrt(-2*np.log(self.threshold))
+        self.deviations = self.radius*2/np.sqrt(-2*np.log(self.threshold))
 
     def min_range(self, min_range: float):
         low, high = self.center - self.radius, self.center + self.radius
@@ -290,6 +285,9 @@ class GaussianKernelFunction(MatchingFunction):
 
         if min_range > 0:
             invalid_indices = np.argwhere(diameter < min_range)
-            self.radius[invalid_indices] += min_range / 2
 
-        self.deviations = self.radius/np.sqrt(-2*np.log(self.threshold))
+            new_radius = self.radius + min_range / 2
+            self.radius[invalid_indices] = new_radius[invalid_indices]
+
+            new_deviation = self.radius*2/np.sqrt(-2*np.log(self.threshold))
+            self.deviations = new_deviation

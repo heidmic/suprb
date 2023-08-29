@@ -183,24 +183,11 @@ class Uniform(RuleMutation):
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
         rule.match.radius = np.abs(rule.match.radius).copy()
 
-
-        help1 = rule.match.center
-        help2 = rule.match.radius
-        help3 = rule.match.center - rule.match.radius
-        help4 = rule.match.center + rule.match.radius
-
-        low, high = rule.match.center - rule.match.radius, rule.match.center + rule.match.radius
-
-
-        out1 = rule.match.center
         #rule.match.center = random_state.uniform(low, high, size=rule.match.radius.shape)
-        out2 = rule.match.center
-
-        test3 = rule.match.deviations
         rule.match.deviations = rule.match.deviations * np.random.uniform(0.5, 1.5, size=rule.match.deviations.shape)
-        test2 = rule.match.deviations
 
-        rule.match.radius = rule.match.deviations * np.sqrt(-2*np.log(rule.match.threshold))
+
+        rule.match.radius = (rule.match.deviations * np.sqrt(-2*np.log(rule.match.threshold))) / 2
 
 
 
