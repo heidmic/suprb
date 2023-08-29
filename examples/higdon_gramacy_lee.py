@@ -11,7 +11,7 @@ from suprb.logging.combination import CombinedLogger
 from suprb.logging.default import DefaultLogger
 from suprb.logging.stdout import StdoutLogger
 from suprb.optimizer import rule as rule_opt
-from suprb.optimizer.solution import saga1
+from suprb.optimizer.solution import saga2
 from suprb.optimizer.rule import es, rs
 from suprb.utils import check_random_state
 from suprb.optimizer.rule.mutation import HalfnormIncrease
@@ -53,10 +53,10 @@ if __name__ == '__main__':
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
             mutation=HalfnormIncrease(sigma=0.1),
         ),
-        solution_composition=saga1.SelfAdaptingGeneticAlgorithm(
+        solution_composition=saga2.SelfAdaptingGeneticAlgorithm(
             n_iter=64,
-            crossover=saga1.crossover.Uniform(),
-            selection=saga1.selection.Tournament(),
+            crossover=saga2.crossover.Uniform(),
+            selection=saga2.selection.Tournament(),
         ),
         n_iter=4,
         n_rules=16,
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     )
 
     # Do cross-validation
-    scores = cross_validate(model, X_train, y_train, cv=4, n_jobs=4, verbose=10,
+    scores = cross_validate(model, X_train, y_train, cv=4, n_jobs=1, verbose=10,
                             scoring=['r2', 'neg_mean_squared_error'],
                             return_estimator=True, fit_params={'cleanup': True})
     models = scores['estimator']

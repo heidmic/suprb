@@ -13,7 +13,7 @@ class SolutionMutation(BaseComponent, metaclass=ABCMeta):
     def __init__(self):
         pass
 
-    def __call__(self, solution: Solution, random_state: RandomState) -> Solution:
+    def __call__(self, solution: Solution, mutation_rate: float, random_state: RandomState) -> Solution:
         pass
 
 
