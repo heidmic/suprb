@@ -7,6 +7,7 @@ from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, Tournament
 from ..archive import SolutionArchive, Elitist
 from ..base import PopulationBasedSolutionComposition
+from suprb.solution import Solution
 
 
 class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
@@ -37,6 +38,12 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
     """
 
     n_elitists_: int
+    fitness_variance_min: float
+    fitness_variance_max: float
+    old_gen: list[Solution]
+    fitness_mean: float
+    fitness_min: float
+    fitness_max: float
 
     def __init__(self,
                  n_iter: int = 32,
@@ -89,12 +96,9 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
         self.fitness_variance_min = fitness_variance
         self.fitness_variance_max = fitness_variance
         self.old_gen = self.population_
-        self.fitness_mean = np.mean(([i.fitness_ for i in self.population_]))
-        self.fitness_min = np.min(([i.fitness_ for i in self.population_]))
-        self.fitness_max = np.max(([i.fitness_ for i in self.population_]))
-        print("mean", self.fitness_mean)
-        print("min", self.fitness_mean)
-        print("max", self.fitness_mean)
+        self.fitness_mean = np.mean([i.fitness_ for i in self.population_])
+        self.fitness_min = np.min([i.fitness_ for i in self.population_])
+        self.fitness_max = np.max([i.fitness_ for i in self.population_])
 
         for iter_ in range(self.n_iter):
 

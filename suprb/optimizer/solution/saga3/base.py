@@ -1,15 +1,16 @@
 import numpy as np
 
-from suprb.solution.initialization import SolutionInit, RandomInit
+from suprb.solution.initialization import SolutionInit
 from suprb.utils import flatten
-from .crossover import SolutionCrossover, NPoint
+from .crossover import SagaCrossover
 from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, Tournament
-from ..archive import SolutionArchive, Elitist
+from .solution_extension import SagaElitist, SagaRandominit, SagaSolution
+from ..archive import SolutionArchive
 from ..base import PopulationBasedSolutionComposition
 
 
-class GeneticAlgorithm(PopulationBasedSolutionComposition):
+class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
     """ A simple Genetic Algorithm.
 
     Parameters
@@ -33,16 +34,17 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
     """
 
     n_elitists_: int
+    population_: list[SagaSolution]
 
     def __init__(self,
                  n_iter: int = 32,
                  population_size: int = 32,
                  elitist_ratio: float = 0.17,
-                 mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
-                 crossover: SolutionCrossover = NPoint(n=3),
+                 mutation: SolutionMutation = BitFlips(),
+                 crossover: SagaCrossover = SagaCrossover(parameter_mutation_rate=0.05),
                  selection: SolutionSelection = Tournament(),
-                 init: SolutionInit = RandomInit(),
-                 archive: SolutionArchive = Elitist(),
+                 init: SolutionInit = SagaRandominit(),
+                 archive: SolutionArchive = SagaElitist(),
                  random_state: int = None,
                  n_jobs: int = 1,
                  warm_start: bool = True,

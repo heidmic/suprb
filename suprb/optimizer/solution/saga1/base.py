@@ -124,7 +124,7 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
 
 
     def calc_gdm(self):
-        return np.mean(([i.fitness_ for i in self.population_])) / np.max([i.fitness_ for i in self.population_])
+        return np.mean([i.fitness_ for i in self.population_]) / np.max([i.fitness_ for i in self.population_])
     
 
     def adjust_rates(self):
