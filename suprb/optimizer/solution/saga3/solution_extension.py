@@ -105,30 +105,3 @@ class SagaSolution(Solution):
             attributes = ['fitness_', 'error_', 'complexity_', 'is_fitted_', 'input_size_']
             solution.__dict__ |= {key: getattr(self, key) for key in attributes}
         return solution
-
-
-class SagaRandominit(RandomInit):
-    """Init and extend genomes with random values, with `p` denoting the probability of ones."""
-
-    def __call__(self, pool: list[Rule], random_state: RandomState) -> SagaSolution:
-        return SagaSolution(genome=random(len(pool), self.p, random_state), pool=pool, mixing=self.mixing,
-                        fitness=self.fitness)
-
-    def pad(self, solution: SagaSolution, random_state: RandomState) -> SagaSolution:
-        solution.genome = np.concatenate((solution.genome, random(padding_size(solution), self.p, random_state)),
-                                         axis=0)
-        return solution
-    
-
-class SagaElitist(Elitist):
-    
-    population_: list[SagaSolution]
-
-    def __call__(self, new_population: list[SagaSolution]):
-        best = max(new_population, key=lambda i: i.fitness_)
-        if self.population_:
-            if self.population_[0].fitness_ < best.fitness_:
-                self.population_.pop(0)
-                self.population_.append(best.clone())
-        else:
-            self.population_.append(best.clone())

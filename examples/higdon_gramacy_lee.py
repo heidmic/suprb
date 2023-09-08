@@ -11,8 +11,7 @@ from suprb.logging.combination import CombinedLogger
 from suprb.logging.default import DefaultLogger
 from suprb.logging.stdout import StdoutLogger
 from suprb.optimizer import rule as rule_opt
-from suprb.optimizer.solution import saga2
-from suprb.optimizer.rule import es, rs
+from suprb.optimizer.solution import ga
 from suprb.utils import check_random_state
 from suprb.optimizer.rule.mutation import HalfnormIncrease
 from sklearn.linear_model import Ridge
@@ -59,13 +58,9 @@ if __name__ == '__main__':
             mutation=HalfnormIncrease(),
             novelty_calculation=NoveltyFitnessBiased()
         ),
-        solution_composition=saga2.SelfAdaptingGeneticAlgorithm(
-            n_iter=64,
-            crossover=saga2.crossover.Uniform(),
-            selection=saga2.selection.Tournament(),
-        ),
-        n_iter=4,
-        n_rules=16,
+        solution_composition=ga.GeneticAlgorithm(n_iter=32, population_size=32),
+        n_iter=32,
+        n_rules=8,
         verbose=10,
         logger=CombinedLogger(
             [('stdout', StdoutLogger()), ('default', DefaultLogger())]),

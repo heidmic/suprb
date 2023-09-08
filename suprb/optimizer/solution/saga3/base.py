@@ -1,12 +1,12 @@
 import numpy as np
 
-from suprb.solution.initialization import SolutionInit
+from suprb.solution.initialization import RandomInit, SolutionInit
 from suprb.utils import flatten
 from .crossover import SagaCrossover
 from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, Tournament
-from .solution_extension import SagaElitist, SagaRandominit, SagaSolution
-from ..archive import SolutionArchive
+from .solution_extension import SagaSolution
+from ..archive import Elitist, SolutionArchive
 from ..base import PopulationBasedSolutionComposition
 
 
@@ -43,8 +43,8 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
                  mutation: SolutionMutation = BitFlips(),
                  crossover: SagaCrossover = SagaCrossover(parameter_mutation_rate=0.05),
                  selection: SolutionSelection = Tournament(),
-                 init: SolutionInit = SagaRandominit(),
-                 archive: SolutionArchive = SagaElitist(),
+                 init: SolutionInit = RandomInit(),
+                 archive: SolutionArchive = Elitist(),
                  random_state: int = None,
                  n_jobs: int = 1,
                  warm_start: bool = True,

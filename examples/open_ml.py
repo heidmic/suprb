@@ -14,7 +14,7 @@ import suprb.optimizer.rule.mutation
 from suprb import SupRB
 from suprb import rule
 from suprb.logging.stdout import StdoutLogger
-from suprb.optimizer.solution import ga
+from suprb.optimizer.solution import sas, saga1, saga2, saga3
 from suprb.optimizer.rule import es
 
 if __name__ == '__main__':
@@ -29,15 +29,6 @@ if __name__ == '__main__':
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
     models = [
-        LinearRegression(),
-        DecisionTreeRegressor(random_state=random_state),
-        RandomForestRegressor(random_state=random_state),
-        ExtraTreeRegressor(random_state=random_state),
-        ExtraTreesRegressor(random_state=random_state),
-        GradientBoostingRegressor(random_state=random_state),
-        HistGradientBoostingRegressor(random_state=random_state),
-        AdaBoostRegressor(random_state=random_state),
-        SVR(),
         KNeighborsRegressor(),
         SupRB(
             rule_generation=es.ES1xLambda(
@@ -45,13 +36,52 @@ if __name__ == '__main__':
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
                 mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
             ),
-            solution_composition=ga.GeneticAlgorithm(
+            solution_composition=saga1.SelfAdaptingGeneticAlgorithm(
                 n_iter=128,
-                crossover=ga.crossover.Uniform(),
-                selection=ga.selection.Tournament(),
-                mutation=ga.mutation.BitFlips(),
             ),
-            n_iter=32,
+            n_iter=8,
+            n_rules=4,
+            logger=StdoutLogger(),
+            random_state=random_state,
+        ),
+        SupRB(
+            rule_generation=es.ES1xLambda(
+                operator='&',
+                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
+                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
+            ),
+            solution_composition=saga2.SelfAdaptingGeneticAlgorithm(
+                n_iter=128,
+            ),
+            n_iter=8,
+            n_rules=4,
+            logger=StdoutLogger(),
+            random_state=random_state,
+        ),
+        SupRB(
+            rule_generation=es.ES1xLambda(
+                operator='&',
+                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
+                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
+            ),
+            solution_composition=saga3.SelfAdaptingGeneticAlgorithm(
+                n_iter=128,
+            ),
+            n_iter=8,
+            n_rules=4,
+            logger=StdoutLogger(),
+            random_state=random_state,
+        ),
+        SupRB(
+            rule_generation=es.ES1xLambda(
+                operator='&',
+                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
+                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
+            ),
+            solution_composition=sas.SasGeneticAlgorithm(
+                n_iter=128,
+            ),
+            n_iter=8,
             n_rules=4,
             logger=StdoutLogger(),
             random_state=random_state,
@@ -63,7 +93,7 @@ if __name__ == '__main__':
         print(f"[EVALUATION] {name}")
         return pd.Series(
             cross_val_score(
-                model, X, y, cv=4, n_jobs=4, verbose=10, scoring='neg_root_mean_squared_error'),
+                model, X, y, cv=4, n_jobs=1, verbose=10, scoring='neg_root_mean_squared_error'),
             name='negated RMSE')
 
     scores = pd.concat({name: run(name=name, model=model) for name, model in models.items()}, axis=0).to_frame()

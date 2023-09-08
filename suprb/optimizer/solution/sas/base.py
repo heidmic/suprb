@@ -1,6 +1,6 @@
 import numpy as np
 
-from .solution_extension import SasElitist, SasRandominit, SasSolution
+from .solution_extension import SasSolution
 from suprb.solution.initialization import SolutionInit, RandomInit
 from suprb.utils import flatten
 from .crossover import SolutionCrossover, NPoint
@@ -43,8 +43,8 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
                  mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
                  crossover: SolutionCrossover = NPoint(n=3), 
                  selection: SolutionSelection = Ageing(),
-                 init: SolutionInit = SasRandominit(),
-                 archive: SolutionArchive = SasElitist(),
+                 init: SolutionInit = RandomInit(),
+                 archive: SolutionArchive = Elitist(),
                  random_state: int = None,
                  n_jobs: int = 1,
                  warm_start: bool = True,
