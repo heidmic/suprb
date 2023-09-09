@@ -2,4 +2,4 @@ from .base import SelfAdaptingGeneticAlgorithm
 from .crossover import SagaCrossover
 from .mutation import SolutionMutation
 from .selection import SolutionSelection
-from .solution_extension import SagaSolution, SagaElitist, SagaRandominit, SolutionCrossover
+from .solution_extension import SagaSolution, SolutionCrossover

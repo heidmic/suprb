@@ -52,8 +52,6 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
                  mutation: SolutionMutation = BitFlips(),
                  crossover: SolutionCrossover = NPoint(n=3),
                  selection: SolutionSelection = Tournament(),
-                 v_min: float = 0.005,
-                 v_max: float = 0.15,
                  mutation_rate_min: float = 0.001,
                  mutation_rate_max: float = 0.25,
                  crossover_rate_min: float = 0.5,
@@ -74,8 +72,6 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
             warm_start=warm_start,
         )
 
-        self.v_min = v_min
-        self.v_max = v_max
         self.mutation_rate_min = mutation_rate_min
         self.mutation_rate_max = mutation_rate_max
         self.mutation_rate_current_max = mutation_rate_max

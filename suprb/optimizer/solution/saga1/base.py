@@ -47,7 +47,7 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
                  selection: SolutionSelection = Tournament(),
                  v_min: float = 0.005,
                  v_max: float = 0.15,
-                 mutation_rate: float = 0.001,
+                 mutation_rate: float = 0.025,
                  mutation_rate_min: float = 0.001,
                  mutation_rate_max: float = 0.25,
                  mutation_rate_multiplier = 1.1,

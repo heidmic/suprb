@@ -180,6 +180,11 @@ class SupRB(BaseRegressor):
             if self.logger_ is not None:
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
+            # Addition for Hyperparameter Tuning
+            if not self.pool_:
+                self.solution_composition_.elitist().fitness_ = 0
+                break
+
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
 
