@@ -7,6 +7,12 @@ figs/*
 *.aux
 *.gz
 
+# PDF
+*.pdf
+
+# ZIP
+*.zip
+
 # MlFlow
 */mlruns/*
 mlruns/*
@@ -236,12 +242,6 @@ venv*/
 ENV/
 env.bak/
 venv.bak/
-
-# PDFs
-*.pdf
-
-#ZIPs
-*.zip
 
 # Spyder project settings
 .spyderproject
