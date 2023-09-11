@@ -238,10 +238,10 @@ env.bak/
 venv.bak/
 
 # PDFs
-.pdf
+*.pdf
 
-# Experiments
-experiments/
+#ZIPs
+*.zip
 
 # Spyder project settings
 .spyderproject
