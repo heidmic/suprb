@@ -52,10 +52,10 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
                  mutation: SolutionMutation = BitFlips(),
                  crossover: SolutionCrossover = NPoint(n=3),
                  selection: SolutionSelection = Tournament(),
-                 mutation_rate_min: float = 0.001,
-                 mutation_rate_max: float = 0.25,
-                 crossover_rate_min: float = 0.5,
-                 crossover_rate_max: float = 1.0,
+                 mutation_rate_min: float = 0.01,
+                 mutation_rate_max: float = 0.1,
+                 crossover_rate_min: float = 0.4,
+                 crossover_rate_max: float = 0.9,
                  init: SolutionInit = RandomInit(),
                  archive: SolutionArchive = Elitist(),
                  random_state: int = None,
@@ -137,11 +137,14 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
 
 
     def calc_similarity(self):
-        dot_sum = np.sum([np.multiply(self.old_gen[i].fitness_, self.population_[i].fitness_) for i in range(len(self.population_))])
-        length_new = np.sqrt(np.sum([np.square(i.fitness_) for i in self.population_]) + np.exp(-10))
-        length_old = np.sqrt(np.sum([np.square(i.fitness_) for i in self.old_gen]) + np.exp(-10))
-        cosine_similarity = dot_sum / (length_new + length_old)
-        genome_similarity = np.product([(np.count_nonzero(np.bitwise_xor(self.population_[i].genome, self.old_gen[i].genome)==0)/len(self.population_)) for i in range(len(self.population_))])
+        try:
+            dot_sum = np.sum([np.multiply(self.old_gen[i].fitness_, self.population_[i].fitness_) for i in range(len(self.population_))])
+            length_new = np.sqrt(np.sum([np.square(i.fitness_) for i in self.population_]) + np.exp(-10))
+            length_old = np.sqrt(np.sum([np.square(i.fitness_) for i in self.old_gen]) + np.exp(-10))
+            cosine_similarity = dot_sum / (length_new + length_old)
+            genome_similarity = np.intersect1d([i.fitness_ for i in self.population_], [i.fitness_ for i in self.old_gen]).size / np.union1d([i.fitness_ for i in self.population_], [i.fitness_ for i in self.old_gen]).size
+        except ZeroDivisionError:
+            return 1
         return cosine_similarity * genome_similarity
     
     def calc_diversity(self):

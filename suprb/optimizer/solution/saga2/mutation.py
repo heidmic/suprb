@@ -21,7 +21,9 @@ class BitFlips(SolutionMutation):
     """Flips every bit in the genome with probability `mutation_rate`."""
 
     def __call__(self, solution: Solution, mutation_rate_min: float, mutation_rate_max: float, fitness_mean: float, fitness_max: float, random_state: RandomState) -> Solution:
-        if solution.fitness_ > fitness_mean:
+        if fitness_max == fitness_mean:
+            mutation_rate = mutation_rate_min
+        elif solution.fitness_ > fitness_mean:
             mutation_rate = mutation_rate_min + (mutation_rate_max - mutation_rate_min) * ((fitness_max - solution.fitness_) / (fitness_max - fitness_mean))
         else:
             mutation_rate = mutation_rate_max
