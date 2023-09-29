@@ -38,7 +38,7 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
 
     def __init__(self,
                  n_iter: int = 32,
-                 initial_population_size: int = 32,
+                 initial_population_size: int = 100,
                  elitist_ratio: float = 0.17,
                  mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
                  crossover: SolutionCrossover = NPoint(n=3), 

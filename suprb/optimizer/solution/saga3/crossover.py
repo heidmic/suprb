@@ -4,7 +4,7 @@ from suprb.utils import RandomState
 
 
 class SagaCrossover(BaseComponent):
-    """Performs crossover and mutation of Parameters, the calls resulting crossover function"""
+    """Performs crossover and mutation of Parameters, then calls resulting crossover function"""
 
     def __init__(self, parameter_mutation_rate: float):
         self.parameter_mutation_rate = parameter_mutation_rate
