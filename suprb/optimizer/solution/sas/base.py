@@ -39,7 +39,6 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
     def __init__(self,
                  n_iter: int = 32,
                  initial_population_size: int = 100,
-                 elitist_ratio: float = 0.17,
                  mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
                  crossover: SolutionCrossover = NPoint(n=3), 
                  selection: SolutionSelection = Ageing(),
@@ -63,16 +62,13 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
         self.mutation = mutation
         self.crossover = crossover
         self.selection = selection
-        self.elitist_ratio = elitist_ratio
 
     def _optimize(self, X: np.ndarray, y: np.ndarray):
         self.fit_population(X, y)
 
-        self.n_elitists_ = int(self.population_size * self.elitist_ratio)
-
         for _ in range(self.n_iter):
-            # Eltitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[:self.n_elitists_]
+            # Correct values for popsize and elitists
+            self.population_size = len(self.population_)
 
             # Selection
             parents = self.selection(population=self.population_, initial_population_size=self.population_size,
@@ -93,8 +89,7 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
             mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
 
             # Replacement
-            self.population_ = elitists
-            self.population_.extend(mutated_children)
+            self.population_ = mutated_children
 
             self.fit_population(X, y)
 
