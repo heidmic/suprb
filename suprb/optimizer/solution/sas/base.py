@@ -67,7 +67,7 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
         self.fit_population(X, y)
 
         for _ in range(self.n_iter):
-            # Correct values for popsize and elitists
+            # Correct values for popsize
             self.population_size = len(self.population_)
 
             # Selection
