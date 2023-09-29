@@ -18,7 +18,8 @@ class Ageing(SolutionSelection):
 
     def __call__(self, population: list[SasSolution], initial_population_size: int, random_state: RandomState) -> list[SasSolution]:
         median_fitness = np.median([i.fitness_ for i in population])
-        thousandth_fitness = (sorted(population, key=lambda i: i.fitness_, reverse=True)[:1000])[-1]
+        top_thousand = sorted(population, key=lambda i: i.fitness_, reverse=True)[:1000]
+        thousandth_fitness = np.min([i.fitness_ for i in top_thousand])
         for i in range(len(population)):
             population[i].age -= 1
             if population[i].fitness_ < median_fitness: 
