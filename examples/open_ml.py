@@ -1,13 +1,7 @@
 import pandas as pd
 from sklearn.datasets import fetch_openml
-from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor, GradientBoostingRegressor, \
-    HistGradientBoostingRegressor, AdaBoostRegressor
-from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
-from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.svm import SVR
-from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
 import suprb.optimizer.rule.mutation
@@ -29,35 +23,6 @@ if __name__ == '__main__':
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
     models = [
-        KNeighborsRegressor(),
-        SupRB(
-            rule_generation=es.ES1xLambda(
-                operator='&',
-                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
-            ),
-            solution_composition=saga1.SelfAdaptingGeneticAlgorithm(
-                n_iter=128,
-            ),
-            n_iter=8,
-            n_rules=4,
-            logger=StdoutLogger(),
-            random_state=random_state,
-        ),
-        SupRB(
-            rule_generation=es.ES1xLambda(
-                operator='&',
-                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
-            ),
-            solution_composition=saga2.SelfAdaptingGeneticAlgorithm(
-                n_iter=128,
-            ),
-            n_iter=8,
-            n_rules=4,
-            logger=StdoutLogger(),
-            random_state=random_state,
-        ),
         SupRB(
             rule_generation=es.ES1xLambda(
                 operator='&',
@@ -65,20 +30,6 @@ if __name__ == '__main__':
                 mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
             ),
             solution_composition=saga3.SelfAdaptingGeneticAlgorithm(
-                n_iter=128,
-            ),
-            n_iter=8,
-            n_rules=4,
-            logger=StdoutLogger(),
-            random_state=random_state,
-        ),
-        SupRB(
-            rule_generation=es.ES1xLambda(
-                operator='&',
-                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)
-            ),
-            solution_composition=sas.SasGeneticAlgorithm(
                 n_iter=128,
             ),
             n_iter=8,

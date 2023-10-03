@@ -27,7 +27,7 @@ def random(n: int, p: float, random_state: RandomState):
     
 
 class SasSolution(Solution):
-    """Solution that mixes a subpopulation of rules. Extended to have a individual mutationrate, crossoverrate and crossovermethod"""
+    """Solution that mixes a subpopulation of rules. Extended to have an age"""
 
     def __init__(self, genome: np.ndarray, 
                  pool: list[Rule], 
@@ -37,6 +37,14 @@ class SasSolution(Solution):
         super().__init__(genome, pool, mixing, fitness)
         self.age = age
 
+    def fit(self, X: np.ndarray, y: np.ndarray) -> SasSolution:
+        pred = self.predict(X, cache=True)
+        self.error_ = max(mean_squared_error(y, pred), 1e-4)
+        self.input_size_ = self.genome.shape[0]
+        self.complexity_ = np.sum(self.genome).item()  # equivalent to np.count_nonzero, but possibly faster
+        self.fitness_ = self.fitness(self)
+        self.is_fitted_ = True
+        return self
 
     def clone(self, **kwargs) -> SasSolution:
         args = dict(
