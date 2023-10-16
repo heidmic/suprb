@@ -71,12 +71,12 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
         self.fit_population(X, y)
 
         for _ in range(self.n_iter):
-            # Correct value for population_size
-            self.population_size = len(self.population_)
-
             # Selection
-            parents = self.selection(population=self.population_, initial_population_size=self.population_size,
+            parents = self.selection(population=self.population_, initial_population_size=self.initial_population_size,
                                      random_state=self.random_state_)
+            
+            # Correct value for population_size
+            self.population_size = len(parents)
             
             # Note that this expression swallows the last element, if `population_size` is odd
             parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
