@@ -15,7 +15,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
-    """ A simple Genetic Algorithm.
+    """ A simple self adapting Genetic Algorithm, implemented acording to 10.1007/978-3-642-21219-2_16 .
 
     Parameters
     ----------

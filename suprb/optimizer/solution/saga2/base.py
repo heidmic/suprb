@@ -11,7 +11,7 @@ from suprb.solution import Solution
 
 
 class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
-    """ A simple self adapting Genetic Algorithm.
+    """ A simple self adapting Genetic Algorithm, implemented acording to 10.1007/s00521-018-3438-9 .
 
     Parameters
     ----------

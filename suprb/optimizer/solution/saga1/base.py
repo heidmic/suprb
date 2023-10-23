@@ -10,7 +10,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
-    """ A simple self adapting Genetic Algorithm.
+    """ A simple self adapting Genetic Algorithm, implemented acording to 10.1109/20.952626 .
 
     Parameters
     ----------
