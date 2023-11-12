@@ -235,13 +235,8 @@ class GaussianKernelFunction(MatchingFunction):
         self.radius = np.abs(self.radius).copy()
         self.deviations = self.radius*2/np.sqrt(-2*np.log(self.threshold))
 
-        test2 = np.exp(np.sum(
-            ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1)
-        out = np.amax(test2)
-        result = np.exp(np.sum(
+        return np.exp(np.sum(
             ((X - self.center) ** 2) / (2 * (self.deviations ** 2)), axis=1) * -1) > self.threshold
-
-        return result
 
     @property
     def volume_(self):
@@ -253,37 +248,42 @@ class GaussianKernelFunction(MatchingFunction):
         pre_factor = (np.pi ** (dim / 2)) / (math.gamma((dim/2) + 1))
         prod_deviations = np.prod(self.radius)
 
-        ret_val = pre_factor * prod_deviations
-        return ret_val
+        return pre_factor * prod_deviations
 
     def copy(self):
         return GaussianKernelFunction(center=self.center, radius=self.radius)
 
     def clip(self, rule_parameter: np.ndarray):
-        self.radius = np.abs(self.radius).copy()
-
+        # get bounds of ellipsoid
         low, high = self.center - self.radius, self.center + self.radius
 
+        # get position relative to definition space
         distance_low = np.abs(-1 - self.center)
         distance_high = np.abs(1 - self.center)
 
+        # get values out of the definition space
         invalid_indices_min = np.squeeze(np.argwhere(low <= -1))
         invalid_indices_max = np.squeeze(np.argwhere(high >= 1))
 
+        # storing the values because of Pointer problems, clipping invalid values
         temp_array = np.ndarray(shape=self.radius.shape)
         np.put(a=temp_array, ind=invalid_indices_min, v=np.minimum(distance_low, distance_high).take(invalid_indices_min))
         self.radius = temp_array
         np.put(a=temp_array, ind=invalid_indices_max, v=np.minimum(distance_low, distance_high).take(invalid_indices_max))
         self.radius = temp_array
 
+        # recalculating deviations, because of the possibility of a changed range
         self.deviations = self.radius*2/np.sqrt(-2*np.log(self.threshold))
 
     def min_range(self, min_range: float):
+        # get bounds of ellipsoid
         low, high = self.center - self.radius, self.center + self.radius
 
+        # get diameter
         diameter = np.abs(high - low)
 
         if min_range > 0:
+            # strech ellipsoid to min_range
             invalid_indices = np.argwhere(diameter < min_range)
 
             new_radius = self.radius + min_range / 2

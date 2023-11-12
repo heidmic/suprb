@@ -89,7 +89,14 @@ class Normal(RuleMutation):
         self.individual_mutate(rule, random_state)
 
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
-        self.individual_mutate(rule, random_state)
+        # get absolute radius values
+        rule.match.radius = np.abs(rule.match.radius).copy()
+
+        # norm increase on deviations
+        rule.match.deviations = rule.match.deviations * random_state.normal(scale=self.sigma[1], size=rule.match.deviations.shape)
+
+        # recalculate the radius based on the changed deviations
+        rule.match.radius = (rule.match.deviations * np.sqrt(-2*np.log(rule.match.threshold))) / 2
 
 
 class Halfnorm(RuleMutation):
@@ -139,23 +146,15 @@ class HalfnormIncrease(RuleMutation):
         bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
 
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
-        center = rule.match.center
-        deviations = rule.match.deviations
-        threshold = rule.match.threshold
+        # get absolute radius values
+        rule.match.radius = np.abs(rule.match.radius).copy()
 
-        numb = halfnorm.rvs(scale=self.sigma[1], size=deviations.shape, random_state=random_state)
+        # halfnorm increase on deviations
+        rule.match.deviations = rule.match.deviations * halfnorm.rvs(scale=self.sigma[1], size=rule.match.deviations.shape, random_state=random_state)
 
-        low, high = center - deviations, center + deviations
+        # recalculate the radius based on the changed deviations
+        rule.match.radius = (rule.match.deviations * np.sqrt(-2*np.log(rule.match.threshold))) / 2
 
-        numerator = high - low
-        denominator = np.sqrt(-2 * np.log(threshold))
-        critical_value = numerator / denominator
-
-        deviations += numb / 2
-
-        invalid_indices = np.argwhere(deviations > critical_value)
-
-        deviations[invalid_indices] = critical_value[invalid_indices]
 
 
 class Uniform(RuleMutation):
@@ -181,12 +180,13 @@ class Uniform(RuleMutation):
         self.individual_mutate(rule, random_state)
 
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
+        # get absolute radius values
         rule.match.radius = np.abs(rule.match.radius).copy()
 
-        #rule.match.center = random_state.uniform(low, high, size=rule.match.radius.shape)
+        # uniform noise on deviations
         rule.match.deviations = rule.match.deviations * np.random.uniform(0.5, 1.5, size=rule.match.deviations.shape)
 
-
+        # recalculate the radius based on the changed deviations
         rule.match.radius = (rule.match.deviations * np.sqrt(-2*np.log(rule.match.threshold))) / 2
 
 
@@ -214,6 +214,11 @@ class UniformIncrease(RuleMutation):
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
 
     def gaussian_kernel_function(self, rule: Rule, random_state: RandomState):
-        bounds = rule.match.bounds
-        bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
-        bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
+        # get absolute radius values
+        rule.match.radius = np.abs(rule.match.radius).copy()
+
+        # uniform increase on deviations
+        rule.match.deviations = rule.match.deviations * np.random.uniform(1, 1.5, size=rule.match.deviations.shape)
+
+        # recalculate the radius based on the changed deviations
+        rule.match.radius = (rule.match.deviations * np.sqrt(-2*np.log(rule.match.threshold))) / 2

@@ -100,15 +100,10 @@ class TestMatchingFunction(unittest.TestCase):
         center = np.array([0, 0])
         X = np.array([center - 0.001])
 
-        # testen ob bei gleichen seed, gleiches ergebnis?
-
-        #
-
         rule = self.create_rule(fitness=1, experience=1,error=0.01)
         ruleMutate = Uniform(matching_type=GaussianKernelFunction, sigma=0.1)
         ruleMutate.gaussian_kernel_function(rule=rule, random_state=42)
         matched = rule.match(X)
-        t = 1
 
 
 if __name__ == '__main__':

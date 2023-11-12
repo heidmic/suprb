@@ -36,8 +36,8 @@ if __name__ == '__main__':
         SupRB(
             rule_generation=es.ES1xLambda(
                 operator='&',
-                init=rule.initialization.NormalInit(sigma=np.array([0.00000001,1]), fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.mutation.Uniform(sigma=np.array([1,1]))
+                init=rule.initialization.NormalInit(sigma=np.array([0.001,1]), fitness=rule.fitness.VolumeWu(alpha=0.8)),
+                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=np.array([1,1]))
             ),
             solution_composition=ga.GeneticAlgorithm(
                 n_iter=64,
