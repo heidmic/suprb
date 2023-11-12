@@ -1,5 +1,6 @@
 
 from typing import Union
+from sklearn import clone
 
 import numpy as np
 from scipy.stats import halfnorm
@@ -177,3 +178,54 @@ class UniformIncrease(RuleMutation):
         bounds = rule.match.bounds
         bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
+
+
+class AdaptiveMutation(RuleMutation):
+    """Start off by using a given operator until the fitness has not increased for
+       more than self.number_of_worse_iterations. Then change the mutation operator
+       to Normal
+    """
+
+    def __init__(self, matching_type: MatchingFunction = None,
+                 operator: RuleMutation = HalfnormIncrease(),
+                 worse_iteration_tolerance: int = 5,
+                 sigma_normal: Union[float, np.ndarray] = 0.1):
+
+        super().__init__(matching_type=matching_type, sigma=operator.sigma)
+        self.best_elitist_fitness = 0
+        self.number_of_worse_iterations = 0
+        self.worse_iteration_tolerance = worse_iteration_tolerance
+        self.sigma_normal = sigma_normal
+
+        # This is necessary because of sklearn guidelines
+        self.operator = operator
+        self.operator_ = clone(self.operator)
+
+    def __call__(self, rule: Rule, random_state: RandomState) -> Rule:
+        return self.operator_(rule, random_state)
+
+    def adapt(self, elitist_fitness: float):
+        if not isinstance(self.operator_, Normal):
+            if elitist_fitness < self.best_elitist_fitness:
+                self.number_of_worse_iterations += 1
+
+                if self.number_of_worse_iterations > self.worse_iteration_tolerance:
+                    self.operator_ = Normal(matching_type=self.matching_type, sigma=self.sigma_normal)
+            else:
+                self.best_elitist_fitness = elitist_fitness
+
+    def unordered_bound(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError(
+            "AdaptiveMutation has no implementation for unordered_bound as it is only used as a wrapper for other mutation types")
+
+    def ordered_bound(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError(
+            "AdaptiveMutation has no implementation for ordered_bound as it is only used as a wrapper for other mutation types")
+
+    def center_spread(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError(
+            "AdaptiveMutation has no implementation for center_spread as it is only used as a wrapper for other mutation types")
+
+    def min_percentage(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError(
+            "AdaptiveMutation has no implementation for min_percentage as it is only used as a wrapper for other mutation types")
