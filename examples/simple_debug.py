@@ -13,7 +13,7 @@ from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 from sklearn.utils import shuffle
 
 from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage, \
-    GaussianKernelFunction
+    GaussianKernelFunction, GaussianKernelFunctionGeneralEllipsoids
 import suprb.optimizer.rule.mutation
 from suprb import SupRB
 from suprb import rule
@@ -37,7 +37,7 @@ if __name__ == '__main__':
             rule_generation=es.ES1xLambda(
                 operator='&',
                 init=rule.initialization.NormalInit(sigma=np.array([0.001,1]), fitness=rule.fitness.VolumeWu(alpha=0.8)),
-                mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=np.array([1,1]))
+                mutation=suprb.optimizer.rule.mutation.Normal(sigma=np.array([1,1]))
             ),
             solution_composition=ga.GeneticAlgorithm(
                 n_iter=64,
@@ -45,8 +45,7 @@ if __name__ == '__main__':
                 selection=ga.selection.Tournament(),
                 mutation=ga.mutation.BitFlips(),
             ),
-            matching_type=GaussianKernelFunction(np.array([]), np.array([])),
-            #matching_type=OrderedBound(np.array([])),
+            matching_type=GaussianKernelFunctionGeneralEllipsoids(np.array([]), np.array([])),
             n_iter=16,
             n_rules=4,
             logger=StdoutLogger(),

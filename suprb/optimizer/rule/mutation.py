@@ -98,6 +98,17 @@ class Normal(RuleMutation):
         # recalculate the radius based on the changed deviations
         rule.match.radius = (rule.match.deviations * np.sqrt(-2*np.log(rule.match.threshold))) / 2
 
+    def gaussian_kernel_function_general_ellipsoid(self, rule: Rule, random_state: RandomState):
+        # get absolute radius values
+        rule.match.matrix_radius = np.abs(rule.match.matrix_radius).copy()
+
+        # norm increase on deviations
+        rule.match.matrix_deviations = rule.match.matrix_deviations * random_state.normal(scale=self.sigma[1], size=rule.match.matrix_deviations.shape)
+
+        # recalculate the radius based on the changed deviations
+        rule.match.matrix_radius = (rule.match.matrix_deviations * np.sqrt(-2*np.log(rule.match.threshold))) / 2
+
+
 
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""

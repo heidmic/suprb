@@ -8,7 +8,7 @@ from sklearn.linear_model import Ridge
 
 from suprb.base import BaseComponent
 from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage, \
-    GaussianKernelFunction
+    GaussianKernelFunction, GaussianKernelFunctionGeneralEllipsoids
 from suprb.utils import check_random_state, RandomState
 from . import Rule, RuleFitness
 from .fitness import VolumeWu
@@ -54,6 +54,9 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
             self.generate_matching_function = self.min_percentage
         elif isinstance(self.matching_type, GaussianKernelFunction):
             self.generate_matching_function = self.gaussian_kernel_function
+        elif isinstance(self.matching_type, GaussianKernelFunctionGeneralEllipsoids):
+            self.generate_matching_function = self.gaussian_kernel_function_general_ellipsoid
+
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """ Generate a random rule.
@@ -103,6 +106,10 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
 
+    @abstractmethod
+    def gaussian_kernel_function_general_ellipsoid(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
+
 
 class MeanInit(RuleInit):
     """Initializes both bounds with the mean."""
@@ -121,6 +128,11 @@ class MeanInit(RuleInit):
 
     def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return GaussianKernelFunction(center=mean.T, deviations=mean.T)
+
+    def gaussian_kernel_function_general_ellipsoid(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        return GaussianKernelFunctionGeneralEllipsoids(center=mean.T, matrix=np.diag(mean.T))
+
+
 
 
 class NormalInit(RuleInit):
@@ -162,6 +174,13 @@ class NormalInit(RuleInit):
 
         return GaussianKernelFunction(center=center, radius=radius)
 
+    def gaussian_kernel_function_general_ellipsoid(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        center = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
+
+        # radius = interval ]0,1]
+        matrix_radius = np.diag((1 - np.random.random_sample(size=(mean.shape[0]))))
+
+        return GaussianKernelFunctionGeneralEllipsoids(center=center, matrix_radius=matrix_radius)
 
 class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
