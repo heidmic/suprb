@@ -127,7 +127,7 @@ class MeanInit(RuleInit):
         return MinPercentage(np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1))
 
     def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        return GaussianKernelFunction(center=mean.T, deviations=mean.T)
+        return GaussianKernelFunction(center=mean.T, radius=mean.T)
 
     def gaussian_kernel_function_general_ellipsoid(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return GaussianKernelFunctionGeneralEllipsoids(center=mean.T, matrix=np.diag(mean.T))
