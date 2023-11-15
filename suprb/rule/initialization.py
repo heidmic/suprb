@@ -130,7 +130,7 @@ class MeanInit(RuleInit):
         return GaussianKernelFunction(center=mean.T, radius=mean.T)
 
     def gaussian_kernel_function_general_ellipsoid(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        return GaussianKernelFunctionGeneralEllipsoids(center=mean.T, matrix=np.diag(mean.T))
+        return GaussianKernelFunctionGeneralEllipsoids(center=mean.T, radius=mean.T)
 
 
 
@@ -178,9 +178,9 @@ class NormalInit(RuleInit):
         center = random_state.normal(loc=mean, scale=self.sigma[0], size=(mean.shape[0]))
 
         # radius = interval ]0,1]
-        matrix_radius = np.diag((1 - np.random.random_sample(size=(mean.shape[0]))))
+        radius = (1 - np.random.random_sample(size=(mean.shape[0])))
 
-        return GaussianKernelFunctionGeneralEllipsoids(center=center, matrix_radius=matrix_radius)
+        return GaussianKernelFunctionGeneralEllipsoids(center=center, radius=radius)
 
 class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
@@ -209,3 +209,6 @@ class HalfnormInit(RuleInit):
 
     def gaussian_kernel_function(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         raise TypeError("Halform Init is not implemented for GKF")
+
+    def gaussian_kernel_function_general_ellipsoid(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        raise TypeError("Halform Init is not implemented for GKFGE")

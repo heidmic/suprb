@@ -273,7 +273,6 @@ class GaussianKernelFunction(MatchingFunction):
                v=np.minimum(distance_low, distance_high).take(invalid_indices_max))
         self.radius = temp_array
 
-        # recalculating deviations, because of the possibility of a changed range
         self.deviations = self.radius * 2 / np.sqrt(-2 * np.log(self.threshold))
 
     def min_range(self, min_range: float):
@@ -297,29 +296,27 @@ class GaussianKernelFunction(MatchingFunction):
 class GaussianKernelFunctionGeneralEllipsoids(MatchingFunction):
     """
     A standard kernel-based matching function producing multi-dimensional
-    hyperellipsoidal conditions. In effect, a center point (c) and deviations (d)
-    are specified for each dimension. A threshold (t) defines if a rule is matched or not.
-    An example x is matched iff exp((x_i - c_i)^2 / 2*(d_i^2)) > t for all dimensions i
+    hyperellipsoidal conditions. In effect, a center point (c) and a deviation matrix (d)
+    are specified for each dimension. Because of the relative positions of the axis - rotations are possible.
+    A threshold (t) defines if a rule is matched or not.
     """
 
-    def __init__(self, center: np.ndarray, matrix_radius: np.ndarray):
+    def __init__(self, center: np.ndarray, radius: np.ndarray):
         self.center = center
-        self.matrix_radius = matrix_radius
+        self.radius = radius
         self.threshold = 0.7
-        self.matrix_deviations = self.matrix_radius * 2 / np.sqrt(-2 * np.log(self.threshold))
+        self.matrix_deviations = np.diag((1 / (self.radius * 2 / np.sqrt(-2 * np.log(self.threshold)))))
 
     def __call__(self, X: np.ndarray):
         """
         Gaussian Kernel Function > threshold as matching function
         """
-        self.matrix_radius = np.abs(self.matrix_radius).copy()
-        self.matrix_deviations = self.matrix_radius * 2 / np.sqrt(-2 * np.log(self.threshold))
-
-        test1 = np.sum(X - self.center, axis=1)
-        test = np.reshape(test1, (-1,1))
+        self.radius = np.abs(self.radius).copy()
+        np.fill_diagonal(self.matrix_deviations, (1 / (self.radius * 2 / np.sqrt(-2 * np.log(self.threshold)))))
 
         return np.exp(
-            ((np.sum(np.dot(test, self.matrix_deviations), axis=0) ** 2) / 2) * -1) > self.threshold
+            -(np.sum((np.square(np.matmul(self.matrix_deviations, (X - self.center).T))) / 2, axis=0))) > self.threshold
+
 
     @property
     def volume_(self):
@@ -329,16 +326,16 @@ class GaussianKernelFunctionGeneralEllipsoids(MatchingFunction):
         dim = self.center.shape[0]
 
         pre_factor = (np.pi ** (dim / 2)) / (math.gamma((dim / 2) + 1))
-        prod_deviations = np.prod(self.matrix_radius)
+        prod_radius = np.prod(self.radius)
 
-        return pre_factor * prod_deviations
+        return pre_factor * prod_radius
 
     def copy(self):
-        return GaussianKernelFunction(center=self.center, matrix_radius=self.matrix_radius)
+        return GaussianKernelFunctionGeneralEllipsoids(center=self.center, radius=self.radius)
 
     def clip(self, rule_parameter: np.ndarray):
         # get bounds of ellipsoid
-        low, high = self.center - self.matrix_radius, self.center + self.matrix_radius
+        low, high = self.center - self.radius, self.center + self.radius
 
         # get position relative to definition space
         distance_low = np.abs(-1 - self.center)
@@ -349,20 +346,20 @@ class GaussianKernelFunctionGeneralEllipsoids(MatchingFunction):
         invalid_indices_max = np.squeeze(np.argwhere(high >= 1))
 
         # storing the values because of Pointer problems, clipping invalid values
-        temp_array = np.ndarray(shape=self.matrix_radius.shape)
+        temp_array = np.ndarray(shape=self.radius.shape)
         np.put(a=temp_array, ind=invalid_indices_min,
                v=np.minimum(distance_low, distance_high).take(invalid_indices_min))
-        self.matrix_radius = temp_array
+        self.radius = temp_array
         np.put(a=temp_array, ind=invalid_indices_max,
                v=np.minimum(distance_low, distance_high).take(invalid_indices_max))
-        self.matrix_radius = temp_array
+        self.radius = temp_array
 
         # recalculating deviations, because of the possibility of a changed range
-        self.matrix_deviations = self.matrix_radius * 2 / np.sqrt(-2 * np.log(self.threshold))
+        np.fill_diagonal(self.matrix_deviations, (1 / (self.radius * 2 / np.sqrt(-2 * np.log(self.threshold)))))
 
     def min_range(self, min_range: float):
         # get bounds of ellipsoid
-        low, high = self.center - self.matrix_radius, self.center + self.matrix_radius
+        low, high = self.center - self.radius, self.center + self.radius
 
         # get diameter
         diameter = np.abs(high - low)
@@ -371,8 +368,7 @@ class GaussianKernelFunctionGeneralEllipsoids(MatchingFunction):
             # strech ellipsoid to min_range
             invalid_indices = np.argwhere(diameter < min_range)
 
-            new_radius = self.matrix_radius + min_range / 2
-            self.matrix_radius[invalid_indices] = new_radius[invalid_indices]
+            new_radius = self.radius + min_range / 2
+            self.radius[invalid_indices] = new_radius[invalid_indices]
 
-            new_deviation = self.matrix_radius * 2 / np.sqrt(-2 * np.log(self.threshold))
-            self.matrix_deviations = new_deviation
+            np.fill_diagonal(self.matrix_deviations, (1 / (self.radius * 2 / np.sqrt(-2 * np.log(self.threshold)))))
