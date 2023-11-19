@@ -87,6 +87,7 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
         self.elitist_ratio = elitist_ratio
 
     def _optimize(self, X: np.ndarray, y: np.ndarray):
+        assert self.population_size % 2 == 0
         self.fit_population(X, y)
 
         self.n_elitists_ = int(self.population_size * self.elitist_ratio)
@@ -109,9 +110,6 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
             children = list(flatten([(self.crossover(A, B, self.crossover_rate, random_state=self.random_state_),
                                       self.crossover(B, A, self.crossover_rate, random_state=self.random_state_))
                                      for A, B in parent_pairs]))
-            # If `population_size` is odd, we add the solution not selected for reproduction directly
-            if self.population_size % 2 != 0:
-                children.append(parents[-1])
 
             # Mutation
             mutated_children = [self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children]

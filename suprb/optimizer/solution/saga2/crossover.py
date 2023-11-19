@@ -47,7 +47,6 @@ class NPoint(SolutionCrossover):
         indices = random_state.choice(np.arange(len(A.genome)), size=min(self.n, len(A.genome)), replace=False)
         for index in indices:
             A = self._single_point(A, B, index)
-            B = self._single_point(B, A, index)
         return A
 
 
