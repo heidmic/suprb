@@ -85,15 +85,13 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
             children = list(flatten([(self.crossover(A, B, random_state=self.random_state_),
                                       self.crossover(B, A, random_state=self.random_state_))
                                      for A, B in parent_pairs]))
-            # If `population_size` is odd, we add the solution not selected for reproduction directly
-            if self.population_size % 2 != 0:
-                children.append(parents[-1])
 
             # Mutation
             mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
 
             # Replacement
-            self.population_ = mutated_children
+            self.population_ = parents
+            self.population_.extend(mutated_children)
 
             self.fit_population(X, y)
-
+            

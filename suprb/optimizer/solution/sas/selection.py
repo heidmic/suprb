@@ -27,10 +27,10 @@ class Ageing(SolutionSelection):
         median_fitness = np.median([i.fitness_ for i in population])
         top_n = initial_population_size * top_cutoff_mult
         top_n_population = sorted(population, key=lambda i: i.fitness_, reverse=True)[:top_n]
-        top_n_fitness = np.min([i.fitness_ for i in top_n_population])
+        top_n_fitness = top_n_population[-1].fitness_
         for i in range(len(population)):
             population[i].age -= 1
-            if population[i].fitness_ < median_fitness: 
+            if population[i].fitness_ > median_fitness: 
                 population[i].age += 1
             else:
                 population[i].age -= 1
