@@ -51,6 +51,7 @@ class DefaultLogger(BaseLogger):
         # Log population
         # Note that this technically is `PopulationBasedSolutionComposition` specific.
         population = estimator.solution_composition_.population_
+        log_metric("population_size", len(population))
         log_metric("population_diversity", genome_diversity(population))
         log_metric_min_max_mean("population_fitness", 'fitness_', population)
         log_metric_min_max_mean("population_error", 'error_', population)

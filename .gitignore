@@ -7,6 +7,12 @@ figs/*
 *.aux
 *.gz
 
+# PDF
+*.pdf
+
+# ZIP
+*.zip
+
 # MlFlow
 */mlruns/*
 mlruns/*
