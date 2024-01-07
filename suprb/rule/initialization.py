@@ -151,9 +151,8 @@ class NormalInit(RuleInit):
         return np.stack((allele_1, allele_2), axis=1)
 
     def ordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        return OrderedBound(np.sort(random_state.normal(loc=mean,
-                                                        scale=self.sigma,
-                                                        size=(2, mean.shape[0])).T, axis=1))
+        return OrderedBound(
+            random_state.normal(loc=mean,scale=self.sigma,size=mean.shape[0]))
 
     def unordered_bound(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return UnorderedBound(random_state.normal(loc=mean,
