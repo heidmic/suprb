@@ -111,92 +111,88 @@ class SupRB(BaseRegressor):
             self : BaseEstimator
                 Returns self.
         """
-        try:
-            # Check that x and y have correct shape
-            X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
-            y = check_array(y, ensure_2d=False, dtype='float64')
 
-            # Init sklearn interface
-            self.n_features_in_ = X.shape[1]
+        # Check that x and y have correct shape
+        X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
+        y = check_array(y, ensure_2d=False, dtype='float64')
 
-            # Random state
-            self.random_state_ = check_random_state(self.random_state)
-            seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter * 2)
-            self.rule_generation_seeds_ = seeds[::2]
-            self.solution_composition_seeds_ = seeds[1::2]
+        # Init sklearn interface
+        self.n_features_in_ = X.shape[1]
 
-            # Initialise components
-            self.pool_ = []
+        # Random state
+        self.random_state_ = check_random_state(self.random_state)
+        seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter * 2)
+        self.rule_generation_seeds_ = seeds[::2]
+        self.solution_composition_seeds_ = seeds[1::2]
 
-            self._validate_rule_generation(default=ES1xLambda())
-            self._validate_solution_composition(default=GeneticAlgorithm())
-            self._validate_matching_type(default=OrderedBound(np.array([])))
+        # Initialise components
+        self.pool_ = []
 
-            self._propagate_component_parameters()
-            self._init_bounds(X)
-            self._init_matching_type()
+        self._validate_rule_generation(default=ES1xLambda())
+        self._validate_solution_composition(default=GeneticAlgorithm())
+        self._validate_matching_type(default=OrderedBound(np.array([])))
 
-            # Init optimizers
-            self.solution_composition_.pool_ = self.pool_
-            self.solution_composition_.init.fitness.max_genome_length_ = self.n_rules * self.n_iter + self.n_initial_rules
-            self.rule_generation_.pool_ = self.pool_
+        self._propagate_component_parameters()
+        self._init_bounds(X)
+        self._init_matching_type()
 
-            # Init Logging
-            self.logger_ = clone(self.logger) if self.logger is not None else None
+        # Init optimizers
+        self.solution_composition_.pool_ = self.pool_
+        self.solution_composition_.init.fitness.max_genome_length_ = self.n_rules * self.n_iter + self.n_initial_rules
+        self.rule_generation_.pool_ = self.pool_
+
+        # Init Logging
+        self.logger_ = clone(self.logger) if self.logger is not None else None
+        if self.logger_ is not None:
+            self.logger_.log_init(X, y, self)
+
+        # Fill population before first step
+        if self.n_initial_rules > 0:
+            try:
+                a = 1/0
+                self._discover_rules(X, y, self.n_initial_rules)
+            except Exception as e:
+                warnings.warn(
+                    f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
+                return self
+
+        # Main loop
+        for self.step_ in range(self.n_iter):
+            # Insert new rules into population
+            try:
+                self._discover_rules(X, y, self.n_rules)
+            except Exception as e:
+                warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
+                return self
+
+            # Optimize solutions
+            try:
+                self._compose_solution(X, y)
+            except Exception as e:
+                warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
+                return self
+
+            # Log Iteration
             if self.logger_ is not None:
-                self.logger_.log_init(X, y, self)
+                self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
-            # Fill population before first step
-            if self.n_initial_rules > 0:
-                try:
-                    self._discover_rules(X, y, self.n_initial_rules)
-                except Exception as e:
-                    warnings.warn(
-                        f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
-                    self.is_fitted_ = True
-                    self.is_error = True
-                    return self
+        self.elitist_ = self.solution_composition_.elitist().clone()
+        self.is_fitted_ = True
 
-            # Main loop
-            for self.step_ in range(self.n_iter):
-                # Insert new rules into population
-                try:
-                    self._discover_rules(X, y, self.n_rules)
-                except Exception as e:
-                    warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
-                    self.is_fitted_ = True
-                    self.is_error = True
-                    return self
+        # Log final result
+        if self.logger_ is not None:
+            self.logger_.log_final(X, y, self)
 
-                # Optimize solutions
-                try:
-                    self._compose_solution(X, y)
-                except Exception as e:
-                    warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
-                    self.is_fitted_ = True
-                    self.is_error = True
-                    return self
+        if cleanup:
+            self._cleanup()
 
-                # Log Iteration
-                if self.logger_ is not None:
-                    self.logger_.log_iteration(X, y, self, iteration=self.step_)
-
-            self.elitist_ = self.solution_composition_.elitist().clone()
-            self.is_fitted_ = True
-
-            # Log final result
-            if self.logger_ is not None:
-                self.logger_.log_final(X, y, self)
-
-            if cleanup:
-                self._cleanup()
-
-            return self
-        except Exception as e:
-            warnings.warn(f"An error has occured during fit:\n{e}")
-            self.is_fitted_ = True
-            self.is_error = True
-            return self
+        return self
 
     def _discover_rules(self, X: np.ndarray, y: np.ndarray, n_rules: int):
         """Performs the rule discovery / rule generation (RG) process."""
