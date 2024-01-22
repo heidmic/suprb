@@ -149,13 +149,14 @@ class SupRB(BaseRegressor):
         # Fill population before first step
         if self.n_initial_rules > 0:
             try:
-                a = 1/0
                 self._discover_rules(X, y, self.n_initial_rules)
             except Exception as e:
                 warnings.warn(
                     f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
+                self.elitist_ = Solution(None, None, None, None)
+                self.elitist_.fitness_ = 0
                 return self
 
         # Main loop
@@ -167,6 +168,8 @@ class SupRB(BaseRegressor):
                 warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
+                self.elitist_ = Solution(None, None, None, None)
+                self.elitist_.fitness_ = 0
                 return self
 
             # Optimize solutions
@@ -176,6 +179,8 @@ class SupRB(BaseRegressor):
                 warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
+                self.elitist_ = Solution(None, None, None, None)
+                self.elitist_.fitness_ = 0
                 return self
 
             # Log Iteration
