@@ -51,7 +51,7 @@ class OrderedBound(MatchingFunction):
     An example x is matched iff l_i <= x_i <= u_i for all dimensions i
     """
 
-    def __init__(self, bounds: np.ndarray):
+    def __init__(self, bounds: np.ndarray = np.array([])):
         self.bounds = bounds
 
     def __call__(self, X: np.ndarray):
