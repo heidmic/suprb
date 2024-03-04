@@ -20,6 +20,22 @@ Solutions of the problem select classifiers from the unchanging pool.
 
 <img src="./docs/solution.png" alt="Solutions and Pool of classifiers" width="500"/>
 
+## Usage
+
+To be able to use SupRB, have a look at the **examples** directory. The most basic way of using SupRB is by specifying the *rule_generation* and *solution_composition* with it's default parameters: 
+`SupRB(rule_generation=ES1xLambda(), solution_composition=GeneticAlgorithm())`
+
+Most of the time you want to use **cross_validate** from **sklearn.model_selection** for your model, which is why the examples provide a basic logic for it.
+
+Make sure that the data you feed the model is in the correct format (use the examples for reference)
+
+The examples in the examples directory are named as follows:
+- example_1.py: Basic example with default parameters
+- example_2.py: Basic example with one level of changed parameters
+- example_3.py: Basic example with two levels of changed parameters
+- example_4.py: Basic example without any default parameters
+- compare_sklearn.py: Code to run a comparison between suprb and other sklearn models
+
 
 ## Publications
 
