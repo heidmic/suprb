@@ -1,8 +1,6 @@
 import warnings
 
 from suprb import SupRB
-from suprb.optimizer.rule.es import ES1xLambda
-from suprb.optimizer.solution.ga import GeneticAlgorithm
 
 """
 This is a wrapper class for SupRB, where parameters can be set without the need to create objects from deep within suprb.
@@ -27,8 +25,7 @@ There is also the possibility to print the final configuration of the SupRB inst
 """
 class SupRBWrapper():
     def __new__(self, **kwargs):
-        self.suprb = SupRB(rule_generation=ES1xLambda(),
-                  solution_composition=GeneticAlgorithm())
+        self.suprb = SupRB()
         
         kwargs = dict(sorted(kwargs.items(), key=lambda item: item[0].count("__")))
         
