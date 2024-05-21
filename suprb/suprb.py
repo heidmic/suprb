@@ -66,7 +66,6 @@ class SupRB(BaseRegressor):
     matching_type_: MatchingFunction
 
     n_features_in_: int
-    early_stop_iteration: int
 
     logger_: BaseLogger
 
@@ -80,8 +79,7 @@ class SupRB(BaseRegressor):
                  random_state: int = None,
                  verbose: int = 1,
                  logger: BaseLogger = None,
-                 n_jobs: int = 1,
-                 early_stop_iteration: int = 5
+                 n_jobs: int = 1
                  ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
@@ -94,24 +92,23 @@ class SupRB(BaseRegressor):
         self.logger = logger
         self.n_jobs = n_jobs
         self.is_error = False
-        self.early_stop_iteration = early_stop_iteration
 
-    def check_early_stopping(self):
+    def check_early_stopping(self, patience):
         if hasattr(self, 'elitist_'):
             better_error = self.solution_composition_.elitist().error_ < self.elitist_.error_
             better_fitness = self.solution_composition_.elitist().fitness_ > self.elitist_.fitness_
             better_complexity = self.solution_composition_.elitist().complexity_ < self.elitist_.complexity_
 
             if better_error or better_fitness or better_complexity:
-                self.early_stop_iteration -= 1
-                if self.early_stop_iteration == 0:
+                patience -= 1
+                if patience == 0:
                     print("Execution stopped early with the following values:")
                     print(f"Error: {self.elitist_.error_}, Fitness: {self.elitist_.fitness_}, Complexity: {self.elitist_.complexity_}")
                     return True
     
         return False
 
-    def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
+    def fit(self, X: np.ndarray, y: np.ndarray, patience: int=5, cleanup=False):
         """ Fit SupRB.2.
 
             Parameters
@@ -194,8 +191,8 @@ class SupRB(BaseRegressor):
                 self.is_error = True
                 return self
 
-            if self.early_stop_iteration > 0:
-                if self.check_early_stopping():
+            if patience > 0:
+                if self.check_early_stopping(patience):
                     break
 
             self.elitist_ = self.solution_composition_.elitist().clone()

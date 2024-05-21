@@ -47,21 +47,20 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
 
-    model = SupRB(rule_generation=ES1xLambda(n_iter=32,
-                                             lmbda=16,
+    model = SupRB(rule_generation=ES1xLambda(n_iter=2,
+                                             lmbda=1,
                                              operator='+',
                                              delay=150,
                                              random_state=random_state,
                                              n_jobs=1),
-                  solution_composition=GeneticAlgorithm(n_iter=32,
-                                                        population_size=32,
+                  solution_composition=GeneticAlgorithm(n_iter=2,
+                                                        population_size=1,
                                                         elitist_ratio=0.2,
                                                         random_state=random_state,
-                                                        n_jobs=1),
-                  early_stop_iteration=5)
+                                                        n_jobs=1))
 
     scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10,
                             scoring=['r2', 'neg_mean_squared_error'],
-                            return_estimator=True, fit_params={'cleanup': True})
+                            return_estimator=True, fit_params={'cleanup': True, 'patience':1})
 
     create_plot(scores)
