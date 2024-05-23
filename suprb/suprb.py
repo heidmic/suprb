@@ -102,8 +102,9 @@ class SupRB(BaseRegressor):
             if better_error or better_fitness or better_complexity:
                 patience -= 1
                 if patience == 0:
-                    print("Execution stopped early with the following values:")
-                    print(f"Error: {self.elitist_.error_}, Fitness: {self.elitist_.fitness_}, Complexity: {self.elitist_.complexity_}")
+                    print(f"Execution was stopped early after {patience} cycles with no significant changes.")
+                    print(f"The elitists values were:"
+                          f"Error: {self.elitist_.error_}, Fitness: {self.elitist_.fitness_}, Complexity: {self.elitist_.complexity_}")
                     return True
     
         return False
