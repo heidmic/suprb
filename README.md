@@ -20,42 +20,26 @@ Solutions of the problem select classifiers from the unchanging pool.
 
 <img src="./docs/solution.png" alt="Solutions and Pool of classifiers" width="500"/>
 
+## Usage
 
-## Publications
+For a quick entry into to using SupRB, have a look at the **examples** directory or the [suprb-experimentation repository](https://github.com/heidmic/suprb-experimentation) for more complex setups including automated parametertuning.
 
-### The Concept
+The most basic way of using SupRB is by specifying the *rule_generation* and *solution_composition* with its default parameters: 
+`SupRB(rule_generation=ES1xLambda(), solution_composition=GeneticAlgorithm())`
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
+Most of the time you want to use **cross_validate** from **sklearn.model_selection** for your model to get a better idea of general performance, which is why the examples use it consistently.
 
-### Comparisons with other Systems
+Make sure that the data you feed the model is in the correct format (use the examples for reference):
+- Inputs/features should be min-max-scaled to [-1, 1].
+- Output/target should be standardized (mean to zero, variance to one).
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** In: Mernik, M., Eftimov, T., Črepinšek, M. (eds) Bioinspired Optimization Methods and Their Applications. BIOMA 2022. Lecture Notes in Computer Science, vol 13627. Springer, Cham. https://doi.org/10.1007/978-3-031-21094-5_11 http://arxiv.org/abs/2207.05582 A comparison with XCSF.
+The examples in the examples directory are:
+- [example_1.py](https://github.com/heidmic/suprb/blob/master/examples/example_1.py): Using default parameters
+- [example_2.py](https://github.com/heidmic/suprb/blob/master/examples/example_2.py): With one level of changed parameters
+- [example_3.py](https://github.com/heidmic/suprb/blob/master/examples/example_3.py): With two levels of changed parameters
+- [example_4.py](https://github.com/heidmic/suprb/blob/master/examples/example_4.py): Without any default parameters
+- [compare_sklearn.py](https://github.com/heidmic/suprb/blob/153_add_usage_guide/examples/compare_sklearn.py): Code to run a direct comparison between suprb and various other sklearn models
 
-Michael Heider, Helena Stegherr, Roman Sraj, David Pätzel, Jonathan Wurth and Jörg Hähner. 2023. **SupRB in the context of rule-based machine learning methods: a comparative study.** Applied Soft Computing 147, 110706. DOI: 10.1016/j.asoc.2023.110706 A comparison with XCSF, Decision Trees, and Random Forests.
-
-
-### Investigating Components
-
-Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. **Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
-
-Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and Jörg Hähner. 2022. **Approaches for Rule Discovery in a Learning Classifier System.** In Proceedings of the 14th International Joint Conference on Computational Intelligence - ECTA. https://doi.org/10.5220/0011542000003332
-
-Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth, Benedikt Volger and Jörg Hähner. 2023. **Discovering rules for rule-based machine learning with the help of novelty search.** SN Computer Science 4, 6, 778. DOI: 10.1007/s42979-023-02198-x
-
-
-### Explainability of LCS
-
-Michael Heider, Helena Stegherr, Richard Nordsieck and Jörg Hähner. 2023. **Assessing model requirements for explainable AI: a template and exemplary case study.** Artificial Life 29, 4, 468-486. MIT press. DOI: https://doi.org/10.1162/artl_a_00414
-
-
-### A general description of LCS and its optimizers
-
-Michael Heider, David Pätzel, Helena Stegherr, Jörg Hähner. 2023. **A Metaheuristic Perspective on Learning Classifier Systems.** In: Eddaly, M., Jarboui, B., Siarry, P. (eds) Metaheuristics for Machine Learning. Computational Intelligence Methods and Applications. Springer, Singapore. https://doi.org/10.1007/978-981-19-3888-7_3
-
-
-## Experiments
-
-We provide the experiment scripts used in associated publications under: https://github.com/heidmic/suprb-experimentation
 
 ## Install all requirements
 
@@ -95,10 +79,42 @@ The commit messages of all the commits in your PR should be properly formatted:
 
 Avoid merge commits by using rebase rather than merge when combining branches
 
+## Publications
+
+### The Concept
+
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
+
+### Comparisons with other Systems
+
+Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** In: Mernik, M., Eftimov, T., Črepinšek, M. (eds) Bioinspired Optimization Methods and Their Applications. BIOMA 2022. Lecture Notes in Computer Science, vol 13627. Springer, Cham. https://doi.org/10.1007/978-3-031-21094-5_11 http://arxiv.org/abs/2207.05582 A comparison with XCSF.
+
+Michael Heider, Helena Stegherr, Roman Sraj, David Pätzel, Jonathan Wurth and Jörg Hähner. 2023. **SupRB in the context of rule-based machine learning methods: a comparative study.** Applied Soft Computing 147, 110706. DOI: 10.1016/j.asoc.2023.110706 A comparison with XCSF, Decision Trees, and Random Forests.
+
+### Investigating Components
+
+Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. **Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
+
+Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and Jörg Hähner. 2022. **Approaches for Rule Discovery in a Learning Classifier System.** In Proceedings of the 14th International Joint Conference on Computational Intelligence - ECTA. https://doi.org/10.5220/0011542000003332
+
+Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth, Benedikt Volger and Jörg Hähner. 2023. **Discovering rules for rule-based machine learning with the help of novelty search.** SN Computer Science 4, 6, 778. DOI: 10.1007/s42979-023-02198-x
+
+### Explainability of LCS
+
+Michael Heider, Helena Stegherr, Richard Nordsieck and Jörg Hähner. 2023. **Assessing model requirements for explainable AI: a template and exemplary case study.** Artificial Life 29, 4, 468-486. MIT press. DOI: https://doi.org/10.1162/artl_a_00414
+
+### A general description of LCS and its optimizers
+
+Michael Heider, David Pätzel, Helena Stegherr, Jörg Hähner. 2023. **A Metaheuristic Perspective on Learning Classifier Systems.** In: Eddaly, M., Jarboui, B., Siarry, P. (eds) Metaheuristics for Machine Learning. Computational Intelligence Methods and Applications. Springer, Singapore. https://doi.org/10.1007/978-981-19-3888-7_3
+
+
+## Experiments
+
+We provide the experiment scripts used in associated publications under: https://github.com/heidmic/suprb-experimentation
+
 
 ## Citation
 
 If you use this code for research, please cite:
 
 Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
-
