@@ -79,7 +79,7 @@ class SupRB(BaseRegressor):
                  random_state: int = None,
                  verbose: int = 1,
                  logger: BaseLogger = None,
-                 n_jobs: int = 1,
+                 n_jobs: int = 1
                  ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
@@ -93,7 +93,23 @@ class SupRB(BaseRegressor):
         self.n_jobs = n_jobs
         self.is_error = False
 
-    def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
+    def check_early_stopping(self, patience):
+        if hasattr(self, 'elitist_'):
+            better_error = self.solution_composition_.elitist().error_ < self.elitist_.error_
+            better_fitness = self.solution_composition_.elitist().fitness_ > self.elitist_.fitness_
+            better_complexity = self.solution_composition_.elitist().complexity_ < self.elitist_.complexity_
+
+            if better_error or better_fitness or better_complexity:
+                patience -= 1
+                if patience == 0:
+                    print(f"Execution was stopped early after {patience} cycles with no significant changes.")
+                    print(f"The elitists values were:"
+                          f"Error: {self.elitist_.error_}, Fitness: {self.elitist_.fitness_}, Complexity: {self.elitist_.complexity_}")
+                    return True
+    
+        return False
+
+    def fit(self, X: np.ndarray, y: np.ndarray, patience: int=5, cleanup=False):
         """ Fit SupRB.2.
 
             Parameters
@@ -150,7 +166,7 @@ class SupRB(BaseRegressor):
         if self.n_initial_rules > 0:
             try:
                 self._discover_rules(X, y, self.n_initial_rules)
-            except Exception as e: 
+            except Exception as e:
                 warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
@@ -161,7 +177,7 @@ class SupRB(BaseRegressor):
             # Insert new rules into population
             try:
                 self._discover_rules(X, y, self.n_rules)
-            except Exception as e: 
+            except Exception as e:
                 warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
@@ -170,11 +186,17 @@ class SupRB(BaseRegressor):
             # Optimize solutions
             try:
                 self._compose_solution(X, y)
-            except Exception as e: 
+            except Exception as e:
                 warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
+
+            if patience > 0:
+                if self.check_early_stopping(patience):
+                    break
+
+            self.elitist_ = self.solution_composition_.elitist().clone()
 
             # Log Iteration
             if self.logger_ is not None:
@@ -236,7 +258,7 @@ class SupRB(BaseRegressor):
             return [0] * len(X)
         else:
             return self.elitist_.predict(X)
-        
+
     def _validate_rule_generation(self, default=None):
         self.rule_generation_ = clone(self.rule_generation) if self.rule_generation is not None else clone(default)
 
