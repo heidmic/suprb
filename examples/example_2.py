@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import cross_validate, train_test_split
+from sklearn.datasets import fetch_openml
 
 
 from suprb import SupRB
@@ -22,45 +23,33 @@ def create_plot(scores):
 
     plt.savefig('result.png')
 
-def load_higdon_gramacy_lee(n_samples=1000, noise=0, random_state=None):
-    random_state_ = check_random_state(random_state)
-
-    X = np.linspace(0, 20, num=n_samples)
-    y = np.zeros(n_samples)
-
-    y[X < 10] = np.sin(np.pi * X[X < 10] / 5) + 0.2 * np.cos(4 * np.pi * X[X < 10] / 5)
-    y[X >= 10] = X[X >= 10] / 10 - 1
-
-    y += random_state_.normal(scale=noise, size=n_samples)
-    X = X.reshape((-1, 1))
-
-    return sklearn.utils.shuffle(X, y, random_state=random_state)
-
 
 if __name__ == '__main__':
     random_state = 42
 
-    X, y = load_higdon_gramacy_lee(noise=0.1, random_state=random_state)
+    data, _ = fetch_openml(name='Concrete_Data', version=1, return_X_y=True)
+    data = data.to_numpy()
+
+    X, y = data[:, :8], data[:, 8]
+    X, y = sklearn.utils.shuffle(X, y, random_state=random_state)
 
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
-
-    model = SupRB(rule_generation=ES1xLambda(n_iter=2,
-                                             lmbda=1,
+    model = SupRB(rule_generation=ES1xLambda(n_iter=32,
+                                             lmbda=16,
                                              operator='+',
                                              delay=150,
                                              random_state=random_state,
                                              n_jobs=1),
-                  solution_composition=GeneticAlgorithm(n_iter=2,
-                                                        population_size=1,
+                  solution_composition=GeneticAlgorithm(n_iter=32,
+                                                        population_size=32,
                                                         elitist_ratio=0.2,
                                                         random_state=random_state,
                                                         n_jobs=1))
 
     scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10,
                             scoring=['r2', 'neg_mean_squared_error'],
-                            return_estimator=True, fit_params={'cleanup': True, 'patience':1})
+                            return_estimator=True, fit_params={'cleanup': True})
 
     create_plot(scores)

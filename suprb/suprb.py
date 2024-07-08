@@ -48,6 +48,10 @@ class SupRB(BaseRegressor):
         None is a marker for 'unset' that will be interpreted as n_jobs=1 (sequential execution) unless the call is
         performed under a parallel_backend context manager that sets another value for n_jobs.
         Taken from the `joblib.Parallel` documentation.
+    early_stopping_patience: int
+        Sets the patience for how many iteration we try to find a better result before we do an early stopping (-1 disabling the early stopping).
+    early_stopping_delta: int
+        The current fitness needs to be higher than this delta of the previous iteration fitness to be considered a "better" iteration 
     """
 
     step_: int = 0
@@ -79,7 +83,9 @@ class SupRB(BaseRegressor):
                  random_state: int = None,
                  verbose: int = 1,
                  logger: BaseLogger = None,
-                 n_jobs: int = 1
+                 n_jobs: int = 1,
+                 early_stopping_patience: int = -1,
+                 early_stopping_delta: int = 0
                  ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
@@ -92,24 +98,27 @@ class SupRB(BaseRegressor):
         self.logger = logger
         self.n_jobs = n_jobs
         self.is_error = False
+        self.early_stopping_patience = early_stopping_patience
+        self.early_stopping_delta = early_stopping_delta
+        self.early_stopping_counter = 0
+        self.previous_fitness = 0
 
-    def check_early_stopping(self, patience):
-        if hasattr(self, 'elitist_'):
-            better_error = self.solution_composition_.elitist().error_ < self.elitist_.error_
-            better_fitness = self.solution_composition_.elitist().fitness_ > self.elitist_.fitness_
-            better_complexity = self.solution_composition_.elitist().complexity_ < self.elitist_.complexity_
+    def check_early_stopping(self):
+        if self.early_stopping_patience > 0:
+            fitness_diff = self.solution_composition_.elitist().fitness_ - self.previous_fitness
 
-            if better_error or better_fitness or better_complexity:
-                patience -= 1
-                if patience == 0:
-                    print(f"Execution was stopped early after {patience} cycles with no significant changes.")
-                    print(f"The elitists values were:"
-                          f"Error: {self.elitist_.error_}, Fitness: {self.elitist_.fitness_}, Complexity: {self.elitist_.complexity_}")
+            if fitness_diff > self.early_stopping_delta:
+                self.early_stopping_counter = 0
+            else:
+                self.early_stopping_counter += 1
+                if self.early_stopping_patience <= self.early_stopping_counter:
+                    print(f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes.")
+                    print(f"The elitist fitness value was: {self.previous_fitness}")
                     return True
     
         return False
 
-    def fit(self, X: np.ndarray, y: np.ndarray, patience: int=5, cleanup=False):
+    def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
         """ Fit SupRB.2.
 
             Parameters
@@ -192,11 +201,11 @@ class SupRB(BaseRegressor):
                 self.is_error = True
                 return self
 
-            if patience > 0:
-                if self.check_early_stopping(patience):
-                    break
+            
+            if self.check_early_stopping():
+                break
 
-            self.elitist_ = self.solution_composition_.elitist().clone()
+            self.previous_fitness = self.solution_composition_.elitist().fitness_
 
             # Log Iteration
             if self.logger_ is not None:
