@@ -149,9 +149,15 @@ class SupRB(BaseRegressor):
         # Fill population before first step
         if self.n_initial_rules > 0:
             try:
-                self._discover_rules(X, y, self.n_initial_rules)
-            except Exception as e: 
-                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+                try:
+                    self._discover_rules(X, y, self.n_initial_rules)
+                except Exception as e: 
+                    warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+                    self.is_fitted_ = True
+                    self.is_error = True
+                    return self
+            except ValueError as v:
+                warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
@@ -160,18 +166,30 @@ class SupRB(BaseRegressor):
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
             try:
-                self._discover_rules(X, y, self.n_rules)
-            except Exception as e: 
-                warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
+                try:
+                    self._discover_rules(X, y, self.n_rules)
+                except Exception as e: 
+                    warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
+                    self.is_fitted_ = True
+                    self.is_error = True
+                    return self
+            except ValueError as v:
+                warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
 
             # Optimize solutions
             try:
-                self._compose_solution(X, y)
-            except Exception as e: 
-                warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
+                try:
+                    self._compose_solution(X, y)
+                except Exception as e: 
+                    warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
+                    self.is_fitted_ = True
+                    self.is_error = True
+                    return self
+            except ValueError as v:
+                warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
