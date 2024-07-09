@@ -16,6 +16,9 @@ from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
 from .rule.matching import MatchingFunction, OrderedBound
 from .utils import check_random_state, estimate_bounds
+from .solution.mixing_model import ErrorExperienceHeuristic
+from .solution.fitness import PseudoBIC
+
 
 
 class SupRB(BaseRegressor):
@@ -92,7 +95,11 @@ class SupRB(BaseRegressor):
         self.logger = logger
         self.n_jobs = n_jobs
         self.is_error = False
-        self.elitist_ = None
+        self.elitist_ = Solution([0,0,0],[0,0,0],ErrorExperienceHeuristic(),PseudoBIC())
+        self.elitist_.fitness_ = 0
+        self.elitist_.error_ = 99999
+        self.elitist_.complexity_ = 99999
+
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
         """ Fit SupRB.2.
