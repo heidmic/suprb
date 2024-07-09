@@ -180,14 +180,25 @@ class SupRB(BaseRegressor):
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
+            except Exception as e: 
+                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
+                return self
 
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
+            
             try:
                 self._discover_rules(X, y, self.n_rules)
             except Exception as e:
                 warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
+                return self
+            except Exception as e: 
+                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
@@ -197,6 +208,11 @@ class SupRB(BaseRegressor):
                 self._compose_solution(X, y)
             except Exception as e:
                 warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
+                self.is_fitted_ = True
+                self.is_error = True
+                return self
+            except Exception as e: 
+                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
