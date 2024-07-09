@@ -16,6 +16,9 @@ from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
 from .rule.matching import MatchingFunction, OrderedBound
 from .utils import check_random_state, estimate_bounds
+from .solution.mixing_model import ErrorExperienceHeuristic
+from .solution.fitness import PseudoBIC
+
 
 
 class SupRB(BaseRegressor):
