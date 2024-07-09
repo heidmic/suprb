@@ -92,6 +92,7 @@ class SupRB(BaseRegressor):
         self.logger = logger
         self.n_jobs = n_jobs
         self.is_error = False
+        self.elitist_ = None
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
         """ Fit SupRB.2.
