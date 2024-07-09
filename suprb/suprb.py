@@ -150,7 +150,7 @@ class SupRB(BaseRegressor):
         if self.n_initial_rules > 0:
             try:
                 self._discover_rules(X, y, self.n_initial_rules)
-            except ValueError as v:
+            except ValueError as e:
                 warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
@@ -167,7 +167,7 @@ class SupRB(BaseRegressor):
             
             try:
                 self._discover_rules(X, y, self.n_rules)
-            except ValueError as v:
+            except ValueError as e:
                 warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
@@ -181,7 +181,7 @@ class SupRB(BaseRegressor):
             # Optimize solutions
             try:
                 self._compose_solution(X, y)
-            except ValueError as v:
+            except ValueError as e:
                 warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
