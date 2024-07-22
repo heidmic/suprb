@@ -71,6 +71,10 @@ def _get_full_class_name(instance):
 
 def _save_config(suprb):
     json_config = {}
+    json_config["elitist"] = {"complexity_": suprb.elitist_.complexity_,
+                              "error_": suprb.elitist_.error_,
+                              "fitness_": suprb.elitist_.fitness_}
+    
     json_config["config"] = {}
     primitive = (int, str, bool, float)
 
