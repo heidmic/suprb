@@ -201,15 +201,14 @@ class SupRB(BaseRegressor):
                 self.is_error = True
                 return self
 
+            # Log Iteration
+            if self.logger_ is not None:
+                self.logger_.log_iteration(X, y, self, iteration=self.step_)
             
             if self.check_early_stopping():
                 break
 
             self.previous_fitness = self.solution_composition_.elitist().fitness_
-
-            # Log Iteration
-            if self.logger_ is not None:
-                self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
