@@ -80,7 +80,11 @@ def _save_config(suprb):
         elif isinstance(value, primitive):
             json_config["config"][key] = value
         else:
-            json_config["config"][key] = _get_full_class_name(value)
+            cname = _get_full_class_name(value)
+            if cname == "NoneType":
+                json_config["config"][key] = None
+            else:    
+                json_config["config"][key] = cname
 
     return json_config
 
@@ -109,6 +113,7 @@ def _convert_rule_to_json(rule):
     return {"error_":        rule.error_,
             "experience_":   rule.experience_,
             "match":         _convert_dict_to_json(vars(rule.match)),
+            "matching_type": _get_full_class_name(rule.match),
             "is_fitted_":    rule.is_fitted_,
             "model":         {"coef_":          _convert_to_json_format(getattr(rule.model, "coef_")),
                               "intercept_":     getattr(rule.model, "intercept_")}}
@@ -190,7 +195,7 @@ def _load_pool(json_dict, suprb):
 
 def _convert_json_to_rule(json_rule, json_dict):
 
-    rule = Rule(_convert_matching_type(json_rule["match"], json_dict["config"]["matching_type"]),
+    rule = Rule(_convert_matching_type(json_rule["match"], json_rule["matching_type"]),
                 _convert_from_json_to_array(json_dict["input_space"]),
                 _convert_model(json_rule["model"], json_dict["config"]["rule_generation__init__model"]),
                 _get_class(json_dict["config"]["rule_generation__init__fitness"]))
