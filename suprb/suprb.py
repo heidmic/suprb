@@ -119,8 +119,7 @@ class SupRB(BaseRegressor):
             else:
                 self.early_stopping_counter += 1
                 if self.early_stopping_patience <= self.early_stopping_counter:
-                    print(
-                        f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes.")
+                    print(f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes.")
                     print(f"The elitist fitness value was: {self.previous_fitness}")
                     return True
 
