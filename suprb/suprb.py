@@ -20,7 +20,6 @@ from .solution.mixing_model import ErrorExperienceHeuristic
 from .solution.fitness import PseudoBIC
 
 
-
 class SupRB(BaseRegressor):
     """ The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
 
@@ -51,10 +50,6 @@ class SupRB(BaseRegressor):
         None is a marker for 'unset' that will be interpreted as n_jobs=1 (sequential execution) unless the call is
         performed under a parallel_backend context manager that sets another value for n_jobs.
         Taken from the `joblib.Parallel` documentation.
-    early_stopping_patience: int
-        Sets the patience for how many iteration we try to find a better result before we do an early stopping (-1 disabling the early stopping).
-    early_stopping_delta: int
-        The current fitness needs to be higher than this delta of the previous iteration fitness to be considered a "better" iteration 
     """
 
     step_: int = 0
@@ -87,8 +82,6 @@ class SupRB(BaseRegressor):
                  verbose: int = 1,
                  logger: BaseLogger = None,
                  n_jobs: int = 1,
-                 early_stopping_patience: int = -1,
-                 early_stopping_delta: int = 0
                  ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
@@ -101,25 +94,10 @@ class SupRB(BaseRegressor):
         self.logger = logger
         self.n_jobs = n_jobs
         self.is_error = False
-        self.early_stopping_patience = early_stopping_patience
-        self.early_stopping_delta = early_stopping_delta
-        self.early_stopping_counter = 0
-        self.previous_fitness = 0
-
-    def check_early_stopping(self):
-        if self.early_stopping_patience > 0:
-            fitness_diff = self.solution_composition_.elitist().fitness_ - self.previous_fitness
-
-            if fitness_diff > self.early_stopping_delta:
-                self.early_stopping_counter = 0
-            else:
-                self.early_stopping_counter += 1
-                if self.early_stopping_patience <= self.early_stopping_counter:
-                    print(f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes.")
-                    print(f"The elitist fitness value was: {self.previous_fitness}")
-                    return True
-    
-        return False
+        self.elitist_ = Solution([0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC())
+        self.elitist_.fitness_ = 0
+        self.elitist_.error_ = 99999
+        self.elitist_.complexity_ = 99999
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
         """ Fit SupRB.2.
@@ -178,13 +156,14 @@ class SupRB(BaseRegressor):
         if self.n_initial_rules > 0:
             try:
                 self._discover_rules(X, y, self.n_initial_rules)
-            except Exception as e:
-                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+            except ValueError as e:
+                warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
-            except Exception as e: 
-                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+            except Exception as e:
+                warnings.warn(
+                    f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
@@ -192,16 +171,17 @@ class SupRB(BaseRegressor):
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-            
+
             try:
                 self._discover_rules(X, y, self.n_rules)
-            except Exception as e:
-                warnings.warn(f"An error has occured when trying to discover rules:\n{e}")
+            except ValueError as e:
+                warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
-            except Exception as e: 
-                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+            except Exception as e:
+                warnings.warn(
+                    f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
@@ -209,13 +189,14 @@ class SupRB(BaseRegressor):
             # Optimize solutions
             try:
                 self._compose_solution(X, y)
-            except Exception as e:
-                warnings.warn(f"An error has occured when trying to compose a solution:\n{e}")
+            except ValueError as e:
+                warnings.warn(f"The following ValueError has occured:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
-            except Exception as e: 
-                warnings.warn(f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
+            except Exception as e:
+                warnings.warn(
+                    f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
                 self.is_fitted_ = True
                 self.is_error = True
                 return self
@@ -223,11 +204,6 @@ class SupRB(BaseRegressor):
             # Log Iteration
             if self.logger_ is not None:
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
-            
-            if self.check_early_stopping():
-                break
-
-            self.previous_fitness = self.solution_composition_.elitist().fitness_
 
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
