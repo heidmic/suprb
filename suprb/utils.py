@@ -1,4 +1,4 @@
-import collections
+import collections.abc
 import numbers
 from typing import Iterator, Union
 
@@ -49,7 +49,7 @@ def flatten(iterable):
     Note that implementations like `itertools.chain` only flatten nested lists, not irregular nested lists.
      """
     for el in iterable:
-        if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
+        if isinstance(el, collections.abc.Iterable) and not isinstance(el, (str, bytes)):
             yield from flatten(el)
         else:
             yield el
