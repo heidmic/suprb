@@ -122,7 +122,6 @@ class SupRB(BaseRegressor):
                     print(f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes.")
                     print(f"The elitist fitness value was: {self.previous_fitness}")
                     return True
-
         return False
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
@@ -196,6 +195,9 @@ class SupRB(BaseRegressor):
             # Log Iteration
             if self.logger_ is not None:
                 self.logger_.log_iteration(X, y, self, iteration=self.step_)
+
+            if self.check_early_stopping():
+                break
 
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
