@@ -1,4 +1,5 @@
 import warnings
+import traceback
 
 import numpy as np
 from sklearn import clone
@@ -154,51 +155,17 @@ class SupRB(BaseRegressor):
 
         # Fill population before first step
         if self.n_initial_rules > 0:
-            try:
-                self._discover_rules(X, y, self.n_initial_rules)
-            except ValueError as e:
-                warnings.warn(f"The following ValueError has occured:\n{e}")
-                self.is_fitted_ = True
-                self.is_error = True
-                return self
-            except Exception as e:
-                warnings.warn(
-                    f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
-                self.is_fitted_ = True
-                self.is_error = True
+            if self._catch_errors(self._discover_rules, X, y, self.n_initial_rules):
                 return self
 
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-
-            try:
-                self._discover_rules(X, y, self.n_rules)
-            except ValueError as e:
-                warnings.warn(f"The following ValueError has occured:\n{e}")
-                self.is_fitted_ = True
-                self.is_error = True
-                return self
-            except Exception as e:
-                warnings.warn(
-                    f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
-                self.is_fitted_ = True
-                self.is_error = True
+            if self._catch_errors(self._discover_rules, X, y, self.n_rules):
                 return self
 
             # Optimize solutions
-            try:
-                self._compose_solution(X, y)
-            except ValueError as e:
-                warnings.warn(f"The following ValueError has occured:\n{e}")
-                self.is_fitted_ = True
-                self.is_error = True
-                return self
-            except Exception as e:
-                warnings.warn(
-                    f"An error has occured when trying to discover rules for the first time. This is likely due to a bad configuration:\n{e}")
-                self.is_fitted_ = True
-                self.is_error = True
+            if self._catch_errors(self._compose_solution(X, y)):
                 return self
 
             # Log Iteration
@@ -216,6 +183,25 @@ class SupRB(BaseRegressor):
             self._cleanup()
 
         return self
+
+    def _catch_errors(self, func, X, y, n_rules):
+        try:
+            func(X, y, n_rules)
+            return False
+        except ValueError as e:
+            # Capture the full traceback and print it
+            tb = traceback.format_exc()
+            warnings.warn(f"The following ValueError has occurred:\n{e}\nTraceback:\n{tb}")
+            self.is_fitted_ = True
+            self.is_error = True
+            return True
+        except Exception as e:
+            # Capture the full traceback and print it
+            tb = traceback.format_exc()
+            warnings.warn(f"An error has occurred. This is likely due to a bad configuration:\n{e}\nTraceback:\n{tb}")
+            self.is_fitted_ = True
+            self.is_error = True
+            return True
 
     def _discover_rules(self, X: np.ndarray, y: np.ndarray, n_rules: int):
         """Performs the rule discovery / rule generation (RG) process."""
