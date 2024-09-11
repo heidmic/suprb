@@ -1,9 +1,7 @@
 import sklearn
-import numpy as np
-import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.model_selection import cross_validate, train_test_split
+from sklearn.model_selection import cross_validate
 from sklearn.datasets import fetch_openml
 from sklearn.linear_model import Ridge
 
@@ -12,18 +10,6 @@ import suprb
 from suprb import SupRB
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.ga import GeneticAlgorithm
-
-
-def create_plot(scores):
-    fig, axes = plt.subplots(2, 2)
-    X_plot = np.linspace(X.min(), X.max(), 500).reshape((-1, 1))
-    for ax, model in zip(axes.flatten(), scores['estimator']):
-        pred = model.predict(X_plot)
-        print(X.shape, y.shape)
-        ax.scatter(X, y, c='b', s=3, label='y_true')
-        ax.plot(X_plot, pred, c='r', label='y_pred')
-
-    plt.savefig('result.png')
 
 
 if __name__ == '__main__':
@@ -70,5 +56,3 @@ if __name__ == '__main__':
     scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10,
                             scoring=['r2', 'neg_mean_squared_error'],
                             return_estimator=True, fit_params={'cleanup': True})
-
-    create_plot(scores)
