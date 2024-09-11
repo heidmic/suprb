@@ -189,7 +189,7 @@ class SupRB(BaseRegressor):
                 return self
 
             # Optimize solutions
-            if self._catch_errors(self._compose_solution(X, y)):
+            if self._catch_errors(self._compose_solution, X, y, False):
                 return self
 
             # Log Iteration
@@ -213,7 +213,11 @@ class SupRB(BaseRegressor):
 
     def _catch_errors(self, func, X, y, n_rules):
         try:
-            func(X, y, n_rules)
+            if not n_rules:
+                func(X, y)
+            else:
+                func(X, y, n_rules)
+
             return False
         except ValueError as e:
             # Capture the full traceback and print it

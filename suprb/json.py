@@ -32,7 +32,7 @@ def dump(suprb, filename):
     except AttributeError:
         pass
     json_config = _save_config(suprb)
-    _save_pool(suprb.pool_, json_config)
+    _save_pool(suprb, json_config)
     _save_input_space(suprb.pool_, json_config)
 
     with open(filename, "w") as f:
@@ -71,10 +71,6 @@ def _get_full_class_name(instance):
 
 def _save_config(suprb):
     json_config = {}
-    json_config["elitist"] = {"complexity_": suprb.elitist_.complexity_,
-                              "error_": suprb.elitist_.error_,
-                              "fitness_": suprb.elitist_.fitness_}
-    
     json_config["config"] = {}
     primitive = (int, str, bool, float)
 
@@ -89,11 +85,14 @@ def _save_config(suprb):
     return json_config
 
 
-def _save_pool(pool, json_config):
-    json_config["pool"] = []
-
-    for rule in pool:
-        json_config["pool"].append(_convert_rule_to_json(rule))
+def _save_pool(suprb, json_config):
+    json_config["pool"] = {}
+    json_config["pool"]["rules"] = []
+    json_config["pool"]["elitist"] = {"complexity_": suprb.elitist_.complexity_,
+                                      "error_": suprb.elitist_.error_,
+                                      "fitness_": suprb.elitist_.fitness_}
+    for rule in suprb.pool_:
+        json_config["pool"]["rules"].append(_convert_rule_to_json(rule))
 
 
 def _save_input_space(pool, json_config):
