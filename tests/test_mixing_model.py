@@ -55,7 +55,7 @@ class TestMixingModel(unittest.TestCase):
         rule_amount = 4
         random_state = 42
 
-        # Elements are not checked because they for different python versions
+        # Elements are not checked because they differ for different python versions
 
         mixing = mixing_model.NRandom(rule_amount, random_state)
         result = mixing(self.subpopulation)
