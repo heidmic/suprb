@@ -4,10 +4,12 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import cross_validate
 from sklearn.datasets import fetch_openml
 
-
 from suprb import SupRB
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.ga import GeneticAlgorithm
+
+from utils import log_scores
+
 
 if __name__ == '__main__':
     random_state = 42
@@ -21,14 +23,14 @@ if __name__ == '__main__':
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
-    model = SupRB(rule_generation=ES1xLambda(n_iter=32,
-                                             lmbda=16,
+    model = SupRB(rule_generation=ES1xLambda(n_iter=2,
+                                             lmbda=1,
                                              operator='+',
                                              delay=150,
                                              random_state=random_state,
                                              n_jobs=1),
-                  solution_composition=GeneticAlgorithm(n_iter=32,
-                                                        population_size=32,
+                  solution_composition=GeneticAlgorithm(n_iter=2,
+                                                        population_size=1,
                                                         elitist_ratio=0.2,
                                                         random_state=random_state,
                                                         n_jobs=1))
@@ -36,3 +38,5 @@ if __name__ == '__main__':
     scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10,
                             scoring=['r2', 'neg_mean_squared_error'],
                             return_estimator=True, fit_params={'cleanup': True})
+
+    log_scores(scores)

@@ -5,11 +5,12 @@ from sklearn.model_selection import cross_validate
 from sklearn.datasets import fetch_openml
 from sklearn.linear_model import Ridge
 
-
 import suprb
 from suprb import SupRB
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.ga import GeneticAlgorithm
+
+from utils import log_scores
 
 
 if __name__ == '__main__':
@@ -56,3 +57,5 @@ if __name__ == '__main__':
     scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10,
                             scoring=['r2', 'neg_mean_squared_error'],
                             return_estimator=True, fit_params={'cleanup': True})
+
+    log_scores(scores)
