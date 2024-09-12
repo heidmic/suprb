@@ -37,6 +37,7 @@ def setup():
     model = SupRB(
         rule_generation=es.ES1xLambda(
             n_iter=2,
+            delay=1,
             operator='&',
             init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
             mutation=HalfnormIncrease(sigma=0.1)
@@ -46,6 +47,7 @@ def setup():
             crossover=ga.crossover.Uniform(),
             selection=ga.selection.Tournament(),
         ),
+        matching_type=rule.matching.OrderedBound(np.array([])),
         n_iter=1,
         n_rules=5,
         verbose=1,
@@ -65,13 +67,17 @@ class TestJsonIO:
         model = scores["estimator"][0]
         json_io_params = model.get_params()
 
-        original_config = json._save_config(model)
+        original_config = {"elitist": {}, "config":  {}, "pool": []}
+
+        json._save_config(model, original_config)
         model = json._load_config(original_config["config"])
         model_params = model.get_params()
 
         for key in json_io_params:
             if not key.startswith("logger"):
-                assert(type(json_io_params[key]) == type(model_params[key]))
+                print(key)
+                print(type(json_io_params[key]), type(model_params[key]))
+                assert (type(json_io_params[key]) == type(model_params[key]))
 
     def test_smoke_test(self):
         model, X, y = setup()
@@ -88,5 +94,5 @@ class TestJsonIO:
         model = json.load("save_state.json")
         loaded_prediction = model.predict(X_predict)
 
-        assert((original_prediction == loaded_prediction).all())
+        assert ((original_prediction == loaded_prediction).all())
         os.remove("save_state.json")
