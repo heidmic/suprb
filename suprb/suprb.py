@@ -100,27 +100,20 @@ class SupRB(BaseRegressor):
         self.verbose = verbose
         self.logger = logger
         self.n_jobs = n_jobs
-        self.is_error = False
         self.early_stopping_patience = early_stopping_patience
         self.early_stopping_delta = early_stopping_delta
-        self.early_stopping_counter = 0
-        self.previous_fitness = 0
-        self.elitist_ = Solution([0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC())
-        self.elitist_.fitness_ = 0
-        self.elitist_.error_ = 99999
-        self.elitist_.complexity_ = 99999
 
     def check_early_stopping(self):
         if self.early_stopping_patience > 0:
-            fitness_diff = self.solution_composition_.elitist().fitness_ - self.previous_fitness
+            fitness_diff = self.solution_composition_.elitist().fitness_ - self.previous_fitness_
 
             if fitness_diff > self.early_stopping_delta:
-                self.early_stopping_counter = 0
+                self.early_stopping_counter_ = 0
             else:
-                self.early_stopping_counter += 1
-                if self.early_stopping_patience <= self.early_stopping_counter:
+                self.early_stopping_counter_ += 1
+                if self.early_stopping_patience <= self.early_stopping_counter_:
                     print(f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes.")
-                    print(f"The elitist fitness value was: {self.previous_fitness}")
+                    print(f"The elitist fitness value was: {self.previous_fitness_}")
                     return True
         return False
 
@@ -142,6 +135,15 @@ class SupRB(BaseRegressor):
             self : BaseEstimator
                 Returns self.
         """
+
+        # Set these values so we gracefully exit on error
+        self.early_stopping_counter_ = 0
+        self.previous_fitness_ = 0
+        self.is_error_ = False
+        self.elitist_ = Solution([0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC())
+        self.elitist_.fitness_ = 0
+        self.elitist_.error_ = 99999
+        self.elitist_.complexity_ = 99999
 
         # Check that x and y have correct shape
         X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
@@ -224,14 +226,14 @@ class SupRB(BaseRegressor):
             tb = traceback.format_exc()
             warnings.warn(f"The following ValueError has occurred:\n{e}\nTraceback:\n{tb}")
             self.is_fitted_ = True
-            self.is_error = True
+            self.is_error_ = True
             return True
         except Exception as e:
             # Capture the full traceback and print it
             tb = traceback.format_exc()
             warnings.warn(f"An error has occurred. This is likely due to a bad configuration:\n{e}\nTraceback:\n{tb}")
             self.is_fitted_ = True
-            self.is_error = True
+            self.is_error_ = True
             return True
 
     def _discover_rules(self, X: np.ndarray, y: np.ndarray, n_rules: int):
@@ -274,7 +276,7 @@ class SupRB(BaseRegressor):
         # Input validation
         X = check_array(X)
 
-        if self.is_error:
+        if hasattr(self, 'is_error_') and self.is_error_:
             return [0] * len(X)
         else:
             return self.elitist_.predict(X)
