@@ -23,14 +23,14 @@ if __name__ == '__main__':
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
-    model = SupRB(rule_generation=ES1xLambda(n_iter=2,
-                                             lmbda=1,
+    model = SupRB(rule_generation=ES1xLambda(n_iter=32,
+                                             lmbda=16,
                                              operator='+',
                                              delay=150,
                                              random_state=random_state,
                                              n_jobs=1),
-                  solution_composition=GeneticAlgorithm(n_iter=2,
-                                                        population_size=1,
+                  solution_composition=GeneticAlgorithm(n_iter=32,
+                                                        population_size=32,
                                                         elitist_ratio=0.2,
                                                         random_state=random_state,
                                                         n_jobs=1))
