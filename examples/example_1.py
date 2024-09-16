@@ -10,6 +10,8 @@ from suprb.utils import check_random_state
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.ga import GeneticAlgorithm
 
+from utils import log_scores
+
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0, random_state=None):
     random_state_ = check_random_state(random_state)
@@ -55,3 +57,5 @@ if __name__ == '__main__':
                             return_estimator=True, fit_params={'cleanup': True})
 
     create_plot(scores)
+
+    log_scores(scores)

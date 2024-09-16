@@ -23,12 +23,13 @@ SupRBWrapper has some sanity checks to make sure that the parameter name is in f
 
 There is also the possibility to print the final configuration of the SupRB instance using the parameter print_config
 """
+
+
 class SupRBWrapper():
     def __new__(self, **kwargs):
         self.suprb = SupRB()
-        
         kwargs = dict(sorted(kwargs.items(), key=lambda item: item[0].count("__")))
-        
+
         for key, value in kwargs.items():
             if "print_config" == key:
                 continue
@@ -40,7 +41,7 @@ class SupRBWrapper():
             for attribute in attribute_split[:-1]:
                 if hasattr(attribute_value, attribute):
                     attribute_value = getattr(attribute_value, attribute)
-                
+
             if hasattr(attribute_value, attribute_split[-1]):
                 setattr(attribute_value, attribute_split[-1], value)
             else:
@@ -50,6 +51,8 @@ class SupRBWrapper():
 
         if "print_config" in kwargs and kwargs["print_config"]:
             for attr_name, attr_value in self.suprb.__dict__.items():
-                print(attr_name, attr_value)
-
+                try:
+                    print(attr_name, attr_value)
+                except:
+                    print("None value found")
         return self.suprb
