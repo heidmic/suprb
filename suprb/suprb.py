@@ -161,9 +161,9 @@ class SupRB(BaseRegressor):
         # Initialise components
         self.pool_ = []
 
+        self._validate_matching_type(default=OrderedBound(np.array([])))
         self._validate_rule_generation(default=ES1xLambda())
         self._validate_solution_composition(default=GeneticAlgorithm())
-        self._validate_matching_type(default=OrderedBound(np.array([])))
 
         self._propagate_component_parameters()
         self._init_bounds(X)
