@@ -4,11 +4,12 @@ authors:
   - family-names: Heider
     given-names: Michael
     orcid: https://orcid.org/0000-0003-3140-1993
+  - family-names: Sraj
+    given-names: Roman-Alexander
+    orcid: https://orcid.org/0009-0003-7930-4276
   - family-names: Wurth
     given-names: Jonathan
     orcid: https://orcid.org/0000-0002-5799-024X
-  - family-names: Sraj
-    given-names: Roman-Alexander
 title: "SupRB: The Supervised Rule-based Learning System"
-version: 0.1.1
-date-released: 2022-04-14
+version: 1.0.0
+date-released: 2024-11-18
