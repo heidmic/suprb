@@ -1,3 +1,4 @@
+from copy import deepcopy
 import warnings
 from collections import deque
 from typing import Optional
@@ -86,17 +87,17 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             warnings.warn("',' operator and HalfnormIncrease mutation lead to collapsing populations")
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
-
         elitist = initial_rule
-
         elitists = deque(maxlen=self.delay)
+        # This is needed for AdaptiveMutation as the initial mutation type needs to be resetted each RuleDiscovery cycle
+        mutation = deepcopy(self.mutation)
 
         # Main iteration
         for iteration in range(self.n_iter):
             elitists.append(elitist)
 
             # Generate, fit and evaluate lambda children
-            children = [self.constraint(self.mutation(elitist, random_state=random_state))
+            children = [self.constraint(mutation(elitist, random_state=random_state))
                             .fit(X, y) for _ in range(self.lmbda)]
 
             # Filter children that do not match any data samples
@@ -120,5 +121,8 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
                     elitist = elitists[0]
                     break
+
+            if getattr(mutation, "adapt", None):
+                mutation.adapt(elitist.fitness_)
 
         return elitist
