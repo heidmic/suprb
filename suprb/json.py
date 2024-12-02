@@ -25,13 +25,14 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 def dump(suprb, filename):
-    json_config = {"config": None, "pool": []}
+    json_config = {"elitist": {}, "config":  {}, "pool": []}
 
     try:
         suprb._cleanup()
     except AttributeError:
         pass
-    json_config = _save_config(suprb)
+    _save_elitist(suprb, json_config)
+    _save_config(suprb, json_config)
     _save_pool(suprb.pool_, json_config)
     _save_input_space(suprb.pool_, json_config)
 
@@ -53,6 +54,12 @@ def load(filename):
     return suprb
 
 
+def _save_elitist(suprb, json_config):
+    json_config["elitist"] = {"complexity_": suprb.elitist_.complexity_,
+                              "error_": suprb.elitist_.error_,
+                              "fitness_": suprb.elitist_.fitness_}
+
+
 def _convert_to_json_format(np_array):
     return json.dumps(np_array, cls=NumpyEncoder)
 
@@ -69,8 +76,7 @@ def _get_full_class_name(instance):
     return CLASS_PREFIX + module + '.' + class_name.__qualname__
 
 
-def _save_config(suprb):
-    json_config = {}
+def _save_config(suprb, json_config):
     json_config["config"] = {}
     primitive = (int, str, bool, float)
 
@@ -85,8 +91,6 @@ def _save_config(suprb):
                 json_config["config"][key] = None
             else:    
                 json_config["config"][key] = cname
-
-    return json_config
 
 
 def _save_pool(pool, json_config):

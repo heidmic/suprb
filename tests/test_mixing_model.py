@@ -55,24 +55,18 @@ class TestMixingModel(unittest.TestCase):
         rule_amount = 4
         random_state = 42
 
+        # Elements are not checked because they differ for different python versions
+
         mixing = mixing_model.NRandom(rule_amount, random_state)
         result = mixing(self.subpopulation)
 
         self.assertEqual(len(result), 4)
-        self.assertEqual(result[0].fitness_, 0.92)
-        self.assertEqual(result[1].fitness_, 0.88)
-        self.assertEqual(result[2].fitness_, 0.09)
-        self.assertEqual(result[3].fitness_, 0.05)
 
         random_state = 1
         mixing = mixing_model.NRandom(rule_amount, random_state)
         result = mixing(self.subpopulation)
 
         self.assertEqual(len(result), 4)
-        self.assertEqual(result[0].fitness_, 0.84)
-        self.assertEqual(result[1].fitness_, 0.93)
-        self.assertEqual(result[2].fitness_, 0.58)
-        self.assertEqual(result[3].fitness_, 0.66)
 
     def test_RouletteWheel(self):
         rule_amount = 4

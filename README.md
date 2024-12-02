@@ -99,6 +99,8 @@ Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and J
 
 Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth, Benedikt Volger and Jörg Hähner. 2023. **Discovering rules for rule-based machine learning with the help of novelty search.** SN Computer Science 4, 6, 778. DOI: 10.1007/s42979-023-02198-x
 
+Michael Heider, Maximilian Krischan, Roman Sraj and Jörg Hähner. 2024 **Exploring Self-Adaptive Genetic Algorithms to Combine Compact Sets of Rules.** In Proceedings of the 2024 IEEE Congress on Evolutionary Computation (CEC). https://doi.org/10.1109/CEC60901.2024.10612101.
+
 ### Explainability of LCS
 
 Michael Heider, Helena Stegherr, Richard Nordsieck and Jörg Hähner. 2023. **Assessing model requirements for explainable AI: a template and exemplary case study.** Artificial Life 29, 4, 468-486. MIT press. DOI: https://doi.org/10.1162/artl_a_00414
