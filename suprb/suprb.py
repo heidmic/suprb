@@ -6,7 +6,7 @@ from sklearn import clone
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted, check_array
 
-from .base import BaseRegressor
+from .base import BaseSupervised
 from .exceptions import PopulationEmptyWarning
 from .solution import Solution
 from .logging import BaseLogger
@@ -21,7 +21,7 @@ from .solution.mixing_model import ErrorExperienceHeuristic
 from .solution.fitness import PseudoBIC
 
 
-class SupRB(BaseRegressor):
+class SupRB(BaseSupervised):
     """ The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
 
     Parameters

@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABCMeta
 
 import numpy as np
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 
 
 class BaseComponent(BaseEstimator, metaclass=ABCMeta):
@@ -47,13 +47,96 @@ class SolutionBase(metaclass=ABCMeta):
         return {}
 
 
-class BaseRegressor(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
+class BaseSupervised(BaseEstimator, metaclass=ABCMeta):
+    """A base (composite) Estimator for supervised learning."""
+
+    is_fitted_: bool
+
+    @abstractmethod
+    def fit(self, X: np.ndarray, y: np.ndarray) -> BaseSupervised:
+        """ A reference implementation of a fitting function.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The training input samples.
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+            The target values.
+
+        Returns
+        -------
+        self : BaseEstimator
+            Returns self.
+        """
+
+        pass
+
+    @abstractmethod
+    def predict(self, X: np.ndarray):
+        """ A reference implementation of a predicting function.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The training input samples.
+
+        Returns
+        -------
+        y : np.ndarray
+            Returns the estimation with shape (n_samples,).
+        """
+
+        pass
+
+class BaseRegressor(BaseEstimator, BaseSupervised, RegressorMixin, metaclass=ABCMeta):
     """A base (composite) Regressor."""
 
     is_fitted_: bool
 
     @abstractmethod
     def fit(self, X: np.ndarray, y: np.ndarray) -> BaseRegressor:
+        """ A reference implementation of a fitting function.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The training input samples.
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+            The target values.
+
+        Returns
+        -------
+        self : BaseEstimator
+            Returns self.
+        """
+
+        pass
+
+    @abstractmethod
+    def predict(self, X: np.ndarray):
+        """ A reference implementation of a predicting function.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The training input samples.
+
+        Returns
+        -------
+        y : np.ndarray
+            Returns the estimation with shape (n_samples,).
+        """
+
+        pass
+
+
+class BaseClassifier(BaseEstimator, BaseSupervised, ClassifierMixin, metaclass=ABCMeta):
+    """A base (composite) Classifier."""
+
+    is_fitted_: bool
+
+    @abstractmethod
+    def fit(self, X: np.ndarray, y: np.ndarray) -> BaseClassifier:
         """ A reference implementation of a fitting function.
 
         Parameters
