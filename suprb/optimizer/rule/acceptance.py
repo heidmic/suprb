@@ -21,7 +21,7 @@ class MaxError(RuleAcceptance):
         self.max_error = max_error
 
     def __call__(self, rule: Rule, X: np.ndarray, y: np.ndarray) -> bool:
-        return rule.error_ <= self.max_error
+        return rule.score_ <= self.max_error
 
 
 class Variance(RuleAcceptance):
@@ -38,4 +38,4 @@ class Variance(RuleAcceptance):
             return False
         local_y = y[rule.match_set_]
         default_error = np.sum(local_y ** 2) / (len(local_y) * self.beta)
-        return rule.error_ <= default_error
+        return rule.score_ <= default_error

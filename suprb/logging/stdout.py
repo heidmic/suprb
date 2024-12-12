@@ -24,7 +24,7 @@ class StdoutLogger(BaseLogger):
         elitist = estimator.solution_composition_.elitist()
 
         message = str(dict(
-            error=elitist.error_,
+            error=elitist.score_,
             fitness=elitist.fitness_,
             complexity=elitist.complexity_,
             score=elitist.score(X, y),

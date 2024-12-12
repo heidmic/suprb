@@ -28,7 +28,7 @@ class SolutionBase(metaclass=ABCMeta):
     """An individual solution to some problem."""
 
     is_fitted_: bool
-    error_: float
+    score_: float
     fitness_: float
 
     @abstractmethod
@@ -38,7 +38,7 @@ class SolutionBase(metaclass=ABCMeta):
 
     def __str__(self):
         if hasattr(self, 'is_fitted_') and self.is_fitted_:
-            attributes = {'error': self.error_, 'fitness': self.fitness_} | self._more_str_attributes()
+            attributes = {'score': self.score_, 'fitness': self.fitness_} | self._more_str_attributes()
             concat = ",".join([f"{key}={value}" for key, value in attributes.items()])
             return f"{self.__class__.__name__}({concat})"
 

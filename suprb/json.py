@@ -204,7 +204,7 @@ def _convert_json_to_rule(json_rule, json_dict):
                 _convert_model(json_rule["model"], json_dict["config"]["rule_generation__init__model"]),
                 _get_class(json_dict["config"]["rule_generation__init__fitness"]))
 
-    rule.error_ = json_rule["error_"]
+    rule.score_ = json_rule["score_"]
     rule.experience_ = json_rule["experience_"]
     rule.is_fitted_ = json_rule["is_fitted_"]
 
