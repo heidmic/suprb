@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Union
 
 import numpy as np
-from sklearn.base import RegressorMixin, clone
+from sklearn.base import RegressorMixin, ClassifierMixin, clone
 from sklearn.metrics import mean_squared_error
 
 from suprb.base import SolutionBase
@@ -38,11 +38,15 @@ class Rule(SolutionBase):
     match_set_: np.ndarray
     pred_: Union[np.ndarray, None]  # only the prediction of matching points, so of x[match_]
 
-    def __init__(self, match: MatchingFunction, input_space: np.ndarray, model: RegressorMixin, fitness: RuleFitness):
+    def __init__(self, match: MatchingFunction, input_space: np.ndarray, model: RegressorMixin | ClassifierMixin, fitness: RuleFitness):
         self.match = match
         self.input_space = input_space
         self.model = model
         self.fitness = fitness
+        if isinstance(model, ClassifierMixin):
+            self.task = 'Classification'
+        else:
+            self.task = 'Regression'
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Rule:
 
@@ -74,7 +78,8 @@ class Rule(SolutionBase):
         self.model.fit(X, y)
 
         self.pred_ = self.model.predict(X)
-        self.error_ = max(mean_squared_error(y, self.pred_), 1e-4)  # TODO: make min a parameter?
+        if self.task == 'Regression':
+            self.error_ = max(mean_squared_error(y, self.pred_), 1e-4)  # TODO: make min a parameter?
         self.fitness_ = self.fitness(self)
         self.experience_ = float(X.shape[0])
 

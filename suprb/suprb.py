@@ -6,7 +6,7 @@ from sklearn import clone
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted, check_array
 
-from .base import BaseSupervised
+from .base import BaseSupervised, BaseRegressor, BaseClassifier
 from .exceptions import PopulationEmptyWarning
 from .solution import Solution
 from .logging import BaseLogger
@@ -146,8 +146,12 @@ class SupRB(BaseSupervised):
         self.elitist_.complexity_ = 99999
 
         # Check that x and y have correct shape
-        X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
-        y = check_array(y, ensure_2d=False, dtype='float64')
+        if isinstance(self, BaseRegressor):
+            X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
+            y = check_array(y, ensure_2d=False, dtype='float64')
+        else:
+            X, y = check_X_y(X, y, dtype=None, y_numeric=True)
+            y = check_array(y, ensure_2d=False, dtype=None)
 
         # Init sklearn interface
         self.n_features_in_ = X.shape[1]

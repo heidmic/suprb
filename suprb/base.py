@@ -88,7 +88,7 @@ class BaseSupervised(BaseEstimator, metaclass=ABCMeta):
 
         pass
 
-class BaseRegressor(BaseEstimator, BaseSupervised, RegressorMixin, metaclass=ABCMeta):
+class BaseRegressor(BaseSupervised, RegressorMixin, metaclass=ABCMeta):
     """A base (composite) Regressor."""
 
     is_fitted_: bool
@@ -130,7 +130,7 @@ class BaseRegressor(BaseEstimator, BaseSupervised, RegressorMixin, metaclass=ABC
         pass
 
 
-class BaseClassifier(BaseEstimator, BaseSupervised, ClassifierMixin, metaclass=ABCMeta):
+class BaseClassifier(BaseSupervised, ClassifierMixin, metaclass=ABCMeta):
     """A base (composite) Classifier."""
 
     is_fitted_: bool

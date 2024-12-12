@@ -2,11 +2,11 @@ from abc import ABCMeta, abstractmethod
 from typing import Union
 import numpy as np
 from scipy.stats import halfnorm
-from sklearn.base import RegressorMixin, clone
+from sklearn.base import RegressorMixin, ClassifierMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 
-from suprb.base import BaseComponent
+from suprb.base import BaseComponent, BaseSupervised
 from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage
 from suprb.utils import check_random_state, RandomState
 from . import Rule, RuleFitness
@@ -25,16 +25,19 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     """
 
     def __init__(self, bounds: np.ndarray = None,
-                 model: RegressorMixin = None,
+                 model: BaseComponent = None,
                  fitness: RuleFitness = None,
                  matching_type: MatchingFunction = None):
         self.bounds = bounds
         self.model = model
         self.fitness = fitness
         self.matching_type = matching_type
-
         self._validate_components(model=Ridge(alpha=0.01),
                                   fitness=VolumeWu())
+        if isinstance(model, ClassifierMixin):
+            self.task = 'Classification'
+        else:
+            self.task = 'Regression'
 
     @property
     def matching_type(self):
