@@ -74,6 +74,16 @@ class Rule(SolutionBase):
         # Get all data points which match the bounds.
         X, y = X[self.match_set_], y[self.match_set_]
 
+        # No reason to fit if only one class match_set
+        if self.task == 'Classification':
+            if len(np.unique(y)) == 1:
+                self.pred_ = y[0]
+                self.score_ = 1 - 1e-4
+                self.fitness_ = self.fitness(self)
+                self.experience_ = float(X.shape[0])
+                self.is_fitted_ = True
+                return self
+
         # Create and fit the model
         self.model.fit(X, y)
 
