@@ -1,5 +1,7 @@
 import numpy as np
 
+from sklearn.base import RegressorMixin, ClassifierMixin
+
 from suprb.rule import Rule
 from suprb.utils import check_random_state, RandomState
 from . import MixingModel
@@ -100,6 +102,8 @@ class ErrorExperienceHeuristic(MixingModel):
         # Normalize
         tau_sum = self._get_tau_sum(subpopulation, matches, taus)
         out = pred / tau_sum
+        if isinstance(subpopulation[0].model, ClassifierMixin):
+            out = [round(x) for x in out]
         return out
 
     def _get_local_pred(self, X: np.ndarray, subpopulation: list[Rule], cache: bool):
