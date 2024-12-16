@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import abstractmethod, ABCMeta
+from abc import abstractmethod, ABCMeta, ABC
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
@@ -170,3 +170,9 @@ class BaseClassifier(BaseSupervised, ClassifierMixin, metaclass=ABCMeta):
         """
 
         pass
+
+class SupervisedMixin(ABC):
+    pass
+
+SupervisedMixin.register(RegressorMixin)
+SupervisedMixin.register(ClassifierMixin)
