@@ -56,7 +56,7 @@ class Solution(SolutionBase, SupervisedMixin):
         if self.task == "Regression":
             self.score_ = max(mean_squared_error(y, pred), 1e-4)
         elif self.task == "Classification":
-            self.score_ = max(accuracy_score(y, pred), 1e-4)
+            self.score_ = -max(accuracy_score(y, pred), 1e-4)
             
         self.input_size_ = self.genome.shape[0]
         self.complexity_ = np.sum(self.genome).item()  # equivalent to np.count_nonzero, but possibly faster
