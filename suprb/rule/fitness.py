@@ -17,7 +17,7 @@ class PseudoAccuracy(RuleFitness):
         # note that we multiply solely for readability reasons without
         # any performance impact
         if rule.task == "Classification":
-            return rule.score_
+            return -rule.score_ * 100
         return pseudo_accuracy(rule.score_) * 100
 
 
