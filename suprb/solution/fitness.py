@@ -8,12 +8,12 @@ from . import Solution, SolutionFitness
 
 
 class PseudoBIC(SolutionFitness):
-    """Tries to minimize complexity along with error. Can be negative for Regression tasks."""
+    """Tries to minimize complexity along with error. Can be negative."""
 
     def __call__(self, solution: Solution) -> float:
         # note that error is capped to 1e-4 in suprb.solution.Solution.fit
-        sign = 1 if solution.task == "Classification" else -1
-        return sign * (solution.input_size_ * np.log(solution.score_)
+        offset = 1 if solution.task == "Classification" else 0
+        return -(solution.input_size_ * np.log(offset + solution.score_)
                  + solution.complexity_ * np.log(solution.input_size_))
 
 
@@ -30,7 +30,7 @@ class ComplexitySolutionFitness(SolutionFitness, metaclass=ABCMeta):
         self.alpha = alpha
 
     def __call__(self, solution: Solution) -> float:
-        acc = solution.score_ if solution.task == "Classification" else pseudo_accuracy(solution.score_)
+        acc = -solution.score_ if solution.task == "Classification" else pseudo_accuracy(solution.score_)
         return self.fitness_func_(self.alpha, acc,
                                   c_norm(solution.complexity_, self.max_genome_length_)) * 100
 
