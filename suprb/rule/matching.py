@@ -48,7 +48,7 @@ class OrderedBound(MatchingFunction):
     A standard interval-based matching function producing multi-dimensional
     hyperrectangular conditions. In effect, a lower (l) and upper bound (u) are
     specified for each dimension. Those bounds always fulfill l <= u
-    An example x is matched iff l_i <= x_i <= u_i for all dimensions i
+    An example x is matched if l_i <= x_i <= u_i for all dimensions i
     """
 
     def __init__(self, bounds: np.ndarray = np.array([])):
@@ -84,7 +84,7 @@ class UnorderedBound(MatchingFunction):
     A standard interval-based matching function producing multi-dimensional
     hyperrectangular conditions. Two bounds (p and q) exist which have
     no explicit ordering but are instead sorted during the matching process
-    An example x is matched iff q_i <= x_i <= p_i for all dimensions i
+    An example x is matched if q_i <= x_i <= p_i or p_i <= x_i <= q_i for all dimensions i
     """
 
     def __init__(self, bounds: np.ndarray):

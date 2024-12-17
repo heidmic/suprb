@@ -102,6 +102,8 @@ class ErrorExperienceHeuristic(MixingModel):
         # Normalize
         tau_sum = self._get_tau_sum(subpopulation, matches, taus)
         out = pred / tau_sum
+        
+        # Round predicitions to int for Classification
         if isinstance(subpopulation[0].model, ClassifierMixin):
             out = [round(x) for x in out]
         return out
