@@ -17,8 +17,8 @@ class PseudoAccuracy(RuleFitness):
         # note that we multiply solely for readability reasons without
         # any performance impact
         if rule.task == "Classification":
-            return -rule.score_ * 100
-        return pseudo_accuracy(rule.score_) * 100
+            return  (1 - rule.error_) * 100
+        return pseudo_accuracy(rule.error_) * 100
 
 
 class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
@@ -34,7 +34,11 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
         input_space_volume = np.prod(diff)
 
         volume_share = rule.volume_ / input_space_volume
-        return self.fitness_func_(alpha=self.alpha, x1=pseudo_accuracy(rule.score_, beta=2), x2=volume_share) * 100
+        if rule.task == "Classification":
+            x1 = (1 - rule.error_)
+        else:
+            x1 = pseudo_accuracy(rule.error_, beta=2)
+        return self.fitness_func_(alpha=self.alpha, x1 = x1, x2=volume_share) * 100
 
 
 class VolumeEmary(VolumeRuleFitness):

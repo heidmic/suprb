@@ -142,7 +142,7 @@ class SupRB(BaseSupervised):
         self.is_error_ = False
         self.elitist_ = Solution([0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC())
         self.elitist_.fitness_ = 0
-        self.elitist_.score_ = 99999
+        self.elitist_.error_ = 99999
         self.elitist_.complexity_ = 99999
 
         # Check that x and y have correct shape
@@ -150,7 +150,7 @@ class SupRB(BaseSupervised):
             X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
             y = check_array(y, ensure_2d=False, dtype='float64')
         else:
-            X, y = check_X_y(X, y, dtype=None, y_numeric=True)
+            X, y = check_X_y(X, y, dtype=None, y_numeric=False)
             y = check_array(y, ensure_2d=False, dtype=None)
 
         # Init sklearn interface

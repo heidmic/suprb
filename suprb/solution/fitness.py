@@ -3,7 +3,7 @@ from typing import Callable
 
 import numpy as np
 
-from suprb.fitness import emary, pseudo_accuracy, wu
+from suprb.fitness import emary, pseudo_accuracy, wu, actual_accuracy
 from . import Solution, SolutionFitness
 
 
@@ -12,8 +12,7 @@ class PseudoBIC(SolutionFitness):
 
     def __call__(self, solution: Solution) -> float:
         # note that error is capped to 1e-4 in suprb.solution.Solution.fit
-        offset = 1 if solution.task == "Classification" else 0
-        return -(solution.input_size_ * np.log(offset + solution.score_)
+        return -(solution.input_size_ * np.log(solution.error_)
                  + solution.complexity_ * np.log(solution.input_size_))
 
 
@@ -30,7 +29,7 @@ class ComplexitySolutionFitness(SolutionFitness, metaclass=ABCMeta):
         self.alpha = alpha
 
     def __call__(self, solution: Solution) -> float:
-        acc = -solution.score_ if solution.task == "Classification" else pseudo_accuracy(solution.score_)
+        acc = actual_accuracy(solution.error_) if solution.task == "Classification" else pseudo_accuracy(solution.error_)
         return self.fitness_func_(self.alpha, acc,
                                   c_norm(solution.complexity_, self.max_genome_length_)) * 100
 

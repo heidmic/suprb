@@ -3,6 +3,7 @@ import numpy as np
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import cross_validate, train_test_split
+from sklearn.linear_model import Ridge
 
 
 from suprb.utils import check_random_state
@@ -49,16 +50,17 @@ if __name__ == '__main__':
                          rule_generation__delay=150,
                          rule_generation__random_state=random_state,
                          rule_generation__n_jobs=1,
+                         rule_generation__init__model=Ridge(), 
 
                          ## SOLUTION COMPOSITION ##
                          solution_composition=GeneticAlgorithm(),
-                         solution_composition__n_iter=32,
+                         solution_composition__n_iter=10,
                          solution_composition__population_size=32,
                          solution_composition__elitist_ratio=0.2,
                          solution_composition__random_state=random_state,
                          solution_composition__n_jobs=1)
 
-    scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10,
+    scores = cross_validate(model, X, y, cv=4, n_jobs=4, verbose=10,
                             scoring=['r2', 'neg_mean_squared_error'],
                             return_estimator=True, fit_params={'cleanup': True})
 

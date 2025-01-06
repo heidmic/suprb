@@ -8,7 +8,7 @@ from sklearn.base import RegressorMixin, ClassifierMixin, clone
 from sklearn.metrics import mean_squared_error, accuracy_score
 
 from suprb.base import SolutionBase
-from suprb.fitness import BaseFitness
+from suprb.fitness import BaseFitness, pseudo_error
 from .matching import MatchingFunction
 
 
@@ -56,7 +56,7 @@ class Rule(SolutionBase):
         # No reason to fit if no data point matches
         if not np.any(match_set):
             self.is_fitted_ = False
-            self.score_ = np.inf
+            self.error_ = np.inf
             self.fitness_ = -np.inf
             self.experience_ = 0
             self.pred_ = np.array([])
@@ -74,14 +74,14 @@ class Rule(SolutionBase):
         # Get all data points which match the bounds.
         X, y = X[self.match_set_], y[self.match_set_]
 
-        # No reason to fit if only one class match_set
+        # No reason to fit if only one label in match_set
         if self.task == 'Classification':
             if len(np.unique(y)) == 1:
                 self.pred_ = y[0]
-                self.score_ = 1 - 1e-4
+                self.error_ = 1
                 self.fitness_ = self.fitness(self)
                 self.experience_ = float(X.shape[0])
-                self.is_fitted_ = True
+                self.is_fitted_ = False
                 return self
 
         # Create and fit the model
@@ -89,9 +89,9 @@ class Rule(SolutionBase):
 
         self.pred_ = self.model.predict(X)
         if self.task == 'Regression':
-            self.score_ = max(mean_squared_error(y, self.pred_), 1e-4)  # TODO: make min a parameter?
+            self.error_ = max(mean_squared_error(y, self.pred_), 1e-4)  # TODO: make min a parameter?
         elif self.task == 'Classification':
-            self.score_ = -max(accuracy_score(y, self.pred_), 1e-4)
+            self.error_ = max(pseudo_error(accuracy_score(y, self.pred_)), 1e-4)
         self.fitness_ = self.fitness(self)
         self.experience_ = float(X.shape[0])
 
@@ -103,6 +103,9 @@ class Rule(SolutionBase):
         return self.match.volume_
 
     def predict(self, X: np.ndarray):
+        # Make array 2dim in case of single sample
+        if np.ndim(X) == 1:
+            X = X.reshape(1, -1)
         return self.model.predict(X)
 
     def clone(self, **kwargs) -> Rule:

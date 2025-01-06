@@ -173,7 +173,7 @@ class MinPercentage(MatchingFunction):
     A standard interval-based matching function producing multi-dimensional
     hyperrectangular conditions. In effect, a lower bound (l) and
     a distance proportion (p) are specified for each dimension.
-    An example x is matched iff
+    An example x is matched if
     l_i <= x_i <= l_i + p_i * (max_i - l_i) for all dimensions i
     """
 

@@ -20,6 +20,14 @@ def pseudo_accuracy(error: float, beta=2) -> float:
     assert beta > 0
     return np.exp(-beta * error)
 
+def pseudo_error(accuracy: float) -> float:
+    return 1 - accuracy
+
+def actual_accuracy(error: float) -> float:
+    '''
+    for classification
+    '''
+    return 1 - error
 
 def emary(alpha: float, x1: float, x2: float) -> float:
     """

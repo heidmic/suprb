@@ -20,7 +20,7 @@ class TestMixingModel(unittest.TestCase):
 
         rule.fitness_ = fitness
         rule.experience_ = experience
-        rule.score_ = error
+        rule.error_ = error
 
         return rule
 

@@ -90,7 +90,7 @@ class SagaSolution(Solution):
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> SagaSolution:
         pred = self.predict(X, cache=True)
-        self.score_ = max(mean_squared_error(y, pred), 1e-4)
+        self.error_ = max(mean_squared_error(y, pred), 1e-4)
         self.input_size_ = self.genome.shape[0]
         self.complexity_ = np.sum(self.genome).item()  # equivalent to np.count_nonzero, but possibly faster
         self.fitness_ = self.fitness(self)

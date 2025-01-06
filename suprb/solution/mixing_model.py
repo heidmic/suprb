@@ -109,7 +109,8 @@ class ErrorExperienceHeuristic(MixingModel):
         return out
 
     def _get_local_pred(self, X: np.ndarray, subpopulation: list[Rule], cache: bool):
-        local_pred = np.zeros((len(subpopulation), self.input_size))
+        if subpopulation:
+            local_pred = np.zeros((len(subpopulation), self.input_size))
 
         if cache:
             # Use the precalculated matches and predictions from fit()
@@ -129,9 +130,9 @@ class ErrorExperienceHeuristic(MixingModel):
     def _get_taus(self, subpopulation: list[Rule], dim: int):
         # Get errors and experience of all rules in subpopulation
         experiences = self.experience_calculation(subpopulation, dim)
-        scores = np.array([rule.score_ for rule in subpopulation])
+        errors = np.array([rule.error_ for rule in subpopulation])
 
-        return (1 / scores) * (experiences * self.experience_weight)
+        return (1 / errors) * (experiences * self.experience_weight)
 
     def _get_tau_sum(self, subpopulation: list[Rule], matches: list[Rule], taus: list[int]):
         # Sum all taus

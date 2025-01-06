@@ -50,12 +50,12 @@ class NondominatedSort(RuleSelection):
             to_be_added = False
             for can in candidates:
 
-                if can.score_ < rule.score_ and can.volume_ > rule.volume_:
+                if can.error_ < rule.error_ and can.volume_ > rule.volume_:
                     # classifier is dominated by this candidate and should not
                     # become a new candidate
                     to_be_added = False
                     break
-                elif can.score_ > rule.score_ and can.volume_ < rule.volume_:
+                elif can.error_ > rule.error_ and can.volume_ < rule.volume_:
                     # classifier dominates candidate
                     candidates.remove(can)
                     to_be_added = True
