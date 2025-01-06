@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 from abc import ABCMeta, abstractmethod
+from typing import Union
 
 import numpy as np
 from sklearn.base import RegressorMixin, ClassifierMixin
@@ -9,7 +10,7 @@ from sklearn.metrics import mean_squared_error, accuracy_score
 
 from suprb.rule import Rule
 from suprb.base import BaseComponent, SolutionBase, SupervisedMixin
-from suprb.fitness import BaseFitness
+from suprb.fitness import BaseFitness, pseudo_error
 
 
 class MixingModel(BaseComponent, metaclass=ABCMeta):
@@ -44,19 +45,19 @@ class Solution(SolutionBase, SupervisedMixin):
         self.pool = pool
         self.mixing = mixing
         self.fitness = fitness
+        self.task = None
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Solution:
         pred = self.predict(X, cache=True)
 
-        if isinstance(self.pool[0].model, ClassifierMixin):
+        if not self.pool:
+            self.error_ = 1 - 1e-4
+        elif isinstance(self.pool[0].model, ClassifierMixin):
             self.task = 'Classification'
+            self.error_ = max(pseudo_error(accuracy_score(y, pred)), 1e-4)
         else:
             self.task = 'Regression'
-
-        if self.task == "Regression":
-            self.score_ = max(mean_squared_error(y, pred), 1e-4)
-        elif self.task == "Classification":
-            self.score_ = -max(accuracy_score(y, pred), 1e-4)
+            self.error_ = max(mean_squared_error(y, pred), 1e-4)
             
         self.input_size_ = self.genome.shape[0]
         self.complexity_ = np.sum(self.genome).item()  # equivalent to np.count_nonzero, but possibly faster
@@ -91,7 +92,7 @@ class Solution(SolutionBase, SupervisedMixin):
         )
         solution = Solution(**(args | kwargs))
         if not kwargs:
-            attributes = ['fitness_', 'score_', 'complexity_', 'is_fitted_', 'input_size_']
+            attributes = ['fitness_', 'error_', 'complexity_', 'is_fitted_', 'input_size_']
             solution.__dict__ |= {key: getattr(self, key) for key in attributes}
         return solution
 
