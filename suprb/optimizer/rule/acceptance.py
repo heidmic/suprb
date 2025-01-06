@@ -2,6 +2,8 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
+from sklearn.metrics import precision_score, recall_score, f1_score
+
 from suprb.base import BaseComponent
 from suprb.rule import Rule
 
@@ -37,5 +39,34 @@ class Variance(RuleAcceptance):
         if rule.experience_ < 1:
             return False
         local_y = y[rule.match_set_]
-        default_error = np.sum(local_y ** 2) / (len(local_y) * self.beta)
-        return rule.score_ <= default_error
+        if rule.task == "Regression":
+            default_error = np.sum(local_y ** 2) / (len(local_y) * self.beta)
+        elif rule.task == "Classification":
+            # default error is the trivial solution of always choosing the most common label
+            default_error = np.bincount(local_y).max() / (len(local_y) * self.beta)
+        return rule.error_ <= default_error
+
+
+class Precision(RuleAcceptance):
+    """Insert if the rule has a precision greater or equal to a threshold"""
+
+    def __init__(self, min_precission: float = 0.9):
+        self.min_precission = min_precission
+
+    def __call__(self, rule: Rule, X: np.ndarray, y: np.ndarray) -> bool:
+        if rule.experience_ < 1:
+            return False
+        local_y = y[rule.match_set_]
+        return rule.error_ > precision_score(local_y, rule.predict(X[rule.match_set_]))
+    
+class F1_Score(RuleAcceptance):
+    """Insert if the rule has a f1_score greater or equal to a threshold"""
+
+    def __init__(self, min_f1: float = 0.9):
+        self.min_precission = min_f1
+
+    def __call__(self, rule: Rule, X: np.ndarray, y: np.ndarray) -> bool:
+        if rule.experience_ < 1:
+            return False
+        local_y = y[rule.match_set_]
+        return rule.error_ > f1_score(local_y, rule.predict(X[rule.match_set_]))
