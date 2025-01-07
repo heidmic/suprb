@@ -7,6 +7,7 @@ from sklearn.model_selection import cross_validate, train_test_split
 from sklearn.linear_model import Ridge, LogisticRegression
 from sklearn.utils import shuffle
 
+import suprb
 from suprb.utils import check_random_state
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.rule.acceptance import MaxError
@@ -26,7 +27,7 @@ if __name__ == '__main__':
     y = iris.data.targets.to_numpy()
     X, y = shuffle(X, y, random_state=random_state)
     unique = np.unique(y)
-    toNum = dict(zip(unique, range(len(unique))))
+    toNum = dict(zip(unique, range(1, len(unique)+1)))
     # targets = {"Iris-setosa": 1, 'Iris-versicolor': 2, 'Iris-virginica': 3}
     # Conversion to int required for mixing, but possibly has unwanted sideeffects
     y = [toNum[x[0]] for x in y]
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     model = SupRBWrapper(print_config=True,
 
                          ## RULE GENERATION ##
-                         rule_generation=ES1xLambda(acceptance=MaxError(max_error=0.1)),
+                         rule_generation=ES1xLambda(),
                          rule_generation__n_iter=100,
                          rule_generation__lmbda=16,
                          rule_generation__operator='+',
@@ -50,6 +51,7 @@ if __name__ == '__main__':
 
                          ## SOLUTION COMPOSITION ##
                          solution_composition=GeneticAlgorithm(),
+                         solution_composition__init__mixing=suprb.solution.mixing_model.ErrorExperienceClassification(),
                          solution_composition__n_iter=100,
                          solution_composition__population_size=32,
                          solution_composition__elitist_ratio=0.2,
