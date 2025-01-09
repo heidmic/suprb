@@ -108,11 +108,14 @@ class MostVoted(MixingModel):
         local_pred, matches = get_local_pred(X, subpopulation, cache)
         pred_per_sample = local_pred.transpose()
         out = np.zeros(self.input_size)
-        for i, pred in enumerate(pred_per_sample):
+        for x, pred in enumerate(pred_per_sample):
             # strip to ensure only valid predictions are counted
             stripped_pred = [i for i in pred if i != 0]
-            out[i] = np.bincount(stripped_pred).argmax()
-        out = [round(x) for x in out]
+            if not stripped_pred:
+                out[x] = int(np.random.choice(local_pred.flatten()))
+                continue
+            out[x] = np.bincount(stripped_pred).argmax()
+        out = [int(label) for label in out]
         return out
 
 
@@ -150,7 +153,7 @@ class ErrorExperienceClassification(MixingModel):
             stripped_pred = pred[match_per_sample[x]]
             stripped_pred = [int(label) for label in stripped_pred]
             if not stripped_pred:
-                out[x] = int(np.random.choice(local_pred.flatten()))
+                out[x] = int(np.random.choice([i for i in local_pred.flatten() if i != 0]))
                 continue
             local_taus = taus[match_per_sample[x]]
             out[x] = np.bincount(stripped_pred, weights=local_taus).argmax()
