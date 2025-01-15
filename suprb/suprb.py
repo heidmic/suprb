@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_is_fitted, check_array
 from .base import BaseRegressor
 from .exceptions import PopulationEmptyWarning
 from .solution import Solution
-from .logging import BaseLogger
+from .logging import BaseLogger, DefaultLogger
 from .optimizer.solution import SolutionComposition, ga
 from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleGeneration
@@ -85,7 +85,7 @@ class SupRB(BaseRegressor):
                  n_rules: int = 4,
                  random_state: int = None,
                  verbose: int = 1,
-                 logger: BaseLogger = None,
+                 logger: BaseLogger = DefaultLogger(),
                  n_jobs: int = 1,
                  early_stopping_patience: int = -1,
                  early_stopping_delta: int = 0
