@@ -44,7 +44,7 @@ class TestMatchingFunction(unittest.TestCase):
             sigma_init = np.array([0.1, 0.1])
 
         self.model = SupRB(
-            rule_generation=es.ES1xLambda(
+            rule_discovery=es.ES1xLambda(
                 operator='&',
                 n_iter=12,
                 delay=10,

@@ -40,7 +40,7 @@ if __name__ == '__main__':
         SVR(),
         KNeighborsRegressor(),
         SupRB(
-            rule_generation=es.ES1xLambda(
+            rule_discovery=es.ES1xLambda(
                 operator='&',
                 init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
                 mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2)

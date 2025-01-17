@@ -41,14 +41,14 @@ if __name__ == '__main__':
     # Comparable with examples/example_2.py
     model = SupRBWrapper(print_config=True,
 
-                         ## RULE GENERATION ##
-                         rule_generation=ES1xLambda(),
-                         rule_generation__n_iter=10,
-                         rule_generation__lmbda=16,
-                         rule_generation__operator='+',
-                         rule_generation__delay=150,
-                         rule_generation__random_state=random_state,
-                         rule_generation__n_jobs=1,
+                         ## RULE DISCOVERY ##
+                         rule_discovery=ES1xLambda(),
+                         rule_discovery__n_iter=10,
+                         rule_discovery__lmbda=16,
+                         rule_discovery__operator='+',
+                         rule_discovery__delay=150,
+                         rule_discovery__random_state=random_state,
+                         rule_discovery__n_jobs=1,
 
                          ## SOLUTION COMPOSITION ##
                          solution_composition=GeneticAlgorithm(),

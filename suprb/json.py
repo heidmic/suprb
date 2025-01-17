@@ -196,8 +196,8 @@ def _convert_json_to_rule(json_rule, json_dict):
 
     rule = Rule(_convert_matching_type(json_rule["match"], json_dict["config"]["matching_type"]),
                 _convert_from_json_to_array(json_dict["input_space"]),
-                _convert_model(json_rule["model"], json_dict["config"]["rule_generation__init__model"]),
-                _get_class(json_dict["config"]["rule_generation__init__fitness"]))
+                _convert_model(json_rule["model"], json_dict["config"]["rule_discovery__init__model"]),
+                _get_class(json_dict["config"]["rule_discovery__init__fitness"]))
 
     rule.error_ = json_rule["error_"]
     rule.experience_ = json_rule["experience_"]
