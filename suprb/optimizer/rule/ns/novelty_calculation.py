@@ -43,12 +43,8 @@ class NoveltyCalculation(BaseComponent):
             archive.append(rule)
 
         for i, rule in enumerate(filtered_rules):
-            local_competition = self.novelty_search_type.local_competition(
-                rule, archive
-            )
-            rule.novelty_score_ = local_competition + self._novelty_score_calculation(
-                rule
-            )
+            local_competition = self.novelty_search_type.local_competition(rule, archive)
+            rule.novelty_score_ = local_competition + self._novelty_score_calculation(rule)
             novelty_search_rules.append(rule)
 
         return novelty_search_rules
@@ -116,8 +112,6 @@ class NoveltyFitnessBiased(NoveltyCalculation):
     def _novelty_score_calculation(self, rule: Rule):
         basic_novelty_score = super()._novelty_score_calculation(rule)
         scaled_fitness = rule.fitness_ / 100
-        novelty_score = (self.novelty_bias * basic_novelty_score) + (
-            self.fitness_bias * scaled_fitness
-        )
+        novelty_score = (self.novelty_bias * basic_novelty_score) + (self.fitness_bias * scaled_fitness)
 
         return novelty_score

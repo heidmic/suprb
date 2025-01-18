@@ -19,9 +19,7 @@ class StdoutLogger(BaseLogger):
         if self.progress_bar:
             self.iterator_ = tqdm(desc="Fitting SupRB", total=estimator.n_iter, ncols=80)
 
-    def log_iteration(
-        self, X: np.ndarray, y: np.ndarray, estimator: SupRB, iteration: int
-    ):
+    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: SupRB, iteration: int):
 
         elitist = estimator.solution_composition_.elitist()
 

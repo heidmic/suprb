@@ -25,15 +25,11 @@ class SolutionBuilder(BaseComponent, metaclass=ABCMeta):
     ) -> Solution:
         pass
 
-    def update_pheromones(
-        self, solution: Solution, pheromones: np.ndarray, delta_tau: float
-    ):
+    def update_pheromones(self, solution: Solution, pheromones: np.ndarray, delta_tau: float):
         """Apply the pheromone update to the pheromone matrix."""
         pass
 
-    def pad_pheromone_matrix(
-        self, pheromones: Optional[np.ndarray], size: int
-    ) -> np.ndarray:
+    def pad_pheromone_matrix(self, pheromones: Optional[np.ndarray], size: int) -> np.ndarray:
         """Pad the pheromone matrix for additional rules."""
         pass
 
@@ -44,9 +40,7 @@ def relative_fitness(pool: list[Rule], scale=0.5) -> np.ndarray:
     assert scale < 1
 
     fitness = np.array([rule.fitness_ for rule in pool])
-    normalized = (
-        (fitness - np.amin(fitness)) / (np.amax(fitness) - np.amin(fitness))
-    ) * scale
+    normalized = ((fitness - np.amin(fitness)) / (np.amax(fitness) - np.amin(fitness))) * scale
 
     return 1 + np.stack((-normalized, normalized), axis=1)
 
@@ -61,9 +55,7 @@ class Binary(SolutionBuilder):
     def __init__(self, alpha: float = 1, beta: float = 1, tau0: float = 5):
         super().__init__(alpha, beta, tau0)
 
-    def pad_pheromone_matrix(
-        self, pheromones: Optional[np.ndarray], size: int
-    ) -> np.ndarray:
+    def pad_pheromone_matrix(self, pheromones: Optional[np.ndarray], size: int) -> np.ndarray:
         """Initialize and pad a Nx2 pheromone matrix."""
         if pheromones is None:
             return self.pad_pheromone_matrix(np.empty((0, 2), dtype="float64"), size)
@@ -93,9 +85,7 @@ class Binary(SolutionBuilder):
 
         return solution
 
-    def update_pheromones(
-        self, solution: Solution, pheromones: np.ndarray, delta_tau: float
-    ):
+    def update_pheromones(self, solution: Solution, pheromones: np.ndarray, delta_tau: float):
         # Add the delta tau to all rules (de)selected
         pheromones[:, 0] += ~solution.genome * delta_tau
         pheromones[:, 1] += solution.genome * delta_tau
@@ -114,9 +104,7 @@ def relative_bounds_overlap(A: Rule, B: Rule) -> np.array:
     If one rule lies completely within the bounds of the other rule, the overlap is 1.
     """
 
-    intersections = (A.match.bounds[:, 0] <= B.match.bounds[:, 1]) & (
-        B.match.bounds[:, 0] <= A.match.bounds[:, 1]
-    )
+    intersections = (A.match.bounds[:, 0] <= B.match.bounds[:, 1]) & (B.match.bounds[:, 0] <= A.match.bounds[:, 1])
 
     if not np.all(intersections):
         return np.ones(2)
@@ -215,16 +203,12 @@ class Complete(SolutionBuilder):
 
         return solution
 
-    def update_pheromones(
-        self, solution: Solution, pheromones: np.ndarray, delta_tau: float
-    ):
+    def update_pheromones(self, solution: Solution, pheromones: np.ndarray, delta_tau: float):
         # Update the pheromones of all rule pair permutations of selected rules
         selected_indices = np.nonzero(solution.genome)[0]
         if len(selected_indices) > 1:
             selected_permutations = np.array(list(permutations(selected_indices, 2)))
-            pheromones[
-                selected_permutations[:, 0], selected_permutations[:, 1], 1
-            ] += delta_tau
+            pheromones[selected_permutations[:, 0], selected_permutations[:, 1], 1] += delta_tau
 
         pheromones[selected_indices, selected_indices, 1] += delta_tau
 

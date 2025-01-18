@@ -106,9 +106,7 @@ class SupRB(BaseRegressor):
 
     def check_early_stopping(self):
         if self.early_stopping_patience > 0:
-            fitness_diff = (
-                self.solution_composition_.elitist().fitness_ - self.previous_fitness_
-            )
+            fitness_diff = self.solution_composition_.elitist().fitness_ - self.previous_fitness_
 
             if fitness_diff > self.early_stopping_delta:
                 self.early_stopping_counter_ = 0
@@ -145,9 +143,7 @@ class SupRB(BaseRegressor):
         self.early_stopping_counter_ = 0
         self.previous_fitness_ = 0
         self.is_error_ = False
-        self.elitist_ = Solution(
-            [0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC()
-        )
+        self.elitist_ = Solution([0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC())
         self.elitist_.fitness_ = 0
         self.elitist_.error_ = 99999
         self.elitist_.complexity_ = 99999
@@ -178,9 +174,7 @@ class SupRB(BaseRegressor):
 
         # Init optimizers
         self.solution_composition_.pool_ = self.pool_
-        self.solution_composition_.init.fitness.max_genome_length_ = (
-            self.n_rules * self.n_iter + self.n_initial_rules
-        )
+        self.solution_composition_.init.fitness.max_genome_length_ = self.n_rules * self.n_iter + self.n_initial_rules
         self.rule_discovery_.pool_ = self.pool_
 
         # Init Logging
@@ -233,18 +227,14 @@ class SupRB(BaseRegressor):
         except ValueError as e:
             # Capture the full traceback and print it
             tb = traceback.format_exc()
-            warnings.warn(
-                f"The following ValueError has occurred:\n{e}\nTraceback:\n{tb}"
-            )
+            warnings.warn(f"The following ValueError has occurred:\n{e}\nTraceback:\n{tb}")
             self.is_fitted_ = True
             self.is_error_ = True
             return True
         except Exception as e:
             # Capture the full traceback and print it
             tb = traceback.format_exc()
-            warnings.warn(
-                f"An error has occurred. This is likely due to a bad configuration:\n{e}\nTraceback:\n{tb}"
-            )
+            warnings.warn(f"An error has occurred. This is likely due to a bad configuration:\n{e}\nTraceback:\n{tb}")
             self.is_fitted_ = True
             self.is_error_ = True
             return True
@@ -278,9 +268,7 @@ class SupRB(BaseRegressor):
         self._log_to_stdout(f"Optimizing populations", priority=4)
 
         # Update the random state
-        self.solution_composition_.random_state = self.solution_composition_seeds_[
-            self.step_
-        ]
+        self.solution_composition_.random_state = self.solution_composition_seeds_[self.step_]
 
         # Optimize
         self.solution_composition_.optimize(X, y)
@@ -297,11 +285,7 @@ class SupRB(BaseRegressor):
             return self.elitist_.predict(X)
 
     def _validate_rule_discovery(self, default=None):
-        self.rule_discovery_ = (
-            clone(self.rule_discovery)
-            if self.rule_discovery is not None
-            else clone(default)
-        )
+        self.rule_discovery_ = clone(self.rule_discovery) if self.rule_discovery is not None else clone(default)
 
     def _validate_solution_composition(self, default=None):
         self.solution_composition_ = (
@@ -309,11 +293,7 @@ class SupRB(BaseRegressor):
         )
 
     def _validate_matching_type(self, default=None):
-        self.matching_type_ = (
-            clone(self.matching_type)
-            if self.matching_type is not None
-            else clone(default)
-        )
+        self.matching_type_ = clone(self.matching_type) if self.matching_type is not None else clone(default)
 
     def _log_to_stdout(self, message, priority=1):
         if self.verbose >= priority:

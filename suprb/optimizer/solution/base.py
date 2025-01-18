@@ -46,9 +46,7 @@ class SolutionComposition(BaseOptimizer, metaclass=ABCMeta):
         self.warm_start = warm_start
 
     @abstractmethod
-    def optimize(
-        self, X: np.ndarray, y: np.ndarray, **kwargs
-    ) -> Union[Solution, list[Solution], None]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Solution, list[Solution], None]:
         pass
 
     @abstractmethod
@@ -87,9 +85,7 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
         )
         self.population_size = population_size
 
-    def optimize(
-        self, X: np.ndarray, y: np.ndarray, **kwargs
-    ) -> Union[Solution, list[Solution], None]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Solution, list[Solution], None]:
         """
         This method does all the work that is independent of the metaheuristic used.
         Specific procedures go into `_optimize()`.
@@ -140,10 +136,7 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
         if not self.warm_start or not hasattr(self, "population_") or not self.population_:
             self.population_ = [self.init(self.pool_, self.random_state_) for _ in range(self.population_size)]
         else:
-            self.population_ = [
-                self.init.pad(solution, self.random_state_)
-                for solution in self.population_
-            ]
+            self.population_ = [self.init.pad(solution, self.random_state_) for solution in self.population_]
 
     def fit_population(self, X, y):
         self.population_ = [solution.fit(X, y) for solution in self.population_]

@@ -82,30 +82,22 @@ class ArtificialBeeColonyAlgorithm(PopulationBasedSolutionComposition):
 
             # Employed bee phase: Crossover with random other solution
             new_solutions = []
-            other_food_sources = self.random_state_.choice(
-                self.food_sources_, size=self.population_size
-            )
+            other_food_sources = self.random_state_.choice(self.food_sources_, size=self.population_size)
             for food_source, other in zip(self.food_sources_, other_food_sources):
-                new = self.food(
-                    food_source, other, random_state=self.random_state_
-                ).fit(X, y)
+                new = self.food(food_source, other, random_state=self.random_state_).fit(X, y)
                 new_solutions.append(new)
 
             self.greedy_update(new_solutions)
 
             # Outlooker bee phase: Crossover with roulette wheel selection
             new_solutions = []
-            weights = np.array(
-                [source.solution.fitness_ for source in self.food_sources_]
-            )
+            weights = np.array([source.solution.fitness_ for source in self.food_sources_])
             normalized_weights = weights / weights.sum()
             other_food_sources = self.random_state_.choice(
                 self.food_sources_, p=normalized_weights, size=self.population_size
             )
             for food_source, other in zip(self.food_sources_, other_food_sources):
-                new = self.food(
-                    food_source, other, random_state=self.random_state_
-                ).fit(X, y)
+                new = self.food(food_source, other, random_state=self.random_state_).fit(X, y)
                 new_solutions.append(new)
 
             self.greedy_update(new_solutions)
@@ -113,13 +105,9 @@ class ArtificialBeeColonyAlgorithm(PopulationBasedSolutionComposition):
             # Scout bee phase: Reinitialize the food sources with trails greater than the limit
             for food_source in self.food_sources_:
                 if food_source.trials >= self.trials_limit:
-                    food_source.solution = self.init(
-                        self.pool_, random_state=self.random_state_
-                    )
+                    food_source.solution = self.init(self.pool_, random_state=self.random_state_)
                     food_source.solution.fit(X, y)
                     food_source.trials = 0
 
             # Update the population
-            self.population_ = [
-                food_source.solution for food_source in self.food_sources_
-            ]
+            self.population_ = [food_source.solution for food_source in self.food_sources_]

@@ -9,27 +9,21 @@ from suprb.utils import RandomState
 
 class SolutionSelection(BaseComponent, metaclass=ABCMeta):
 
-    def __call__(
-        self, population: list[Solution], n: int, random_state: RandomState
-    ) -> list[Solution]:
+    def __call__(self, population: list[Solution], n: int, random_state: RandomState) -> list[Solution]:
         pass
 
 
 class Random(SolutionSelection):
     """Sample `n_parents` at random."""
 
-    def __call__(
-        self, population: list[Solution], n: int, random_state: RandomState
-    ) -> list[Solution]:
+    def __call__(self, population: list[Solution], n: int, random_state: RandomState) -> list[Solution]:
         return list(random_state.choice(population, size=n))
 
 
 class RouletteWheel(SolutionSelection):
     """Sample `n_parents` solutions proportional to their fitness."""
 
-    def __call__(
-        self, population: list[Solution], n: int, random_state: RandomState
-    ) -> list[Solution]:
+    def __call__(self, population: list[Solution], n: int, random_state: RandomState) -> list[Solution]:
         fitness_sum = sum([solution.fitness_ for solution in population])
         if fitness_sum != 0:
             weights = [solution.fitness_ / fitness_sum for solution in population]
@@ -41,9 +35,7 @@ class RouletteWheel(SolutionSelection):
 class LinearRank(SolutionSelection):
     """Sample `n_parents` solutions linear to their fitness ranking."""
 
-    def __call__(
-        self, population: list[Solution], n: int, random_state: RandomState
-    ) -> list[Solution]:
+    def __call__(self, population: list[Solution], n: int, random_state: RandomState) -> list[Solution]:
         fitness = np.array([solution.fitness_ for solution in population])
         ranks = fitness.argsort().argsort() + 1  # double `argsort()` obtains the ranks
         weights = ranks / sum(ranks)

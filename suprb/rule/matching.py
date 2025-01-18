@@ -37,14 +37,10 @@ class MatchingFunction(BaseComponent, metaclass=ABCMeta):
     def _validate_bounds(self, X: np.ndarray):
         """Validates that bounds have the correct shape."""
         if self.bounds.shape[1] != 2:
-            raise ValueError(
-                f"specified bounds are not of shape (-1, 2), but {self.bounds.shape}"
-            )
+            raise ValueError(f"specified bounds are not of shape (-1, 2), but {self.bounds.shape}")
 
         if self.bounds.shape[0] != X.shape[1]:
-            raise ValueError(
-                f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}"
-            )
+            raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
 
 
 class OrderedBound(MatchingFunction):
@@ -116,13 +112,9 @@ class UnorderedBound(MatchingFunction):
         if min_range > 0:
             invalid_indices = np.argwhere((diff < min_range) & (-diff < min_range))
             # Select indices where p >= q and diff < min_range
-            invalid_indices_l = np.argwhere(
-                (diff[invalid_indices] > -diff[invalid_indices])
-            )
+            invalid_indices_l = np.argwhere((diff[invalid_indices] > -diff[invalid_indices]))
             # Select indices where p <= q and diff < min_range
-            invalid_indices_r = np.argwhere(
-                (diff[invalid_indices] <= -diff[invalid_indices])
-            )
+            invalid_indices_r = np.argwhere((diff[invalid_indices] <= -diff[invalid_indices]))
 
             # Increase Range for indices where p >= q
             self.bounds[invalid_indices_l, 0] += min_range / 2
