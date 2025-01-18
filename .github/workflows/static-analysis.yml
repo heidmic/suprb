@@ -26,7 +26,7 @@ jobs:
 
     - name: Run Pylint and generate report
       run: |
-        find suprb/ -maxdepth 1 -name "*.py" | xargs -n 1 -P 4 pylint --max-line-length=120 --output-format=text
+        find suprb/ -name "*.py" | xargs -n 1 -P 4 pylint --max-line-length=120 --output-format=text
         
     - name: Upload pylint report
       uses: actions/upload-artifact@v3
