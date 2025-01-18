@@ -6,6 +6,7 @@ import suprb
 import suprb.logging.stdout
 from suprb.optimizer.rule.es import ES1xLambda
 
+
 class TestSupRB(unittest.TestCase):
 
     def test_check_estimator(self):
