@@ -86,7 +86,7 @@ class SupRB(BaseRegressor):
         n_rules: int = 4,
         random_state: int = None,
         verbose: int = 1,
-        logger: BaseLogger = DefaultLogger(),
+        logger: BaseLogger = None,
         n_jobs: int = 1,
         early_stopping_patience: int = -1,
         early_stopping_delta: int = 0,
@@ -147,6 +147,9 @@ class SupRB(BaseRegressor):
         self.elitist_.fitness_ = 0
         self.elitist_.error_ = 99999
         self.elitist_.complexity_ = 99999
+
+        if not self.logger:
+            self.logger = DefaultLogger()
 
         # Check that x and y have correct shape
         X, y = check_X_y(X, y, dtype="float64", y_numeric=True)
