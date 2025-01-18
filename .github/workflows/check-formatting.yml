@@ -3,10 +3,10 @@ name: Check Python Formatting
 on:
   push:
     branches:
-      - ci-pipeline
+      - master
   pull_request:
     branches:
-      - ci-pipeline
+      - master
 
 jobs:
   formatting-check:
