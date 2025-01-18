@@ -78,9 +78,7 @@ class ParticleSwarmOptimization(PopulationBasedSolutionComposition):
 
         for _ in range(self.n_iter):
             # Perform movement of particles
-            self.movement(
-                particles=self.particles, a=a, random_state=self.random_state_
-            )
+            self.movement(particles=self.particles, a=a, random_state=self.random_state_)
 
             a -= step_size
 

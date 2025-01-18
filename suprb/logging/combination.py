@@ -18,18 +18,14 @@ class CombinedLogger(BaseLogger):
 
     def log_init(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
         if any(map(lambda logger: isinstance(logger, CombinedLogger), self.loggers)):
-            warnings.warn(
-                "Nesting loggers is not recommended. Please add all loggers to this top-level logger."
-            )
+            warnings.warn("Nesting loggers is not recommended. Please add all loggers to this top-level logger.")
 
         self.loggers_ = [(name, clone(logger)) for name, logger in self.loggers]
 
         for _, logger in self.loggers_:
             logger.log_init(X=X, y=y, estimator=estimator)
 
-    def log_iteration(
-        self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int
-    ):
+    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
         for _, logger in self.loggers_:
             logger.log_iteration(X=X, y=y, estimator=estimator, iteration=iteration)
 

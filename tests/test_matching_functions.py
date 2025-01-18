@@ -38,9 +38,7 @@ class TestMatchingFunction(unittest.TestCase):
 
         X = np.linspace(0, 20, num=n_samples)
         y = np.zeros(n_samples)
-        y[X < 10] = np.sin(np.pi * X[X < 10] / 5) + 0.2 * np.cos(
-            4 * np.pi * X[X < 10] / 5
-        )
+        y[X < 10] = np.sin(np.pi * X[X < 10] / 5) + 0.2 * np.cos(4 * np.pi * X[X < 10] / 5)
         y[X >= 10] = X[X >= 10] / 10 - 1
         y += random_state_.normal(scale=0.1, size=n_samples)
         X = X.reshape((-1, 1))
@@ -62,9 +60,7 @@ class TestMatchingFunction(unittest.TestCase):
                 n_iter=12,
                 delay=10,
                 init=(
-                    initialization(
-                        fitness=rule.fitness.VolumeWu(alpha=0.8), sigma=sigma_init
-                    )
+                    initialization(fitness=rule.fitness.VolumeWu(alpha=0.8), sigma=sigma_init)
                     if initialization in (NormalInit, HalfnormInit)
                     else initialization(fitness=rule.fitness.VolumeWu(alpha=0.8))
                 ),
@@ -97,9 +93,7 @@ class TestMatchingFunction(unittest.TestCase):
         initialization_operators = [MeanInit, NormalInit, HalfnormInit]
 
         self.combined_matching_params = list(
-            itertools.product(
-                matching_functions, mutation_operators, initialization_operators
-            )
+            itertools.product(matching_functions, mutation_operators, initialization_operators)
         )
 
     def setUp(self) -> None:
@@ -112,9 +106,7 @@ class TestMatchingFunction(unittest.TestCase):
         for matching_func, mutation, initialization in self.combined_matching_params:
             self.setup_model(matching_func, mutation, initialization)
 
-            print(
-                f"\n\nChecking... {matching_func.__name__} with {mutation.__name__} and {initialization.__name__}"
-            )
+            print(f"\n\nChecking... {matching_func.__name__} with {mutation.__name__} and {initialization.__name__}")
 
             try:
                 self.assertTrue(True),

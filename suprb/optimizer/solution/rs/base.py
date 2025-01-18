@@ -52,10 +52,7 @@ class RandomSearch(PopulationBasedSolutionComposition):
 
         new_population = []
         for _ in range(self.population_size):
-            solutions = [
-                self.init(self.pool_, self.random_state_).fit(X, y)
-                for _ in range(self.n_iter)
-            ]
+            solutions = [self.init(self.pool_, self.random_state_).fit(X, y) for _ in range(self.n_iter)]
             new_population.append(max(solutions, key=lambda i: i.fitness_))
 
         self.population_ = new_population

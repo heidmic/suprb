@@ -161,9 +161,7 @@ class NoveltySearch(RuleDiscovery):
 
         parent_combinations = zip(*[iter(parents)] * 2)
         for parent_A, parent_B in parent_combinations:
-            children.extend(
-                self.crossover(A=parent_A, B=parent_B, random_state=self.random_state_)
-            )
+            children.extend(self.crossover(A=parent_A, B=parent_B, random_state=self.random_state_))
 
         children = [self.constraint(self.mutation(child, random_state=self.random_state_)).fit(X, y)
                     for child in children]

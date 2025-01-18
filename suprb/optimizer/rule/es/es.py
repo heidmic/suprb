@@ -83,13 +83,9 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
             )
 
         if self.operator == "&":
-            assert self.delay < self.n_iter, (
-                f"n_iter {self.n_iter} must be " f"greater than delay {self.delay}"
-            )
+            assert self.delay < self.n_iter, f"n_iter {self.n_iter} must be " f"greater than delay {self.delay}"
         if self.operator == "," and isinstance(self.mutation, HalfnormIncrease):
-            warnings.warn(
-                "',' operator and HalfnormIncrease mutation lead to collapsing populations"
-            )
+            warnings.warn("',' operator and HalfnormIncrease mutation lead to collapsing populations")
 
     def _optimize(
         self,
@@ -109,16 +105,11 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
 
             # Generate, fit and evaluate lambda children
             children = [
-                self.constraint(self.mutation(elitist, random_state=random_state)).fit(
-                    X, y
-                )
-                for _ in range(self.lmbda)
+                self.constraint(self.mutation(elitist, random_state=random_state)).fit(X, y) for _ in range(self.lmbda)
             ]
 
             # Filter children that do not match any data samples
-            valid_children = list(
-                filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children)
-            )
+            valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
 
             if valid_children:
                 children = valid_children
@@ -138,9 +129,7 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
             elif self.operator in (",", "&"):
                 elitist = self.selection(children, random_state=random_state)[0]
             if self.operator == "&":
-                if len(elitists) == self.delay and all(
-                    [e.fitness_ <= elitists[0].fitness_ for e in elitists]
-                ):
+                if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
                     elitist = elitists[0]
                     break
 

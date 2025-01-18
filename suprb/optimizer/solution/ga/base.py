@@ -70,9 +70,7 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
 
         for _ in range(self.n_iter):
             # Eltitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[
-                : self.n_elitists_
-            ]
+            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
 
             # Selection
             parents = self.selection(
@@ -100,10 +98,7 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
                 children.append(parents[-1])
 
             # Mutation
-            mutated_children = [
-                self.mutation(child, random_state=self.random_state_)
-                for child in children
-            ]
+            mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
 
             # Replacement
             self.population_ = elitists

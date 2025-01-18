@@ -41,9 +41,9 @@ class BitFlips(SolutionMutation):
         if fitness_max == fitness_mean:
             mutation_rate = mutation_rate_min
         elif solution.fitness_ > fitness_mean:
-            mutation_rate = mutation_rate_min + (
-                mutation_rate_max - mutation_rate_min
-            ) * ((fitness_max - solution.fitness_) / (fitness_max - fitness_mean))
+            mutation_rate = mutation_rate_min + (mutation_rate_max - mutation_rate_min) * (
+                (fitness_max - solution.fitness_) / (fitness_max - fitness_mean)
+            )
         else:
             mutation_rate = mutation_rate_max
 

@@ -29,9 +29,7 @@ class SolutionInit(BaseComponent, metaclass=ABCMeta):
         self.mixing = mixing
         self.fitness = fitness
 
-        self._validate_components(
-            mixing=ErrorExperienceHeuristic(), fitness=ComplexityWu()
-        )
+        self._validate_components(mixing=ErrorExperienceHeuristic(), fitness=ComplexityWu())
 
     @abstractmethod
     def __call__(self, pool: list[Rule], random_state: RandomState) -> Solution:
@@ -54,9 +52,7 @@ class ZeroInit(SolutionInit):
         )
 
     def pad(self, solution: Solution, random_state: RandomState = None) -> Solution:
-        solution.genome = np.pad(
-            solution.genome, (0, padding_size(solution)), mode="constant"
-        )
+        solution.genome = np.pad(solution.genome, (0, padding_size(solution)), mode="constant")
         return solution
 
 

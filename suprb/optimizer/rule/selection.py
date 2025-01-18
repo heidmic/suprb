@@ -11,18 +11,14 @@ class RuleSelection(BaseComponent, metaclass=ABCMeta):
     """Decides on the best rule of an iteration."""
 
     @abstractmethod
-    def __call__(
-        self, rules: list[Rule], random_state: RandomState, size: int = 1
-    ) -> list[Rule]:
+    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> list[Rule]:
         pass
 
 
 class Fittest(RuleSelection):
     """Take the rule with highest fitness."""
 
-    def __call__(
-        self, rules: list[Rule], random_state: RandomState, size: int = 1
-    ) -> list[Rule]:
+    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> list[Rule]:
         rules = sorted(rules, key=lambda child: child.fitness_, reverse=True)
         return rules[:size]
 
@@ -30,9 +26,7 @@ class Fittest(RuleSelection):
 class RouletteWheel(RuleSelection):
     """Selection probability is proportional to fitness."""
 
-    def __call__(
-        self, rules: list[Rule], random_state: RandomState, size: int = 1
-    ) -> list[Rule]:
+    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> list[Rule]:
         rules_ = [rule for rule in rules if rule.fitness_ != -np.inf]
         try:
             if rules_:
@@ -50,9 +44,7 @@ class RouletteWheel(RuleSelection):
 class NondominatedSort(RuleSelection):
     """Choose a random rule from the pareto front."""
 
-    def __call__(
-        self, rules: list[Rule], random_state: RandomState, size: int = 1
-    ) -> list[Rule]:
+    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> list[Rule]:
         candidates: list[Rule] = [rules[0]]
         for rule in rules[1:]:
             to_be_added = False
@@ -78,7 +70,5 @@ class NondominatedSort(RuleSelection):
 
 class Random(RuleSelection):
 
-    def __call__(
-        self, rules: list[Rule], random_state: RandomState, size: int = 1
-    ) -> list[Rule]:
+    def __call__(self, rules: list[Rule], random_state: RandomState, size: int = 1) -> list[Rule]:
         return random_state.choice(rules, size=size)

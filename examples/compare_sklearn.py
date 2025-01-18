@@ -47,9 +47,7 @@ if __name__ == "__main__":
         SupRB(
             rule_discovery=es.ES1xLambda(
                 operator="&",
-                init=rule.initialization.MeanInit(
-                    fitness=rule.fitness.VolumeWu(alpha=0.8)
-                ),
+                init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.8)),
                 mutation=suprb.optimizer.rule.mutation.HalfnormIncrease(sigma=2),
             ),
             solution_composition=ga.GeneticAlgorithm(
@@ -81,9 +79,7 @@ if __name__ == "__main__":
             name="negated RMSE",
         )
 
-    scores = pd.concat(
-        {name: run(name=name, model=model) for name, model in models.items()}, axis=0
-    ).to_frame()
+    scores = pd.concat({name: run(name=name, model=model) for name, model in models.items()}, axis=0).to_frame()
     scores.index.names = ["model", "cv"]
 
     print(scores.groupby(by="model").describe().to_string())

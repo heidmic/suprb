@@ -45,9 +45,7 @@ class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
             return A
 
     @abstractmethod
-    def _crossover(
-        self, A: SagaSolution, B: SagaSolution, random_state: RandomState
-    ) -> SagaSolution:
+    def _crossover(self, A: SagaSolution, B: SagaSolution, random_state: RandomState) -> SagaSolution:
         pass
 
 
@@ -62,12 +60,8 @@ class NPoint(SolutionCrossover):
     def _single_point(A: SagaSolution, B: SagaSolution, index: int) -> SagaSolution:
         return A.clone(genome=np.append(A.genome[:index], B.genome[index:]))
 
-    def _crossover(
-        self, A: SagaSolution, B: SagaSolution, random_state: RandomState
-    ) -> SagaSolution:
-        indices = random_state.choice(
-            np.arange(len(A.genome)), size=min(self.n, len(A.genome)), replace=False
-        )
+    def _crossover(self, A: SagaSolution, B: SagaSolution, random_state: RandomState) -> SagaSolution:
+        indices = random_state.choice(np.arange(len(A.genome)), size=min(self.n, len(A.genome)), replace=False)
         for index in indices:
             A = self._single_point(A, B, index)
         return A
@@ -76,9 +70,7 @@ class NPoint(SolutionCrossover):
 class Uniform(SolutionCrossover):
     """Decide for every bit with uniform probability if the bit in genome A or B is used."""
 
-    def _crossover(
-        self, A: SagaSolution, B: SagaSolution, random_state: RandomState
-    ) -> SagaSolution:
+    def _crossover(self, A: SagaSolution, B: SagaSolution, random_state: RandomState) -> SagaSolution:
         indices = random_state.random(size=len(A.genome)) <= 0.5
         genome = np.empty(A.genome.shape)
         genome[indices] = A.genome[indices]
@@ -109,9 +101,7 @@ class SagaSolution(Solution):
         pred = self.predict(X, cache=True)
         self.error_ = max(mean_squared_error(y, pred), 1e-4)
         self.input_size_ = self.genome.shape[0]
-        self.complexity_ = np.sum(
-            self.genome
-        ).item()  # equivalent to np.count_nonzero, but possibly faster
+        self.complexity_ = np.sum(self.genome).item()  # equivalent to np.count_nonzero, but possibly faster
         self.fitness_ = self.fitness(self)
         self.is_fitted_ = True
         return self

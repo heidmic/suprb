@@ -22,9 +22,7 @@ class FilterSubpopulation:
 class NBestFitness(FilterSubpopulation):
     def __call__(self, subpopulation: list[Rule]) -> list[Rule]:
         fitnesses = np.array([rule.fitness_ for rule in subpopulation])
-        ind = sorted(range(len(fitnesses)), key=lambda i: fitnesses[i])[
-            -self.rule_amount :
-        ]
+        ind = sorted(range(len(fitnesses)), key=lambda i: fitnesses[i])[-self.rule_amount :]
         return [subpopulation[i] for i in ind]
 
 
@@ -39,9 +37,7 @@ class RouletteWheel(FilterSubpopulation):
         fitnesses = np.array([rule.fitness_ for rule in subpopulation])
         weights = fitnesses / np.sum(fitnesses)
         choice_size = min(len(subpopulation), self.rule_amount)
-        return self.random_state.choice(
-            subpopulation, p=weights, size=choice_size, replace=False
-        )
+        return self.random_state.choice(subpopulation, p=weights, size=choice_size, replace=False)
 
 
 class ExperienceCalculation:
@@ -88,9 +84,7 @@ class ErrorExperienceHeuristic(MixingModel):
         self.experience_calculation = experience_calculation
         self.experience_weight = experience_weight
 
-    def __call__(
-        self, X: np.ndarray, subpopulation: list[Rule], cache=False
-    ) -> np.ndarray:
+    def __call__(self, X: np.ndarray, subpopulation: list[Rule], cache=False) -> np.ndarray:
         self.input_size = X.shape[0]
 
         # No need to perform any calculation if no rule was selected.
@@ -135,17 +129,13 @@ class ErrorExperienceHeuristic(MixingModel):
 
         return (1 / errors) * (experiences * self.experience_weight)
 
-    def _get_tau_sum(
-        self, subpopulation: list[Rule], matches: list[Rule], taus: list[int]
-    ):
+    def _get_tau_sum(self, subpopulation: list[Rule], matches: list[Rule], taus: list[int]):
         # Sum all taus
         local_taus = np.zeros((len(subpopulation), self.input_size))
         for i in range(len(subpopulation)):
             local_taus[i][matches[i]] = taus[i]
 
         tau_sum = np.sum(local_taus, axis=0)
-        tau_sum[tau_sum == 0] = (
-            1  # Needed, otherwise "out = pred / tau_sum" might become a divison by 0
-        )
+        tau_sum[tau_sum == 0] = 1  # Needed, otherwise "out = pred / tau_sum" might become a divison by 0
 
         return tau_sum

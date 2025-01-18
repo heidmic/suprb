@@ -78,13 +78,9 @@ class AntColonyOptimization(PopulationBasedSolutionComposition):
         """Initialize an empty matrix or pad the matrix for additional rules."""
 
         if not self.warm_start or not hasattr(self, "pheromone_matrix_"):
-            self.pheromone_matrix_ = self.builder.pad_pheromone_matrix(
-                None, len(self.pool_)
-            )
+            self.pheromone_matrix_ = self.builder.pad_pheromone_matrix(None, len(self.pool_))
         else:
-            self.pheromone_matrix_ = self.builder.pad_pheromone_matrix(
-                self.pheromone_matrix_, len(self.pool_)
-            )
+            self.pheromone_matrix_ = self.builder.pad_pheromone_matrix(self.pheromone_matrix_, len(self.pool_))
 
     def _optimize(self, X: np.ndarray, y: np.ndarray):
         self._init_pheromone_matrix()
@@ -117,6 +113,4 @@ class AntColonyOptimization(PopulationBasedSolutionComposition):
                 )
 
             # Clip pheromones
-            self.pheromone_matrix_ = np.clip(
-                self.pheromone_matrix_, self.min_pheromone, self.max_pheromone
-            )
+            self.pheromone_matrix_ = np.clip(self.pheromone_matrix_, self.min_pheromone, self.max_pheromone)

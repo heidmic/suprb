@@ -36,9 +36,7 @@ class Rule(SolutionBase):
 
     experience_: float
     match_set_: np.ndarray
-    pred_: Union[
-        np.ndarray, None
-    ]  # only the prediction of matching points, so of x[match_]
+    pred_: Union[np.ndarray, None]  # only the prediction of matching points, so of x[match_]
 
     def __init__(
         self,
@@ -82,9 +80,7 @@ class Rule(SolutionBase):
         self.model.fit(X, y)
 
         self.pred_ = self.model.predict(X)
-        self.error_ = max(
-            mean_squared_error(y, self.pred_), 1e-4
-        )  # TODO: make min a parameter?
+        self.error_ = max(mean_squared_error(y, self.pred_), 1e-4)  # TODO: make min a parameter?
         self.fitness_ = self.fitness(self)
         self.experience_ = float(X.shape[0])
 
