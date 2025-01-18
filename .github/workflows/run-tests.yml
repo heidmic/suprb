@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run python tests
 
 on:
   pull_request:
