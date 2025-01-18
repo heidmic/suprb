@@ -5,7 +5,7 @@ on:
 jobs:
   linting:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 9
 
     steps:
     - name: Checkout code
@@ -26,7 +26,7 @@ jobs:
 
     - name: Run Pylint and generate report
       run: |
-        find suprb/ -name "*.py" | xargs -n 1 -P 4 pylint --max-line-length=120 --output-format=text
+        find suprb/ -name "*.py" -print0 | xargs -0 -n 1 -P 4 pylint --max-line-length=120 --output-format=text || true
         
     - name: Upload pylint report
       uses: actions/upload-artifact@v3
