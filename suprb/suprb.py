@@ -148,9 +148,6 @@ class SupRB(BaseRegressor):
         self.elitist_.error_ = 99999
         self.elitist_.complexity_ = 99999
 
-        if not self.logger:
-            self.logger = DefaultLogger()
-
         # Check that x and y have correct shape
         X, y = check_X_y(X, y, dtype="float64", y_numeric=True)
         y = check_array(y, ensure_2d=False, dtype="float64")
@@ -181,7 +178,7 @@ class SupRB(BaseRegressor):
         self.rule_discovery_.pool_ = self.pool_
 
         # Init Logging
-        self.logger_ = clone(self.logger) if self.logger is not None else None
+        self.logger_ = clone(self.logger) if self.logger is not None else DefaultLogger()
         if self.logger_ is not None:
             self.logger_.log_init(X, y, self)
 
