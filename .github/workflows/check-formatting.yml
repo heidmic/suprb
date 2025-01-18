@@ -1,7 +1,6 @@
 name: Check Python Formatting
 
 on:
-  push:       
   pull_request:
 
 jobs:
