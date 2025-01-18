@@ -37,7 +37,9 @@ class ArchiveNovel(Archive):
     """Archive Class that adds n rules with the best novelty scores to the archive"""
 
     def _add_rules_to_archive(self, rules: list[Rule], n: int):
-        sorted_rules = sorted(rules, key=lambda x: (x.novelty_score_, x.experience_), reverse=True)
+        sorted_rules = sorted(
+            rules, key=lambda x: (x.novelty_score_, x.experience_), reverse=True
+        )
         self.archive.extend([x for x in sorted_rules][:n])
 
 
@@ -51,8 +53,8 @@ class ArchiveRandom(Archive):
 
 class ArchiveNone(Archive):
     """
-        Archive Class where no archive is saved.
-        Since we don't want to use an archive, the set_archive and extend_archive functions 
+    Archive Class where no archive is saved.
+    Since we don't want to use an archive, the set_archive and extend_archive functions
     """
 
     def _add_rules_to_archive(self, rules: list[Rule], n: int):

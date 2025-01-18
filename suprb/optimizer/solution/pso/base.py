@@ -8,7 +8,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class ParticleSwarmOptimization(PopulationBasedSolutionComposition):
-    """ Particle Swarm Optimization written in Python.
+    """Particle Swarm Optimization written in Python.
 
     The base version was taken from https://doi.org/10/bdc3t3.
 
@@ -36,18 +36,19 @@ class ParticleSwarmOptimization(PopulationBasedSolutionComposition):
 
     particles: list[Particle]
 
-    def __init__(self,
-                 n_iter: int = 32,
-                 population_size: int = 32,
-                 a_min: float = 1,
-                 a_max: float = 2,
-                 movement: ParticleMovement = Sigmoid(),
-                 init: SolutionInit = RandomInit(),
-                 archive: SolutionArchive = Elitist(),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 32,
+        population_size: int = 32,
+        a_min: float = 1,
+        a_max: float = 2,
+        movement: ParticleMovement = Sigmoid(),
+        init: SolutionInit = RandomInit(),
+        archive: SolutionArchive = Elitist(),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -70,12 +71,16 @@ class ParticleSwarmOptimization(PopulationBasedSolutionComposition):
         step_size = (self.a_max - self.a_min) / self.n_iter
 
         # Initialize particles
-        self.particles = [self.movement.init_particle(start=solution, random_state=self.random_state_)
-                          for solution in self.population_]
+        self.particles = [
+            self.movement.init_particle(start=solution, random_state=self.random_state_)
+            for solution in self.population_
+        ]
 
         for _ in range(self.n_iter):
             # Perform movement of particles
-            self.movement(particles=self.particles, a=a, random_state=self.random_state_)
+            self.movement(
+                particles=self.particles, a=a, random_state=self.random_state_
+            )
 
             a -= step_size
 

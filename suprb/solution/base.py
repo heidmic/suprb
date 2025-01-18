@@ -19,7 +19,9 @@ class MixingModel(BaseComponent, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def __call__(self, X: np.ndarray, subpopulation: list[Rule], cache=False) -> np.ndarray:
+    def __call__(
+        self, X: np.ndarray, subpopulation: list[Rule], cache=False
+    ) -> np.ndarray:
         pass
 
 
@@ -39,7 +41,13 @@ class Solution(SolutionBase, RegressorMixin):
     input_size_: int
     complexity_: int
 
-    def __init__(self, genome: np.ndarray, pool: list[Rule], mixing: MixingModel, fitness: SolutionFitness):
+    def __init__(
+        self,
+        genome: np.ndarray,
+        pool: list[Rule],
+        mixing: MixingModel,
+        fitness: SolutionFitness,
+    ):
         self.genome = genome
         self.pool = pool
         self.mixing = mixing
@@ -49,7 +57,9 @@ class Solution(SolutionBase, RegressorMixin):
         pred = self.predict(X, cache=True)
         self.error_ = max(mean_squared_error(y, pred), 1e-4)
         self.input_size_ = self.genome.shape[0]
-        self.complexity_ = np.sum(self.genome).item()  # equivalent to np.count_nonzero, but possibly faster
+        self.complexity_ = np.sum(
+            self.genome
+        ).item()  # equivalent to np.count_nonzero, but possibly faster
         self.fitness_ = self.fitness(self)
         self.is_fitted_ = True
         return self
@@ -69,21 +79,27 @@ class Solution(SolutionBase, RegressorMixin):
     @property
     def subpopulation(self) -> list[Rule]:
         """Get all rules in the subpopulation."""
-        assert (len(self.genome) == len(self.pool))
+        assert len(self.genome) == len(self.pool)
         return list(itertools.compress(self.pool, self.genome))
 
     def clone(self, **kwargs) -> Solution:
         args = dict(
-            genome=self.genome.copy() if 'genome' not in kwargs else None,
+            genome=self.genome.copy() if "genome" not in kwargs else None,
             pool=self.pool,
             mixing=self.mixing,
-            fitness=self.fitness
+            fitness=self.fitness,
         )
         solution = Solution(**(args | kwargs))
         if not kwargs:
-            attributes = ['fitness_', 'error_', 'complexity_', 'is_fitted_', 'input_size_']
+            attributes = [
+                "fitness_",
+                "error_",
+                "complexity_",
+                "is_fitted_",
+                "input_size_",
+            ]
             solution.__dict__ |= {key: getattr(self, key) for key in attributes}
         return solution
 
     def _more_str_attributes(self) -> dict:
-        return {'complexity': self.complexity_}
+        return {"complexity": self.complexity_}

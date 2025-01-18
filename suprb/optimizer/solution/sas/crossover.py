@@ -13,7 +13,9 @@ class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
     def __init__(self, crossover_rate: float = 0.9):
         self.crossover_rate = crossover_rate
 
-    def __call__(self, A: SasSolution, B: SasSolution, random_state: RandomState) -> SasSolution:
+    def __call__(
+        self, A: SasSolution, B: SasSolution, random_state: RandomState
+    ) -> SasSolution:
         if random_state.random() < self.crossover_rate:
             return self._crossover(A=A, B=B, random_state=random_state)
         else:
@@ -21,7 +23,9 @@ class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
             return A
 
     @abstractmethod
-    def _crossover(self, A: SasSolution, B: SasSolution, random_state: RandomState) -> SasSolution:
+    def _crossover(
+        self, A: SasSolution, B: SasSolution, random_state: RandomState
+    ) -> SasSolution:
         pass
 
 
@@ -36,8 +40,12 @@ class NPoint(SolutionCrossover):
     def _single_point(A: SasSolution, B: SasSolution, index: int) -> SasSolution:
         return A.clone(genome=np.append(A.genome[:index], B.genome[index:]))
 
-    def _crossover(self, A: SasSolution, B: SasSolution, random_state: RandomState) -> SasSolution:
-        indices = random_state.choice(np.arange(len(A.genome)), size=min(self.n, len(A.genome)), replace=False)
+    def _crossover(
+        self, A: SasSolution, B: SasSolution, random_state: RandomState
+    ) -> SasSolution:
+        indices = random_state.choice(
+            np.arange(len(A.genome)), size=min(self.n, len(A.genome)), replace=False
+        )
         for index in indices:
             A = self._single_point(A, B, index)
         return A
@@ -46,7 +54,9 @@ class NPoint(SolutionCrossover):
 class Uniform(SolutionCrossover):
     """Decide for every bit with uniform probability if the bit in genome A or B is used."""
 
-    def _crossover(self, A: SasSolution, B: SasSolution, random_state: RandomState) -> SasSolution:
+    def _crossover(
+        self, A: SasSolution, B: SasSolution, random_state: RandomState
+    ) -> SasSolution:
         indices = random_state.random(size=len(A.genome)) <= 0.5
         genome = np.empty(A.genome.shape)
         genome[indices] = A.genome[indices]

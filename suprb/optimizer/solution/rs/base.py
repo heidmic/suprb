@@ -7,7 +7,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class RandomSearch(PopulationBasedSolutionComposition):
-    """ A simple Random Search.
+    """A simple Random Search.
     Note that this is not really population-based, and only used to shorten the implementation.
 
     Parameters
@@ -27,15 +27,16 @@ class RandomSearch(PopulationBasedSolutionComposition):
         The number of threads / processes the optimization uses.
     """
 
-    def __init__(self,
-                 n_iter: int = 128,
-                 population_size: int = 128,
-                 init: SolutionInit = RandomInit(),
-                 archive: SolutionArchive = Elitist(),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 128,
+        population_size: int = 128,
+        init: SolutionInit = RandomInit(),
+        archive: SolutionArchive = Elitist(),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -51,8 +52,10 @@ class RandomSearch(PopulationBasedSolutionComposition):
 
         new_population = []
         for _ in range(self.population_size):
-            solutions = [self.init(self.pool_, self.random_state_).fit(X, y)
-                         for _ in range(self.n_iter)]
+            solutions = [
+                self.init(self.pool_, self.random_state_).fit(X, y)
+                for _ in range(self.n_iter)
+            ]
             new_population.append(max(solutions, key=lambda i: i.fitness_))
 
         self.population_ = new_population

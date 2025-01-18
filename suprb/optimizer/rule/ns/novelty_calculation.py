@@ -7,8 +7,12 @@ from .archive import Archive, ArchiveNovel
 
 
 class NoveltyCalculation(BaseComponent):
-    def __init__(self, novelty_search_type: NoveltySearchType = NoveltySearchType(),
-                 archive: Archive = ArchiveNovel(), k_neighbor: int = 15):
+    def __init__(
+        self,
+        novelty_search_type: NoveltySearchType = NoveltySearchType(),
+        archive: Archive = ArchiveNovel(),
+        k_neighbor: int = 15,
+    ):
         self.novelty_search_type = novelty_search_type
         self.archive = archive
         self.k_neighbor = k_neighbor
@@ -17,16 +21,16 @@ class NoveltyCalculation(BaseComponent):
         return self._novelty_score(rules=rules)
 
     def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
-        """ The basic novely calculation based on the hamming distance. 
-            Takes every rule and calculates the hamming distance to each rule contained in the archive
-            and averages the distances of the k-nearest neighbors to get the novelty score.
+        """The basic novely calculation based on the hamming distance.
+        Takes every rule and calculates the hamming distance to each rule contained in the archive
+        and averages the distances of the k-nearest neighbors to get the novelty score.
         """
         novelty_search_rules = []
         archive = self.archive.archive[:]
         filtered_rules = self.novelty_search_type.filter_rules(rules)
 
         for i, rule in enumerate(filtered_rules):
-            if not hasattr(rule, 'idx_') or rule.idx_ > len(archive):
+            if not hasattr(rule, "idx_") or rule.idx_ > len(archive):
                 rule.distances_ = []
                 for archive_rule in archive:
                     hamming_distance = hamming(rule.match_set_, archive_rule.match_set_)
@@ -39,8 +43,12 @@ class NoveltyCalculation(BaseComponent):
             archive.append(rule)
 
         for i, rule in enumerate(filtered_rules):
-            local_competition = self.novelty_search_type.local_competition(rule, archive)
-            rule.novelty_score_ = local_competition + self._novelty_score_calculation(rule)
+            local_competition = self.novelty_search_type.local_competition(
+                rule, archive
+            )
+            rule.novelty_score_ = local_competition + self._novelty_score_calculation(
+                rule
+            )
             novelty_search_rules.append(rule)
 
         return novelty_search_rules
@@ -56,8 +64,8 @@ class NoveltyCalculation(BaseComponent):
 
 
 class ProgressiveMinimalCriteria(NoveltyCalculation):
-    """ Uses the basic novelty score calculation, but only with rules that are above the median fitness.
-        The returned list of rules will be shorter than the original input 
+    """Uses the basic novelty score calculation, but only with rules that are above the median fitness.
+    The returned list of rules will be shorter than the original input
     """
 
     def _novelty_score(self, rules: list[Rule]) -> list[Rule]:
@@ -76,9 +84,9 @@ class NoveltyFitnessPareto(NoveltyCalculation):
         return self._get_pareto_front(novelty_search_rules)
 
     def _get_pareto_front(self, rules: list[Rule]) -> list[Rule]:
-        rules = sorted(rules,
-                       key=lambda rule: (rule.novelty_score_, rule.fitness_),
-                       reverse=True)
+        rules = sorted(
+            rules, key=lambda rule: (rule.novelty_score_, rule.fitness_), reverse=True
+        )
 
         pareto_front = [rules[0]]
 
@@ -96,9 +104,12 @@ class NoveltyFitnessBiased(NoveltyCalculation):
         Percentage value [0, 1]
     """
 
-    def __init__(self, novelty_bias: float = 0.5, novelty_search_type:
-                 NoveltySearchType = NoveltySearchType(),
-                 archive: Archive = ArchiveNovel()):
+    def __init__(
+        self,
+        novelty_bias: float = 0.5,
+        novelty_search_type: NoveltySearchType = NoveltySearchType(),
+        archive: Archive = ArchiveNovel(),
+    ):
         self.novelty_bias = novelty_bias
         self.fitness_bias = 1 - novelty_bias
 
@@ -107,6 +118,8 @@ class NoveltyFitnessBiased(NoveltyCalculation):
     def _novelty_score_calculation(self, rule: Rule):
         basic_novelty_score = super()._novelty_score_calculation(rule)
         scaled_fitness = rule.fitness_ / 100
-        novelty_score = (self.novelty_bias * basic_novelty_score) + (self.fitness_bias * scaled_fitness)
+        novelty_score = (self.novelty_bias * basic_novelty_score) + (
+            self.fitness_bias * scaled_fitness
+        )
 
         return novelty_score

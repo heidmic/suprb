@@ -13,10 +13,12 @@ import suprb.solution.mixing_model as mixing_model
 class TestMixingModel(unittest.TestCase):
 
     def create_rule(self, fitness, experience, error):
-        rule = Rule(match=OrderedBound(np.array([[-1, 1]])),
-                    input_space=[-1.0, 1.0],
-                    model=SupRB(),
-                    fitness=VolumeWu)
+        rule = Rule(
+            match=OrderedBound(np.array([[-1, 1]])),
+            input_space=[-1.0, 1.0],
+            model=SupRB(),
+            fitness=VolumeWu,
+        )
 
         rule.fitness_ = fitness
         rule.experience_ = experience
@@ -29,7 +31,7 @@ class TestMixingModel(unittest.TestCase):
         random_state = check_random_state(42)
 
         for i in range(100):
-            subpopulation.append(self.create_rule(i/100, i, 0.01))
+            subpopulation.append(self.create_rule(i / 100, i, 0.01))
 
         random_state.shuffle(subpopulation)
 
@@ -100,16 +102,15 @@ class TestMixingModel(unittest.TestCase):
 
     def test_CapExperience(self):
         for i in range(100):
-            experience_calc = mixing_model.CapExperience(i/2, i)
+            experience_calc = mixing_model.CapExperience(i / 2, i)
             result_experiences = experience_calc(self.subpopulation)
             self.assertEqual(max(result_experiences), i)
-            self.assertEqual(min(result_experiences), i/2)
+            self.assertEqual(min(result_experiences), i / 2)
 
     def test_CapExperienceWithDimensionality(self):
         lower = 5
         upper = 20
-        experience_calc = mixing_model.CapExperienceWithDimensionality(
-            lower, upper)
+        experience_calc = mixing_model.CapExperienceWithDimensionality(lower, upper)
 
         result_experiences = experience_calc(self.subpopulation, 2)
         self.assertEqual(max(result_experiences), 40)

@@ -61,21 +61,42 @@ class Sigmoid(ParticleMovement):
         self.v_max = v_max
 
     def init_particle(self, start: Solution, random_state: RandomState) -> Particle:
-        position = (start.genome.astype(np.float) + random_state.random(size=start.genome.shape[0])) / 2
-        velocity = random_state.uniform(-self.v_max, self.v_max, size=start.genome.shape[0])
+        position = (
+            start.genome.astype(np.float)
+            + random_state.random(size=start.genome.shape[0])
+        ) / 2
+        velocity = random_state.uniform(
+            -self.v_max, self.v_max, size=start.genome.shape[0]
+        )
 
         return ClassicalParticle(velocity=velocity, position=position, solution=start)
 
-    def __call__(self, particles: list[ClassicalParticle], a: float, random_state: RandomState):
-        global_best_position = max(particles, key=lambda p: p.solution.fitness_).position
+    def __call__(
+        self, particles: list[ClassicalParticle], a: float, random_state: RandomState
+    ):
+        global_best_position = max(
+            particles, key=lambda p: p.solution.fitness_
+        ).position
         n = particles[0].position.shape[0]
 
         for particle in particles:
-            br = self.b * random_state.random(size=n) * (particle.best_position - particle.position)
-            cr = self.c * random_state.random(size=n) * (global_best_position - particle.position)
-            particle.velocity = np.clip(a * particle.velocity + br + cr, -self.v_max, self.v_max)
+            br = (
+                self.b
+                * random_state.random(size=n)
+                * (particle.best_position - particle.position)
+            )
+            cr = (
+                self.c
+                * random_state.random(size=n)
+                * (global_best_position - particle.position)
+            )
+            particle.velocity = np.clip(
+                a * particle.velocity + br + cr, -self.v_max, self.v_max
+            )
             particle.position = np.clip(particle.position + particle.velocity, 0, 1)
-            particle.solution.genome = sigmoid_binarize(particle.position, random_state=random_state)
+            particle.solution.genome = sigmoid_binarize(
+                particle.position, random_state=random_state
+            )
 
 
 class QuantumParticle(Particle):
@@ -102,21 +123,38 @@ class SigmoidQuantum(ParticleMovement):
     """
 
     def init_particle(self, start: Solution, random_state: RandomState) -> Particle:
-        position = (start.genome.astype(np.float) + random_state.random(size=start.genome.shape[0])) / 2
+        position = (
+            start.genome.astype(np.float)
+            + random_state.random(size=start.genome.shape[0])
+        ) / 2
 
         return QuantumParticle(position=position, solution=start)
 
-    def __call__(self, particles: list[QuantumParticle], a: float, random_state: RandomState):
-        global_best_position = max(particles, key=lambda p: p.solution.fitness_).position
+    def __call__(
+        self, particles: list[QuantumParticle], a: float, random_state: RandomState
+    ):
+        global_best_position = max(
+            particles, key=lambda p: p.solution.fitness_
+        ).position
         mean_position = np.mean([particle.position for particle in particles], axis=0)
         n = particles[0].position.shape[0]
 
         for particle in particles:
             lmbda = random_state.random(size=n) <= 0.5
-            mixed_global = lmbda * particle.position + (1 - lmbda) * global_best_position
-            mixed_mean = a * np.abs(mean_position - particle.position) * np.log(1 / random_state.random(size=n))
-            particle.position = np.clip(mixed_global + mixed_mean * random_state.choice([-1, 1]), 0, 1)
-            particle.solution.genome = sigmoid_binarize(particle.position, random_state=random_state)
+            mixed_global = (
+                lmbda * particle.position + (1 - lmbda) * global_best_position
+            )
+            mixed_mean = (
+                a
+                * np.abs(mean_position - particle.position)
+                * np.log(1 / random_state.random(size=n))
+            )
+            particle.position = np.clip(
+                mixed_global + mixed_mean * random_state.choice([-1, 1]), 0, 1
+            )
+            particle.solution.genome = sigmoid_binarize(
+                particle.position, random_state=random_state
+            )
 
 
 class BinaryParticle(Particle):
@@ -140,13 +178,17 @@ def binary_mean(x: list[np.ndarray], random_state: RandomState) -> np.ndarray:
     x_sum = np.sum(x, axis=0)
     half = x_sum.shape[0] // 2
     equal_indices = x_sum == half
-    mean = (x_sum >= half)
-    mean[equal_indices] = random_state.integers(0, 2, size=np.count_nonzero(equal_indices))
+    mean = x_sum >= half
+    mean[equal_indices] = random_state.integers(
+        0, 2, size=np.count_nonzero(equal_indices)
+    )
 
     return mean.astype(np.bool)
 
 
-def best_random_subset_particle(particles: list[Particle], n: int, random_state: RandomState) -> Particle:
+def best_random_subset_particle(
+    particles: list[Particle], n: int, random_state: RandomState
+) -> Particle:
     """Calculates the best particle of a random subset of particles with size n."""
 
     subset = random_state.choice(particles, size=n)
@@ -175,8 +217,13 @@ class BinaryQuantum(ParticleMovement):
     def init_particle(self, start: Solution, random_state: RandomState) -> Particle:
         return BinaryParticle(solution=start)
 
-    def __call__(self, particles: list[BinaryParticle], a: float, random_state: RandomState):
-        mean_genome = binary_mean([particle.solution.genome for particle in particles], random_state=random_state)
+    def __call__(
+        self, particles: list[BinaryParticle], a: float, random_state: RandomState
+    ):
+        mean_genome = binary_mean(
+            [particle.solution.genome for particle in particles],
+            random_state=random_state,
+        )
         n = particles[0].solution.genome.shape[0]
 
         # Calculate attractors for every particle
@@ -188,7 +235,9 @@ class BinaryQuantum(ParticleMovement):
             # Get some indices from the best particle of a random subset
             attractor = []
             for i in indices:
-                neighbor = best_random_subset_particle(particles, n=self.n_attractors, random_state=random_state)
+                neighbor = best_random_subset_particle(
+                    particles, n=self.n_attractors, random_state=random_state
+                )
                 attractor.append(neighbor.best_solution.genome[i])
 
             genome[indices] = attractor
@@ -196,14 +245,20 @@ class BinaryQuantum(ParticleMovement):
             # If no index is different from the own best, change a random dimension
             if np.all(genome == particle.best_solution.genome):
                 i = random_state.integers(0, n)
-                neighbor = best_random_subset_particle(particles, n=self.n_attractors, random_state=random_state)
+                neighbor = best_random_subset_particle(
+                    particles, n=self.n_attractors, random_state=random_state
+                )
                 genome[i] = neighbor.best_solution.genome[i]
 
             attractors.append(genome)
 
         for particle, attractor in zip(particles, attractors):
             # Calculate the probability to use the attractor
-            b = a * hamming_distance(particle.solution.genome, mean_genome) * np.log(1 / random_state.random())
+            b = (
+                a
+                * hamming_distance(particle.solution.genome, mean_genome)
+                * np.log(1 / random_state.random())
+            )
             pr = min(b / n, 1)
 
             # Mix the old position and the attractor

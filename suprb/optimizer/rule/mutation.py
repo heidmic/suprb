@@ -1,4 +1,3 @@
-
 from typing import Union
 
 import numpy as np
@@ -13,9 +12,11 @@ from suprb.rule.matching import MatchingFunction
 class RuleMutation(GenerationOperator):
     """Mutates the bounds of a rule with the strength defined by sigma."""
 
-    def __init__(self,
-                 matching_type: MatchingFunction = None,
-                 sigma: Union[float, np.ndarray] = 0.1):
+    def __init__(
+        self,
+        matching_type: MatchingFunction = None,
+        sigma: Union[float, np.ndarray] = 0.1,
+    ):
         super().__init__(matching_type=matching_type)
         self.sigma = sigma
 
@@ -33,14 +34,16 @@ class RuleMutation(GenerationOperator):
 
 
 class SigmaRange(RuleMutation):
-    """ Draws the sigma used for another mutation from uniform distribution, low to high.
-        unordered_bound, ordered_bound, center_spread and min_percentage are empty, because 
-        of the inheritance to RuleMutation (and then the inheritance to GenerationOperator),
-        which need an implementation for those functions.
-        They provide no utility, since the RuleMutation this class uses is set in the __init__ 
+    """Draws the sigma used for another mutation from uniform distribution, low to high.
+    unordered_bound, ordered_bound, center_spread and min_percentage are empty, because
+    of the inheritance to RuleMutation (and then the inheritance to GenerationOperator),
+    which need an implementation for those functions.
+    They provide no utility, since the RuleMutation this class uses is set in the __init__
     """
 
-    def __init__(self, mutation: RuleMutation = None, low: float = 0.001, high: float = 0.1):
+    def __init__(
+        self, mutation: RuleMutation = None, low: float = 0.001, high: float = 0.1
+    ):
         super().__init__(0)
         self.mutation = mutation
         self.low = low
@@ -71,11 +74,14 @@ class Normal(RuleMutation):
     def individual_mutate(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
         for index in range(0, self.sigma.shape[0]):
-            bounds[:, index] += random_state.normal(scale=self.sigma[index], size=rule.match.bounds.shape[0])
+            bounds[:, index] += random_state.normal(
+                scale=self.sigma[index], size=rule.match.bounds.shape[0]
+            )
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        rule.match.bounds += random_state.normal(scale=self.sigma,
-                                                 size=rule.match.bounds.shape)
+        rule.match.bounds += random_state.normal(
+            scale=self.sigma, size=rule.match.bounds.shape
+        )
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         # code inspection gives you a warning here but it is ineffectual
@@ -95,9 +101,13 @@ class Halfnorm(RuleMutation):
     def unordered_bound(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
         mean = np.mean(bounds, axis=1)
-        bounds[:, 0] = mean - halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 0] = mean - halfnorm.rvs(
+            scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state
+        )
 
-        bounds[:, 1] = mean + halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 1] = mean + halfnorm.rvs(
+            scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state
+        )
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         self.unordered_bound(rule, random_state)
@@ -118,19 +128,29 @@ class HalfnormIncrease(RuleMutation):
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
-        bounds[:, 0] -= halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 0] -= halfnorm.rvs(
+            scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state
+        )
+        bounds[:, 1] += halfnorm.rvs(
+            scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state
+        )
         rule.match.bounds = np.sort(rule.match.bounds, axis=1)
 
     def center_spread(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
         bounds[:, 0] += random_state.normal(scale=self.sigma[0], size=bounds.shape[0])
-        bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 1] += halfnorm.rvs(
+            scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state
+        )
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
-        bounds[:, 0] -= halfnorm.rvs(scale=self.sigma[0] / 2, size=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
+        bounds[:, 0] -= halfnorm.rvs(
+            scale=self.sigma[0] / 2, size=bounds.shape[0], random_state=random_state
+        )
+        bounds[:, 1] += halfnorm.rvs(
+            scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state
+        )
 
 
 class Uniform(RuleMutation):
@@ -139,11 +159,14 @@ class Uniform(RuleMutation):
     def individual_mutate(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
         for index in range(0, self.sigma.shape[0]):
-            bounds[:, index] += random_state.uniform(-self.sigma[index], self.sigma[index], size=bounds.shape[0])
+            bounds[:, index] += random_state.uniform(
+                -self.sigma[index], self.sigma[index], size=bounds.shape[0]
+            )
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        rule.match.bounds += random_state.uniform(-self.sigma, self.sigma,
-                                                  size=rule.match.bounds.shape)
+        rule.match.bounds += random_state.uniform(
+            -self.sigma, self.sigma, size=rule.match.bounds.shape
+        )
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         self.unordered_bound(rule, random_state)
@@ -170,7 +193,9 @@ class UniformIncrease(RuleMutation):
 
     def center_spread(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
-        bounds[:, 0] -= random_state.uniform(-self.sigma[0], self.sigma[0], size=bounds.shape[0])
+        bounds[:, 0] -= random_state.uniform(
+            -self.sigma[0], self.sigma[0], size=bounds.shape[0]
+        )
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
 
     def min_percentage(self, rule: Rule, random_state: RandomState):

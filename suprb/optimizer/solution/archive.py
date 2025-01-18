@@ -22,8 +22,11 @@ class SolutionArchive(BaseComponent, metaclass=ABCMeta):
 
     def pad(self):
         for solution in self.population_:
-            solution.genome = np.pad(solution.genome, (0, len(self.pool_) - solution.genome.shape[0]),
-                                     mode='constant')
+            solution.genome = np.pad(
+                solution.genome,
+                (0, len(self.pool_) - solution.genome.shape[0]),
+                mode="constant",
+            )
 
     @abstractmethod
     def __call__(self, new_population: list[Solution]):

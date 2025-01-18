@@ -20,8 +20,10 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
     random_state_: RandomState
 
     @abstractmethod
-    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[SolutionBase, list[SolutionBase], None]:
-        """ Optimizes the fitness of `Solutions`.
+    def optimize(
+        self, X: np.ndarray, y: np.ndarray, **kwargs
+    ) -> Union[SolutionBase, list[SolutionBase], None]:
+        """Optimizes the fitness of `Solutions`.
 
         Parameters
         ----------
@@ -42,5 +44,5 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
 
         __init__ parameters are not touched.
         """
-        if hasattr(self, 'random_state_'):
+        if hasattr(self, "random_state_"):
             del self.random_state_

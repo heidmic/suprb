@@ -12,8 +12,10 @@ class PseudoBIC(SolutionFitness):
 
     def __call__(self, solution: Solution) -> float:
         # note that error is capped to 1e-4 in suprb.solution.Solution.fit
-        return -(solution.input_size_ * np.log(solution.error_)
-                 + solution.complexity_ * np.log(solution.input_size_))
+        return -(
+            solution.input_size_ * np.log(solution.error_)
+            + solution.complexity_ * np.log(solution.input_size_)
+        )
 
 
 def c_norm(complexity, N) -> float:
@@ -29,8 +31,14 @@ class ComplexitySolutionFitness(SolutionFitness, metaclass=ABCMeta):
         self.alpha = alpha
 
     def __call__(self, solution: Solution) -> float:
-        return self.fitness_func_(self.alpha, pseudo_accuracy(solution.error_),
-                                  c_norm(solution.complexity_, self.max_genome_length_)) * 100
+        return (
+            self.fitness_func_(
+                self.alpha,
+                pseudo_accuracy(solution.error_),
+                c_norm(solution.complexity_, self.max_genome_length_),
+            )
+            * 100
+        )
 
 
 class ComplexityEmary(ComplexitySolutionFitness):

@@ -25,7 +25,7 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 def dump(suprb, filename):
-    json_config = {"elitist": {}, "config":  {}, "pool": []}
+    json_config = {"elitist": {}, "config": {}, "pool": []}
 
     try:
         suprb._cleanup()
@@ -55,9 +55,11 @@ def load(filename):
 
 
 def _save_elitist(suprb, json_config):
-    json_config["elitist"] = {"complexity_": suprb.elitist_.complexity_,
-                              "error_": suprb.elitist_.error_,
-                              "fitness_": suprb.elitist_.fitness_}
+    json_config["elitist"] = {
+        "complexity_": suprb.elitist_.complexity_,
+        "error_": suprb.elitist_.error_,
+        "fitness_": suprb.elitist_.fitness_,
+    }
 
 
 def _convert_to_json_format(np_array):
@@ -71,9 +73,9 @@ def _convert_from_json_to_array(json_array):
 def _get_full_class_name(instance):
     class_name = instance.__class__
     module = class_name.__module__
-    if module == 'builtins':
+    if module == "builtins":
         return class_name.__qualname__
-    return CLASS_PREFIX + module + '.' + class_name.__qualname__
+    return CLASS_PREFIX + module + "." + class_name.__qualname__
 
 
 def _save_config(suprb, json_config):
@@ -110,12 +112,16 @@ def _convert_dict_to_json(rule_dict):
 
 
 def _convert_rule_to_json(rule):
-    return {"error_":        rule.error_,
-            "experience_":   rule.experience_,
-            "match":         _convert_dict_to_json(vars(rule.match)),
-            "is_fitted_":    rule.is_fitted_,
-            "model":         {"coef_":          _convert_to_json_format(getattr(rule.model, "coef_")),
-                              "intercept_":     getattr(rule.model, "intercept_")}}
+    return {
+        "error_": rule.error_,
+        "experience_": rule.experience_,
+        "match": _convert_dict_to_json(vars(rule.match)),
+        "is_fitted_": rule.is_fitted_,
+        "model": {
+            "coef_": _convert_to_json_format(getattr(rule.model, "coef_")),
+            "intercept_": getattr(rule.model, "intercept_"),
+        },
+    }
 
 
 def _load_config(json_config):
@@ -132,14 +138,16 @@ def _deserialize_config(json_config):
 
 
 def _get_longest_key(json_config):
-    longest_key = max(json_config, key=lambda key: key.count('__'))
-    base_key = '__'.join(longest_key.split('__')[:-1])
+    longest_key = max(json_config, key=lambda key: key.count("__"))
+    base_key = "__".join(longest_key.split("__")[:-1])
 
     return base_key, longest_key
 
 
 def _update_longest_key(json_config, longest_key):
-    if isinstance(json_config[longest_key], str) and json_config[longest_key].startswith(CLASS_PREFIX):
+    if isinstance(json_config[longest_key], str) and json_config[
+        longest_key
+    ].startswith(CLASS_PREFIX):
         if json_config[longest_key] == "class:numpy.ndarray":
             json_config[longest_key] = np.ndarray([])
         else:
@@ -152,7 +160,7 @@ def _get_class(full_class_name):
     full_class_name = full_class_name.replace(CLASS_PREFIX, "")
     separator_idx = full_class_name.rfind(".")
     module_string = full_class_name[:separator_idx]
-    class_string = full_class_name[separator_idx+1:]
+    class_string = full_class_name[separator_idx + 1 :]
 
     module = importlib.import_module(module_string)
     return getattr(module, class_string)
@@ -162,11 +170,13 @@ def _update_same_base_keys(json_config, base_key):
     params = {}
 
     for key in _get_keys_with_same_base(json_config, base_key):
-        param = key[key.rfind("__") + 2:]
+        param = key[key.rfind("__") + 2 :]
 
         if json_config[key] == "NoneType":
             params[param] = None
-        elif isinstance(json_config[key], str) and json_config[key].startswith(CLASS_PREFIX):
+        elif isinstance(json_config[key], str) and json_config[key].startswith(
+            CLASS_PREFIX
+        ):
             json_config[key] = _get_class(json_config[key])()
         else:
             params[param] = json_config[key]
@@ -194,10 +204,16 @@ def _load_pool(json_dict, suprb):
 
 def _convert_json_to_rule(json_rule, json_dict):
 
-    rule = Rule(_convert_matching_type(json_rule["match"], json_dict["config"]["matching_type"]),
-                _convert_from_json_to_array(json_dict["input_space"]),
-                _convert_model(json_rule["model"], json_dict["config"]["rule_discovery__init__model"]),
-                _get_class(json_dict["config"]["rule_discovery__init__fitness"]))
+    rule = Rule(
+        _convert_matching_type(
+            json_rule["match"], json_dict["config"]["matching_type"]
+        ),
+        _convert_from_json_to_array(json_dict["input_space"]),
+        _convert_model(
+            json_rule["model"], json_dict["config"]["rule_discovery__init__model"]
+        ),
+        _get_class(json_dict["config"]["rule_discovery__init__fitness"]),
+    )
 
     rule.error_ = json_rule["error_"]
     rule.experience_ = json_rule["experience_"]
@@ -225,7 +241,9 @@ def _convert_model(json_model, model_type):
 
 
 def _load_elitist(suprb):
-    suprb.elitist_ = Solution(genome=np.ones(len(suprb.pool_)),
-                              pool=suprb.pool_,
-                              mixing=suprb.solution_composition.init.mixing,
-                              fitness=suprb.solution_composition.init.fitness)
+    suprb.elitist_ = Solution(
+        genome=np.ones(len(suprb.pool_)),
+        pool=suprb.pool_,
+        mixing=suprb.solution_composition.init.mixing,
+        fitness=suprb.solution_composition.init.fitness,
+    )

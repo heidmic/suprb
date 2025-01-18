@@ -28,7 +28,7 @@ def load_higdon_gramacy_lee(n_samples=1000, noise=0, random_state=None):
     return sklearn.utils.shuffle(X, y, random_state=random_state)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     random_state = 42
 
     X, y = load_higdon_gramacy_lee(noise=0.1, random_state=random_state)
@@ -39,27 +39,35 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
 
     # Comparable with examples/example_2.py
-    model = SupRBWrapper(print_config=True,
+    model = SupRBWrapper(
+        print_config=True,
+        ## RULE DISCOVERY ##
+        rule_discovery=ES1xLambda(),
+        rule_discovery__n_iter=10,
+        rule_discovery__lmbda=16,
+        rule_discovery__operator="+",
+        rule_discovery__delay=150,
+        rule_discovery__random_state=random_state,
+        rule_discovery__n_jobs=1,
+        ## SOLUTION COMPOSITION ##
+        solution_composition=GeneticAlgorithm(),
+        solution_composition__n_iter=32,
+        solution_composition__population_size=32,
+        solution_composition__elitist_ratio=0.2,
+        solution_composition__random_state=random_state,
+        solution_composition__n_jobs=1,
+    )
 
-                         ## RULE DISCOVERY ##
-                         rule_discovery=ES1xLambda(),
-                         rule_discovery__n_iter=10,
-                         rule_discovery__lmbda=16,
-                         rule_discovery__operator='+',
-                         rule_discovery__delay=150,
-                         rule_discovery__random_state=random_state,
-                         rule_discovery__n_jobs=1,
-
-                         ## SOLUTION COMPOSITION ##
-                         solution_composition=GeneticAlgorithm(),
-                         solution_composition__n_iter=32,
-                         solution_composition__population_size=32,
-                         solution_composition__elitist_ratio=0.2,
-                         solution_composition__random_state=random_state,
-                         solution_composition__n_jobs=1)
-
-    scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=10,
-                            scoring=['r2', 'neg_mean_squared_error'],
-                            return_estimator=True, fit_params={'cleanup': True})
+    scores = cross_validate(
+        model,
+        X,
+        y,
+        cv=4,
+        n_jobs=1,
+        verbose=10,
+        scoring=["r2", "neg_mean_squared_error"],
+        return_estimator=True,
+        fit_params={"cleanup": True},
+    )
 
     log_scores(scores)
