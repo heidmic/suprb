@@ -102,9 +102,7 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
         for iter_ in range(self.n_iter):
 
             # Elitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[
-                : self.n_elitists_
-            ]
+            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
 
             # Selection
             parents = self.selection(
@@ -186,12 +184,8 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
                     for i in range(len(self.population_))
                 ]
             )
-            length_new = np.sqrt(
-                np.sum([np.square(i.fitness_) for i in self.population_]) + np.exp(-10)
-            )
-            length_old = np.sqrt(
-                np.sum([np.square(i.fitness_) for i in self.old_gen]) + np.exp(-10)
-            )
+            length_new = np.sqrt(np.sum([np.square(i.fitness_) for i in self.population_]) + np.exp(-10))
+            length_old = np.sqrt(np.sum([np.square(i.fitness_) for i in self.old_gen]) + np.exp(-10))
             cosine_similarity = dot_sum / (length_new + length_old)
             genome_similarity = (
                 np.intersect1d(
@@ -217,15 +211,7 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
         if self.fitness_max == self.fitness_min:
             b = 0
         else:
-            b = np.cos(
-                np.pi
-                / 2
-                * (
-                    1
-                    - (self.fitness_mean - self.fitness_min)
-                    / (self.fitness_max - self.fitness_min)
-                )
-            )
+            b = np.cos(np.pi / 2 * (1 - (self.fitness_mean - self.fitness_min) / (self.fitness_max - self.fitness_min)))
         return a * b
 
     def calc_quality(self):
@@ -235,11 +221,9 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
         quality = self.calc_quality()
         # crossover rate
         self.crossover_rate_current_min = (
-            self.crossover_rate_min
-            + quality * (self.crossover_rate_max - self.crossover_rate_min) / 2
+            self.crossover_rate_min + quality * (self.crossover_rate_max - self.crossover_rate_min) / 2
         )
         # mutationrate
         self.mutation_rate_current_max = (
-            self.mutation_rate_max
-            - quality * (self.mutation_rate_max - self.mutation_rate_min) / 2
+            self.mutation_rate_max - quality * (self.mutation_rate_max - self.mutation_rate_min) / 2
         )

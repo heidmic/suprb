@@ -9,9 +9,7 @@ from suprb.utils import RandomState
 
 class SolutionSelection(BaseComponent, metaclass=ABCMeta):
 
-    def __call__(
-        self, population: list[SasSolution], random_state: RandomState
-    ) -> list[SasSolution]:
+    def __call__(self, population: list[SasSolution], random_state: RandomState) -> list[SasSolution]:
         pass
 
 
@@ -34,9 +32,7 @@ class Ageing(SolutionSelection):
     ) -> list[SasSolution]:
         median_fitness = np.median([i.fitness_ for i in population])
         top_n = initial_population_size * top_cutoff_mult
-        top_n_population = sorted(population, key=lambda i: i.fitness_, reverse=True)[
-            :top_n
-        ]
+        top_n_population = sorted(population, key=lambda i: i.fitness_, reverse=True)[:top_n]
         top_n_fitness = top_n_population[-1].fitness_
         for i in range(len(population)):
             population[i].age -= 1

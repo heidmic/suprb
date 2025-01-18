@@ -20,4 +20,4 @@ jobs:
       run: pip install black
 
     - name: Check formatting with black
-      run: black --check .
+      run: black --check --line-length 120 .

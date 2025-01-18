@@ -39,9 +39,7 @@ def setup():
             n_iter=2,
             delay=1,
             operator="&",
-            init=rule.initialization.MeanInit(
-                fitness=rule.fitness.VolumeWu(alpha=0.05)
-            ),
+            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
             mutation=HalfnormIncrease(sigma=0.1),
         ),
         solution_composition=ga.GeneticAlgorithm(

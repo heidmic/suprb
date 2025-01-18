@@ -145,9 +145,7 @@ def _get_longest_key(json_config):
 
 
 def _update_longest_key(json_config, longest_key):
-    if isinstance(json_config[longest_key], str) and json_config[
-        longest_key
-    ].startswith(CLASS_PREFIX):
+    if isinstance(json_config[longest_key], str) and json_config[longest_key].startswith(CLASS_PREFIX):
         if json_config[longest_key] == "class:numpy.ndarray":
             json_config[longest_key] = np.ndarray([])
         else:
@@ -174,9 +172,7 @@ def _update_same_base_keys(json_config, base_key):
 
         if json_config[key] == "NoneType":
             params[param] = None
-        elif isinstance(json_config[key], str) and json_config[key].startswith(
-            CLASS_PREFIX
-        ):
+        elif isinstance(json_config[key], str) and json_config[key].startswith(CLASS_PREFIX):
             json_config[key] = _get_class(json_config[key])()
         else:
             params[param] = json_config[key]
@@ -205,13 +201,9 @@ def _load_pool(json_dict, suprb):
 def _convert_json_to_rule(json_rule, json_dict):
 
     rule = Rule(
-        _convert_matching_type(
-            json_rule["match"], json_dict["config"]["matching_type"]
-        ),
+        _convert_matching_type(json_rule["match"], json_dict["config"]["matching_type"]),
         _convert_from_json_to_array(json_dict["input_space"]),
-        _convert_model(
-            json_rule["model"], json_dict["config"]["rule_discovery__init__model"]
-        ),
+        _convert_model(json_rule["model"], json_dict["config"]["rule_discovery__init__model"]),
         _get_class(json_dict["config"]["rule_discovery__init__fitness"]),
     )
 

@@ -32,9 +32,7 @@ class DefaultLogger(BaseLogger):
 
         self.log_params(**estimator.get_params())
 
-    def log_iteration(
-        self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int
-    ):
+    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
         def log_metric(key, value):
             self.log_metric(key=key, value=value, step=estimator.step_)
 

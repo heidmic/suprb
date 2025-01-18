@@ -63,9 +63,7 @@ class GreyWolfOptimizer(PopulationBasedSolutionComposition):
 
         for _ in range(self.n_iter):
             # Get Alpha, Beta, and Delta
-            leaders = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[
-                : self.n_leaders
-            ]
+            leaders = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_leaders]
 
             # Update the positions of all wolves
             self.population_ = self.position(

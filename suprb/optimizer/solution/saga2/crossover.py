@@ -27,13 +27,13 @@ class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
         if fitness_min == fitness_mean or fitness_mean == fitness_max:
             crossover_rate = crossover_rate_max
         elif fitness_parents_mean <= fitness_mean:
-            crossover_rate = crossover_rate_max - (
-                crossover_rate_max - crossover_rate_min
-            ) * ((fitness_mean - fitness_parents_mean) / (fitness_mean - fitness_min))
+            crossover_rate = crossover_rate_max - (crossover_rate_max - crossover_rate_min) * (
+                (fitness_mean - fitness_parents_mean) / (fitness_mean - fitness_min)
+            )
         else:
-            crossover_rate = crossover_rate_max - (
-                crossover_rate_max - crossover_rate_min
-            ) * ((fitness_parents_mean - fitness_mean) / (fitness_max - fitness_mean))
+            crossover_rate = crossover_rate_max - (crossover_rate_max - crossover_rate_min) * (
+                (fitness_parents_mean - fitness_mean) / (fitness_max - fitness_mean)
+            )
 
         if random_state.random() < crossover_rate:
             return self._crossover(A=A, B=B, random_state=random_state)
@@ -42,9 +42,7 @@ class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
             return A
 
     @abstractmethod
-    def _crossover(
-        self, A: Solution, B: Solution, random_state: RandomState
-    ) -> Solution:
+    def _crossover(self, A: Solution, B: Solution, random_state: RandomState) -> Solution:
         pass
 
 
@@ -59,12 +57,8 @@ class NPoint(SolutionCrossover):
     def _single_point(A: Solution, B: Solution, index: int) -> Solution:
         return A.clone(genome=np.append(A.genome[:index], B.genome[index:]))
 
-    def _crossover(
-        self, A: Solution, B: Solution, random_state: RandomState
-    ) -> Solution:
-        indices = random_state.choice(
-            np.arange(len(A.genome)), size=min(self.n, len(A.genome)), replace=False
-        )
+    def _crossover(self, A: Solution, B: Solution, random_state: RandomState) -> Solution:
+        indices = random_state.choice(np.arange(len(A.genome)), size=min(self.n, len(A.genome)), replace=False)
         for index in indices:
             A = self._single_point(A, B, index)
         return A
@@ -73,9 +67,7 @@ class NPoint(SolutionCrossover):
 class Uniform(SolutionCrossover):
     """Decide for every bit with uniform probability if the bit in genome A or B is used."""
 
-    def _crossover(
-        self, A: Solution, B: Solution, random_state: RandomState
-    ) -> Solution:
+    def _crossover(self, A: Solution, B: Solution, random_state: RandomState) -> Solution:
         indices = random_state.random(size=len(A.genome)) <= 0.5
         genome = np.empty(A.genome.shape)
         genome[indices] = A.genome[indices]

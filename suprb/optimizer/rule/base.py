@@ -53,9 +53,7 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
         self.acceptance = acceptance
         self.constraint = constraint
 
-    def _filter_invalid_rules(
-        self, X: np.ndarray, y: np.ndarray, rules: list[Rule]
-    ) -> list[Rule]:
+    def _filter_invalid_rules(self, X: np.ndarray, y: np.ndarray, rules: list[Rule]) -> list[Rule]:
         return list(
             filter(
                 lambda rule: rule is not None and self.acceptance(rule=rule, X=X, y=y),
@@ -94,9 +92,7 @@ class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
 
         with Parallel(n_jobs=self.n_jobs) as parallel:
             rules = parallel(
-                delayed(self._optimize)(
-                    X=X, y=y, initial_rule=initial_rule, random_state=random_state
-                )
+                delayed(self._optimize)(X=X, y=y, initial_rule=initial_rule, random_state=random_state)
                 for initial_rule, random_state in zip(initial_rules, random_states)
             )
 

@@ -51,9 +51,7 @@ if __name__ == "__main__":
             random_state=random_state,
             n_jobs=1,
             mutation=suprb.optimizer.solution.ga.mutation.BitFlips(mutation_rate=0.1),
-            crossover=suprb.optimizer.solution.ga.crossover.NPoint(
-                crossover_rate=0.9, n=2
-            ),
+            crossover=suprb.optimizer.solution.ga.crossover.NPoint(crossover_rate=0.9, n=2),
             selection=suprb.optimizer.solution.ga.selection.Tournament(k=6),
             init=suprb.solution.initialization.RandomInit(
                 mixing=suprb.solution.mixing_model.ErrorExperienceHeuristic(),

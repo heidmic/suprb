@@ -20,9 +20,7 @@ class BaseOptimizer(BaseEstimator, metaclass=ABCMeta):
     random_state_: RandomState
 
     @abstractmethod
-    def optimize(
-        self, X: np.ndarray, y: np.ndarray, **kwargs
-    ) -> Union[SolutionBase, list[SolutionBase], None]:
+    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[SolutionBase, list[SolutionBase], None]:
         """Optimizes the fitness of `Solutions`.
 
         Parameters

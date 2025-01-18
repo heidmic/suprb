@@ -98,9 +98,7 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
             self.adjust_rates()
 
             # Eltitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[
-                : self.n_elitists_
-            ]
+            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
 
             # Selection
             parents = self.selection(
@@ -137,10 +135,7 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
 
             # Mutation
             mutated_children = [
-                self.mutation(
-                    child, self.mutation_rate, random_state=self.random_state_
-                )
-                for child in children
+                self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children
             ]
 
             # Replacement
@@ -150,9 +145,7 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
             self.fit_population(X, y)
 
     def calc_gdm(self):
-        return np.mean([i.fitness_ for i in self.population_]) / np.max(
-            [i.fitness_ for i in self.population_]
-        )
+        return np.mean([i.fitness_ for i in self.population_]) / np.max([i.fitness_ for i in self.population_])
 
     def adjust_rates(self):
         gdm = self.calc_gdm()

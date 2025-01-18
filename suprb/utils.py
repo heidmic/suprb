@@ -23,19 +23,13 @@ def check_random_state(seed) -> RandomState:
         If seed is already a Generator instance, return it.
         Otherwise raise ValueError.
     """
-    if (
-        seed is None
-        or isinstance(seed, numbers.Integral)
-        or isinstance(seed, np.random.SeedSequence)
-    ):
+    if seed is None or isinstance(seed, numbers.Integral) or isinstance(seed, np.random.SeedSequence):
         return np.random.default_rng(seed)
     if isinstance(seed, np.random.RandomState):
         return np.random.default_rng(seed.bit_generator._seed_seq)
     if isinstance(seed, np.random.Generator):
         return seed
-    raise ValueError(
-        "%r cannot be used to seed a numpy.random.Generator" " instance" % seed
-    )
+    raise ValueError("%r cannot be used to seed a numpy.random.Generator" " instance" % seed)
 
 
 def spawn_random_states(random_state: RandomState, n: int) -> Iterator[RandomState]:
@@ -54,9 +48,7 @@ def flatten(iterable):
     Note that implementations like `itertools.chain` only flatten nested lists, not irregular nested lists.
     """
     for el in iterable:
-        if isinstance(el, collections.abc.Iterable) and not isinstance(
-            el, (str, bytes)
-        ):
+        if isinstance(el, collections.abc.Iterable) and not isinstance(el, (str, bytes)):
             yield from flatten(el)
         else:
             yield el
