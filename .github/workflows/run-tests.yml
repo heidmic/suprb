@@ -1,4 +1,4 @@
-name: Run Tests and Generate Reports
+name: Run python tests
 
 on:
   pull_request:
@@ -21,19 +21,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pytest pytest-cov
-        pip install -r requirements.txt
+        pip install pytest
+        pip install -r requirements.txt  # If your project has additional dependencies
 
-    - name: Run tests with coverage and generate report
-      run: pytest --cov=suprb --cov-report=xml:coverage.xml
-
-    - name: Upload test report
-      uses: actions/upload-artifact@v3
-      with:
-        name: pytest-report
-        path: pytest-report.xml
-
-    - name: Upload coverage report to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: coverage.xml
+    - name: Run tests with pytest
+      run: pytest tests/

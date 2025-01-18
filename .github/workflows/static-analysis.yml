@@ -1,0 +1,58 @@
+name: Static Analysis
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.1'
+
+    - name: Install dependencies
+      run: |
+        pip install pylint flake8 mypy bandit
+
+    - name: Run Pylint and generate report
+      run: pylint your_module.py --output-format=text > pylint-report.txt
+
+    - name: Run Flake8 and generate report
+      run: flake8 your_module.py --output-file=flake8-report.txt
+
+    - name: Run Mypy and generate report
+      run: mypy your_module.py --html-report mypy-report.html
+
+    - name: Run Bandit and generate report
+      run: bandit -r your_module.py -f html -o bandit-report.html
+
+    - name: Upload pylint report
+      uses: actions/upload-artifact@v3
+      with:
+        name: pylint-report
+        path: pylint-report.txt
+
+    - name: Upload flake8 report
+      uses: actions/upload-artifact@v3
+      with:
+        name: flake8-report
+        path: flake8-report.txt
+
+    - name: Upload mypy report
+      uses: actions/upload-artifact@v3
+      with:
+        name: mypy-report
+        path: mypy-report.html
+
+    - name: Upload bandit report
+      uses: actions/upload-artifact@v3
+      with:
+        name: bandit-report
+        path: bandit-report.html
