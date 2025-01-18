@@ -22,7 +22,9 @@ class BaseComponent(BaseEstimator, metaclass=ABCMeta):
     def _validate_components(self, **kwargs):
         for parameter_name, default in kwargs.items():
             current_value = self.__getattribute__(parameter_name)
-            self.__setattr__(parameter_name, current_value if current_value is not None else default)
+            self.__setattr__(
+                parameter_name, current_value if current_value is not None else default
+            )
 
 
 class SolutionBase(metaclass=ABCMeta):

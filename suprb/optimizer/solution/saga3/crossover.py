@@ -13,12 +13,18 @@ class SagaCrossover(BaseComponent):
         # Crossover of parent parameters
         new_crossover_rate = random_state.choice([A.crossover_rate, B.crossover_rate])
         new_mutation_rate = random_state.choice([A.mutation_rate, B.mutation_rate])
-        new_crossover_method = random_state.choice([A.crossover_method, B.crossover_method])
+        new_crossover_method = random_state.choice(
+            [A.crossover_method, B.crossover_method]
+        )
 
         # Mutation of parameters
         if random_state.random() < self.parameter_mutation_rate:
-            new_crossover_rate = min(max(new_crossover_rate + random_state.normal(), 0.0), 1.0)
-            new_mutation_rate = min(max(new_mutation_rate + random_state.normal(), 0.0), 1.0)
+            new_crossover_rate = min(
+                max(new_crossover_rate + random_state.normal(), 0.0), 1.0
+            )
+            new_mutation_rate = min(
+                max(new_mutation_rate + random_state.normal(), 0.0), 1.0
+            )
             new_crossover_method = random_state.choice([NPoint(n=3), Uniform()])
 
         # Crossover of genome

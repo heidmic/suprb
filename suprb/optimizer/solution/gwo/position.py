@@ -21,20 +21,26 @@ class SolutionPositionUpdate(BaseComponent, metaclass=ABCMeta):
         pass
 
 
-def binary_C(prey: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState) -> np.ndarray:
+def binary_C(
+    prey: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState
+) -> np.ndarray:
     a_pos = A(a=a, n=prey.shape[0], random_state=random_state)
     d_pos = D(prey=prey, wolf=wolf, random_state=random_state)
 
     return sigmoid_binarize(a_pos * d_pos, random_state=random_state)
 
 
-def binary_B(prey: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState) -> np.ndarray:
+def binary_B(
+    prey: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState
+) -> np.ndarray:
     c_pos = binary_C(prey=prey, wolf=wolf, a=a, random_state=random_state)
 
     return c_pos >= random_state.random(size=prey.shape[0])
 
 
-def binary_X(leader: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState) -> np.ndarray:
+def binary_X(
+    leader: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState
+) -> np.ndarray:
     leader = leader.astype(np.float)
     wolf = wolf.astype(np.float)
 
@@ -51,7 +57,9 @@ def D(prey: np.ndarray, wolf: np.ndarray, random_state: RandomState) -> np.ndarr
     return np.abs(2 * random_state.random(size=prey.shape[0]) * prey - wolf)
 
 
-def X(leader: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState) -> np.ndarray:
+def X(
+    leader: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState
+) -> np.ndarray:
     leader = leader.astype(np.float)
     wolf = wolf.astype(np.float)
 
@@ -90,7 +98,9 @@ class Crossover(SolutionPositionUpdate):
             xs = np.stack(xs, axis=0)
 
             # Uniform crossover
-            crossover = np.choose(random_state.integers(len(leaders), size=solution.genome.shape[0]), xs)
+            crossover = np.choose(
+                random_state.integers(len(leaders), size=solution.genome.shape[0]), xs
+            )
 
             new_population.append(solution.clone(genome=crossover))
 

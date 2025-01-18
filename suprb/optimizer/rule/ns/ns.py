@@ -129,11 +129,17 @@ class NoveltySearch(RuleDiscovery):
                 continue
             children = self._crossover_and_mutate(X, y, parents)
 
-            valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
+            valid_children = list(
+                filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children)
+            )
 
             if valid_children:
-                best_children = self._rule_selection(rules=valid_children, n_rules=self.mu, roh=self.roh)
-                best_parents = self._rule_selection(rules=parents, n_rules=self.n_elitists)
+                best_children = self._rule_selection(
+                    rules=valid_children, n_rules=self.mu, roh=self.roh
+                )
+                best_parents = self._rule_selection(
+                    rules=parents, n_rules=self.n_elitists
+                )
 
                 population = best_children + best_parents
 
@@ -153,17 +159,23 @@ class NoveltySearch(RuleDiscovery):
         return population
 
     def _select_shuffled_parents(self, population: list[Rule]) -> list[Rule]:
-        parents = self.selection(population, random_state=self.random_state_, size=self.lmbda)
+        parents = self.selection(
+            population, random_state=self.random_state_, size=self.lmbda
+        )
         self.random_state_.shuffle(parents)
 
         return parents
 
-    def _crossover_and_mutate(self, X: np.ndarray, y: np.ndarray, parents: list[Rule]) -> list[Rule]:
+    def _crossover_and_mutate(
+        self, X: np.ndarray, y: np.ndarray, parents: list[Rule]
+    ) -> list[Rule]:
         children = []
 
         parent_combinations = zip(*[iter(parents)] * 2)
         for parent_A, parent_B in parent_combinations:
-            children.extend(self.crossover(A=parent_A, B=parent_B, random_state=self.random_state_))
+            children.extend(
+                self.crossover(A=parent_A, B=parent_B, random_state=self.random_state_)
+            )
 
         children = [
             self.constraint(self.mutation(child, random_state=self.random_state_)).fit(X, y) for child in children

@@ -109,7 +109,9 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
             ]
 
             # Filter children that do not match any data samples
-            valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
+            valid_children = list(
+                filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children)
+            )
 
             if valid_children:
                 children = valid_children

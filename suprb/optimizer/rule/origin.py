@@ -28,14 +28,20 @@ class RuleOriginGeneration(BaseComponent, metaclass=ABCMeta):
 class UniformInputOrigin(RuleOriginGeneration):
     """Sample origins uniformly in the input space."""
 
-    def __call__(self, n_rules: int, X: np.ndarray, random_state: RandomState, **kwargs) -> np.ndarray:
-        return random_state.uniform(np.min(X, axis=0), np.max(X, axis=0), size=(n_rules, X.shape[1]))
+    def __call__(
+        self, n_rules: int, X: np.ndarray, random_state: RandomState, **kwargs
+    ) -> np.ndarray:
+        return random_state.uniform(
+            np.min(X, axis=0), np.max(X, axis=0), size=(n_rules, X.shape[1])
+        )
 
 
 class UniformSamplesOrigin(RuleOriginGeneration):
     """Sample origins uniformly in the sample space."""
 
-    def __call__(self, n_rules: int, X: np.ndarray, random_state: RandomState, **kwargs) -> np.ndarray:
+    def __call__(
+        self, n_rules: int, X: np.ndarray, random_state: RandomState, **kwargs
+    ) -> np.ndarray:
         return random_state.choice(X, axis=0, size=n_rules)
 
 
@@ -59,7 +65,9 @@ class RouletteWheelOrigin(RuleOriginGeneration):
         **kwargs
     ) -> np.ndarray:
 
-        subgroup = elitist.subpopulation if elitist is not None and self.use_elitist else pool
+        subgroup = (
+            elitist.subpopulation if elitist is not None and self.use_elitist else pool
+        )
 
         if subgroup:
             weights = self._calculate_weights(

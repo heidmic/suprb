@@ -29,7 +29,9 @@ class SolutionInit(BaseComponent, metaclass=ABCMeta):
         self.mixing = mixing
         self.fitness = fitness
 
-        self._validate_components(mixing=ErrorExperienceHeuristic(), fitness=ComplexityWu())
+        self._validate_components(
+            mixing=ErrorExperienceHeuristic(), fitness=ComplexityWu()
+        )
 
     @abstractmethod
     def __call__(self, pool: list[Rule], random_state: RandomState) -> Solution:

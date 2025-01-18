@@ -33,8 +33,18 @@ class UniformCrossover(RuleCrossover):
 
         bool_mask = random_state.choice([False, True], size=(len(a_bounds),))
 
-        a.match.bounds = np.array([a_bounds[i] if bool_mask[i] else b_bounds[i] for i in range(len(bool_mask))])
-        b.match.bounds = np.array([b_bounds[i] if bool_mask[i] else a_bounds[i] for i in range(len(bool_mask))])
+        a.match.bounds = np.array(
+            [
+                a_bounds[i] if bool_mask[i] else b_bounds[i]
+                for i in range(len(bool_mask))
+            ]
+        )
+        b.match.bounds = np.array(
+            [
+                b_bounds[i] if bool_mask[i] else a_bounds[i]
+                for i in range(len(bool_mask))
+            ]
+        )
 
         return [a, b]
 

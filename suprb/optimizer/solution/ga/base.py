@@ -98,7 +98,10 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
                 children.append(parents[-1])
 
             # Mutation
-            mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
+            mutated_children = [
+                self.mutation(child, random_state=self.random_state_)
+                for child in children
+            ]
 
             # Replacement
             self.population_ = elitists

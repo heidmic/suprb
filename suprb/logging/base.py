@@ -14,7 +14,9 @@ class BaseLogger(BaseComponent):
         pass
 
     @abstractmethod
-    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
+    def log_iteration(
+        self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int
+    ):
         """Logs an iteration of the estimator. May actually compute errors or scores, depending on the state."""
         pass
 

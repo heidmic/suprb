@@ -30,7 +30,11 @@ class MinimalCriteria(NoveltySearchType):
             25,
         )
 
-        return [rule for rule in rules if np.count_nonzero(rule.match_set_) >= maximum_threshold]
+        return [
+            rule
+            for rule in rules
+            if np.count_nonzero(rule.match_set_) >= maximum_threshold
+        ]
 
 
 class LocalCompetition(NoveltySearchType):

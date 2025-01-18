@@ -7,7 +7,9 @@ from suprb.utils import RandomState
 
 class AntSelection(BaseComponent, metaclass=ABCMeta):
 
-    def __call__(self, population: list[Solution], random_state: RandomState) -> list[Solution]:
+    def __call__(
+        self, population: list[Solution], random_state: RandomState
+    ) -> list[Solution]:
         pass
 
 
