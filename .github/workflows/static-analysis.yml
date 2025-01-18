@@ -20,16 +20,16 @@ jobs:
         pip install pylint flake8 mypy bandit
 
     - name: Run Pylint and generate report
-      run: pylint your_module.py --output-format=text > pylint-report.txt
+      run: pylint suprb/suprb.py --output-format=text > pylint-report.txt
 
     - name: Run Flake8 and generate report
-      run: flake8 your_module.py --output-file=flake8-report.txt
+      run: flake8 suprb/suprb.py --output-file=flake8-report.txt
 
     - name: Run Mypy and generate report
-      run: mypy your_module.py --html-report mypy-report.html
+      run: mypy suprb/suprb.py --html-report mypy-report.html
 
     - name: Run Bandit and generate report
-      run: bandit -r your_module.py -f html -o bandit-report.html
+      run: bandit -r suprb/suprb.py -f html -o bandit-report.html
 
     - name: Upload pylint report
       uses: actions/upload-artifact@v3
