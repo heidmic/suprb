@@ -1,6 +1,12 @@
 from abc import ABCMeta, abstractmethod
 import numpy as np
-from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage
+from suprb.rule.matching import (
+    MatchingFunction,
+    OrderedBound,
+    UnorderedBound,
+    CenterSpread,
+    MinPercentage,
+)
 from suprb.rule import Rule
 from suprb.base import BaseComponent
 from suprb.utils import RandomState

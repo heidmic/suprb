@@ -22,7 +22,7 @@ from .solution.fitness import PseudoBIC
 
 
 class SupRB(BaseRegressor):
-    """ The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
+    """The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
 
     Parameters
     ----------
@@ -76,20 +76,21 @@ class SupRB(BaseRegressor):
 
     logger_: BaseLogger
 
-    def __init__(self,
-                 rule_discovery: RuleGeneration = None,
-                 solution_composition: SolutionComposition = None,
-                 matching_type: MatchingFunction = None,
-                 n_iter: int = 32,
-                 n_initial_rules: int = 0,
-                 n_rules: int = 4,
-                 random_state: int = None,
-                 verbose: int = 1,
-                 logger: BaseLogger = DefaultLogger(),
-                 n_jobs: int = 1,
-                 early_stopping_patience: int = -1,
-                 early_stopping_delta: int = 0
-                 ):
+    def __init__(
+        self,
+        rule_discovery: RuleGeneration = None,
+        solution_composition: SolutionComposition = None,
+        matching_type: MatchingFunction = None,
+        n_iter: int = 32,
+        n_initial_rules: int = 0,
+        n_rules: int = 4,
+        random_state: int = None,
+        verbose: int = 1,
+        logger: BaseLogger = DefaultLogger(),
+        n_jobs: int = 1,
+        early_stopping_patience: int = -1,
+        early_stopping_delta: int = 0,
+    ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
         self.n_rules = n_rules
@@ -105,49 +106,55 @@ class SupRB(BaseRegressor):
 
     def check_early_stopping(self):
         if self.early_stopping_patience > 0:
-            fitness_diff = self.solution_composition_.elitist().fitness_ - self.previous_fitness_
+            fitness_diff = (
+                self.solution_composition_.elitist().fitness_ - self.previous_fitness_
+            )
 
             if fitness_diff > self.early_stopping_delta:
                 self.early_stopping_counter_ = 0
             else:
                 self.early_stopping_counter_ += 1
                 if self.early_stopping_patience <= self.early_stopping_counter_:
-                    print(f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes.")
+                    print(
+                        f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes."
+                    )
                     print(f"The elitist fitness value was: {self.previous_fitness_}")
                     return True
         return False
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
-        """ Fit SupRB.2.
+        """Fit SupRB.2.
 
-            Parameters
-            ----------
-            X : {array-like, sparse matrix}, shape (n_samples, n_features)
-                The training input samples.
-            y : array-like, shape (n_samples,) or (n_samples, n_outputs)
-                The target values.
-            cleanup : bool
-                Optional cleanup of unused rules and components after fitting. Can be used to reduce size if only the
-                final model is relevant. Note that all information about the fitting process itself is removed.
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape (n_samples, n_features)
+            The training input samples.
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
+            The target values.
+        cleanup : bool
+            Optional cleanup of unused rules and components after fitting. Can be used to reduce size if only the
+            final model is relevant. Note that all information about the fitting process itself is removed.
 
-            Returns
-            -------
-            self : BaseEstimator
-                Returns self.
+        Returns
+        -------
+        self : BaseEstimator
+            Returns self.
         """
 
         # Set these values so we gracefully exit on error
         self.early_stopping_counter_ = 0
         self.previous_fitness_ = 0
         self.is_error_ = False
-        self.elitist_ = Solution([0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC())
+        self.elitist_ = Solution(
+            [0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC()
+        )
         self.elitist_.fitness_ = 0
         self.elitist_.error_ = 99999
         self.elitist_.complexity_ = 99999
 
         # Check that x and y have correct shape
-        X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
-        y = check_array(y, ensure_2d=False, dtype='float64')
+        X, y = check_X_y(X, y, dtype="float64", y_numeric=True)
+        y = check_array(y, ensure_2d=False, dtype="float64")
 
         # Init sklearn interface
         self.n_features_in_ = X.shape[1]
@@ -171,7 +178,9 @@ class SupRB(BaseRegressor):
 
         # Init optimizers
         self.solution_composition_.pool_ = self.pool_
-        self.solution_composition_.init.fitness.max_genome_length_ = self.n_rules * self.n_iter + self.n_initial_rules
+        self.solution_composition_.init.fitness.max_genome_length_ = (
+            self.n_rules * self.n_iter + self.n_initial_rules
+        )
         self.rule_discovery_.pool_ = self.pool_
 
         # Init Logging
@@ -224,14 +233,18 @@ class SupRB(BaseRegressor):
         except ValueError as e:
             # Capture the full traceback and print it
             tb = traceback.format_exc()
-            warnings.warn(f"The following ValueError has occurred:\n{e}\nTraceback:\n{tb}")
+            warnings.warn(
+                f"The following ValueError has occurred:\n{e}\nTraceback:\n{tb}"
+            )
             self.is_fitted_ = True
             self.is_error_ = True
             return True
         except Exception as e:
             # Capture the full traceback and print it
             tb = traceback.format_exc()
-            warnings.warn(f"An error has occurred. This is likely due to a bad configuration:\n{e}\nTraceback:\n{tb}")
+            warnings.warn(
+                f"An error has occurred. This is likely due to a bad configuration:\n{e}\nTraceback:\n{tb}"
+            )
             self.is_fitted_ = True
             self.is_error_ = True
             return True
@@ -257,7 +270,8 @@ class SupRB(BaseRegressor):
             warnings.warn(
                 "The population is empty, even after generating rules. "
                 "Solution optimization will be skipped.",
-                PopulationEmptyWarning)
+                PopulationEmptyWarning,
+            )
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""
@@ -265,31 +279,44 @@ class SupRB(BaseRegressor):
         self._log_to_stdout(f"Optimizing populations", priority=4)
 
         # Update the random state
-        self.solution_composition_.random_state = self.solution_composition_seeds_[self.step_]
+        self.solution_composition_.random_state = self.solution_composition_seeds_[
+            self.step_
+        ]
 
         # Optimize
         self.solution_composition_.optimize(X, y)
 
     def predict(self, X: np.ndarray):
         # Check is fit had been called
-        check_is_fitted(self, ['is_fitted_'])
+        check_is_fitted(self, ["is_fitted_"])
         # Input validation
         X = check_array(X)
 
-        if hasattr(self, 'is_error_') and self.is_error_:
+        if hasattr(self, "is_error_") and self.is_error_:
             return [0] * len(X)
         else:
             return self.elitist_.predict(X)
 
     def _validate_rule_discovery(self, default=None):
-        self.rule_discovery_ = clone(self.rule_discovery) if self.rule_discovery is not None else clone(default)
+        self.rule_discovery_ = (
+            clone(self.rule_discovery)
+            if self.rule_discovery is not None
+            else clone(default)
+        )
 
     def _validate_solution_composition(self, default=None):
-        self.solution_composition_ = clone(self.solution_composition) \
-            if self.solution_composition is not None else clone(default)
+        self.solution_composition_ = (
+            clone(self.solution_composition)
+            if self.solution_composition is not None
+            else clone(default)
+        )
 
     def _validate_matching_type(self, default=None):
-        self.matching_type_ = clone(self.matching_type) if self.matching_type is not None else clone(default)
+        self.matching_type_ = (
+            clone(self.matching_type)
+            if self.matching_type is not None
+            else clone(default)
+        )
 
     def _log_to_stdout(self, message, priority=1):
         if self.verbose >= priority:
@@ -298,7 +325,7 @@ class SupRB(BaseRegressor):
 
     def _propagate_component_parameters(self):
         """Propagate shared parameters to subcomponents."""
-        keys = ['n_jobs']
+        keys = ["n_jobs"]
         params = {key: value for key, value in self.get_params().items() if key in keys}
 
         self.rule_discovery_.set_params(**params)
@@ -308,13 +335,15 @@ class SupRB(BaseRegressor):
         """Try to estimate all bounds that are not provided at the start from the training data."""
         bounds = estimate_bounds(X)
         for key, value in self.rule_discovery_.get_params().items():
-            if key.endswith('bounds') and value is None:
-                self._log_to_stdout(f"Found empty bounds for {key}, estimating from data")
+            if key.endswith("bounds") and value is None:
+                self._log_to_stdout(
+                    f"Found empty bounds for {key}, estimating from data"
+                )
                 self.rule_discovery_.set_params(**{key: bounds})
 
     def _init_matching_type(self):
         for key, value in self.rule_discovery_.get_params().items():
-            if 'matching_type' in key:
+            if "matching_type" in key:
                 self.rule_discovery_.set_params(**{key: self.matching_type_})
 
     def _cleanup(self):
@@ -325,7 +354,7 @@ class SupRB(BaseRegressor):
         """
         self.pool_ = self.elitist_.subpopulation
 
-        self.elitist_.genome = np.ones(len(self.pool_), dtype='bool')
+        self.elitist_.genome = np.ones(len(self.pool_), dtype="bool")
         self.elitist_.pool = self.pool_
 
         del self.rule_discovery_
@@ -337,5 +366,5 @@ class SupRB(BaseRegressor):
         Needed so that the model passes `check_estimator()`.
         """
         return {
-            'poor_score': True,
+            "poor_score": True,
         }

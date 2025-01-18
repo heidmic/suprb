@@ -12,48 +12,45 @@ from ..selection import RuleSelection, Fittest
 
 
 class RandomSearch(RuleGeneration):
-    """ RandomSearch Algorithm
+    """RandomSearch Algorithm
 
-        Parameters
-        ----------
-        n_iter: int
-            Has no effect
-        rules_generated: float
-            Number of random rules generated per rule added to the pool
-        origin_generation: RuleOriginGeneration
-            The selection process which decides on the next initial points.
-        init: RuleInit
-            A method to init rules. The init must always match at least one
-            example but ideally should already match more than one,
-            e.g. HalfnormInit, whereas NormalInit would not work consistently.
+    Parameters
+    ----------
+    n_iter: int
+        Has no effect
+    rules_generated: float
+        Number of random rules generated per rule added to the pool
+    origin_generation: RuleOriginGeneration
+        The selection process which decides on the next initial points.
+    init: RuleInit
+        A method to init rules. The init must always match at least one
+        example but ideally should already match more than one,
+        e.g. HalfnormInit, whereas NormalInit would not work consistently.
 
-        selection: RuleSelection
-        acceptance: RuleAcceptance
-        constraint: RuleConstraint
+    selection: RuleSelection
+    acceptance: RuleAcceptance
+    constraint: RuleConstraint
 
-        random_state : int, RandomState instance or None, default=None
-            Pass an int for reproducible results across multiple function calls.
-        n_jobs: int
-            The number of threads / processes the optimization uses. Currently not used for this optimizer.
-        """
+    random_state : int, RandomState instance or None, default=None
+        Pass an int for reproducible results across multiple function calls.
+    n_jobs: int
+        The number of threads / processes the optimization uses. Currently not used for this optimizer.
+    """
 
     last_iter_inner: bool
 
-    def __init__(self,
-                 n_iter: int = 1,
-                 rules_generated: int = 7,
-
-                 origin_generation: RuleOriginGeneration = SquaredError(),
-                 init: RuleInit = HalfnormInit(),
-
-                 selection: RuleSelection = Fittest(),
-
-                 acceptance: RuleAcceptance = Variance(),
-                 constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 1,
+        rules_generated: int = 7,
+        origin_generation: RuleOriginGeneration = SquaredError(),
+        init: RuleInit = HalfnormInit(),
+        selection: RuleSelection = Fittest(),
+        acceptance: RuleAcceptance = Variance(),
+        constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
+        random_state: int = None,
+        n_jobs: int = 1,
+    ):
         super().__init__(
             n_iter=n_iter,
             origin_generation=origin_generation,
@@ -80,18 +77,22 @@ class RandomSearch(RuleGeneration):
 
         rules_out = []
         for _ in range(n_rules):
-            origins = self.origin_generation(n_rules=self.rules_generated, X=X,
-                                             y=y, pool=self.pool_,
-                                             elitist=self.elitist_,
-                                             random_state=self.random_state_)
+            origins = self.origin_generation(
+                n_rules=self.rules_generated,
+                X=X,
+                y=y,
+                pool=self.pool_,
+                elitist=self.elitist_,
+                random_state=self.random_state_,
+            )
 
             rules = []
             for origin in origins:
                 rule = self.init(mean=origin, random_state=self.random_state_)
                 rules.append(self.constraint(rule).fit(X, y))
 
-            rules_out.extend(self.selection(rules,
-                                            random_state=self.random_state_,
-                                            size=1))
+            rules_out.extend(
+                self.selection(rules, random_state=self.random_state_, size=1)
+            )
 
         return self._filter_invalid_rules(X=X, y=y, rules=rules_out)

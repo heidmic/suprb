@@ -9,21 +9,27 @@ from suprb.utils import RandomState
 
 class SolutionSelection(BaseComponent, metaclass=ABCMeta):
 
-    def __call__(self, population: list[SagaSolution], n: int, random_state: RandomState) -> list[SagaSolution]:
+    def __call__(
+        self, population: list[SagaSolution], n: int, random_state: RandomState
+    ) -> list[SagaSolution]:
         pass
 
 
 class Random(SolutionSelection):
     """Sample `n_parents` at random."""
 
-    def __call__(self, population: list[SagaSolution], n: int, random_state: RandomState) -> list[SagaSolution]:
+    def __call__(
+        self, population: list[SagaSolution], n: int, random_state: RandomState
+    ) -> list[SagaSolution]:
         return list(random_state.choice(population, size=n))
 
 
 class RouletteWheel(SolutionSelection):
     """Sample `n_parents` solutions proportional to their fitness."""
 
-    def __call__(self, population: list[SagaSolution], n: int, random_state: RandomState) -> list[SagaSolution]:
+    def __call__(
+        self, population: list[SagaSolution], n: int, random_state: RandomState
+    ) -> list[SagaSolution]:
         fitness_sum = sum([solution.fitness_ for solution in population])
         if fitness_sum != 0:
             weights = [solution.fitness_ / fitness_sum for solution in population]
@@ -35,7 +41,9 @@ class RouletteWheel(SolutionSelection):
 class LinearRank(SolutionSelection):
     """Sample `n_parents` solutions linear to their fitness ranking."""
 
-    def __call__(self, population: list[SagaSolution], n: int, random_state: RandomState) -> list[SagaSolution]:
+    def __call__(
+        self, population: list[SagaSolution], n: int, random_state: RandomState
+    ) -> list[SagaSolution]:
         fitness = np.array([solution.fitness_ for solution in population])
         ranks = fitness.argsort().argsort() + 1  # double `argsort()` obtains the ranks
         weights = ranks / sum(ranks)
@@ -48,6 +56,10 @@ class Tournament(SolutionSelection):
     def __init__(self, k: int = 5):
         self.k = k
 
-    def __call__(self, population: list[SagaSolution], n: int, random_state: RandomState) -> list[SagaSolution]:
-        return list(max(random_state.choice(population, size=self.k), key=lambda i: i.fitness_)
-                    for _ in range(n))
+    def __call__(
+        self, population: list[SagaSolution], n: int, random_state: RandomState
+    ) -> list[SagaSolution]:
+        return list(
+            max(random_state.choice(population, size=self.k), key=lambda i: i.fitness_)
+            for _ in range(n)
+        )

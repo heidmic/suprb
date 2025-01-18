@@ -14,7 +14,7 @@ from suprb.optimizer.rule.mutation import HalfnormIncrease
 import suprb.json as json
 
 
-def load_higdon_gramacy_lee(n_samples=1000, noise=0., shuffle=True, random_state=None):
+def load_higdon_gramacy_lee(n_samples=1000, noise=0.0, shuffle=True, random_state=None):
     random_state_ = check_random_state(random_state)
     X = np.linspace(0, 20, num=n_samples)
     y = np.zeros(n_samples)
@@ -38,9 +38,11 @@ def setup():
         rule_discovery=es.ES1xLambda(
             n_iter=2,
             delay=1,
-            operator='&',
-            init=rule.initialization.MeanInit(fitness=rule.fitness.VolumeWu(alpha=0.05)),
-            mutation=HalfnormIncrease(sigma=0.1)
+            operator="&",
+            init=rule.initialization.MeanInit(
+                fitness=rule.fitness.VolumeWu(alpha=0.05)
+            ),
+            mutation=HalfnormIncrease(sigma=0.1),
         ),
         solution_composition=ga.GeneticAlgorithm(
             n_iter=1,
@@ -61,13 +63,21 @@ class TestJsonIO:
     def test_save_load_config(self):
         model, X, y = setup()
 
-        scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=1, scoring=['r2', 'neg_mean_squared_error'],
-                                return_estimator=True)
+        scores = cross_validate(
+            model,
+            X,
+            y,
+            cv=4,
+            n_jobs=1,
+            verbose=1,
+            scoring=["r2", "neg_mean_squared_error"],
+            return_estimator=True,
+        )
 
         model = scores["estimator"][0]
         json_io_params = model.get_params()
 
-        original_config = {"elitist": {}, "config":  {}, "pool": []}
+        original_config = {"elitist": {}, "config": {}, "pool": []}
 
         json._save_config(model, original_config)
         model = json._load_config(original_config["config"])
@@ -75,15 +85,23 @@ class TestJsonIO:
 
         for key in json_io_params:
             if not key.startswith("logger"):
-                assert (type(json_io_params[key]) == type(model_params[key]))
+                assert type(json_io_params[key]) == type(model_params[key])
 
     def test_smoke_test(self):
         model, X, y = setup()
 
         X_predict = np.linspace(X.min(), X.max(), 500).reshape((-1, 1))
 
-        scores = cross_validate(model, X, y, cv=4, n_jobs=1, verbose=1, scoring=['r2', 'neg_mean_squared_error'],
-                                return_estimator=True)
+        scores = cross_validate(
+            model,
+            X,
+            y,
+            cv=4,
+            n_jobs=1,
+            verbose=1,
+            scoring=["r2", "neg_mean_squared_error"],
+            return_estimator=True,
+        )
 
         model = scores["estimator"][0]
         original_prediction = model.predict(X_predict)
@@ -92,5 +110,5 @@ class TestJsonIO:
         model = json.load("save_state.json")
         loaded_prediction = model.predict(X_predict)
 
-        assert ((original_prediction == loaded_prediction).all())
+        assert (original_prediction == loaded_prediction).all()
         os.remove("save_state.json")

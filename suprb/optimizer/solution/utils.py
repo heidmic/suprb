@@ -8,4 +8,6 @@ def sigmoid(x: np.ndarray, scale: float = 10, offset: float = 0.5) -> np.ndarray
 
 
 def sigmoid_binarize(x: np.ndarray, random_state: RandomState, **kwargs) -> np.ndarray:
-    return (random_state.random(size=x.shape[0]) <= sigmoid(x, **kwargs)).astype(np.bool)
+    return (random_state.random(size=x.shape[0]) <= sigmoid(x, **kwargs)).astype(
+        np.bool
+    )

@@ -10,7 +10,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class AntColonyOptimization(PopulationBasedSolutionComposition):
-    """ Ant Colony Optimization written in Python.
+    """Ant Colony Optimization written in Python.
 
     The base version was taken from https://doi.org/10/dq339r.
 
@@ -40,21 +40,22 @@ class AntColonyOptimization(PopulationBasedSolutionComposition):
 
     pheromone_matrix_: np.ndarray
 
-    def __init__(self,
-                 n_iter: int = 32,
-                 population_size: int = 32,
-                 evaporation_rate: float = 0.78,
-                 max_pheromone: float = 10,
-                 min_pheromone: float = 0.1,
-                 builder: SolutionBuilder = Complete(),
-                 selection: AntSelection = NBest(),
-                 pheromones: PheromoneUpdate = Fitness(),
-                 init: SolutionInit = RandomInit(),
-                 archive: SolutionArchive = Elitist(),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 32,
+        population_size: int = 32,
+        evaporation_rate: float = 0.78,
+        max_pheromone: float = 10,
+        min_pheromone: float = 0.1,
+        builder: SolutionBuilder = Complete(),
+        selection: AntSelection = NBest(),
+        pheromones: PheromoneUpdate = Fitness(),
+        init: SolutionInit = RandomInit(),
+        archive: SolutionArchive = Elitist(),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -76,10 +77,14 @@ class AntColonyOptimization(PopulationBasedSolutionComposition):
     def _init_pheromone_matrix(self):
         """Initialize an empty matrix or pad the matrix for additional rules."""
 
-        if not self.warm_start or not hasattr(self, 'pheromone_matrix_'):
-            self.pheromone_matrix_ = self.builder.pad_pheromone_matrix(None, len(self.pool_))
+        if not self.warm_start or not hasattr(self, "pheromone_matrix_"):
+            self.pheromone_matrix_ = self.builder.pad_pheromone_matrix(
+                None, len(self.pool_)
+            )
         else:
-            self.pheromone_matrix_ = self.builder.pad_pheromone_matrix(self.pheromone_matrix_, len(self.pool_))
+            self.pheromone_matrix_ = self.builder.pad_pheromone_matrix(
+                self.pheromone_matrix_, len(self.pool_)
+            )
 
     def _optimize(self, X: np.ndarray, y: np.ndarray):
         self._init_pheromone_matrix()
@@ -88,11 +93,14 @@ class AntColonyOptimization(PopulationBasedSolutionComposition):
         for _ in range(self.n_iter):
 
             # Construct ants and evaluate
-            self.population_ = [self.builder(
-                solution=solution,
-                pheromones=self.pheromone_matrix_,
-                pool=self.pool_,
-                random_state=self.random_state_) for solution in self.population_
+            self.population_ = [
+                self.builder(
+                    solution=solution,
+                    pheromones=self.pheromone_matrix_,
+                    pool=self.pool_,
+                    random_state=self.random_state_,
+                )
+                for solution in self.population_
             ]
             self.fit_population(X, y)
 
@@ -102,7 +110,13 @@ class AntColonyOptimization(PopulationBasedSolutionComposition):
             # Select ants to update the pheromones with and update the pheromones
             selected = self.selection(self.population_, random_state=self.random_state_)
             for ant in selected:
-                self.builder.update_pheromones(ant, pheromones=self.pheromone_matrix_, delta_tau=self.pheromones(ant))
+                self.builder.update_pheromones(
+                    ant,
+                    pheromones=self.pheromone_matrix_,
+                    delta_tau=self.pheromones(ant),
+                )
 
             # Clip pheromones
-            self.pheromone_matrix_ = np.clip(self.pheromone_matrix_, self.min_pheromone, self.max_pheromone)
+            self.pheromone_matrix_ = np.clip(
+                self.pheromone_matrix_, self.min_pheromone, self.max_pheromone
+            )

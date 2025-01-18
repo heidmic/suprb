@@ -32,7 +32,14 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
         input_space_volume = np.prod(diff)
 
         volume_share = rule.volume_ / input_space_volume
-        return self.fitness_func_(alpha=self.alpha, x1=pseudo_accuracy(rule.error_, beta=2), x2=volume_share) * 100
+        return (
+            self.fitness_func_(
+                alpha=self.alpha,
+                x1=pseudo_accuracy(rule.error_, beta=2),
+                x2=volume_share,
+            )
+            * 100
+        )
 
 
 class VolumeEmary(VolumeRuleFitness):

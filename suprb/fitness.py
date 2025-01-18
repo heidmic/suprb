@@ -38,4 +38,4 @@ def wu(alpha: float, x1: float, x2: float) -> float:
     Taken from https://doi.org/10.1109/IJCNN.2018.8489676.
     """
 
-    return ((1 + alpha ** 2) * x1 * x2) / (alpha ** 2 * x1 + x2)
+    return ((1 + alpha**2) * x1 * x2) / (alpha**2 * x1 + x2)

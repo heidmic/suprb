@@ -18,7 +18,7 @@ from ..origin import Matching, RuleOriginGeneration
 
 
 class ES1xLambda(ParallelSingleRuleGeneration):
-    """ The 1xLambda Evolutionary Strategy, where x is in {,+&}.
+    """The 1xLambda Evolutionary Strategy, where x is in {,+&}.
 
     Parameters
     ----------
@@ -47,20 +47,21 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         The number of threads / processes the optimization uses. Currently not used for this optimizer.
     """
 
-    def __init__(self,
-                 n_iter: int = 10_000,
-                 lmbda: int = 20,
-                 operator: str = '&',
-                 delay: int = 146,
-                 origin_generation: RuleOriginGeneration = Matching(),
-                 init: RuleInit = MeanInit(),
-                 mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
-                 selection: RuleSelection = Fittest(),
-                 acceptance: RuleAcceptance = Variance(),
-                 constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 10_000,
+        lmbda: int = 20,
+        operator: str = "&",
+        delay: int = 146,
+        origin_generation: RuleOriginGeneration = Matching(),
+        init: RuleInit = MeanInit(),
+        mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
+        selection: RuleSelection = Fittest(),
+        acceptance: RuleAcceptance = Variance(),
+        constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
+        random_state: int = None,
+        n_jobs: int = 1,
+    ):
         super().__init__(
             n_iter=n_iter,
             origin_generation=origin_generation,
@@ -77,15 +78,26 @@ class ES1xLambda(ParallelSingleRuleGeneration):
         self.selection = selection
 
         if self.delay < 2:
-            warnings.warn("Delay too low! Volume of rules will not increase! A delay of one does not allow mutation to happen")
+            warnings.warn(
+                "Delay too low! Volume of rules will not increase! A delay of one does not allow mutation to happen"
+            )
 
-        if self.operator == '&':
-            assert self.delay < self.n_iter, f"n_iter {self.n_iter} must be " \
-                                             f"greater than delay {self.delay}"
-        if self.operator == ',' and isinstance(self.mutation, HalfnormIncrease):
-            warnings.warn("',' operator and HalfnormIncrease mutation lead to collapsing populations")
+        if self.operator == "&":
+            assert self.delay < self.n_iter, (
+                f"n_iter {self.n_iter} must be " f"greater than delay {self.delay}"
+            )
+        if self.operator == "," and isinstance(self.mutation, HalfnormIncrease):
+            warnings.warn(
+                "',' operator and HalfnormIncrease mutation lead to collapsing populations"
+            )
 
-    def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
+    def _optimize(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        initial_rule: Rule,
+        random_state: RandomState,
+    ) -> Optional[Rule]:
 
         elitist = initial_rule
 
@@ -96,28 +108,39 @@ class ES1xLambda(ParallelSingleRuleGeneration):
             elitists.append(elitist)
 
             # Generate, fit and evaluate lambda children
-            children = [self.constraint(self.mutation(elitist, random_state=random_state))
-                            .fit(X, y) for _ in range(self.lmbda)]
+            children = [
+                self.constraint(self.mutation(elitist, random_state=random_state)).fit(
+                    X, y
+                )
+                for _ in range(self.lmbda)
+            ]
 
             # Filter children that do not match any data samples
-            valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
+            valid_children = list(
+                filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children)
+            )
 
             if valid_children:
                 children = valid_children
             else:
-                warnings.warn("No valid children were generated during this iteration.", UserWarning)
+                warnings.warn(
+                    "No valid children were generated during this iteration.",
+                    UserWarning,
+                )
                 continue
 
             # Different operators for replacement
             # 'selection' returns a list of rules. Either unordered or
             # descending, we thus take the first element for our new parent
-            if self.operator == '+':
+            if self.operator == "+":
                 children.append(elitist)
                 elitist = self.selection(children, random_state=random_state)[0]
-            elif self.operator in (',', '&'):
+            elif self.operator in (",", "&"):
                 elitist = self.selection(children, random_state=random_state)[0]
-            if self.operator == '&':
-                if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
+            if self.operator == "&":
+                if len(elitists) == self.delay and all(
+                    [e.fitness_ <= elitists[0].fitness_ for e in elitists]
+                ):
                     elitist = elitists[0]
                     break
 

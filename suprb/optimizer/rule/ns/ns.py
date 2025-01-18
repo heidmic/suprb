@@ -18,60 +18,61 @@ from ..origin import RuleOriginGeneration, SquaredError
 
 
 class NoveltySearch(RuleGeneration):
-    """ NoveltySearch Algorithm
+    """NoveltySearch Algorithm
 
-        Parameters
-        ----------
-        n_iter: int
-            Iterations to evolve rules. Must be greater than zero.
-        mu: int
-            The amount of offspring from each population that get selected for the next generation.
-        lmbda: int
-            Each generation lambda children will be generated.
-        roh: int
-            Each generation roh rules will be added to the archive (depending on archive type). 
-            For population sizes of 200, a value of 15 is generally recommended. However, this value is highly sensitive
-            to a multitude of factors (and novelty search mechanisms, such as the specific archiving technique)
-        random_state : int, RandomState instance or None, default=None
-            Pass an int for reproducible results across multiple function calls.
-        n_jobs: int
-            The number of threads / processes the optimization uses. Currently not used for this optimizer.
-        n_elitists: int
-            The number of parents that get added to the population each generation. 
-            For better performance this should be greater than the n_rules parameter of the optimize calls.
-        origin_generation: RuleOriginGeneration
-            The selection process which decides on the next initial points.
-        init: RuleInit
-            A method to init rules. The init must always match at least one
-            example but ideally should already match more than one,
-            e.g. HalfnormInit, whereas NormalInit would not work consistently.
-        crossover: RuleCrossover
-        mutation: RuleMutation
-        selection: RuleSelection
-        acceptance: RuleAcceptance
-        constraint: RuleConstraint
-        novelty_calculation: NoveltyCalculation
-            Class to calculate the novelty score based on NoveltySearchType, Archive and k_neigbor
-        """
+    Parameters
+    ----------
+    n_iter: int
+        Iterations to evolve rules. Must be greater than zero.
+    mu: int
+        The amount of offspring from each population that get selected for the next generation.
+    lmbda: int
+        Each generation lambda children will be generated.
+    roh: int
+        Each generation roh rules will be added to the archive (depending on archive type).
+        For population sizes of 200, a value of 15 is generally recommended. However, this value is highly sensitive
+        to a multitude of factors (and novelty search mechanisms, such as the specific archiving technique)
+    random_state : int, RandomState instance or None, default=None
+        Pass an int for reproducible results across multiple function calls.
+    n_jobs: int
+        The number of threads / processes the optimization uses. Currently not used for this optimizer.
+    n_elitists: int
+        The number of parents that get added to the population each generation.
+        For better performance this should be greater than the n_rules parameter of the optimize calls.
+    origin_generation: RuleOriginGeneration
+        The selection process which decides on the next initial points.
+    init: RuleInit
+        A method to init rules. The init must always match at least one
+        example but ideally should already match more than one,
+        e.g. HalfnormInit, whereas NormalInit would not work consistently.
+    crossover: RuleCrossover
+    mutation: RuleMutation
+    selection: RuleSelection
+    acceptance: RuleAcceptance
+    constraint: RuleConstraint
+    novelty_calculation: NoveltyCalculation
+        Class to calculate the novelty score based on NoveltySearchType, Archive and k_neigbor
+    """
 
-    def __init__(self,
-                 n_iter: int = 10,
-                 mu: int = 16,
-                 lmbda: int = 160,
-                 roh: int = 15,
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 n_elitists=10,
-                 use_population_for_archive=False,
-
-                 origin_generation: RuleOriginGeneration = SquaredError(),
-                 init: RuleInit = HalfnormInit(),
-                 crossover: RuleCrossover = UniformCrossover(),
-                 mutation: RuleMutation = Normal(sigma=0.1),
-                 selection: RuleSelection = Random(),
-                 acceptance: RuleAcceptance = Variance(),
-                 constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
-                 novelty_calculation: NoveltyCalculation = NoveltyCalculation()):
+    def __init__(
+        self,
+        n_iter: int = 10,
+        mu: int = 16,
+        lmbda: int = 160,
+        roh: int = 15,
+        random_state: int = None,
+        n_jobs: int = 1,
+        n_elitists=10,
+        use_population_for_archive=False,
+        origin_generation: RuleOriginGeneration = SquaredError(),
+        init: RuleInit = HalfnormInit(),
+        crossover: RuleCrossover = UniformCrossover(),
+        mutation: RuleMutation = Normal(sigma=0.1),
+        selection: RuleSelection = Random(),
+        acceptance: RuleAcceptance = Variance(),
+        constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
+        novelty_calculation: NoveltyCalculation = NoveltyCalculation(),
+    ):
         super().__init__(
             n_iter=n_iter,
             origin_generation=origin_generation,
@@ -92,14 +93,15 @@ class NoveltySearch(RuleGeneration):
         self.novelty_calculation = novelty_calculation
         self.use_population_for_archive = use_population_for_archive
 
-        assert self.novelty_calculation.k_neighbor + \
-            2 < self.lmbda, f"Insert reason here {self.novelty_calculation.k_neighbor} {self.lmbda}"
+        assert (
+            self.novelty_calculation.k_neighbor + 2 < self.lmbda
+        ), f"Insert reason here {self.novelty_calculation.k_neighbor} {self.lmbda}"
 
     def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
-        """ Validation of the parameters and checking the random_state.
-            Then _optimize is called, where the Novelty Search algorithm is implemented.
+        """Validation of the parameters and checking the random_state.
+        Then _optimize is called, where the Novelty Search algorithm is implemented.
 
-            Return: A list of filtered Rules.
+        Return: A list of filtered Rules.
         """
         self.random_state_ = check_random_state(self.random_state)
         self.novelty_calculation.archive.random_state = self.random_state_
@@ -110,12 +112,12 @@ class NoveltySearch(RuleGeneration):
         return self._filter_invalid_rules(X=X, y=y, rules=rules)
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
-        """ Steps of the novelty Search Algorithm containing:
+        """Steps of the novelty Search Algorithm containing:
 
-            1. Initialisation of the Population.
-            2. Loop of Selection, Crossover and Mutation and replacing the current Generation based on novelty.
+        1. Initialisation of the Population.
+        2. Loop of Selection, Crossover and Mutation and replacing the current Generation based on novelty.
 
-            Return: n_rules generated by the algorithm
+        Return: n_rules generated by the algorithm
         """
         population = self._init_population(X, y)
         best_children = []
@@ -127,11 +129,17 @@ class NoveltySearch(RuleGeneration):
                 continue
             children = self._crossover_and_mutate(X, y, parents)
 
-            valid_children = list(filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children))
+            valid_children = list(
+                filter(lambda rule: rule.is_fitted_ and rule.experience_ > 0, children)
+            )
 
             if valid_children:
-                best_children = self._rule_selection(rules=valid_children, n_rules=self.mu, roh=self.roh)
-                best_parents = self._rule_selection(rules=parents, n_rules=self.n_elitists)
+                best_children = self._rule_selection(
+                    rules=valid_children, n_rules=self.mu, roh=self.roh
+                )
+                best_parents = self._rule_selection(
+                    rules=parents, n_rules=self.n_elitists
+                )
 
                 population = best_children + best_parents
 
@@ -139,9 +147,14 @@ class NoveltySearch(RuleGeneration):
 
     def _init_population(self, X: np.ndarray, y: np.ndarray) -> list[Rule]:
         population = []
-        origins = self.origin_generation(n_rules=self.mu, X=X, y=y,
-                                         pool=self.pool_,
-                                         elitist=self.elitist_, random_state=self.random_state_)
+        origins = self.origin_generation(
+            n_rules=self.mu,
+            X=X,
+            y=y,
+            pool=self.pool_,
+            elitist=self.elitist_,
+            random_state=self.random_state_,
+        )
         for origin in origins:
             initialized_rules = self.init(mean=origin, random_state=self.random_state_)
             constrained_rules = self.constraint(initialized_rules)
@@ -151,27 +164,37 @@ class NoveltySearch(RuleGeneration):
         return population
 
     def _select_shuffled_parents(self, population: list[Rule]) -> list[Rule]:
-        parents = self.selection(population, random_state=self.random_state_, size=self.lmbda)
+        parents = self.selection(
+            population, random_state=self.random_state_, size=self.lmbda
+        )
         self.random_state_.shuffle(parents)
 
         return parents
 
-    def _crossover_and_mutate(self, X: np.ndarray, y: np.ndarray, parents: list[Rule]) -> list[Rule]:
+    def _crossover_and_mutate(
+        self, X: np.ndarray, y: np.ndarray, parents: list[Rule]
+    ) -> list[Rule]:
         children = []
 
         parent_combinations = zip(*[iter(parents)] * 2)
         for parent_A, parent_B in parent_combinations:
-            children.extend(self.crossover(A=parent_A, B=parent_B, random_state=self.random_state_))
+            children.extend(
+                self.crossover(A=parent_A, B=parent_B, random_state=self.random_state_)
+            )
 
-        children = [self.constraint(self.mutation(child, random_state=self.random_state_)).fit(X, y)
-                    for child in children]
+        children = [
+            self.constraint(self.mutation(child, random_state=self.random_state_)).fit(
+                X, y
+            )
+            for child in children
+        ]
 
         return children
 
     def _rule_selection(self, rules: list[Rule], n_rules: int, roh: int = 0):
         ns_rules = self.novelty_calculation(rules=rules)
-        
-        if self.use_population_for_archive: 
+
+        if self.use_population_for_archive:
             self.novelty_calculation.archive.archive.extend(ns_rules)
         else:
             self.novelty_calculation.archive(ns_rules, roh)
@@ -179,18 +202,20 @@ class NoveltySearch(RuleGeneration):
         return self._get_n_best_rules(ns_rules, n_rules)
 
     def _get_n_best_rules(self, rules: list[Rule], n: int):
-        sorted_rules = sorted(rules,
-                              key=lambda ns_rule: (ns_rule.novelty_score_, ns_rule.experience_),
-                              reverse=True)
+        sorted_rules = sorted(
+            rules,
+            key=lambda ns_rule: (ns_rule.novelty_score_, ns_rule.experience_),
+            reverse=True,
+        )
         return [sorted_rule for sorted_rule in sorted_rules][:n]
 
     def _get_optimized_rules(self, best_children: list[Rule], n_rules: int):
         chosen_rules = []
 
         for rule in best_children[:n_rules]:
-            if hasattr(rule, 'novelty_score_'):
+            if hasattr(rule, "novelty_score_"):
                 del rule.novelty_score_
-            if hasattr(rule, 'distance_'):
+            if hasattr(rule, "distance_"):
                 del rule.distance_
 
             chosen_rules.append(rule)

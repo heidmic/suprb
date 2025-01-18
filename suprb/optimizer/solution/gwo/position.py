@@ -11,25 +11,36 @@ from suprb.optimizer.solution.utils import sigmoid_binarize
 class SolutionPositionUpdate(BaseComponent, metaclass=ABCMeta):
     """Calculates the next positions of all wolves, using the leaders."""
 
-    def __call__(self, leaders: list[Solution], population: list[Solution], a: float,
-                 random_state: RandomState) -> list[Solution]:
+    def __call__(
+        self,
+        leaders: list[Solution],
+        population: list[Solution],
+        a: float,
+        random_state: RandomState,
+    ) -> list[Solution]:
         pass
 
 
-def binary_C(prey: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState) -> np.ndarray:
+def binary_C(
+    prey: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState
+) -> np.ndarray:
     a_pos = A(a=a, n=prey.shape[0], random_state=random_state)
     d_pos = D(prey=prey, wolf=wolf, random_state=random_state)
 
     return sigmoid_binarize(a_pos * d_pos, random_state=random_state)
 
 
-def binary_B(prey: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState) -> np.ndarray:
+def binary_B(
+    prey: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState
+) -> np.ndarray:
     c_pos = binary_C(prey=prey, wolf=wolf, a=a, random_state=random_state)
 
     return c_pos >= random_state.random(size=prey.shape[0])
 
 
-def binary_X(leader: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState) -> np.ndarray:
+def binary_X(
+    leader: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState
+) -> np.ndarray:
     leader = leader.astype(np.float)
     wolf = wolf.astype(np.float)
 
@@ -46,7 +57,9 @@ def D(prey: np.ndarray, wolf: np.ndarray, random_state: RandomState) -> np.ndarr
     return np.abs(2 * random_state.random(size=prey.shape[0]) * prey - wolf)
 
 
-def X(leader: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState) -> np.ndarray:
+def X(
+    leader: np.ndarray, wolf: np.ndarray, a: float, random_state: RandomState
+) -> np.ndarray:
     leader = leader.astype(np.float)
     wolf = wolf.astype(np.float)
 
@@ -63,17 +76,31 @@ class Crossover(SolutionPositionUpdate):
     Taken from https://doi.org/10/gfxvkw.
     """
 
-    def __call__(self, leaders: list[Solution], population: list[Solution], a: float,
-                 random_state: RandomState) -> list[Solution]:
+    def __call__(
+        self,
+        leaders: list[Solution],
+        population: list[Solution],
+        a: float,
+        random_state: RandomState,
+    ) -> list[Solution]:
         new_population = []
         for solution in population:
             # Calculate binary vectors for solution with each leader
-            xs = [binary_X(leader=leader.genome, wolf=solution.genome, a=a, random_state=random_state) for leader in
-                  leaders]
+            xs = [
+                binary_X(
+                    leader=leader.genome,
+                    wolf=solution.genome,
+                    a=a,
+                    random_state=random_state,
+                )
+                for leader in leaders
+            ]
             xs = np.stack(xs, axis=0)
 
             # Uniform crossover
-            crossover = np.choose(random_state.integers(len(leaders), size=solution.genome.shape[0]), xs)
+            crossover = np.choose(
+                random_state.integers(len(leaders), size=solution.genome.shape[0]), xs
+            )
 
             new_population.append(solution.clone(genome=crossover))
 
@@ -87,12 +114,25 @@ class Sigmoid(SolutionPositionUpdate):
     Taken from https://doi.org/10/gfxvkw.
     """
 
-    def __call__(self, leaders: list[Solution], population: list[Solution], a: float,
-                 random_state: RandomState) -> list[Solution]:
+    def __call__(
+        self,
+        leaders: list[Solution],
+        population: list[Solution],
+        a: float,
+        random_state: RandomState,
+    ) -> list[Solution]:
         new_population = []
         for solution in population:
             # Calculate binary vectors for solution with each leader
-            xs = [X(leader=leader.genome, wolf=solution.genome, a=a, random_state=random_state) for leader in leaders]
+            xs = [
+                X(
+                    leader=leader.genome,
+                    wolf=solution.genome,
+                    a=a,
+                    random_state=random_state,
+                )
+                for leader in leaders
+            ]
             xs = np.stack(xs, axis=0)
 
             # Binarize the vectors through sigmoid

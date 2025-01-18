@@ -16,12 +16,15 @@ class BaseComponent(BaseEstimator, metaclass=ABCMeta):
     The necessary interface to other scikit-learn functionality is still present, because all components
     are instantiated internally, so `sklearn.utils.estimator_checks.check_estimator()` should still pass.
     """
+
     pass
 
     def _validate_components(self, **kwargs):
         for parameter_name, default in kwargs.items():
             current_value = self.__getattribute__(parameter_name)
-            self.__setattr__(parameter_name, current_value if current_value is not None else default)
+            self.__setattr__(
+                parameter_name, current_value if current_value is not None else default
+            )
 
 
 class SolutionBase(metaclass=ABCMeta):
@@ -37,8 +40,11 @@ class SolutionBase(metaclass=ABCMeta):
         pass
 
     def __str__(self):
-        if hasattr(self, 'is_fitted_') and self.is_fitted_:
-            attributes = {'error': self.error_, 'fitness': self.fitness_} | self._more_str_attributes()
+        if hasattr(self, "is_fitted_") and self.is_fitted_:
+            attributes = {
+                "error": self.error_,
+                "fitness": self.fitness_,
+            } | self._more_str_attributes()
             concat = ",".join([f"{key}={value}" for key, value in attributes.items()])
             return f"{self.__class__.__name__}({concat})"
 
@@ -54,7 +60,7 @@ class BaseRegressor(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
     @abstractmethod
     def fit(self, X: np.ndarray, y: np.ndarray) -> BaseRegressor:
-        """ A reference implementation of a fitting function.
+        """A reference implementation of a fitting function.
 
         Parameters
         ----------
@@ -73,7 +79,7 @@ class BaseRegressor(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
 
     @abstractmethod
     def predict(self, X: np.ndarray):
-        """ A reference implementation of a predicting function.
+        """A reference implementation of a predicting function.
 
         Parameters
         ----------

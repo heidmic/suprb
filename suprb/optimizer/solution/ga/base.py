@@ -10,7 +10,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class GeneticAlgorithm(PopulationBasedSolutionComposition):
-    """ A simple Genetic Algorithm.
+    """A simple Genetic Algorithm.
 
     Parameters
     ----------
@@ -34,19 +34,20 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
 
     n_elitists_: int
 
-    def __init__(self,
-                 n_iter: int = 32,
-                 population_size: int = 32,
-                 elitist_ratio: float = 0.17,
-                 mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
-                 crossover: SolutionCrossover = NPoint(n=3),
-                 selection: SolutionSelection = Tournament(),
-                 init: SolutionInit = RandomInit(),
-                 archive: SolutionArchive = Elitist(),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 32,
+        population_size: int = 32,
+        elitist_ratio: float = 0.17,
+        mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
+        crossover: SolutionCrossover = NPoint(n=3),
+        selection: SolutionSelection = Tournament(),
+        init: SolutionInit = RandomInit(),
+        archive: SolutionArchive = Elitist(),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -69,24 +70,40 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
 
         for _ in range(self.n_iter):
             # Eltitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[:self.n_elitists_]
+            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[
+                : self.n_elitists_
+            ]
 
             # Selection
-            parents = self.selection(population=self.population_, n=self.population_size,
-                                     random_state=self.random_state_)
+            parents = self.selection(
+                population=self.population_,
+                n=self.population_size,
+                random_state=self.random_state_,
+            )
             # Note that this expression swallows the last element, if `population_size` is odd
             parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
 
             # Crossover
-            children = list(flatten([(self.crossover(A, B, random_state=self.random_state_),
-                                      self.crossover(B, A, random_state=self.random_state_))
-                                     for A, B in parent_pairs]))
+            children = list(
+                flatten(
+                    [
+                        (
+                            self.crossover(A, B, random_state=self.random_state_),
+                            self.crossover(B, A, random_state=self.random_state_),
+                        )
+                        for A, B in parent_pairs
+                    ]
+                )
+            )
             # If `population_size` is odd, we add the solution not selected for reproduction directly
             if self.population_size % 2 != 0:
                 children.append(parents[-1])
 
             # Mutation
-            mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
+            mutated_children = [
+                self.mutation(child, random_state=self.random_state_)
+                for child in children
+            ]
 
             # Replacement
             self.population_ = elitists
