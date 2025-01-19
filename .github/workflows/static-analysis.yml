@@ -58,8 +58,10 @@ jobs:
         script: |
           const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
           const commentBody = `
-          Pylint job contains errors or warnings. 
+          ⚠️ Pylint job contains errors or warnings ⚠️
+
           Please check the report [here](${artifactUrl}).
+          (The PR will still pass the pipeline)
           `;
           await github.rest.issues.createComment({
             ...context.repo,
