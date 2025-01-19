@@ -35,8 +35,32 @@ jobs:
           fi
           exit $exit_code
 
-    - name: Upload pylint report
+    - name: Determine status
+      id: check-status
+      run: |
+          if grep -q "Your code has been rated at" pylint-report.txt; then
+            if grep -q "Your code has been rated at 10.00/10" pylint-report.txt; then
+              echo "status=success" >> $GITHUB_ENV
+            else
+              echo "status=warning" >> $GITHUB_ENV
+            fi
+          else
+            echo "status=failure" >> $GITHUB_ENV
+            exit 1
+          fi
+    
+    - name: Upload Pylint report as artifact
       uses: actions/upload-artifact@v3
       with:
         name: pylint-report
         path: pylint-report.txt
+  
+    - name: Set conclusion
+      if: always()
+      run: |
+        if [ "$status" == "success" ]; then
+          echo "Linting passed without warnings or errors."
+        elif [ "$status" == "warning" ]; then
+          echo "::warning::Linting passed with warnings. Review the pylint report."
+        else
+          echo "::error::Linting failed. Please fix the errors."
