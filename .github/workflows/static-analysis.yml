@@ -28,6 +28,12 @@ jobs:
       run: |
         find suprb/ -name "*.py" -print0 | xargs -0 -n 1 -P 4 pylint --max-line-length=120 --output-format=text > pylint-report.txt || true
 
+    - name: Check for warnings in pylint report
+      run: |
+          if grep -q 'Your code has been rated at' pylint-report.txt; then
+            echo "Pylint completed with warnings. Review the pylint report for details."
+          fi
+
     - name: Upload pylint report
       uses: actions/upload-artifact@v3
       with:
