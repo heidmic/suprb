@@ -33,3 +33,25 @@ jobs:
       with:
         name: pylint-report
         path: pylint-report.txt
+
+    - name: Check Pylint report for issues
+      id: check_pylint
+      run: |
+        if grep -qE "^[^ ]+:([0-9]+):([0-9]+): (error|warning)" pylint-report.txt; then
+          echo "has_issues=true" >> $GITHUB_ENV
+        else
+          echo "has_issues=false" >> $GITHUB_ENV
+
+    - name: Post comment on PR if there are issues
+      if: env.has_issues == 'true'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('pylint-report.txt', 'utf8');
+          const issueComment = `### Pylint Report\n\`\`\`\n${report}\n\`\`\`\n`;
+          await github.rest.issues.createComment({
+            ...context.repo,
+            issue_number: context.issue.number,
+            body: issueComment
+          });
