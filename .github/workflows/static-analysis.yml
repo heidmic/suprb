@@ -46,7 +46,8 @@ jobs:
           fi
       
     - name: Output Pylint status
-      run: echo "Pylint Status: ${{ env.status }}"
+      run: |
+        echo "Pylint Status: $status"
 
     - name: Upload pylint report
       uses: actions/upload-artifact@v3
