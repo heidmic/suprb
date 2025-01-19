@@ -50,8 +50,6 @@ jobs:
         else
           echo "has_issues=false" >> $GITHUB_ENV
         fi
-
-        echo "has_issues=true" >> $GITHUB_ENV
       
       
 
@@ -60,20 +58,13 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const pullRequestNumber = context.payload.pull_request.number;
-          console.log(`Pull Request Number: ${pullRequestNumber}`);
-          
           const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-          console.log(`Artifact URL: ${artifactUrl}`);
-    
           const commentBody = `
           Pylint job contains errors or warnings. 
           Please check the report [here](${artifactUrl}).
           `;
-          
           await github.rest.issues.createComment({
             ...context.repo,
-            issue_number: pullRequestNumber,
+            issue_number: context.issue.number,
             body: commentBody.trim()
           });
-      
