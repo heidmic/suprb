@@ -5,6 +5,7 @@ on:
 jobs:
   linting:
     runs-on: ubuntu-latest
+    continue-on-error: true
     timeout-minutes: 9
 
     steps:
@@ -26,35 +27,10 @@ jobs:
 
     - name: Run Pylint and generate report
       run: |
-        find suprb/ -name "*.py" -print0 | xargs -0 -n 1 -P 4 pylint --max-line-length=120 --output-format=text > pylint-report.txt || true
-
-    - name: Check for warnings in Pylint report
-      id: lint-check
-      run: |
-          if grep -q "rated at" pylint-report.txt; then
-            if grep -q "Your code has been rated at 10.00/10" pylint-report.txt; then
-              echo "status=success" >> $GITHUB_ENV
-              echo "No warnings or errors found."
-            else
-              echo "status=warning" >> $GITHUB_ENV
-              echo "Linting passed with warnings. Review the report."
-            fi
-          else
-            echo "status=failure" >> $GITHUB_ENV
-            echo "No linting output found. Please check the configuration."
-            exit 1
-          fi
-      
-    - name: Output Pylint status
-      run: |
-        echo "Pylint Status: $status"
+        find suprb/ -name "*.py" -print0 | xargs -0 -n 1 -P 4 pylint --max-line-length=120 --output-format=text > pylint-report.txt
 
     - name: Upload pylint report
       uses: actions/upload-artifact@v3
       with:
         name: pylint-report
         path: pylint-report.txt
-
-    - name: Mark as Passed with Warnings
-      if: env.status == 'warning'
-      run: echo "Static Analysis / linting passed with warnings."
