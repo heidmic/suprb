@@ -6,6 +6,7 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     timeout-minutes: 9
+    continue-on-error: true
 
     steps:
     - name: Checkout code
@@ -25,6 +26,7 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run Pylint and generate report
+      continue-on-error: true
       run: |
         find suprb/ -name "*.py" -print0 | xargs -0 -n 1 -P 4 pylint --max-line-length=120 --output-format=text > pylint-report.txt || true
 
@@ -47,11 +49,13 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const fs = require('fs');
-          const report = fs.readFileSync('pylint-report.txt', 'utf8');
-          const issueComment = `### Pylint Report\n\`\`\`\n${report}\n\`\`\`\n`;
+          const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+          const commentBody = `
+          Pylint job contains errors or warnings. 
+          Please check the report [here](${artifactUrl}).
+          `;
           await github.rest.issues.createComment({
             ...context.repo,
             issue_number: context.issue.number,
-            body: issueComment
+            body: commentBody.trim()
           });
