@@ -43,6 +43,8 @@ jobs:
           echo "has_issues=true" >> $GITHUB_ENV
         else
           echo "has_issues=false" >> $GITHUB_ENV
+        fi
+      
 
     - name: Post comment on PR if there are issues
       if: env.has_issues == 'true'
