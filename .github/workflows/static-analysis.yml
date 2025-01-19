@@ -54,3 +54,7 @@ jobs:
       with:
         name: pylint-report
         path: pylint-report.txt
+
+    - name: Mark as Passed with Warnings
+      if: env.status == 'warning'
+      run: echo "Static Analysis / linting passed with warnings."
