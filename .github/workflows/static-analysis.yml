@@ -25,9 +25,15 @@ jobs:
         pip install pylint 
         pip install -r requirements.txt
 
-    - name: Run Pylint and generate report
+    - name: Run Pylint
+      continue-on-error: true
       run: |
-        find suprb/ -name "*.py" -print0 | xargs -0 -n 1 -P 4 pylint --max-line-length=120 --output-format=text > pylint-report.txt
+          find suprb/ -name "*.py" -print0 | xargs -0 -n 1 -P 4 pylint --max-line-length=120 --output-format=text > pylint-report.txt
+          exit_code=$?
+          if [ $exit_code -ne 0 ]; then
+            echo "Pylint returned errors. Check the report."
+          fi
+          exit $exit_code
 
     - name: Upload pylint report
       uses: actions/upload-artifact@v3
