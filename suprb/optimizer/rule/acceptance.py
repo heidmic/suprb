@@ -6,6 +6,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 
 from suprb.base import BaseComponent
 from suprb.rule import Rule
+from suprb.fitness import pseudo_error
 
 
 class RuleAcceptance(BaseComponent, metaclass=ABCMeta):
@@ -43,7 +44,9 @@ class Variance(RuleAcceptance):
             default_error = np.sum(local_y ** 2) / (len(local_y) * self.beta)
         elif rule.task == "Classification":
             # default error is the trivial solution of always choosing the most common label
-            default_error = np.bincount(local_y).max() / (len(local_y) * self.beta)
+            local_y = [round(y) for y in local_y]
+            default_accuracy = np.bincount(local_y).max() / (len(local_y) * self.beta)
+            default_error = pseudo_error(default_accuracy)
         return rule.error_ <= default_error
 
 
