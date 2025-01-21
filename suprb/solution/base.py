@@ -5,8 +5,8 @@ from abc import ABCMeta, abstractmethod
 from typing import Union
 
 import numpy as np
-from sklearn.base import RegressorMixin, ClassifierMixin
-from sklearn.metrics import mean_squared_error, accuracy_score
+from sklearn.base import RegressorMixin, ClassifierMixin, BaseEstimator
+from sklearn.metrics import mean_squared_error, accuracy_score, r2_score
 
 from suprb.rule import Rule
 from suprb.base import BaseComponent, SolutionBase, SupervisedMixin
@@ -45,18 +45,35 @@ class Solution(SolutionBase, SupervisedMixin):
         self.pool = pool
         self.mixing = mixing
         self.fitness = fitness
-        self.task = None
+        self.isClass = None
+
+    def score(self, X, y, sample_weight=None):
+        if self.isClass is None:
+            if not self.pool:
+                return 0.0
+            elif isinstance(self.pool[0].model, ClassifierMixin):
+                self.isClass = True
+            else:
+                self.isClass = False
+        elif self.isClass:
+            return accuracy_score(y, self.predict(X), sample_weight=sample_weight)
+        else:
+            y_pred = self.predict(X)
+            return r2_score(y, y_pred, sample_weight=sample_weight)
+            
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Solution:
         pred = self.predict(X, cache=True)
-
-        if not self.pool:
-            self.error_ = 1 - 1e-4
-        elif isinstance(self.pool[0].model, ClassifierMixin):
-            self.task = 'Classification'
+        if self.isClass is None:
+            if not self.pool:
+                self.error = 9999
+            elif isinstance(self.pool[0].model, ClassifierMixin):
+                self.isClass = True
+            else:
+                self.isClass = False
+        elif self.isClass:
             self.error_ = max(pseudo_error(accuracy_score(y, pred)), 1e-4)
         else:
-            self.task = 'Regression'
             self.error_ = max(mean_squared_error(y, pred), 1e-4)
             
         self.input_size_ = self.genome.shape[0]

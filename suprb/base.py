@@ -172,7 +172,9 @@ class BaseClassifier(BaseSupervised, ClassifierMixin, metaclass=ABCMeta):
         pass
 
 class SupervisedMixin(ABC):
-    pass
+    @abstractmethod
+    def score(self, X, y, sample_weight=None):
+        pass
 
 SupervisedMixin.register(RegressorMixin)
 SupervisedMixin.register(ClassifierMixin)
