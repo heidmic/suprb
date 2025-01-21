@@ -35,9 +35,9 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
         self._validate_components(model=Ridge(alpha=0.01),
                                   fitness=VolumeWu())
         if isinstance(model, ClassifierMixin):
-            self.task = 'Classification'
+            self.isClass = True
         else:
-            self.task = 'Regression'
+            self.isClass = False
 
     @property
     def matching_type(self):

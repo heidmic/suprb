@@ -3,7 +3,7 @@ from typing import Callable
 
 import numpy as np
 
-from suprb.fitness import pseudo_accuracy, emary, wu
+from suprb.fitness import pseudo_accuracy, actual_accuracy, emary, wu
 from . import Rule, RuleFitness
 
 
@@ -16,8 +16,8 @@ class PseudoAccuracy(RuleFitness):
     def __call__(self, rule: Rule) -> float:
         # note that we multiply solely for readability reasons without
         # any performance impact
-        if rule.task == "Classification":
-            return  (1 - rule.error_) * 100
+        if rule.isClass:
+            return  actual_accuracy(rule.error_) * 100
         return pseudo_accuracy(rule.error_) * 100
 
 
@@ -34,8 +34,8 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
         input_space_volume = np.prod(diff)
 
         volume_share = rule.volume_ / input_space_volume
-        if rule.task == "Classification":
-            x1 = (1 - rule.error_)
+        if rule.isClass:
+            x1 = actual_accuracy(rule.error_)
         else:
             x1 = pseudo_accuracy(rule.error_, beta=2)
         return self.fitness_func_(alpha=self.alpha, x1 = x1, x2=volume_share) * 100
