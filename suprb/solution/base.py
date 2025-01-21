@@ -48,14 +48,14 @@ class Solution(SolutionBase, SupervisedMixin):
         self.isClass = None
 
     def score(self, X, y, sample_weight=None):
+        if not self.pool:
+            return 0.0
         if self.isClass is None:
-            if not self.pool:
-                return 0.0
-            elif isinstance(self.pool[0].model, ClassifierMixin):
+            if isinstance(self.pool[0].model, ClassifierMixin):
                 self.isClass = True
             else:
                 self.isClass = False
-        elif self.isClass:
+        if self.isClass:
             return accuracy_score(y, self.predict(X), sample_weight=sample_weight)
         else:
             y_pred = self.predict(X)
@@ -64,14 +64,14 @@ class Solution(SolutionBase, SupervisedMixin):
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Solution:
         pred = self.predict(X, cache=True)
+        if not self.pool:
+            self.error_ = 9999
         if self.isClass is None:
-            if not self.pool:
-                self.error = 9999
-            elif isinstance(self.pool[0].model, ClassifierMixin):
+            if isinstance(self.pool[0].model, ClassifierMixin):
                 self.isClass = True
             else:
                 self.isClass = False
-        elif self.isClass:
+        if self.isClass:
             self.error_ = max(pseudo_error(accuracy_score(y, pred)), 1e-4)
         else:
             self.error_ = max(mean_squared_error(y, pred), 1e-4)
