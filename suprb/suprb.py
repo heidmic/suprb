@@ -1,10 +1,13 @@
 import warnings
 import traceback
+import copy
 
 import numpy as np
 from sklearn import clone
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted, check_array
+from sklearn.base import RegressorMixin, ClassifierMixin, BaseEstimator
+from sklearn.metrics import mean_squared_error, accuracy_score, r2_score
 
 from .base import BaseSupervised, BaseRegressor, BaseClassifier
 from .exceptions import PopulationEmptyWarning
@@ -117,6 +120,21 @@ class SupRB(BaseSupervised):
                     return True
         return False
 
+    
+    def score(self, X, y, sample_weight=None):
+        if not self.pool:
+            return 0.0
+        if self.isClass is None:
+            if isinstance(self.pool[0].model, ClassifierMixin):
+                self.isClass = True
+            else:
+                self.isClass = False
+        if self.isClass:
+            return accuracy_score(y, self.predict(X), sample_weight=sample_weight)
+        else:
+            y_pred = self.predict(X)
+            return r2_score(y, y_pred, sample_weight=sample_weight)
+        
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
         """ Fit SupRB.2.
 
@@ -275,7 +293,7 @@ class SupRB(BaseSupervised):
         self.solution_composition_.optimize(X, y)
 
     def predict(self, X: np.ndarray):
-        # Check is fit had been called
+        # Check if fit had been called
         check_is_fitted(self, ['is_fitted_'])
         # Input validation
         X = check_array(X)
@@ -343,3 +361,11 @@ class SupRB(BaseSupervised):
         return {
             'poor_score': True,
         }
+
+    def model_swap(self, local_model) -> Solution:
+        solution = self.elitist_.clone()
+        # pool = []
+        for space in solution.pool:
+            space = space.clone(model = copy.deepcopy(local_model))
+            #pool.append(rule)
+        return solution

@@ -85,7 +85,10 @@ class BaseSupervised(BaseEstimator, metaclass=ABCMeta):
         y : np.ndarray
             Returns the estimation with shape (n_samples,).
         """
+        pass
 
+    @abstractmethod
+    def score(self, X, y, sample_weight=None):
         pass
 
 class BaseRegressor(BaseSupervised, RegressorMixin, metaclass=ABCMeta):
