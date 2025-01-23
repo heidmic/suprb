@@ -88,13 +88,13 @@ class ES1xLambda(ParallelSingleRuleGeneration):
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
 
+        elitist_last = None
         elitist = initial_rule
 
-        elitists = deque(maxlen=self.delay)
+        n_iter_since_improvement = 0
 
         # Main iteration
         for iteration in range(self.n_iter):
-            elitists.append(elitist)
 
             # Generate, fit and evaluate lambda children
             children = [self.constraint(self.mutation(elitist, random_state=random_state))
@@ -117,9 +117,18 @@ class ES1xLambda(ParallelSingleRuleGeneration):
                 elitist = self.selection(children, random_state=random_state)[0]
             elif self.operator in (',', '&'):
                 elitist = self.selection(children, random_state=random_state)[0]
+
+            if elitist_last == None or elitist.fitness_ >= elitist_last.fitness_:
+                # @heidmic I don't think we have to `clone(…)` here because
+                # `mutation` already does but I'm not 100% sure.
+                elitist_last = elitist
+                n_iter_since_improvement = 0
+            else:
+                n_iter_since_improvement += 1
+
             if self.operator == '&':
-                if len(elitists) == self.delay and all([e.fitness_ <= elitists[0].fitness_ for e in elitists]):
-                    elitist = elitists[0]
+                if n_iter_since_improvement >= self.delay:
+                    elitist = elitist_last
                     break
 
         return elitist
