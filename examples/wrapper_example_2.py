@@ -41,7 +41,8 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
 
     # Comparable with examples/example_4.py
-    model = SupRBWrapper(print_config=True,
+    basic_model = suprb.SupRB(random_state=33)
+    model = SupRBWrapper(basic_model, print_config=True,
 
                          ## RULE GENERATION ##
                          rule_generation=ES1xLambda(),

@@ -4,8 +4,8 @@ import json
 import numpy as np
 
 from . import BaseLogger
-from .metrics import matched_training_samples, genome_diversity
-from .. import json as suprb_json
+# from .metrics import matched_training_samples, genome_diversity
+# from .. import json as suprb_json
 from suprb.base import BaseRegressor
 
 
@@ -63,7 +63,7 @@ class DefaultLogger(BaseLogger):
         # Log pool
         pool = estimator.pool_
         log_metric("pool_size", len(pool))
-        log_metric("pool_matched", matched_training_samples(pool))
+        # log_metric("pool_matched", matched_training_samples(pool))  # When using default logging, not all approaches are compatible with this
         if pool:
             log_metric_stats("pool_fitness", "fitness_", pool)
 
@@ -71,7 +71,7 @@ class DefaultLogger(BaseLogger):
         # Note that this technically is `PopulationBasedSolutionComposition` specific.
         population = estimator.solution_composition_.population_
         log_metric("population_size", len(population))
-        log_metric("population_diversity", genome_diversity(population))
+        # log_metric("population_diversity", genome_diversity(population))  # When using default logging, not all approaches are compatible with this
         log_metric_stats("population_fitness", "fitness_", population)
         log_metric_stats("population_error", "error_", population)
         log_metric_stats("population_complexity", "complexity_", population)
@@ -81,7 +81,7 @@ class DefaultLogger(BaseLogger):
         log_metric("elitist_fitness", elitist.fitness_)
         log_metric("elitist_error", elitist.error_)
         log_metric("elitist_complexity", elitist.complexity_)
-        log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))
+        # log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))  # When using default logging, not all approaches are compatible with this
         # log_metric("elitist_rules", elitist.pool)
 
         # Log performance
@@ -89,7 +89,7 @@ class DefaultLogger(BaseLogger):
 
     def get_elitist(self, estimator: BaseRegressor):
         json_data = {}
-        suprb_json._save_pool(estimator.solution_composition_.elitist().pool, json_data)
+        # suprb_json._save_pool(estimator.solution_composition_.elitist().pool, json_data)
         return json_data
 
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
