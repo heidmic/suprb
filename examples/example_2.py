@@ -9,9 +9,16 @@ from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.ga import GeneticAlgorithm
 
 from utils import log_scores
+import cProfile
+import pstats
+from line_profiler import LineProfiler
+from suprb.rule.matching import OrderedBound
+from suprb.optimizer.rule.mutation import RuleMutation
+from suprb.optimizer.rule.mutation import HalfnormIncrease
+from suprb.rule import Rule
 
 
-if __name__ == "__main__":
+def start_test():
     random_state = 42
 
     data, _ = fetch_openml(name="Concrete_Data", version=1, return_X_y=True)
@@ -25,16 +32,16 @@ if __name__ == "__main__":
 
     model = SupRB(
         rule_discovery=ES1xLambda(
-            n_iter=32,
-            lmbda=16,
+            n_iter=8,
+            lmbda=8,
             operator="+",
-            delay=150,
+            delay=2,
             random_state=random_state,
             n_jobs=1,
         ),
         solution_composition=GeneticAlgorithm(
-            n_iter=32,
-            population_size=32,
+            n_iter=4,
+            population_size=4,
             elitist_ratio=0.2,
             random_state=random_state,
             n_jobs=1,
@@ -54,3 +61,26 @@ if __name__ == "__main__":
     )
 
     log_scores(scores)
+
+
+if __name__ == "__main__":
+    cProfile.run('start_test()', 'output.prof')
+
+    with open("profiler_results.txt", "w") as f:
+        ps = pstats.Stats('output.prof', stream=f)
+        ps.sort_stats('cumulative').print_stats()
+        ps.strip_dirs().sort_stats('cumulative').print_stats('_catch_errors')
+
+
+
+    # profiler = LineProfiler()
+    # profiler.add_function(RuleMutation.__call__)
+    # profiler.add_function(Rule.fit)
+    # profiler.add_function(SupRB._catch_errors)
+    # profiler.add_function(HalfnormIncrease.ordered_bound)
+
+    # profiler.run('start_test()')
+    # output_file = "line_profiler_results.txt"
+    # with open(output_file, "w") as f:
+    #     profiler.print_stats(stream=f)
+

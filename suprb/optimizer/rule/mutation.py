@@ -118,9 +118,13 @@ class HalfnormIncrease(RuleMutation):
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
-        bounds[:, 0] -= halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
-        bounds[:, 1] += halfnorm.rvs(scale=self.sigma / 2, size=bounds.shape[0], random_state=random_state)
-        rule.match.bounds = np.sort(rule.match.bounds, axis=1)
+        delta = halfnorm.rvs(scale=self.sigma / 2, size=(bounds.shape[0], 2), random_state=random_state)
+
+        bounds[:, 0] -= delta[:, 0]
+        bounds[:, 1] += delta[:, 1]
+        
+        rule.match.bounds = np.sort(bounds, axis=1)
+
 
     def center_spread(self, rule: Rule, random_state: RandomState):
         bounds = rule.match.bounds
