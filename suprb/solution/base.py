@@ -66,15 +66,16 @@ class Solution(SolutionBase, SupervisedMixin):
         pred = self.predict(X, cache=True)
         if not self.pool:
             self.error_ = 9999
-        if self.isClass is None:
-            if isinstance(self.pool[0].model, ClassifierMixin):
-                self.isClass = True
-            else:
-                self.isClass = False
-        if self.isClass:
-            self.error_ = max(pseudo_error(accuracy_score(y, pred)), 1e-4)
         else:
-            self.error_ = max(mean_squared_error(y, pred), 1e-4)
+            if self.isClass is None:
+                if isinstance(self.pool[0].model, ClassifierMixin):
+                    self.isClass = True
+                else:
+                    self.isClass = False
+            if self.isClass:
+                self.error_ = max(pseudo_error(accuracy_score(y, pred)), 1e-4)
+            else:
+                self.error_ = max(mean_squared_error(y, pred), 1e-4)
             
         self.input_size_ = self.genome.shape[0]
         self.complexity_ = np.sum(self.genome).item()  # equivalent to np.count_nonzero, but possibly faster
