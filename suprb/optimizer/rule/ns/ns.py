@@ -92,8 +92,8 @@ class NoveltySearch(RuleDiscovery):
         self.novelty_calculation = novelty_calculation
         self.use_population_for_archive = use_population_for_archive
 
-        assert self.novelty_calculation.k_neighbor +
-        2 < self.lmbda, f"Insert reason here {self.novelty_calculation.k_neighbor} {self.lmbda}"
+        assert self.novelty_calculation.k_neighbor + \
+            2 < self.lmbda, f"Insert reason here {self.novelty_calculation.k_neighbor} {self.lmbda}"
 
     def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
         """ Validation of the parameters and checking the random_state.
