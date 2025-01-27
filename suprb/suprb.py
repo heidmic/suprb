@@ -12,7 +12,7 @@ from .solution import Solution
 from .logging import BaseLogger, DefaultLogger
 from .optimizer.solution import SolutionComposition, ga
 from .optimizer.solution.ga import GeneticAlgorithm
-from .optimizer.rule import RuleGeneration
+from .optimizer.rule import RuleDiscovery
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
 from .rule.matching import MatchingFunction, OrderedBound
@@ -26,7 +26,7 @@ class SupRB(BaseRegressor):
 
     Parameters
     ----------
-    rule_discovery: RuleGeneration
+    rule_discovery: RuleDiscovery
         Optimizer used to evolve the :class:`Rule`s. If None is passed, it is set to :class:`ES1xLambda`.
     solution_composition: SolutionComposition
         Optimizer used to evolve the :class:`Solution`s. If None is passed, it is set to :class:`GeneticAlgorithm`.
@@ -64,7 +64,7 @@ class SupRB(BaseRegressor):
 
     random_state_: np.random.Generator
 
-    rule_discovery_: RuleGeneration
+    rule_discovery_: RuleDiscovery
     rule_discovery_seeds_: list[int]
 
     solution_composition_: SolutionComposition
@@ -77,7 +77,7 @@ class SupRB(BaseRegressor):
     logger_: BaseLogger
 
     def __init__(self,
-                 rule_discovery: RuleGeneration = None,
+                 rule_discovery: RuleDiscovery = None,
                  solution_composition: SolutionComposition = None,
                  matching_type: MatchingFunction = None,
                  n_iter: int = 32,

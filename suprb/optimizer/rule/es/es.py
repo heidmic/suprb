@@ -12,12 +12,12 @@ from ..mutation import RuleMutation, HalfnormIncrease
 from ..selection import RuleSelection, Fittest
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
-from ..base import ParallelSingleRuleGeneration
+from ..base import ParallelSingleRuleDiscovery
 from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import Matching, RuleOriginGeneration
 
 
-class ES1xLambda(ParallelSingleRuleGeneration):
+class ES1xLambda(ParallelSingleRuleDiscovery):
     """ The 1xLambda Evolutionary Strategy, where x is in {,+&}.
 
     Parameters

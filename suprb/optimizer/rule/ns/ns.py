@@ -12,12 +12,12 @@ from suprb.optimizer.rule.mutation import Normal, RuleMutation
 from suprb.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
-from ..base import RuleGeneration
+from ..base import RuleDiscovery
 from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import RuleOriginGeneration, SquaredError
 
 
-class NoveltySearch(RuleGeneration):
+class NoveltySearch(RuleDiscovery):
     """ NoveltySearch Algorithm
 
         Parameters
@@ -170,8 +170,8 @@ class NoveltySearch(RuleGeneration):
 
     def _rule_selection(self, rules: list[Rule], n_rules: int, roh: int = 0):
         ns_rules = self.novelty_calculation(rules=rules)
-        
-        if self.use_population_for_archive: 
+
+        if self.use_population_for_archive:
             self.novelty_calculation.archive.archive.extend(ns_rules)
         else:
             self.novelty_calculation.archive(ns_rules, roh)
