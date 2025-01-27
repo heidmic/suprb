@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
 
-    model = SupRB(rule_generation=ES1xLambda(),
+    model = SupRB(rule_discovery=ES1xLambda(),
                   solution_composition=GeneticAlgorithm())
 
     scores = cross_validate(model, X_train, y_train, cv=4, n_jobs=1, verbose=10,

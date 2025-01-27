@@ -35,7 +35,7 @@ def setup():
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
     model = SupRB(
-        rule_generation=es.ES1xLambda(
+        rule_discovery=es.ES1xLambda(
             n_iter=2,
             delay=1,
             operator='&',

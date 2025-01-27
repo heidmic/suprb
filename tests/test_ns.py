@@ -44,7 +44,7 @@ class TestNoveltySearch(unittest.TestCase):
 
     def setup_base_model(self):
         from suprb import optimizer
-        self.model = SupRB(rule_generation=ns.NoveltySearch(
+        self.model = SupRB(rule_discovery=ns.NoveltySearch(
             init=rule.initialization.HalfnormInit(),
             selection=optimizer.rule.selection.RouletteWheel()),
             solution_composition=ga.GeneticAlgorithm(),
@@ -98,7 +98,7 @@ class TestNoveltySearch(unittest.TestCase):
             print(f"\n\nChecking... {novelty_calculation_type.__name__} {self.kwargs}")
 
             try:
-                self.model.rule_generation.novelty_calculation = novelty_calculation_type(**self.kwargs)
+                self.model.rule_discovery.novelty_calculation = novelty_calculation_type(**self.kwargs)
                 self.assertTrue(True),
                 print("PASSED [Model Generation]\n")
             except:

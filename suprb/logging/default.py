@@ -71,10 +71,10 @@ class DefaultLogger(BaseLogger):
         # Note that this technically is `PopulationBasedSolutionComposition` specific.
         population = estimator.solution_composition_.population_
         log_metric("population_size", len(population))
-        # log_metric("population_diversity", genome_diversity(population))  # When using default logging, not all approaches are compatible with this
-        log_metric_stats("population_fitness", "fitness_", population)
-        log_metric_stats("population_error", "error_", population)
-        log_metric_stats("population_complexity", "complexity_", population)
+        # log_metric("population_diversity", genome_diversity(population)) # When using default logging, not all approaches are compatible with this
+        log_metric_min_max_mean("population_fitness", 'fitness_', population)
+        log_metric_min_max_mean("population_error", 'error_', population)
+        log_metric_min_max_mean("population_complexity", 'complexity_', population)
 
         # Log elitist
         elitist = estimator.solution_composition_.elitist()

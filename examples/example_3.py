@@ -23,7 +23,7 @@ if __name__ == '__main__':
     X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
     y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
-    model = SupRB(rule_generation=ES1xLambda(n_iter=32,
+    model = SupRB(rule_discovery=ES1xLambda(n_iter=32,
                                              lmbda=16,
                                              operator='+',
                                              delay=150,

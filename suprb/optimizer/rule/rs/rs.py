@@ -5,13 +5,13 @@ from suprb.rule.initialization import RuleInit, HalfnormInit
 from suprb.utils import RandomState, check_random_state
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
-from ..base import RuleGeneration
+from ..base import RuleDiscovery
 from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import RuleOriginGeneration, SquaredError
 from ..selection import RuleSelection, Fittest
 
 
-class RandomSearch(RuleGeneration):
+class RandomSearch(RuleDiscovery):
     """ RandomSearch Algorithm
 
         Parameters

@@ -24,8 +24,8 @@ Solutions of the problem select classifiers from the unchanging pool.
 
 For a quick entry into to using SupRB, have a look at the **examples** directory or the [suprb-experimentation repository](https://github.com/heidmic/suprb-experimentation) for more complex setups including automated parametertuning.
 
-The most basic way of using SupRB is by specifying the *rule_generation* and *solution_composition* with its default parameters: 
-`SupRB(rule_generation=ES1xLambda(), solution_composition=GeneticAlgorithm())`
+The most basic way of using SupRB is by specifying the *rule_discovery* and *solution_composition* with its default parameters: 
+`SupRB(rule_discovery=ES1xLambda(), solution_composition=GeneticAlgorithm())`
 
 Most of the time you want to use **cross_validate** from **sklearn.model_selection** for your model to get a better idea of general performance, which is why the examples use it consistently.
 

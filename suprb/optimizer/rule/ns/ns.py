@@ -12,12 +12,12 @@ from suprb.optimizer.rule.mutation import Normal, RuleMutation
 from suprb.optimizer.rule.selection import RuleSelection, Random
 from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
-from ..base import RuleGeneration
+from ..base import RuleDiscovery
 from ..constraint import CombinedConstraint, MinRange, Clip
 from ..origin import RuleOriginGeneration, SquaredError
 
 
-class NoveltySearch(RuleGeneration):
+class NoveltySearch(RuleDiscovery):
     """ NoveltySearch Algorithm
 
         Parameters
@@ -29,7 +29,7 @@ class NoveltySearch(RuleGeneration):
         lmbda: int
             Each generation lambda children will be generated.
         roh: int
-            Each generation roh rules will be added to the archive (depending on archive type). 
+            Each generation roh rules will be added to the archive (depending on archive type).
             For population sizes of 200, a value of 15 is generally recommended. However, this value is highly sensitive
             to a multitude of factors (and novelty search mechanisms, such as the specific archiving technique)
         random_state : int, RandomState instance or None, default=None
@@ -37,7 +37,7 @@ class NoveltySearch(RuleGeneration):
         n_jobs: int
             The number of threads / processes the optimization uses. Currently not used for this optimizer.
         n_elitists: int
-            The number of parents that get added to the population each generation. 
+            The number of parents that get added to the population each generation.
             For better performance this should be greater than the n_rules parameter of the optimize calls.
         origin_generation: RuleOriginGeneration
             The selection process which decides on the next initial points.
@@ -170,8 +170,8 @@ class NoveltySearch(RuleGeneration):
 
     def _rule_selection(self, rules: list[Rule], n_rules: int, roh: int = 0):
         ns_rules = self.novelty_calculation(rules=rules)
-        
-        if self.use_population_for_archive: 
+
+        if self.use_population_for_archive:
             self.novelty_calculation.archive.archive.extend(ns_rules)
         else:
             self.novelty_calculation.archive(ns_rules, roh)

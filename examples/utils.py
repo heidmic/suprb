@@ -15,7 +15,7 @@ def get_params(obj, prefix="", ignore_keywords=None):
 
 def log_scores(scores):
     ignore_keywords = {
-        "rule_generation_seeds_",
+        "rule_discovery_seeds_",
         "solution_composition_seeds_",
         "elitist___pool",
         "pool_",

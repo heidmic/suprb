@@ -1,5 +1,5 @@
 from .acceptance import RuleAcceptance
-from .base import RuleGeneration
+from .base import RuleDiscovery
 from .constraint import RuleConstraint
 from .origin import RuleOriginGeneration
 from .selection import RuleSelection

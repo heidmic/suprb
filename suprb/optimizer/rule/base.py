@@ -14,7 +14,7 @@ from .origin import RuleOriginGeneration
 from ...utils import check_random_state, RandomState, spawn_random_states
 
 
-class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
+class RuleDiscovery(BaseOptimizer, metaclass=ABCMeta):
     """ Base class of different methods to generate `Rule`s.
 
     Parameters
@@ -60,7 +60,7 @@ class RuleGeneration(BaseOptimizer, metaclass=ABCMeta):
         pass
 
 
-class ParallelSingleRuleGeneration(RuleGeneration, metaclass=ABCMeta):
+class ParallelSingleRuleDiscovery(RuleDiscovery, metaclass=ABCMeta):
     """
     Implements basic functionality to generate several `Rule`s in parallel.
     The optimization process is assumed to generate exactly one rule for every origin data sample.

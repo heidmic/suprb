@@ -12,7 +12,7 @@ from .solution import Solution
 from .logging import BaseLogger, DefaultLogger
 from .optimizer.solution import SolutionComposition, ga
 from .optimizer.solution.ga import GeneticAlgorithm
-from .optimizer.rule import RuleGeneration
+from .optimizer.rule import RuleDiscovery
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
 from .rule.matching import MatchingFunction, OrderedBound
@@ -26,7 +26,7 @@ class SupRB(BaseRegressor):
 
     Parameters
     ----------
-    rule_generation: RuleGeneration
+    rule_discovery: RuleDiscovery
         Optimizer used to evolve the :class:`Rule`s. If None is passed, it is set to :class:`ES1xLambda`.
     solution_composition: SolutionComposition
         Optimizer used to evolve the :class:`Solution`s. If None is passed, it is set to :class:`GeneticAlgorithm`.
@@ -64,8 +64,8 @@ class SupRB(BaseRegressor):
 
     random_state_: np.random.Generator
 
-    rule_generation_: RuleGeneration
-    rule_generation_seeds_: list[int]
+    rule_discovery_: RuleDiscovery
+    rule_discovery_seeds_: list[int]
 
     solution_composition_: SolutionComposition
     solution_composition_seeds_: list[int]
@@ -77,7 +77,7 @@ class SupRB(BaseRegressor):
     logger_: BaseLogger
 
     def __init__(self,
-                 rule_generation: RuleGeneration = None,
+                 rule_discovery: RuleDiscovery = None,
                  solution_composition: SolutionComposition = None,
                  matching_type: MatchingFunction = None,
                  n_iter: int = 32,
@@ -94,7 +94,7 @@ class SupRB(BaseRegressor):
         self.n_initial_rules = n_initial_rules
         self.n_rules = n_rules
         self.matching_type = matching_type
-        self.rule_generation = rule_generation
+        self.rule_discovery = rule_discovery
         self.solution_composition = solution_composition
         self.random_state = random_state
         self.verbose = verbose
@@ -155,13 +155,13 @@ class SupRB(BaseRegressor):
         # Random state
         self.random_state_ = check_random_state(self.random_state)
         seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter * 2)
-        self.rule_generation_seeds_ = seeds[::2]
+        self.rule_discovery_seeds_ = seeds[::2]
         self.solution_composition_seeds_ = seeds[1::2]
 
         # Initialise components
         self.pool_ = []
 
-        self._validate_rule_generation(default=ES1xLambda())
+        self._validate_rule_discovery(default=ES1xLambda())
         self._validate_solution_composition(default=GeneticAlgorithm())
         self._validate_matching_type(default=OrderedBound(np.array([])))
 
@@ -172,7 +172,7 @@ class SupRB(BaseRegressor):
         # Init optimizers
         self.solution_composition_.pool_ = self.pool_
         self.solution_composition_.init.fitness.max_genome_length_ = self.n_rules * self.n_iter + self.n_initial_rules
-        self.rule_generation_.pool_ = self.pool_
+        self.rule_discovery_.pool_ = self.pool_
 
         # Init Logging
         self.logger_ = clone(self.logger) if self.logger is not None else None
@@ -242,13 +242,13 @@ class SupRB(BaseRegressor):
         self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
 
         # Update the current elitist
-        self.rule_generation_.elitist_ = self.solution_composition_.elitist()
+        self.rule_discovery_.elitist_ = self.solution_composition_.elitist()
 
         # Update the random state
-        self.rule_generation_.random_state = self.rule_generation_seeds_[self.step_]
+        self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
 
         # Generate new rules
-        new_rules = self.rule_generation_.optimize(X, y, n_rules=n_rules)
+        new_rules = self.rule_discovery_.optimize(X, y, n_rules=n_rules)
 
         # Extend the pool with the new rules
         self.pool_.extend(new_rules)
@@ -281,8 +281,8 @@ class SupRB(BaseRegressor):
         else:
             return self.elitist_.predict(X)
 
-    def _validate_rule_generation(self, default=None):
-        self.rule_generation_ = clone(self.rule_generation) if self.rule_generation is not None else clone(default)
+    def _validate_rule_discovery(self, default=None):
+        self.rule_discovery_ = clone(self.rule_discovery) if self.rule_discovery is not None else clone(default)
 
     def _validate_solution_composition(self, default=None):
         self.solution_composition_ = clone(self.solution_composition) \
@@ -301,21 +301,21 @@ class SupRB(BaseRegressor):
         keys = ['n_jobs']
         params = {key: value for key, value in self.get_params().items() if key in keys}
 
-        self.rule_generation_.set_params(**params)
+        self.rule_discovery_.set_params(**params)
         self.solution_composition_.set_params(**params)
 
     def _init_bounds(self, X):
         """Try to estimate all bounds that are not provided at the start from the training data."""
         bounds = estimate_bounds(X)
-        for key, value in self.rule_generation_.get_params().items():
+        for key, value in self.rule_discovery_.get_params().items():
             if key.endswith('bounds') and value is None:
                 self._log_to_stdout(f"Found empty bounds for {key}, estimating from data")
-                self.rule_generation_.set_params(**{key: bounds})
+                self.rule_discovery_.set_params(**{key: bounds})
 
     def _init_matching_type(self):
-        for key, value in self.rule_generation_.get_params().items():
+        for key, value in self.rule_discovery_.get_params().items():
             if 'matching_type' in key:
-                self.rule_generation_.set_params(**{key: self.matching_type_})
+                self.rule_discovery_.set_params(**{key: self.matching_type_})
 
     def _cleanup(self):
         """
@@ -328,7 +328,7 @@ class SupRB(BaseRegressor):
         self.elitist_.genome = np.ones(len(self.pool_), dtype='bool')
         self.elitist_.pool = self.pool_
 
-        del self.rule_generation_
+        del self.rule_discovery_
         del self.solution_composition_
 
     def _more_tags(self):
