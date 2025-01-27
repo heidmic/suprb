@@ -12,7 +12,7 @@ from ..selection import RuleSelection, Fittest
 
 
 class RandomSearch(RuleDiscovery):
-    """ RandomSearch Algorithm
+    """RandomSearch Algorithm
 
     Parameters
     ----------
@@ -39,21 +39,18 @@ class RandomSearch(RuleDiscovery):
 
     last_iter_inner: bool
 
-    def __init__(self,
-                 n_iter: int = 1,
-                 rules_generated: int = 7,
-
-                 origin_generation: RuleOriginGeneration = SquaredError(),
-                 init: RuleInit = HalfnormInit(),
-
-                 selection: RuleSelection = Fittest(),
-
-                 acceptance: RuleAcceptance = Variance(),
-                 constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 1,
+        rules_generated: int = 7,
+        origin_generation: RuleOriginGeneration = SquaredError(),
+        init: RuleInit = HalfnormInit(),
+        selection: RuleSelection = Fittest(),
+        acceptance: RuleAcceptance = Variance(),
+        constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
+        random_state: int = None,
+        n_jobs: int = 1,
+    ):
         super().__init__(
             n_iter=n_iter,
             origin_generation=origin_generation,
@@ -80,10 +77,14 @@ class RandomSearch(RuleDiscovery):
 
         rules_out = []
         for _ in range(n_rules):
-            origins = self.origin_generation(n_rules=self.rules_generated, X=X,
-                                             y=y, pool=self.pool_,
-                                             elitist=self.elitist_,
-                                             random_state=self.random_state_)
+            origins = self.origin_generation(
+                n_rules=self.rules_generated,
+                X=X,
+                y=y,
+                pool=self.pool_,
+                elitist=self.elitist_,
+                random_state=self.random_state_,
+            )
 
             rules = []
             for origin in origins:

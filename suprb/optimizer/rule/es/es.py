@@ -18,7 +18,7 @@ from ..origin import Matching, RuleOriginGeneration
 
 
 class ES1xLambda(ParallelSingleRuleDiscovery):
-    """ The 1xLambda Evolutionary Strategy, where x is in {,+&}.
+    """The 1xLambda Evolutionary Strategy, where x is in {,+&}.
 
     Parameters
     ----------

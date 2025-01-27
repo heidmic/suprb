@@ -15,7 +15,7 @@ from ...utils import check_random_state, RandomState, spawn_random_states
 
 
 class RuleDiscovery(BaseOptimizer, metaclass=ABCMeta):
-    """ Base class of different methods to generate `Rule`s.
+    """Base class of different methods to generate `Rule`s.
 
     Parameters
     ----------

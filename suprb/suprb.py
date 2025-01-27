@@ -76,20 +76,21 @@ class SupRB(BaseRegressor):
 
     logger_: BaseLogger
 
-    def __init__(self,
-                 rule_discovery: RuleDiscovery = None,
-                 solution_composition: SolutionComposition = None,
-                 matching_type: MatchingFunction = None,
-                 n_iter: int = 32,
-                 n_initial_rules: int = 0,
-                 n_rules: int = 4,
-                 random_state: int = None,
-                 verbose: int = 1,
-                 logger: BaseLogger = DefaultLogger(),
-                 n_jobs: int = 1,
-                 early_stopping_patience: int = -1,
-                 early_stopping_delta: int = 0
-                 ):
+    def __init__(
+        self,
+        rule_discovery: RuleDiscovery = None,
+        solution_composition: SolutionComposition = None,
+        matching_type: MatchingFunction = None,
+        n_iter: int = 32,
+        n_initial_rules: int = 0,
+        n_rules: int = 4,
+        random_state: int = None,
+        verbose: int = 1,
+        logger: BaseLogger = DefaultLogger(),
+        n_jobs: int = 1,
+        early_stopping_patience: int = -1,
+        early_stopping_delta: int = 0,
+    ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
         self.n_rules = n_rules
