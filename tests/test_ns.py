@@ -53,7 +53,6 @@ class TestNoveltySearch(unittest.TestCase):
 
     def setup_base_model(self):
         from suprb import optimizer
-
         self.model = SupRB(
             rule_discovery=ns.NoveltySearch(
                 init=rule.initialization.HalfnormInit(),

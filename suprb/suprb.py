@@ -86,7 +86,7 @@ class SupRB(BaseRegressor):
         n_rules: int = 4,
         random_state: int = None,
         verbose: int = 1,
-        logger: BaseLogger = None,
+        logger: BaseLogger = DefaultLogger(),
         n_jobs: int = 1,
         early_stopping_patience: int = -1,
         early_stopping_delta: int = 0,

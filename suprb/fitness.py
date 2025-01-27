@@ -36,6 +36,7 @@ def wu(alpha: float, x1: float, x2: float) -> float:
     A fitness function which mixes two objectives x1, x2 weighted by alpha.
     Computed fitness is in [0, 1], if x1 and x2 are.
     Taken from https://doi.org/10.1109/IJCNN.2018.8489676.
+    Increasing alpha increases the importance of x2.
     """
 
     return ((1 + alpha**2) * x1 * x2) / (alpha**2 * x1 + x2)
