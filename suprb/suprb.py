@@ -75,7 +75,7 @@ class SupRB(BaseRegressor):
     n_features_in_: int
 
     logger_: BaseLogger
-
+      
     def __init__(
         self,
         rule_discovery: RuleDiscovery = None,

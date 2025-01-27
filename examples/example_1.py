@@ -60,8 +60,7 @@ if __name__ == "__main__":
         verbose=10,
         scoring=["r2", "neg_mean_squared_error"],
         return_estimator=True,
-        fit_params={"cleanup": True},
-    )
+        fit_params={"cleanup": True}
 
     create_plot(scores)
 
