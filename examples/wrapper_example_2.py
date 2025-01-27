@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # Comparable with examples/example_4.py
     basic_model = suprb.SupRB(random_state=33)
-    
+
     model = SupRBWrapper(
         basic_model,
         print_config=True,

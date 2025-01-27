@@ -75,7 +75,7 @@ class SupRB(BaseRegressor):
     n_features_in_: int
 
     logger_: BaseLogger
-      
+
     def __init__(
         self,
         rule_discovery: RuleDiscovery = None,
@@ -178,7 +178,7 @@ class SupRB(BaseRegressor):
         self.rule_discovery_.pool_ = self.pool_
 
         # Init Logging
-        self.logger_ = clone(self.logger) if self.logger is not None else None
+        self.logger_ = clone(self.logger) if self.logger is not None else DefaultLogger()
         if self.logger_ is not None:
             self.logger_.log_init(X, y, self)
 

@@ -4,6 +4,7 @@ from sklearn.utils.estimator_checks import check_estimator
 
 import suprb
 import suprb.logging.stdout
+from suprb.optimizer.rule.es import ES1xLambda
 
 
 class TestSupRB(unittest.TestCase):
@@ -15,7 +16,8 @@ class TestSupRB(unittest.TestCase):
         # Low n_iter for speed. Still takes forever though.
         estimator = suprb.SupRB(
             n_iter=1,
-            solution_composition=suprb.optimizer.solution.ga.GeneticAlgorithm(n_iter=16, population_size=16),
+            rule_discovery=ES1xLambda(n_iter=4, lmbda=1, delay=2),
+            solution_composition=suprb.optimizer.solution.ga.GeneticAlgorithm(n_iter=2, population_size=2),
             logger=suprb.logging.stdout.StdoutLogger(),
             verbose=10,
         )

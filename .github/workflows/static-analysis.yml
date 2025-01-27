@@ -1,0 +1,70 @@
+name: Static Analysis
+
+on:
+  pull_request:
+jobs:
+  linting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    continue-on-error: true
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)" >> $GITHUB_ENV
+
+    - name: Install dependencies
+      run: |
+        pip install pylint 
+        pip install -r requirements.txt
+
+    - name: Run Pylint and generate report
+      continue-on-error: true
+      run: |
+        find suprb/ -name "*.py" -print0 | xargs -0 -n 1 -P 4 pylint --max-line-length=120 --output-format=text > pylint-report.txt || true
+
+    - name: Upload pylint report
+      uses: actions/upload-artifact@v3
+      with:
+        name: pylint-report
+        path: pylint-report.txt
+
+    - name: Check Pylint report for issues
+      id: check_pylint
+      run: |
+        # Check if there are any errors or warnings in the Pylint report
+        if grep -qE "^[^ ]+:([0-9]+):([0-9]+): (error|warning)" pylint-report.txt; then
+          echo "has_issues=true" >> $GITHUB_ENV
+        fi
+        
+        # Check if the rating is less than 10.00
+        if grep -qE "Your code has been rated at ([0-9]+\.[0-9]{2})/10" pylint-report.txt && ! grep -q "Your code has been rated at 10.00/10" pylint-report.txt; then
+          echo "has_issues=true" >> $GITHUB_ENV
+        else
+          echo "has_issues=false" >> $GITHUB_ENV
+        fi
+      
+    - name: Post comment on PR if there are issues
+      if: env.has_issues == 'true'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+          const commentBody = `
+          ⚠️ Pylint job contains errors or warnings ⚠️
+
+          Please check the report [here](${artifactUrl}).
+          (The PR will still pass the pipeline)
+          `;
+          await github.rest.issues.createComment({
+            ...context.repo,
+            issue_number: context.issue.number,
+            body: commentBody.trim()
+          });
