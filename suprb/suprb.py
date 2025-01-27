@@ -86,7 +86,7 @@ class SupRB(BaseRegressor):
         n_rules: int = 4,
         random_state: int = None,
         verbose: int = 1,
-        logger: BaseLogger = DefaultLogger(),
+        logger: BaseLogger = None,
         n_jobs: int = 1,
         early_stopping_patience: int = -1,
         early_stopping_delta: int = 0,
@@ -167,6 +167,7 @@ class SupRB(BaseRegressor):
         self._validate_rule_discovery(default=ES1xLambda())
         self._validate_solution_composition(default=GeneticAlgorithm())
         self._validate_matching_type(default=OrderedBound(np.array([])))
+        self._validate_logger(default=DefaultLogger())
 
         self._propagate_component_parameters()
         self._init_bounds(X)
@@ -294,6 +295,9 @@ class SupRB(BaseRegressor):
 
     def _validate_matching_type(self, default=None):
         self.matching_type_ = clone(self.matching_type) if self.matching_type is not None else clone(default)
+
+    def _validate_logger(self, default=None):
+        self.logger = clone(self.logger) if self.logger is not None else clone(default)
 
     def _log_to_stdout(self, message, priority=1):
         if self.verbose >= priority:
