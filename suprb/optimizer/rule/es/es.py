@@ -30,7 +30,8 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
         Can be one of ',', '+' or '&'.
         ',' replaces the elitist in every generation.
         '+' may keep the elitist.
-        '&' behaves similar to '+' and ends the optimization process, if no improvement is found in a generation.
+        '&' is a hybrid approach that essentially performs ',' but with elitists being archived and 
+            it ends the optimization process, if no improvement is found in delay generations.
     delay: int
         Only relevant if operator is '&'. Controls the number of elitists which need to be worse before stopping.
     origin_generation: RuleOriginGeneration

@@ -35,24 +35,43 @@ class DefaultLogger(BaseLogger):
         def log_metric(key, value):
             self.log_metric(key=key, value=value, step=estimator.step_)
 
-        def log_metric_min_max_mean(metric_name: str, attribute_name: str, lst: list):
+        def log_metric_stats(metric_name: str, attribute_name: str, lst: list):
             comprehension = [getattr(e, attribute_name) for e in lst]
             log_metric(metric_name + '_min', min(comprehension))
             log_metric(metric_name + '_mean', sum(comprehension) / len(comprehension))
             log_metric(metric_name + '_max', max(comprehension))
+            log_metric(metric_name + "_median", np.median(comprehension))
+            # From the docs of np.percentile: “["median_unbiased" is] probably
+            # the best method if the sample distribution function is unknown”.
+            log_metric(
+                metric_name + "_percentile10",
+                np.percentile(comprehension, 10, method="median_unbiased"),
+            )
+            log_metric(
+                metric_name + "_percentile25",
+                np.percentile(comprehension, 25, method="median_unbiased"),
+            )
+            log_metric(
+                metric_name + "_percentile75",
+                np.percentile(comprehension, 75, method="median_unbiased"),
+            )
+            log_metric(
+                metric_name + "_percentile90",
+                np.percentile(comprehension, 90, method="median_unbiased"),
+            )
 
         # Log pool
         pool = estimator.pool_
         log_metric("pool_size", len(pool))
-        # log_metric("pool_matched", matched_training_samples(pool))
+        # log_metric("pool_matched", matched_training_samples(pool))  # When using default logging, not all approaches are compatible with this
         if pool:
-            log_metric_min_max_mean("pool_fitness", 'fitness_', pool)
+            log_metric_stats("pool_fitness", "fitness_", pool)
 
         # Log population
         # Note that this technically is `PopulationBasedSolutionComposition` specific.
         population = estimator.solution_composition_.population_
         log_metric("population_size", len(population))
-        # log_metric("population_diversity", genome_diversity(population))
+        # log_metric("population_diversity", genome_diversity(population)) # When using default logging, not all approaches are compatible with this
         log_metric_min_max_mean("population_fitness", 'fitness_', population)
         log_metric_min_max_mean("population_error", 'error_', population)
         log_metric_min_max_mean("population_complexity", 'complexity_', population)
@@ -62,7 +81,7 @@ class DefaultLogger(BaseLogger):
         log_metric("elitist_fitness", elitist.fitness_)
         log_metric("elitist_error", elitist.error_)
         log_metric("elitist_complexity", elitist.complexity_)
-        # log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))
+        # log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))  # When using default logging, not all approaches are compatible with this
         # log_metric("elitist_rules", elitist.pool)
 
         # Log performance
