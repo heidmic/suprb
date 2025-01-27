@@ -8,7 +8,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class GreyWolfOptimizer(PopulationBasedSolutionComposition):
-    """ Grey Wolf Optimizer written in Python.
+    """Grey Wolf Optimizer written in Python.
 
     The base version was taken from https://doi.org/10/gfxvkw.
 
@@ -30,17 +30,18 @@ class GreyWolfOptimizer(PopulationBasedSolutionComposition):
         The number of threads / processes the optimization uses.
     """
 
-    def __init__(self,
-                 n_iter: int = 32,
-                 population_size: int = 32,
-                 n_leaders: int = 2,
-                 position: SolutionPositionUpdate = Sigmoid(),
-                 init: SolutionInit = RandomInit(),
-                 archive: SolutionArchive = Elitist(),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 32,
+        population_size: int = 32,
+        n_leaders: int = 2,
+        position: SolutionPositionUpdate = Sigmoid(),
+        init: SolutionInit = RandomInit(),
+        archive: SolutionArchive = Elitist(),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -62,11 +63,15 @@ class GreyWolfOptimizer(PopulationBasedSolutionComposition):
 
         for _ in range(self.n_iter):
             # Get Alpha, Beta, and Delta
-            leaders = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[:self.n_leaders]
+            leaders = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_leaders]
 
             # Update the positions of all wolves
-            self.population_ = self.position(leaders=leaders, population=self.population_, a=a,
-                                             random_state=self.random_state_)
+            self.population_ = self.position(
+                leaders=leaders,
+                population=self.population_,
+                a=a,
+                random_state=self.random_state_,
+            )
 
             # Update a
             a -= step_size

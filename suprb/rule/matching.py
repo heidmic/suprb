@@ -55,8 +55,7 @@ class OrderedBound(MatchingFunction):
         self.bounds = bounds
 
     def __call__(self, X: np.ndarray):
-        return np.all((self.bounds[:, 0] <= X) &
-                      (X <= self.bounds[:, 1]), axis=1)
+        return np.all((self.bounds[:, 0] <= X) & (X <= self.bounds[:, 1]), axis=1)
 
     @property
     def volume_(self):
@@ -138,8 +137,10 @@ class CenterSpread(MatchingFunction):
         self.bounds = bounds
 
     def __call__(self, X: np.ndarray):
-        return np.all(((self.bounds[:, 0] - self.bounds[:, 1]) <= X) &
-                      (X <= (self.bounds[:, 0] + self.bounds[:, 1])), axis=1)
+        return np.all(
+            ((self.bounds[:, 0] - self.bounds[:, 1]) <= X) & (X <= (self.bounds[:, 0] + self.bounds[:, 1])),
+            axis=1,
+        )
 
     def calculate_widths(self):
         """Calculates the individual widths"""

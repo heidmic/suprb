@@ -48,8 +48,8 @@ class CombinedLogger(BaseLogger):
     def set_params(self, **params):
         # Ensure strict ordering of parameter setting:
         # 1. All steps
-        if 'loggers' in params:
-            self.loggers = params.pop('loggers')
+        if "loggers" in params:
+            self.loggers = params.pop("loggers")
         # 2. Step replacement
         items = self.loggers
         names = []

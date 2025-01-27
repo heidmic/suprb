@@ -23,17 +23,20 @@ def padding_size(solution: Solution) -> int:
 def random(n: int, p: float, random_state: RandomState):
     """Returns a random bit string of size `n`, with ones having probability `p`."""
 
-    return (random_state.random(size=n) <= p).astype('bool')
-    
+    return (random_state.random(size=n) <= p).astype("bool")
+
 
 class SasSolution(Solution):
     """Solution that mixes a subpopulation of rules. Extended to have an age"""
 
-    def __init__(self, genome: np.ndarray, 
-                 pool: list[Rule], 
-                 mixing: MixingModel, 
-                 fitness: SolutionFitness,
-                 age: int = 3):
+    def __init__(
+        self,
+        genome: np.ndarray,
+        pool: list[Rule],
+        mixing: MixingModel,
+        fitness: SolutionFitness,
+        age: int = 3,
+    ):
         super().__init__(genome, pool, mixing, fitness)
         self.age = age
 
@@ -48,13 +51,19 @@ class SasSolution(Solution):
 
     def clone(self, **kwargs) -> SasSolution:
         args = dict(
-            genome=self.genome.copy() if 'genome' not in kwargs else None,
+            genome=self.genome.copy() if "genome" not in kwargs else None,
             pool=self.pool,
             mixing=self.mixing,
             fitness=self.fitness,
         )
         solution = SasSolution(**(args | kwargs))
         if not kwargs:
-            attributes = ['fitness_', 'error_', 'complexity_', 'is_fitted_', 'input_size_']
+            attributes = [
+                "fitness_",
+                "error_",
+                "complexity_",
+                "is_fitted_",
+                "input_size_",
+            ]
             solution.__dict__ |= {key: getattr(self, key) for key in attributes}
         return solution

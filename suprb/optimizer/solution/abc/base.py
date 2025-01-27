@@ -9,7 +9,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class ArtificialBeeColonyAlgorithm(PopulationBasedSolutionComposition):
-    """ Artificial Bee Colony Algorithm written in Python.
+    """Artificial Bee Colony Algorithm written in Python.
 
     The base version was taken from https://doi.org/10/c25dm6.
 
@@ -35,17 +35,18 @@ class ArtificialBeeColonyAlgorithm(PopulationBasedSolutionComposition):
 
     food_sources_: list[FoodSource]
 
-    def __init__(self,
-                 n_iter: int = 32,
-                 population_size: int = 32,
-                 trials_limit: int = 25,
-                 food: FoodSourceUpdate = Sigmoid(),
-                 init: SolutionInit = RandomInit(),
-                 archive: SolutionArchive = Elitist(),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 32,
+        population_size: int = 32,
+        trials_limit: int = 25,
+        food: FoodSourceUpdate = Sigmoid(),
+        init: SolutionInit = RandomInit(),
+        archive: SolutionArchive = Elitist(),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -92,8 +93,9 @@ class ArtificialBeeColonyAlgorithm(PopulationBasedSolutionComposition):
             new_solutions = []
             weights = np.array([source.solution.fitness_ for source in self.food_sources_])
             normalized_weights = weights / weights.sum()
-            other_food_sources = self.random_state_.choice(self.food_sources_, p=normalized_weights,
-                                                           size=self.population_size)
+            other_food_sources = self.random_state_.choice(
+                self.food_sources_, p=normalized_weights, size=self.population_size
+            )
             for food_source, other in zip(self.food_sources_, other_food_sources):
                 new = self.food(food_source, other, random_state=self.random_state_).fit(X, y)
                 new_solutions.append(new)

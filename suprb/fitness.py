@@ -39,4 +39,4 @@ def wu(alpha: float, x1: float, x2: float) -> float:
     Increasing alpha increases the importance of x2.
     """
 
-    return ((1 + alpha ** 2) * x1 * x2) / (alpha ** 2 * x1 + x2)
+    return ((1 + alpha**2) * x1 * x2) / (alpha**2 * x1 + x2)

@@ -1,7 +1,12 @@
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.utils import shuffle as apply_shuffle
 
-from suprb.rule.matching import OrderedBound, UnorderedBound, CenterSpread, MinPercentage
+from suprb.rule.matching import (
+    OrderedBound,
+    UnorderedBound,
+    CenterSpread,
+    MinPercentage,
+)
 import unittest
 from suprb import SupRB
 from suprb import rule
@@ -11,7 +16,13 @@ from suprb.optimizer.rule import es
 import numpy as np
 
 from suprb.utils import check_random_state
-from suprb.optimizer.rule.mutation import Normal, HalfnormIncrease, Halfnorm, Uniform, UniformIncrease
+from suprb.optimizer.rule.mutation import (
+    Normal,
+    HalfnormIncrease,
+    Halfnorm,
+    Uniform,
+    UniformIncrease,
+)
 from suprb.rule.initialization import MeanInit, NormalInit, HalfnormInit
 import itertools
 
@@ -45,13 +56,14 @@ class TestMatchingFunction(unittest.TestCase):
 
         self.model = SupRB(
             rule_discovery=es.ES1xLambda(
-                operator='&',
+                operator="&",
                 n_iter=12,
                 delay=10,
-                init=
-                initialization(fitness=rule.fitness.VolumeWu(alpha=0.8), sigma=sigma_init)
-                if initialization in (NormalInit, HalfnormInit)
-                else initialization(fitness=rule.fitness.VolumeWu(alpha=0.8)),
+                init=(
+                    initialization(fitness=rule.fitness.VolumeWu(alpha=0.8), sigma=sigma_init)
+                    if initialization in (NormalInit, HalfnormInit)
+                    else initialization(fitness=rule.fitness.VolumeWu(alpha=0.8))
+                ),
                 mutation=mutation(sigma=sigma_mutate),
             ),
             matching_type=matching_func(np.array([])),
@@ -70,12 +82,19 @@ class TestMatchingFunction(unittest.TestCase):
 
         matching_functions = [OrderedBound, UnorderedBound, CenterSpread, MinPercentage]
 
-        mutation_operators = [Normal, HalfnormIncrease, Halfnorm, Uniform, UniformIncrease]
+        mutation_operators = [
+            Normal,
+            HalfnormIncrease,
+            Halfnorm,
+            Uniform,
+            UniformIncrease,
+        ]
 
         initialization_operators = [MeanInit, NormalInit, HalfnormInit]
 
-        self.combined_matching_params = list(itertools.product(
-            matching_functions, mutation_operators, initialization_operators))
+        self.combined_matching_params = list(
+            itertools.product(matching_functions, mutation_operators, initialization_operators)
+        )
 
     def setUp(self) -> None:
         self.setup_test_example()
@@ -93,25 +112,29 @@ class TestMatchingFunction(unittest.TestCase):
                 self.assertTrue(True),
                 print("PASSED [Model Generation]\n")
             except:
-                self.assertTrue(False), f"FAILED! Model generation with this config:" \
-                                        f" {matching_func} with {mutation} and {initialization}"
+                self.assertTrue(
+                    False
+                ), f"FAILED! Model generation with this config:" f" {matching_func} with {mutation} and {initialization}"
 
             try:
                 self.model.fit(self.X, self.y)
                 self.assertTrue(True),
                 print("PASSED [Model fit]\n")
             except:
-                if matching_func.__name__ in ("CenterSpread", "MinPercentage") \
-                        and (mutation == Halfnorm or initialization == HalfnormInit) \
-                        or matching_func.__name__ == "UnorderedBound" \
-                        and mutation in (HalfnormIncrease, UniformIncrease):
+                if (
+                    matching_func.__name__ in ("CenterSpread", "MinPercentage")
+                    and (mutation == Halfnorm or initialization == HalfnormInit)
+                    or matching_func.__name__ == "UnorderedBound"
+                    and mutation in (HalfnormIncrease, UniformIncrease)
+                ):
                     # All scenarios where a type error is wanted
                     self.assertTrue(True)
 
                 else:
-                    self.assertTrue(False), f"FAILED! Model fit with this config: " \
-                                            f"{matching_func} with {mutation} and {initialization}"
+                    self.assertTrue(
+                        False
+                    ), f"FAILED! Model fit with this config: " f"{matching_func} with {mutation} and {initialization}"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

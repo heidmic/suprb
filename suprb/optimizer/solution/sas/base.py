@@ -15,7 +15,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
-    """ A simple self adapting Genetic Algorithm, implemented acording to 10.1007/978-3-642-21219-2_16 .
+    """A simple self adapting Genetic Algorithm, implemented acording to 10.1007/978-3-642-21219-2_16 .
 
     Parameters
     ----------
@@ -40,18 +40,19 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
     n_elitists_: int
     population_: list[SasSolution]
 
-    def __init__(self,
-                 n_iter: int = 32,
-                 initial_population_size: int = 100,
-                 mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
-                 crossover: SolutionCrossover = NPoint(n=3), 
-                 selection: SolutionSelection = Ageing(),
-                 init: SolutionInit = SasRandomInit(),
-                 archive: SolutionArchive = SasElitist(),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 32,
+        initial_population_size: int = 100,
+        mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
+        crossover: SolutionCrossover = NPoint(n=3),
+        selection: SolutionSelection = Ageing(),
+        init: SolutionInit = SasRandomInit(),
+        archive: SolutionArchive = SasElitist(),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=initial_population_size,
@@ -72,19 +73,30 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
 
         for _ in range(self.n_iter):
             # Selection
-            parents = self.selection(population=self.population_, initial_population_size=self.initial_population_size,
-                                     random_state=self.random_state_)
-            
+            parents = self.selection(
+                population=self.population_,
+                initial_population_size=self.initial_population_size,
+                random_state=self.random_state_,
+            )
+
             # Correct value for population_size
             self.population_size = len(parents)
-            
+
             # Note that this expression swallows the last element, if `population_size` is odd
             parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
 
             # Crossover
-            children = list(flatten([(self.crossover(A, B, random_state=self.random_state_),
-                                      self.crossover(B, A, random_state=self.random_state_))
-                                     for A, B in parent_pairs]))
+            children = list(
+                flatten(
+                    [
+                        (
+                            self.crossover(A, B, random_state=self.random_state_),
+                            self.crossover(B, A, random_state=self.random_state_),
+                        )
+                        for A, B in parent_pairs
+                    ]
+                )
+            )
 
             # Mutation
             mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
@@ -94,4 +106,3 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
             self.population_.extend(mutated_children)
 
             self.fit_population(X, y)
-            

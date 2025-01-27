@@ -51,8 +51,8 @@ class ArchiveRandom(Archive):
 
 class ArchiveNone(Archive):
     """
-        Archive Class where no archive is saved.
-        Since we don't want to use an archive, the set_archive and extend_archive functions 
+    Archive Class where no archive is saved.
+    Since we don't want to use an archive, the set_archive and extend_archive functions
     """
 
     def _add_rules_to_archive(self, rules: list[Rule], n: int):

@@ -21,7 +21,7 @@ class RuleFitness(BaseFitness, metaclass=ABCMeta):
 
 
 class Rule(SolutionBase):
-    """ A rule that fits the input data in a certain interval.
+    """A rule that fits the input data in a certain interval.
 
     Parameters
     ----------
@@ -38,7 +38,13 @@ class Rule(SolutionBase):
     match_set_: np.ndarray
     pred_: Union[np.ndarray, None]  # only the prediction of matching points, so of x[match_]
 
-    def __init__(self, match: MatchingFunction, input_space: np.ndarray, model: RegressorMixin, fitness: RuleFitness):
+    def __init__(
+        self,
+        match: MatchingFunction,
+        input_space: np.ndarray,
+        model: RegressorMixin,
+        fitness: RuleFitness,
+    ):
         self.match = match
         self.input_space = input_space
         self.model = model
@@ -60,7 +66,7 @@ class Rule(SolutionBase):
             return self
 
         # No reason to refit if matched data points did not change
-        if hasattr(self, 'match_set_'):
+        if hasattr(self, "match_set_"):
             if (self.match_set_ == match_set).all():
                 self.is_fitted_ = True
                 return self
@@ -90,12 +96,12 @@ class Rule(SolutionBase):
 
     def clone(self, **kwargs) -> Rule:
         args = dict(
-            match=self.match.copy() if 'match' not in kwargs else None,
+            match=self.match.copy() if "match" not in kwargs else None,
             input_space=self.input_space,
-            model=clone(self.model) if 'model' not in kwargs else None,
-            fitness=self.fitness
+            model=clone(self.model) if "model" not in kwargs else None,
+            fitness=self.fitness,
         )
         return Rule(**(args | kwargs))
 
     def _more_str_attributes(self) -> dict:
-        return {'experience': self.experience_}
+        return {"experience": self.experience_}

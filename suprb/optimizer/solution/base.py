@@ -11,7 +11,7 @@ from . import SolutionArchive
 
 
 class SolutionComposition(BaseOptimizer, metaclass=ABCMeta):
-    """ Base class of optimizers for `Solution`s.
+    """Base class of optimizers for `Solution`s.
 
     Parameters
     ----------
@@ -30,14 +30,15 @@ class SolutionComposition(BaseOptimizer, metaclass=ABCMeta):
 
     pool_: list[Rule]
 
-    def __init__(self,
-                 n_iter: int,
-                 init: SolutionInit,
-                 archive: SolutionArchive,
-                 random_state: int,
-                 n_jobs: int,
-                 warm_start: bool,
-                 ):
+    def __init__(
+        self,
+        n_iter: int,
+        init: SolutionInit,
+        archive: SolutionArchive,
+        random_state: int,
+        n_jobs: int,
+        warm_start: bool,
+    ):
         super().__init__(random_state=random_state, n_jobs=n_jobs)
         self.n_iter = n_iter
         self.init = init
@@ -54,7 +55,7 @@ class SolutionComposition(BaseOptimizer, metaclass=ABCMeta):
 
     def _reset(self):
         super()._reset()
-        if hasattr(self, 'pool_'):
+        if hasattr(self, "pool_"):
             del self.pool_
 
 
@@ -64,22 +65,24 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
     pool_: list[Rule]
     population_: list[Solution]
 
-    def __init__(self,
-                 population_size: int,
-                 n_iter: int,
-                 init: SolutionInit,
-                 archive: SolutionArchive,
-                 random_state: int,
-                 n_jobs: int,
-                 warm_start: bool,
-                 ):
+    def __init__(
+        self,
+        population_size: int,
+        n_iter: int,
+        init: SolutionInit,
+        archive: SolutionArchive,
+        random_state: int,
+        n_jobs: int,
+        warm_start: bool,
+    ):
         super().__init__(
             n_iter=n_iter,
             init=init,
             archive=archive,
             warm_start=warm_start,
             random_state=random_state,
-            n_jobs=n_jobs)
+            n_jobs=n_jobs,
+        )
         self.population_size = population_size
 
     def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Solution, list[Solution], None]:
@@ -102,8 +105,7 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
         if self.pool_:
             self._optimize(X, y)
         else:
-            self.population_ = [self.init(self.pool_,
-                                          self.random_state_).fit(X, y)]
+            self.population_ = [self.init(self.pool_, self.random_state_).fit(X, y)]
 
         # Check if new solutions should be stored in the archive, store them and refit
         if self.archive is not None:
@@ -120,7 +122,7 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
     def elitist(self) -> Optional[Solution]:
         """Returns the best `Solution` from the archive and the population together."""
 
-        if not hasattr(self, 'population_') or not self.population_:
+        if not hasattr(self, "population_") or not self.population_:
             return None
 
         population = self.population_.copy()  # shallow copy
@@ -131,7 +133,7 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
     def _init_population(self):
         """Either generate new solutions or pad the existing ones using the initialization method."""
 
-        if not self.warm_start or not hasattr(self, 'population_') or not self.population_:
+        if not self.warm_start or not hasattr(self, "population_") or not self.population_:
             self.population_ = [self.init(self.pool_, self.random_state_) for _ in range(self.population_size)]
         else:
             self.population_ = [self.init.pad(solution, self.random_state_) for solution in self.population_]
@@ -141,5 +143,5 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
 
     def _reset(self):
         super()._reset()
-        if hasattr(self, 'population_'):
+        if hasattr(self, "population_"):
             del self.population_

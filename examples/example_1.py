@@ -31,15 +31,15 @@ def load_higdon_gramacy_lee(n_samples=1000, noise=0, random_state=None):
 def create_plot(scores):
     fig, axes = plt.subplots(2, 2)
     X_plot = np.linspace(X.min(), X.max(), 500).reshape((-1, 1))
-    for ax, model in zip(axes.flatten(), scores['estimator']):
+    for ax, model in zip(axes.flatten(), scores["estimator"]):
         pred = model.predict(X_plot)
-        ax.scatter(X, y, c='b', s=3, label='y_true')
-        ax.plot(X_plot, pred, c='r', label='y_pred')
+        ax.scatter(X, y, c="b", s=3, label="y_true")
+        ax.plot(X_plot, pred, c="r", label="y_pred")
 
-    plt.savefig('result.png')
+    plt.savefig("result.png")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     random_state = 42
 
     X, y = load_higdon_gramacy_lee(noise=0.1, random_state=random_state)
@@ -49,12 +49,18 @@ if __name__ == '__main__':
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
 
-    model = SupRB(rule_discovery=ES1xLambda(),
-                  solution_composition=GeneticAlgorithm())
+    model = SupRB(rule_discovery=ES1xLambda(), solution_composition=GeneticAlgorithm())
 
-    scores = cross_validate(model, X_train, y_train, cv=4, n_jobs=1, verbose=10,
-                            scoring=['r2', 'neg_mean_squared_error'],
-                            return_estimator=True, fit_params={'cleanup': True})
+    scores = cross_validate(
+        model,
+        X_train,
+        y_train,
+        cv=4,
+        n_jobs=1,
+        verbose=10,
+        scoring=["r2", "neg_mean_squared_error"],
+        return_estimator=True,
+        fit_params={"cleanup": True}
 
     create_plot(scores)
 

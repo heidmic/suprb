@@ -39,7 +39,13 @@ class Solution(SolutionBase, RegressorMixin):
     input_size_: int
     complexity_: int
 
-    def __init__(self, genome: np.ndarray, pool: list[Rule], mixing: MixingModel, fitness: SolutionFitness):
+    def __init__(
+        self,
+        genome: np.ndarray,
+        pool: list[Rule],
+        mixing: MixingModel,
+        fitness: SolutionFitness,
+    ):
         self.genome = genome
         self.pool = pool
         self.mixing = mixing
@@ -69,21 +75,27 @@ class Solution(SolutionBase, RegressorMixin):
     @property
     def subpopulation(self) -> list[Rule]:
         """Get all rules in the subpopulation."""
-        assert (len(self.genome) == len(self.pool))
+        assert len(self.genome) == len(self.pool)
         return list(itertools.compress(self.pool, self.genome))
 
     def clone(self, **kwargs) -> Solution:
         args = dict(
-            genome=self.genome.copy() if 'genome' not in kwargs else None,
+            genome=self.genome.copy() if "genome" not in kwargs else None,
             pool=self.pool,
             mixing=self.mixing,
-            fitness=self.fitness
+            fitness=self.fitness,
         )
         solution = Solution(**(args | kwargs))
         if not kwargs:
-            attributes = ['fitness_', 'error_', 'complexity_', 'is_fitted_', 'input_size_']
+            attributes = [
+                "fitness_",
+                "error_",
+                "complexity_",
+                "is_fitted_",
+                "input_size_",
+            ]
             solution.__dict__ |= {key: getattr(self, key) for key in attributes}
         return solution
 
     def _more_str_attributes(self) -> dict:
-        return {'complexity': self.complexity_}
+        return {"complexity": self.complexity_}

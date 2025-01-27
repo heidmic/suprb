@@ -8,7 +8,7 @@ def genome_diversity(population: list[Solution]):
     """
     Calculates the relative pairwise hamming distance of the genomes of all solutions in the population.
 
-    Note that this does not speak to the diversity of individual solutions, i.e. two different genomes can construct 
+    Note that this does not speak to the diversity of individual solutions, i.e. two different genomes can construct
     identical solutions if the same rule is part of the pool multiple times
     """
 

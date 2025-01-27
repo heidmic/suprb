@@ -15,7 +15,7 @@ from ...utils import check_random_state, RandomState, spawn_random_states
 
 
 class RuleDiscovery(BaseOptimizer, metaclass=ABCMeta):
-    """ Base class of different methods to generate `Rule`s.
+    """Base class of different methods to generate `Rule`s.
 
     Parameters
     ----------
@@ -35,15 +35,16 @@ class RuleDiscovery(BaseOptimizer, metaclass=ABCMeta):
     pool_: list[Rule]
     elitist_: Solution
 
-    def __init__(self,
-                 n_iter: int,
-                 origin_generation: RuleOriginGeneration,
-                 init: RuleInit,
-                 acceptance: RuleAcceptance,
-                 constraint: RuleConstraint,
-                 random_state: int,
-                 n_jobs: int,
-                 ):
+    def __init__(
+        self,
+        n_iter: int,
+        origin_generation: RuleOriginGeneration,
+        init: RuleInit,
+        acceptance: RuleAcceptance,
+        constraint: RuleConstraint,
+        random_state: int,
+        n_jobs: int,
+    ):
         super().__init__(random_state=random_state, n_jobs=n_jobs)
 
         self.n_iter = n_iter
@@ -53,7 +54,12 @@ class RuleDiscovery(BaseOptimizer, metaclass=ABCMeta):
         self.constraint = constraint
 
     def _filter_invalid_rules(self, X: np.ndarray, y: np.ndarray, rules: list[Rule]) -> list[Rule]:
-        return list(filter(lambda rule: rule is not None and self.acceptance(rule=rule, X=X, y=y), rules))
+        return list(
+            filter(
+                lambda rule: rule is not None and self.acceptance(rule=rule, X=X, y=y),
+                rules,
+            )
+        )
 
     @abstractmethod
     def optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int = 1) -> list[Rule]:
@@ -70,8 +76,14 @@ class ParallelSingleRuleDiscovery(RuleDiscovery, metaclass=ABCMeta):
         self.random_state_ = check_random_state(self.random_state)
         random_states = spawn_random_states(self.random_state_, n=n_rules)
 
-        origins = self.origin_generation(n_rules=n_rules, X=X, y=y, pool=self.pool_, elitist=self.elitist_,
-                                         random_state=self.random_state_)
+        origins = self.origin_generation(
+            n_rules=n_rules,
+            X=X,
+            y=y,
+            pool=self.pool_,
+            elitist=self.elitist_,
+            random_state=self.random_state_,
+        )
 
         initial_rules = []
         for origin in origins:
@@ -79,11 +91,19 @@ class ParallelSingleRuleDiscovery(RuleDiscovery, metaclass=ABCMeta):
             initial_rules.append(self.constraint(initial_rule).fit(X, y))
 
         with Parallel(n_jobs=self.n_jobs) as parallel:
-            rules = parallel(delayed(self._optimize)(X=X, y=y, initial_rule=initial_rule, random_state=random_state)
-                             for initial_rule, random_state in zip(initial_rules, random_states))
+            rules = parallel(
+                delayed(self._optimize)(X=X, y=y, initial_rule=initial_rule, random_state=random_state)
+                for initial_rule, random_state in zip(initial_rules, random_states)
+            )
 
         return self._filter_invalid_rules(X=X, y=y, rules=rules)
 
     @abstractmethod
-    def _optimize(self, X: np.ndarray, y: np.ndarray, initial_rule: Rule, random_state: RandomState) -> Optional[Rule]:
+    def _optimize(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        initial_rule: Rule,
+        random_state: RandomState,
+    ) -> Optional[Rule]:
         pass

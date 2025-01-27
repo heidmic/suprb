@@ -25,7 +25,7 @@ There is also the possibility to print the final configuration of the SupRB inst
 """
 
 
-class SupRBWrapper():
+class SupRBWrapper:
     def __new__(self, suprb=SupRB(), **kwargs):
         self.suprb = suprb
         kwargs = dict(sorted(kwargs.items(), key=lambda item: item[0].count("__")))

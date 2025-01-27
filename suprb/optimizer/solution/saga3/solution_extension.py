@@ -23,15 +23,21 @@ def padding_size(solution: Solution) -> int:
 def random(n: int, p: float, random_state: RandomState):
     """Returns a random bit string of size `n`, with ones having probability `p`."""
 
-    return (random_state.random(size=n) <= p).astype('bool')
-    
+    return (random_state.random(size=n) <= p).astype("bool")
+
 
 class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
 
     def __init__(self):
         pass
 
-    def __call__(self, A: SagaSolution, B: SagaSolution, crossover_rate: float, random_state: RandomState) -> SagaSolution:
+    def __call__(
+        self,
+        A: SagaSolution,
+        B: SagaSolution,
+        crossover_rate: float,
+        random_state: RandomState,
+    ) -> SagaSolution:
         if random_state.random() < crossover_rate:
             return self._crossover(A=A, B=B, random_state=random_state)
         else:
@@ -76,13 +82,16 @@ class Uniform(SolutionCrossover):
 class SagaSolution(Solution):
     """Solution that mixes a subpopulation of rules. Extended to have a individual mutationrate, crossoverrate and crossovermethod"""
 
-    def __init__(self, genome: np.ndarray, 
-                 pool: list[Rule], 
-                 mixing: MixingModel, 
-                 fitness: SolutionFitness, 
-                 crossover_rate: float = 0.9, 
-                 mutation_rate: float = 0.001, 
-                 crossover_method: SolutionCrossover = NPoint(n=3)):
+    def __init__(
+        self,
+        genome: np.ndarray,
+        pool: list[Rule],
+        mixing: MixingModel,
+        fitness: SolutionFitness,
+        crossover_rate: float = 0.9,
+        mutation_rate: float = 0.001,
+        crossover_method: SolutionCrossover = NPoint(n=3),
+    ):
         super().__init__(genome, pool, mixing, fitness)
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
@@ -99,16 +108,22 @@ class SagaSolution(Solution):
 
     def clone(self, **kwargs) -> SagaSolution:
         args = dict(
-            genome=self.genome.copy() if 'genome' not in kwargs else None,
+            genome=self.genome.copy() if "genome" not in kwargs else None,
             pool=self.pool,
             mixing=self.mixing,
             fitness=self.fitness,
-            crossover_rate = self.crossover_rate,
-            mutation_rate = self.mutation_rate,
-            crossover_method = self.crossover_method
+            crossover_rate=self.crossover_rate,
+            mutation_rate=self.mutation_rate,
+            crossover_method=self.crossover_method,
         )
         solution = SagaSolution(**(args | kwargs))
         if not kwargs:
-            attributes = ['fitness_', 'error_', 'complexity_', 'is_fitted_', 'input_size_']
+            attributes = [
+                "fitness_",
+                "error_",
+                "complexity_",
+                "is_fitted_",
+                "input_size_",
+            ]
             solution.__dict__ |= {key: getattr(self, key) for key in attributes}
         return solution

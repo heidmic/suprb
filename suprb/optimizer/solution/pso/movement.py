@@ -140,7 +140,7 @@ def binary_mean(x: list[np.ndarray], random_state: RandomState) -> np.ndarray:
     x_sum = np.sum(x, axis=0)
     half = x_sum.shape[0] // 2
     equal_indices = x_sum == half
-    mean = (x_sum >= half)
+    mean = x_sum >= half
     mean[equal_indices] = random_state.integers(0, 2, size=np.count_nonzero(equal_indices))
 
     return mean.astype(np.bool)
@@ -176,7 +176,10 @@ class BinaryQuantum(ParticleMovement):
         return BinaryParticle(solution=start)
 
     def __call__(self, particles: list[BinaryParticle], a: float, random_state: RandomState):
-        mean_genome = binary_mean([particle.solution.genome for particle in particles], random_state=random_state)
+        mean_genome = binary_mean(
+            [particle.solution.genome for particle in particles],
+            random_state=random_state,
+        )
         n = particles[0].solution.genome.shape[0]
 
         # Calculate attractors for every particle

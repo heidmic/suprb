@@ -17,4 +17,4 @@ class NBest(AntSelection):
         self.n = n
 
     def __call__(self, population: list[Solution], random_state: RandomState) -> list[Solution]:
-        return list(sorted(population, key=lambda i: i.fitness_, reverse=True))[:self.n]
+        return list(sorted(population, key=lambda i: i.fitness_, reverse=True))[: self.n]

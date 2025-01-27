@@ -1,4 +1,3 @@
-
 from typing import Union
 
 import numpy as np
@@ -13,9 +12,11 @@ from suprb.rule.matching import MatchingFunction
 class RuleMutation(GenerationOperator):
     """Mutates the bounds of a rule with the strength defined by sigma."""
 
-    def __init__(self,
-                 matching_type: MatchingFunction = None,
-                 sigma: Union[float, np.ndarray] = 0.1):
+    def __init__(
+        self,
+        matching_type: MatchingFunction = None,
+        sigma: Union[float, np.ndarray] = 0.1,
+    ):
         super().__init__(matching_type=matching_type)
         self.sigma = sigma
 
@@ -33,11 +34,11 @@ class RuleMutation(GenerationOperator):
 
 
 class SigmaRange(RuleMutation):
-    """ Draws the sigma used for another mutation from uniform distribution, low to high.
-        unordered_bound, ordered_bound, center_spread and min_percentage are empty, because 
-        of the inheritance to RuleMutation (and then the inheritance to GenerationOperator),
-        which need an implementation for those functions.
-        They provide no utility, since the RuleMutation this class uses is set in the __init__ 
+    """Draws the sigma used for another mutation from uniform distribution, low to high.
+    unordered_bound, ordered_bound, center_spread and min_percentage are empty, because
+    of the inheritance to RuleMutation (and then the inheritance to GenerationOperator),
+    which need an implementation for those functions.
+    They provide no utility, since the RuleMutation this class uses is set in the __init__
     """
 
     def __init__(self, mutation: RuleMutation = None, low: float = 0.001, high: float = 0.1):
@@ -74,8 +75,7 @@ class Normal(RuleMutation):
             bounds[:, index] += random_state.normal(scale=self.sigma[index], size=rule.match.bounds.shape[0])
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        rule.match.bounds += random_state.normal(scale=self.sigma,
-                                                 size=rule.match.bounds.shape)
+        rule.match.bounds += random_state.normal(scale=self.sigma, size=rule.match.bounds.shape)
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         # code inspection gives you a warning here but it is ineffectual
@@ -142,8 +142,7 @@ class Uniform(RuleMutation):
             bounds[:, index] += random_state.uniform(-self.sigma[index], self.sigma[index], size=bounds.shape[0])
 
     def unordered_bound(self, rule: Rule, random_state: RandomState):
-        rule.match.bounds += random_state.uniform(-self.sigma, self.sigma,
-                                                  size=rule.match.bounds.shape)
+        rule.match.bounds += random_state.uniform(-self.sigma, self.sigma, size=rule.match.bounds.shape)
 
     def ordered_bound(self, rule: Rule, random_state: RandomState):
         self.unordered_bound(rule, random_state)

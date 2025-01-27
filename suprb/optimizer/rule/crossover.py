@@ -8,9 +8,7 @@ from copy import deepcopy
 
 class RuleCrossover(GenerationOperator):
 
-    def __init__(self,
-                 matching_type: MatchingFunction = None,
-                 crossover_rate: float = 0.2):
+    def __init__(self, matching_type: MatchingFunction = None, crossover_rate: float = 0.2):
         super().__init__(matching_type=matching_type)
         self.crossover_rate = crossover_rate
 

@@ -17,18 +17,20 @@ class StdoutLogger(BaseLogger):
 
     def log_init(self, X: np.ndarray, y: np.ndarray, estimator: SupRB):
         if self.progress_bar:
-            self.iterator_ = tqdm(desc='Fitting SupRB', total=estimator.n_iter, ncols=80)
+            self.iterator_ = tqdm(desc="Fitting SupRB", total=estimator.n_iter, ncols=80)
 
     def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: SupRB, iteration: int):
 
         elitist = estimator.solution_composition_.elitist()
 
-        message = str(dict(
-            error=elitist.error_,
-            fitness=elitist.fitness_,
-            complexity=elitist.complexity_,
-            score=elitist.score(X, y),
-        ))
+        message = str(
+            dict(
+                error=elitist.error_,
+                fitness=elitist.fitness_,
+                complexity=elitist.complexity_,
+                score=elitist.score(X, y),
+            )
+        )
 
         message = f"[{iteration + 1}/{estimator.n_iter}] Statistics: {message}"
 

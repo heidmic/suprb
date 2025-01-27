@@ -22,8 +22,13 @@ class MinimalCriteria(NoveltySearchType):
     def filter_rules(self, rules: list[Rule]) -> list[Rule]:
         # calculate the 25th percentile value and if it's lower than MNCS_threshold_matched use it instead to filter
         # a maximum of 25% of the population (to prevent empty populations)
-        maximum_threshold = min(np.percentile([np.count_nonzero(rule.match_set_) for rule in rules],
-                                              self.min_examples_matched), 25)
+        maximum_threshold = min(
+            np.percentile(
+                [np.count_nonzero(rule.match_set_) for rule in rules],
+                self.min_examples_matched,
+            ),
+            25,
+        )
 
         return [rule for rule in rules if np.count_nonzero(rule.match_set_) >= maximum_threshold]
 
@@ -36,7 +41,7 @@ class LocalCompetition(NoveltySearchType):
 
     def local_competition(self, rule: Rule, rules: list[Rule]) -> float:
         count_worse = 0
-        for archive_rule in rules[:self.max_neighborhood_range]:
+        for archive_rule in rules[: self.max_neighborhood_range]:
             if rule.fitness_ < archive_rule.fitness_:
                 count_worse += 1
         local_score = count_worse / self.max_neighborhood_range

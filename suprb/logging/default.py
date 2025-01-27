@@ -63,7 +63,7 @@ class DefaultLogger(BaseLogger):
         # Log pool
         pool = estimator.pool_
         log_metric("pool_size", len(pool))
-        # log_metric("pool_matched", matched_training_samples(pool))  # When using default logging, not all approaches are compatible with this
+        # log_metric("pool_matched", matched_training_samples(pool)) # When using default logging, not all approaches are compatible with this
         if pool:
             log_metric_stats("pool_fitness", "fitness_", pool)
 
@@ -72,9 +72,9 @@ class DefaultLogger(BaseLogger):
         population = estimator.solution_composition_.population_
         log_metric("population_size", len(population))
         # log_metric("population_diversity", genome_diversity(population)) # When using default logging, not all approaches are compatible with this
-        log_metric_min_max_mean("population_fitness", 'fitness_', population)
-        log_metric_min_max_mean("population_error", 'error_', population)
-        log_metric_min_max_mean("population_complexity", 'complexity_', population)
+        log_metric_stats("population_fitness", "fitness_", population)
+        log_metric_stats("population_error", "error_", population)
+        log_metric_stats("population_complexity", "complexity_", population)
 
         # Log elitist
         elitist = estimator.solution_composition_.elitist()

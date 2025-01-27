@@ -12,14 +12,28 @@ class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
     def __init__(self):
         pass
 
-    def __call__(self, A: Solution, B: Solution, crossover_rate_min, crossover_rate_max, fitness_mean, fitness_min, fitness_max, random_state: RandomState) -> Solution:
+    def __call__(
+        self,
+        A: Solution,
+        B: Solution,
+        crossover_rate_min,
+        crossover_rate_max,
+        fitness_mean,
+        fitness_min,
+        fitness_max,
+        random_state: RandomState,
+    ) -> Solution:
         fitness_parents_mean = (A.fitness_ + B.fitness_) / 2
         if fitness_min == fitness_mean or fitness_mean == fitness_max:
             crossover_rate = crossover_rate_max
         elif fitness_parents_mean <= fitness_mean:
-            crossover_rate = crossover_rate_max - (crossover_rate_max - crossover_rate_min) * ((fitness_mean - fitness_parents_mean) / (fitness_mean - fitness_min))
+            crossover_rate = crossover_rate_max - (crossover_rate_max - crossover_rate_min) * (
+                (fitness_mean - fitness_parents_mean) / (fitness_mean - fitness_min)
+            )
         else:
-            crossover_rate = crossover_rate_max - (crossover_rate_max - crossover_rate_min) * ((fitness_parents_mean - fitness_mean) / (fitness_max - fitness_mean))
+            crossover_rate = crossover_rate_max - (crossover_rate_max - crossover_rate_min) * (
+                (fitness_parents_mean - fitness_mean) / (fitness_max - fitness_mean)
+            )
 
         if random_state.random() < crossover_rate:
             return self._crossover(A=A, B=B, random_state=random_state)

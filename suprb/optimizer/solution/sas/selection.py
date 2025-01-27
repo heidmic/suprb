@@ -23,14 +23,20 @@ class Ageing(SolutionSelection):
         in the top initial_population_size * top_cutoff_mult more.
     """
 
-    def __call__(self, population: list[SasSolution], initial_population_size: int, random_state: RandomState, top_cutoff_mult: float = 5) -> list[SasSolution]:
+    def __call__(
+        self,
+        population: list[SasSolution],
+        initial_population_size: int,
+        random_state: RandomState,
+        top_cutoff_mult: float = 5,
+    ) -> list[SasSolution]:
         median_fitness = np.median([i.fitness_ for i in population])
         top_n = initial_population_size * top_cutoff_mult
         top_n_population = sorted(population, key=lambda i: i.fitness_, reverse=True)[:top_n]
         top_n_fitness = top_n_population[-1].fitness_
         for i in range(len(population)):
             population[i].age -= 1
-            if population[i].fitness_ > median_fitness: 
+            if population[i].fitness_ > median_fitness:
                 population[i].age += 1
             else:
                 population[i].age -= 1

@@ -49,5 +49,4 @@ class Tournament(SolutionSelection):
         self.k = k
 
     def __call__(self, population: list[SagaSolution], n: int, random_state: RandomState) -> list[SagaSolution]:
-        return list(max(random_state.choice(population, size=self.k), key=lambda i: i.fitness_)
-                    for _ in range(n))
+        return list(max(random_state.choice(population, size=self.k), key=lambda i: i.fitness_) for _ in range(n))

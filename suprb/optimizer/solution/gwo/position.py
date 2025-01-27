@@ -11,8 +11,13 @@ from suprb.optimizer.solution.utils import sigmoid_binarize
 class SolutionPositionUpdate(BaseComponent, metaclass=ABCMeta):
     """Calculates the next positions of all wolves, using the leaders."""
 
-    def __call__(self, leaders: list[Solution], population: list[Solution], a: float,
-                 random_state: RandomState) -> list[Solution]:
+    def __call__(
+        self,
+        leaders: list[Solution],
+        population: list[Solution],
+        a: float,
+        random_state: RandomState,
+    ) -> list[Solution]:
         pass
 
 
@@ -63,13 +68,25 @@ class Crossover(SolutionPositionUpdate):
     Taken from https://doi.org/10/gfxvkw.
     """
 
-    def __call__(self, leaders: list[Solution], population: list[Solution], a: float,
-                 random_state: RandomState) -> list[Solution]:
+    def __call__(
+        self,
+        leaders: list[Solution],
+        population: list[Solution],
+        a: float,
+        random_state: RandomState,
+    ) -> list[Solution]:
         new_population = []
         for solution in population:
             # Calculate binary vectors for solution with each leader
-            xs = [binary_X(leader=leader.genome, wolf=solution.genome, a=a, random_state=random_state) for leader in
-                  leaders]
+            xs = [
+                binary_X(
+                    leader=leader.genome,
+                    wolf=solution.genome,
+                    a=a,
+                    random_state=random_state,
+                )
+                for leader in leaders
+            ]
             xs = np.stack(xs, axis=0)
 
             # Uniform crossover
@@ -87,12 +104,25 @@ class Sigmoid(SolutionPositionUpdate):
     Taken from https://doi.org/10/gfxvkw.
     """
 
-    def __call__(self, leaders: list[Solution], population: list[Solution], a: float,
-                 random_state: RandomState) -> list[Solution]:
+    def __call__(
+        self,
+        leaders: list[Solution],
+        population: list[Solution],
+        a: float,
+        random_state: RandomState,
+    ) -> list[Solution]:
         new_population = []
         for solution in population:
             # Calculate binary vectors for solution with each leader
-            xs = [X(leader=leader.genome, wolf=solution.genome, a=a, random_state=random_state) for leader in leaders]
+            xs = [
+                X(
+                    leader=leader.genome,
+                    wolf=solution.genome,
+                    a=a,
+                    random_state=random_state,
+                )
+                for leader in leaders
+            ]
             xs = np.stack(xs, axis=0)
 
             # Binarize the vectors through sigmoid

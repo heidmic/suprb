@@ -10,7 +10,7 @@ from ..base import PopulationBasedSolutionComposition
 
 
 class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
-    """ A simple self adapting Genetic Algorithm, implemented acording to 10.1109/20.952626 .
+    """A simple self adapting Genetic Algorithm, implemented acording to 10.1109/20.952626 .
 
     Parameters
     ----------
@@ -38,29 +38,30 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
 
     n_elitists_: int
 
-    def __init__(self,
-                 n_iter: int = 32,
-                 population_size: int = 32,
-                 elitist_ratio: float = 0.17,
-                 mutation: SolutionMutation = BitFlips(),
-                 crossover: SolutionCrossover = NPoint(n=3),
-                 selection: SolutionSelection = Tournament(),
-                 v_min: float = 0.005,
-                 v_max: float = 0.15,
-                 mutation_rate: float = 0.025,
-                 mutation_rate_min: float = 0.001,
-                 mutation_rate_max: float = 0.25,
-                 mutation_rate_multiplier = 1.1,
-                 crossover_rate: float = 0.75,
-                 crossover_rate_min: float = 0.5,
-                 crossover_rate_max: float = 1.0,
-                 crossover_rate_multiplier = 1.1,
-                 init: SolutionInit = RandomInit(),
-                 archive: SolutionArchive = Elitist(),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+    def __init__(
+        self,
+        n_iter: int = 32,
+        population_size: int = 32,
+        elitist_ratio: float = 0.17,
+        mutation: SolutionMutation = BitFlips(),
+        crossover: SolutionCrossover = NPoint(n=3),
+        selection: SolutionSelection = Tournament(),
+        v_min: float = 0.005,
+        v_max: float = 0.15,
+        mutation_rate: float = 0.025,
+        mutation_rate_min: float = 0.001,
+        mutation_rate_max: float = 0.25,
+        mutation_rate_multiplier=1.1,
+        crossover_rate: float = 0.75,
+        crossover_rate_min: float = 0.5,
+        crossover_rate_max: float = 1.0,
+        crossover_rate_multiplier=1.1,
+        init: SolutionInit = RandomInit(),
+        archive: SolutionArchive = Elitist(),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -97,22 +98,45 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
             self.adjust_rates()
 
             # Eltitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[:self.n_elitists_]
+            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
 
             # Selection
-            parents = self.selection(population=self.population_, n=self.population_size,
-                                     random_state=self.random_state_)
+            parents = self.selection(
+                population=self.population_,
+                n=self.population_size,
+                random_state=self.random_state_,
+            )
 
             # Note that this expression swallows the last element, if `population_size` is odd
             parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
 
             # Crossover
-            children = list(flatten([(self.crossover(A, B, self.crossover_rate, random_state=self.random_state_),
-                                      self.crossover(B, A, self.crossover_rate, random_state=self.random_state_))
-                                     for A, B in parent_pairs]))
+            children = list(
+                flatten(
+                    [
+                        (
+                            self.crossover(
+                                A,
+                                B,
+                                self.crossover_rate,
+                                random_state=self.random_state_,
+                            ),
+                            self.crossover(
+                                B,
+                                A,
+                                self.crossover_rate,
+                                random_state=self.random_state_,
+                            ),
+                        )
+                        for A, B in parent_pairs
+                    ]
+                )
+            )
 
             # Mutation
-            mutated_children = [self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children]
+            mutated_children = [
+                self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children
+            ]
 
             # Replacement
             self.population_ = elitists
@@ -120,16 +144,26 @@ class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
 
             self.fit_population(X, y)
 
-
     def calc_gdm(self):
         return np.mean([i.fitness_ for i in self.population_]) / np.max([i.fitness_ for i in self.population_])
-    
 
     def adjust_rates(self):
         gdm = self.calc_gdm()
         if gdm > self.v_max:
-            self.mutation_rate = min(self.mutation_rate_max, self.mutation_rate * self.mutation_rate_multiplier)
-            self.crossover_rate = max(self.crossover_rate_min, self.crossover_rate / self.crossover_rate_multiplier)
+            self.mutation_rate = min(
+                self.mutation_rate_max,
+                self.mutation_rate * self.mutation_rate_multiplier,
+            )
+            self.crossover_rate = max(
+                self.crossover_rate_min,
+                self.crossover_rate / self.crossover_rate_multiplier,
+            )
         elif gdm < self.v_min:
-            self.mutation_rate = max(self.mutation_rate_min, self.mutation_rate / self.mutation_rate_multiplier)
-            self.crossover_rate = min(self.crossover_rate_max, self.crossover_rate * self.crossover_rate_multiplier)
+            self.mutation_rate = max(
+                self.mutation_rate_min,
+                self.mutation_rate / self.mutation_rate_multiplier,
+            )
+            self.crossover_rate = min(
+                self.crossover_rate_max,
+                self.crossover_rate * self.crossover_rate_multiplier,
+            )
