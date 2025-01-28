@@ -4,6 +4,7 @@ import json
 import numpy as np
 
 from . import BaseLogger
+
 # from .metrics import matched_training_samples, genome_diversity
 # from .. import json as suprb_json
 from suprb.base import BaseRegressor
@@ -37,9 +38,9 @@ class DefaultLogger(BaseLogger):
 
         def log_metric_stats(metric_name: str, attribute_name: str, lst: list):
             comprehension = [getattr(e, attribute_name) for e in lst]
-            log_metric(metric_name + '_min', min(comprehension))
-            log_metric(metric_name + '_mean', sum(comprehension) / len(comprehension))
-            log_metric(metric_name + '_max', max(comprehension))
+            log_metric(metric_name + "_min", min(comprehension))
+            log_metric(metric_name + "_mean", sum(comprehension) / len(comprehension))
+            log_metric(metric_name + "_max", max(comprehension))
             log_metric(metric_name + "_median", np.median(comprehension))
             # From the docs of np.percentile: “["median_unbiased" is] probably
             # the best method if the sample distribution function is unknown”.

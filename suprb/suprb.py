@@ -286,7 +286,9 @@ class SupRB(BaseRegressor):
         self.rule_discovery_ = clone(self.rule_discovery) if self.rule_discovery is not None else clone(default)
 
     def _validate_solution_composition(self, default=None):
-        self.solution_composition_ = clone(self.solution_composition) if self.solution_composition is not None else clone(default)
+        self.solution_composition_ = (
+            clone(self.solution_composition) if self.solution_composition is not None else clone(default)
+        )
 
     def _validate_matching_type(self, default=None):
         self.matching_type_ = clone(self.matching_type) if self.matching_type is not None else clone(default)
