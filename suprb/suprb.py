@@ -43,6 +43,7 @@ class SupRB(BaseRegressor):
         - >5: Show elaborate description.
         - >10: show all
     logger: BaseLogger
+        If none is set it defaults to DefaultLogger()
     n_jobs: int
         The number of threads / processes the fitting process uses.
         If -1 all CPUs are used. If 1 is given, no parallel computing code is used at all,
@@ -86,7 +87,7 @@ class SupRB(BaseRegressor):
         n_rules: int = 4,
         random_state: int = None,
         verbose: int = 1,
-        logger: BaseLogger = DefaultLogger(),
+        logger: BaseLogger = None,
         n_jobs: int = 1,
         early_stopping_patience: int = -1,
         early_stopping_delta: int = 0,
@@ -167,6 +168,7 @@ class SupRB(BaseRegressor):
         self._validate_rule_discovery(default=ES1xLambda())
         self._validate_solution_composition(default=GeneticAlgorithm())
         self._validate_matching_type(default=OrderedBound(np.array([])))
+        self._validate_logger(default=DefaultLogger())
 
         self._propagate_component_parameters()
         self._init_bounds(X)
@@ -178,9 +180,7 @@ class SupRB(BaseRegressor):
         self.rule_discovery_.pool_ = self.pool_
 
         # Init Logging
-        self.logger_ = clone(self.logger) if self.logger is not None else DefaultLogger()
-        if self.logger_ is not None:
-            self.logger_.log_init(X, y, self)
+        self.logger_.log_init(X, y, self)
 
         # Fill population before first step
         if self.n_initial_rules > 0:
@@ -198,8 +198,7 @@ class SupRB(BaseRegressor):
                 return self
 
             # Log Iteration
-            if self.logger_ is not None:
-                self.logger_.log_iteration(X, y, self, iteration=self.step_)
+            self.logger_.log_iteration(X, y, self, iteration=self.step_)
 
             if self.check_early_stopping():
                 break
@@ -208,8 +207,7 @@ class SupRB(BaseRegressor):
         self.is_fitted_ = True
 
         # Log final result
-        if self.logger_ is not None:
-            self.logger_.log_final(X, y, self)
+        self.logger_.log_final(X, y, self)
 
         if cleanup:
             self._cleanup()
@@ -288,12 +286,13 @@ class SupRB(BaseRegressor):
         self.rule_discovery_ = clone(self.rule_discovery) if self.rule_discovery is not None else clone(default)
 
     def _validate_solution_composition(self, default=None):
-        self.solution_composition_ = (
-            clone(self.solution_composition) if self.solution_composition is not None else clone(default)
-        )
+        self.solution_composition_ = clone(self.solution_composition) if self.solution_composition is not None else clone(default)
 
     def _validate_matching_type(self, default=None):
         self.matching_type_ = clone(self.matching_type) if self.matching_type is not None else clone(default)
+
+    def _validate_logger(self, default=None):
+        self.logger_ = clone(self.logger) if self.logger is not None else clone(default)
 
     def _log_to_stdout(self, message, priority=1):
         if self.verbose >= priority:
