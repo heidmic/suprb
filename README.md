@@ -120,3 +120,9 @@ We provide the experiment scripts used in associated publications under: https:/
 If you use this code for research, please cite:
 
 Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
+
+
+
+## Formatting
+
+Install black formatter (pip install black) and use it in the root directory of the project to format all python files (black .)
