@@ -6,7 +6,7 @@ import numpy as np
 from sklearn import clone
 from sklearn.utils import check_X_y
 from sklearn.utils.validation import check_is_fitted, check_array
-from sklearn.base import RegressorMixin, ClassifierMixin, BaseEstimator, is_classifier, is_regressor
+from sklearn.base import RegressorMixin, ClassifierMixin, BaseEstimator
 from sklearn.metrics import mean_squared_error, accuracy_score, r2_score
 
 from .base import BaseSupervised, BaseRegressor, BaseClassifier
@@ -78,6 +78,7 @@ class SupRB(BaseSupervised):
     n_features_in_: int
 
     logger_: BaseLogger
+    is_fitted_: bool = False
 
     def __init__(self,
                  rule_generation: RuleGeneration = None,
@@ -126,7 +127,7 @@ class SupRB(BaseSupervised):
         if not self.pool_:
             return 0.0
         if self.isClass is None:
-            if is_classifier(self.pool_[0].model):
+            if isinstance(self.pool_[0].model, ClassifierMixin):
                 self.isClass = True
             else:
                 self.isClass = False
@@ -137,7 +138,7 @@ class SupRB(BaseSupervised):
             return r2_score(y, y_pred, sample_weight=sample_weight)
         
         
-    def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
+    def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False, force=False):
         """ Fit SupRB.2.
 
             Parameters
@@ -156,6 +157,9 @@ class SupRB(BaseSupervised):
                 Returns self.
         """
 
+        if self.is_fitted_ and not force:
+            return self
+
         # Set these values so we gracefully exit on error
         self.early_stopping_counter_ = 0
         self.previous_fitness_ = 0
@@ -166,7 +170,7 @@ class SupRB(BaseSupervised):
         self.elitist_.complexity_ = 99999
 
         # Check that x and y have correct shape
-        if is_regressor(self):
+        if isinstance(self, BaseRegressor):
             X, y = check_X_y(X, y, dtype='float64', y_numeric=True)
             y = check_array(y, ensure_2d=False, dtype='float64')
         else:
@@ -366,6 +370,8 @@ class SupRB(BaseSupervised):
 
     def model_swap(self, local_model) -> Solution:
         solution = self.elitist_.clone()
+        # pool = []
         for space in solution.pool:
             space = space.clone(model = copy.deepcopy(local_model))
+            #pool.append(rule)
         return solution
