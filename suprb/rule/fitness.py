@@ -31,6 +31,7 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
 
     def __call__(self, rule: Rule) -> float:
         diff = rule.input_space[:, 1] - rule.input_space[:, 0]
+        diff[diff == 0] = 1  # avoid division by zero
         input_space_volume = np.prod(diff)
 
         volume_share = rule.volume_ / input_space_volume
