@@ -41,9 +41,9 @@ class DefaultLogger(BaseLogger):
             else:
                 comprehension = [getattr(e, attribute_name)[index] for e in lst]
 
-            log_metric(metric_name + '_min', min(comprehension))
-            log_metric(metric_name + '_mean', sum(comprehension) / len(comprehension))
-            log_metric(metric_name + '_max', max(comprehension))
+            log_metric(metric_name + "_min", min(comprehension))
+            log_metric(metric_name + "_mean", sum(comprehension) / len(comprehension))
+            log_metric(metric_name + "_max", max(comprehension))
             log_metric(metric_name + "_median", np.median(comprehension))
             # From the docs of np.percentile: “["median_unbiased" is] probably
             # the best method if the sample distribution function is unknown”.
@@ -76,13 +76,7 @@ class DefaultLogger(BaseLogger):
         population = estimator.solution_composition_.population_
         log_metric("population_size", len(population))
         # log_metric("population_diversity", genome_diversity(population)) # When using default logging, not all approaches are compatible with this
-
-        # This is a bit of a hack to support multidimensional objective functions ~Felix
-        if population[0].fitness_.__class__.__name__ == "tuple":
-            for i in range(len(population[0].fitness_)):
-                log_metric_stats(f"population_fitness_o_{i}", "fitness_", population, i)
-        else:
-            log_metric_stats("population_fitness", "fitness_", population)
+        log_metric_stats("population_fitness", "fitness_", population)
         log_metric_stats("population_error", "error_", population)
         log_metric_stats("population_complexity", "complexity_", population)
 
