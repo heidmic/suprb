@@ -100,5 +100,5 @@ if __name__ == "__main__":
         return_estimator=True,
         fit_params={"cleanup": True},
     )
-    
+
     log_scores(scores)
