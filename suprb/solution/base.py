@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 from abc import ABCMeta, abstractmethod
+from typing import Tuple
 
 import numpy as np
 from sklearn.base import RegressorMixin
@@ -29,7 +30,7 @@ class SolutionFitness(BaseFitness, metaclass=ABCMeta):
     max_genome_length_: int
 
     @abstractmethod
-    def __call__(self, solution: Solution) -> float:
+    def __call__(self, solution: Solution) -> float | Tuple[float, float]:
         pass
 
 

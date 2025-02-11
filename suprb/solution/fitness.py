@@ -1,5 +1,5 @@
 from abc import ABCMeta
-from typing import Callable
+from typing import Callable, Tuple
 
 import numpy as np
 
@@ -36,6 +36,16 @@ class ComplexitySolutionFitness(SolutionFitness, metaclass=ABCMeta):
             )
             * 100
         )
+
+
+class MultiObjectiveSolutionFitness(SolutionFitness, metaclass=ABCMeta):
+    """Passes on fitness and complexity measures for MOOAs to minimize complexity along with error."""
+    def __init__(self, fitness_func: Callable = pseudo_accuracy, complexity_func: Callable = c_norm):
+        self.fitness_func_ = fitness_func
+        self.complexity_func_ = complexity_func
+
+    def __call__(self, solution: Solution) -> Tuple[float, float]:
+        return self.fitness_func_(solution.error_), self.complexity_func_(solution.complexity_)
 
 
 class ComplexityEmary(ComplexitySolutionFitness):
