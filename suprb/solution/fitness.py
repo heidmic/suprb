@@ -40,12 +40,22 @@ class ComplexitySolutionFitness(SolutionFitness, metaclass=ABCMeta):
 
 class MultiObjectiveSolutionFitness(SolutionFitness, metaclass=ABCMeta):
     """Passes on fitness and complexity measures for MOOAs to minimize complexity along with error."""
-    def __init__(self, fitness_func: Callable = pseudo_accuracy, complexity_func: Callable = c_norm):
-        self.fitness_func_ = fitness_func
-        self.complexity_func_ = complexity_func
+
+    error_func_: Callable
+    complexity_func_: Callable
+
+    def __init__(self):
+        pass
 
     def __call__(self, solution: Solution) -> Tuple[float, float]:
-        return self.fitness_func_(solution.error_), self.complexity_func_(solution.complexity_)
+        return self.error_func_(solution.error_), self.complexity_func_(solution.complexity_, self.max_genome_length_)
+
+
+class BasicMOSolutionFitness(MultiObjectiveSolutionFitness):
+    def __init__(self):
+        super().__init__()
+        self.error_func_ = pseudo_accuracy
+        self.complexity_func_ = c_norm
 
 
 class ComplexityEmary(ComplexitySolutionFitness):

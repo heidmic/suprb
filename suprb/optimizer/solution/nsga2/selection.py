@@ -13,40 +13,31 @@ class SolutionSelection(BaseComponent, metaclass=ABCMeta):
         pass
 
 
-class Random(SolutionSelection):
-    """Sample `n_parents` at random."""
+class BinaryTournament(SolutionSelection):
+    """Draw 2 solutions n_parents times and select the best solution from each pair."""
 
-    def __call__(self, population: list[Solution], n: int, random_state: RandomState) -> list[Solution]:
-        return list(random_state.choice(population, size=n))
+    def __init__(self):
+        pass
 
+    def __call__(
+        self,
+        population: list[Solution],
+        n: int,
+        random_state: RandomState,
+        pareto_ranks: np.ndarray,
+        crowding_distances: np.ndarray
+    ) -> list[Solution]:
 
-class RouletteWheel(SolutionSelection):
-    """Sample `n_parents` solutions proportional to their fitness."""
-
-    def __call__(self, population: list[Solution], n: int, random_state: RandomState) -> list[Solution]:
-        fitness_sum = sum([solution.fitness_ for solution in population])
-        if fitness_sum != 0:
-            weights = [solution.fitness_ / fitness_sum for solution in population]
-        else:
-            weights = None
-        return list(random_state.choice(population, p=weights, size=n))
-
-
-class LinearRank(SolutionSelection):
-    """Sample `n_parents` solutions linear to their fitness ranking."""
-
-    def __call__(self, population: list[Solution], n: int, random_state: RandomState) -> list[Solution]:
-        fitness = np.array([solution.fitness_ for solution in population])
-        ranks = fitness.argsort().argsort() + 1  # double `argsort()` obtains the ranks
-        weights = ranks / sum(ranks)
-        return list(random_state.choice(population, p=weights, size=n))
-
-
-class Tournament(SolutionSelection):
-    """Draw k solutions n_parents times and select the best solution from each k-subset."""
-
-    def __init__(self, k: int = 5):
-        self.k = k
-
-    def __call__(self, population: list[Solution], n: int, random_state: RandomState) -> list[Solution]:
-        return list(max(random_state.choice(population, size=self.k), key=lambda i: i.fitness_) for _ in range(n))
+        selection = []
+        pairs = random_state.integers(low=0, high=len(population), size=(n, 2))
+        for a, b in pairs:
+            if pareto_ranks[a] == pareto_ranks[b]:
+                if crowding_distances[a] >= crowding_distances[b]:
+                    selection.append(population[a])
+                else:
+                    selection.append(population[b])
+            elif pareto_ranks[a] > pareto_ranks[b]:
+                selection.append(population[a])
+            else:
+                selection.append(population[b])
+        return selection
