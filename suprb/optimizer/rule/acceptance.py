@@ -24,7 +24,7 @@ class MaxError(RuleAcceptance):
         self.max_error = max_error
 
     def __call__(self, rule: Rule, X: np.ndarray, y: np.ndarray) -> bool:
-        return rule.score_ <= self.max_error
+        return rule.error_ <= self.max_error
 
 
 class Variance(RuleAcceptance):
@@ -59,7 +59,7 @@ class Precision(RuleAcceptance):
         if rule.experience_ < 1:
             return False
         local_y = y[rule.match_set_]
-        return rule.error_ > precision_score(local_y, rule.predict(X[rule.match_set_]))
+        return precision_score(local_y, rule.predict(X[rule.match_set_]), average='macro', zero_division=np.nan) >= self.min_precission
     
 class F1_Score(RuleAcceptance):
     """Insert if the rule has a f1_score greater or equal to a threshold"""
@@ -71,4 +71,4 @@ class F1_Score(RuleAcceptance):
         if rule.experience_ < 1:
             return False
         local_y = y[rule.match_set_]
-        return rule.error_ > f1_score(local_y, rule.predict(X[rule.match_set_]))
+        return f1_score(local_y, rule.predict(X[rule.match_set_])) >= self.min_f1
