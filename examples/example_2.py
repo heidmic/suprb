@@ -25,16 +25,16 @@ if __name__ == "__main__":
 
     model = SupRB(
         rule_discovery=ES1xLambda(
-            n_iter=32,
-            lmbda=16,
+            n_iter=2,
+            lmbda=1,
             operator="+",
             delay=150,
             random_state=random_state,
             n_jobs=1,
         ),
         solution_composition=GeneticAlgorithm(
-            n_iter=32,
-            population_size=32,
+            n_iter=2,
+            population_size=2,
             elitist_ratio=0.2,
             random_state=random_state,
             n_jobs=1,
