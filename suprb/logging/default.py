@@ -61,9 +61,12 @@ class DefaultLogger(BaseLogger):
         elitist = estimator.solution_composition_.elitist()
         log_metric("elitist_fitness", elitist.fitness_)
         log_metric("elitist_error", elitist.error_)
+        if elitist.isClass:
+            log_metric("elitist_accuracy", elitist.score(X, y))
+            log_metric("elitist_f1", elitist.f1_score(X, y))
         log_metric("elitist_complexity", elitist.complexity_)
         log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))
-        # log_metric("elitist_rules", elitist.pool)
+        log_metric("elitist_rules", elitist.pool)
 
         # Log performance
         log_metric("training_score", elitist.score(X, y))

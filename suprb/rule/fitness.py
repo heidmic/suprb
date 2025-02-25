@@ -31,15 +31,15 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
 
     def __call__(self, rule: Rule) -> float:
         diff = rule.input_space[:, 1] - rule.input_space[:, 0]
-        diff[diff == 0] = 1  # avoid division by zero
+        diff[diff == 0] = 1.0  # avoid division by zero
         input_space_volume = np.prod(diff)
 
         volume_share = rule.volume_ / input_space_volume
         if rule.isClass:
-            x1 = actual_accuracy(rule.error_)
+            accuracy = actual_accuracy(rule.error_)
         else:
-            x1 = pseudo_accuracy(rule.error_, beta=2)
-        return self.fitness_func_(alpha=self.alpha, x1 = x1, x2=volume_share) * 100
+            accuracy = pseudo_accuracy(rule.error_, beta=2)
+        return self.fitness_func_(alpha=self.alpha, x1 = accuracy, x2=volume_share) * 100
 
 
 class VolumeEmary(VolumeRuleFitness):
