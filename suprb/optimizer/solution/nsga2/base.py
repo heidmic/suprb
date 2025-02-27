@@ -1,6 +1,8 @@
+from typing import Optional
+
 import numpy as np
 
-
+from suprb import Solution
 from suprb.solution.initialization import SolutionInit, RandomInit
 from ..base import PopulationBasedSolutionComposition
 from suprb.solution.fitness import BasicMOSolutionFitness
@@ -11,7 +13,7 @@ from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, BinaryTournament
 from .crossover import SolutionCrossover, NPoint
 from .sorting import fast_non_dominated_sort, calculate_crowding_distances
-from ..archive import SolutionArchive
+from ..sampler import SolutionSampler, NormalSolutionSampler
 
 
 class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
@@ -22,14 +24,13 @@ class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
     Parameters
     ----------
     n_iter: int
-        Iterations the the metaheuristic will perform.
+        Iterations the metaheuristic will perform.
     population_size: int
         Number of solutions in the population.
     mutation: SolutionMutation
     crossover: SolutionCrossover
     selection: SolutionSelection
     init: SolutionInit
-    archive: SolutionArchive
     random_state : int, RandomState instance or None, default=None
         Pass an int for reproducible results across multiple function calls.
     warm_start: bool
@@ -44,6 +45,7 @@ class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
                  mutation: SolutionMutation = BitFlips(),
                  crossover: SolutionCrossover = NPoint(n=3),
                  selection: SolutionSelection = BinaryTournament(),
+                 sampler: SolutionSampler = NormalSolutionSampler(),
                  mutation_rate: float = 0.025,
                  crossover_rate: float = 0.75,
                  init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
@@ -63,6 +65,7 @@ class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
         self.mutation = mutation
         self.crossover = crossover
         self.selection = selection
+        self.sampler = sampler
 
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
@@ -119,3 +122,11 @@ class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
             sorting_permutation = np.argsort(intermediate_pareto_ranks, kind="stable")
             intermediate_pop = [intermediate_pop[index] for index in sorting_permutation]
             self.population_ = intermediate_pop[: self.population_size]
+
+    def elitist(self) -> Optional[Solution]:
+        if not hasattr(self, "population_") or not self.population_:
+            return None
+        fitness_values = np.array([solution.fitness_ for solution in self.population_])
+        pareto_ranks = fast_non_dominated_sort(fitness_values)
+        pareto_front = np.array(self.population_)[pareto_ranks == 0]
+        return self.sampler(pareto_front, self.random_state_)

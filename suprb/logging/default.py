@@ -35,8 +35,12 @@ class DefaultLogger(BaseLogger):
         def log_metric(key, value):
             self.log_metric(key=key, value=value, step=estimator.step_)
 
-        def log_metric_stats(metric_name: str, attribute_name: str, lst: list):
-            comprehension = [getattr(e, attribute_name) for e in lst]
+        def log_metric_stats(metric_name: str, attribute_name: str, lst: list, index=None):
+            if index is None:
+                comprehension = [getattr(e, attribute_name) for e in lst]
+            else:
+                comprehension = [getattr(e, attribute_name)[index] for e in lst]
+
             log_metric(metric_name + '_min', min(comprehension))
             log_metric(metric_name + '_mean', sum(comprehension) / len(comprehension))
             log_metric(metric_name + '_max', max(comprehension))
@@ -72,7 +76,13 @@ class DefaultLogger(BaseLogger):
         population = estimator.solution_composition_.population_
         log_metric("population_size", len(population))
         # log_metric("population_diversity", genome_diversity(population)) # When using default logging, not all approaches are compatible with this
-        log_metric_stats("population_fitness", "fitness_", population)
+
+        # This is a bit of a hack to support multidimensional objective functions
+        if population[0].fitness_.__class__.__name__ == "tuple":
+            for i in range(len(population[0].fitness_)):
+                log_metric_stats(f"population_fitness_o_{i}", "fitness_", population, i)
+        else:
+            log_metric_stats("population_fitness", "fitness_", population)
         log_metric_stats("population_error", "error_", population)
         log_metric_stats("population_complexity", "complexity_", population)
 
