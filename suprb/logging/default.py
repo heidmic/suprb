@@ -4,6 +4,7 @@ import json
 import numpy as np
 
 from . import BaseLogger
+
 # from .metrics import matched_training_samples, genome_diversity
 # from .. import json as suprb_json
 from suprb.base import BaseRegressor
