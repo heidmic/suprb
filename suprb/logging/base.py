@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 import numpy as np
 
-from suprb.base import BaseComponent, BaseRegressor
+from suprb.base import BaseComponent, BaseRegressor, BaseSupervised
 
 
 class BaseLogger(BaseComponent):
@@ -24,6 +24,6 @@ class BaseLogger(BaseComponent):
         pass
 
     @abstractmethod
-    def get_elitist(self, estimator: BaseRegressor):
+    def get_elitist(self, estimator: BaseSupervised):
         """Log the final elitist"""
         pass

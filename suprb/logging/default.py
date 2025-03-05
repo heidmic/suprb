@@ -6,7 +6,7 @@ import numpy as np
 from . import BaseLogger
 from .metrics import matched_training_samples, genome_diversity
 from .. import json as suprb_json
-from suprb.base import BaseRegressor
+from suprb.base import BaseRegressor, BaseSupervised
 
 
 class DefaultLogger(BaseLogger):
@@ -71,7 +71,7 @@ class DefaultLogger(BaseLogger):
         # Log performance
         log_metric("training_score", elitist.score(X, y))
 
-    def get_elitist(self, estimator: BaseRegressor):
+    def get_elitist(self, estimator: BaseSupervised):
         json_data = {}
         suprb_json._save_pool(estimator.solution_composition_.elitist().pool, json_data)
         return json_data
