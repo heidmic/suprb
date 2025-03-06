@@ -368,10 +368,19 @@ class SupRB(BaseSupervised):
             'poor_score': True,
         }
 
-    def model_swap(self, local_model) -> Solution:
-        solution = self.elitist_.clone()
-        # pool = []
-        for space in solution.pool:
-            space = space.clone(model = copy.deepcopy(local_model))
-            #pool.append(rule)
+    def model_swap(self, local_model):
+        solution = self.elitist_
+        pool = []
+        for old_rule in solution.pool:
+            rule = old_rule.clone(model = copy.deepcopy(local_model))
+            rule.isClass = old_rule.isClass
+            pool.append(rule)
+        solution.pool = pool
+        self.is_fitted_ = True
         return solution
+    
+    def model_swap_fit(self, local_model, X, y):
+        solution = self.model_swap(local_model)
+        for rule in solution.pool:
+            rule.fit(X, y)
+        solution.fit(X, y, cache=False)
