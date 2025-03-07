@@ -91,11 +91,13 @@ class SagaSolution(Solution):
         crossover_rate: float = 0.9,
         mutation_rate: float = 0.001,
         crossover_method: SolutionCrossover = NPoint(n=3),
+        age: int = 3,
     ):
         super().__init__(genome, pool, mixing, fitness)
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
         self.crossover_method = crossover_method
+        self.age = age
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> SagaSolution:
         pred = self.predict(X, cache=True)

@@ -1,4 +1,4 @@
-from .base import SelfAdaptingGeneticAlgorithm
+from .base import SelfAdaptingGeneticAlgorithm, SasGeneticAlgorithm
 from .crossover import SagaCrossover
 from .mutation import SolutionMutation
 from .selection import SolutionSelection

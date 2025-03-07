@@ -7,7 +7,7 @@ from sklearn.datasets import fetch_openml
 from suprb import SupRB
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.ga import GeneticAlgorithm, SelfAdaptingGeneticAlgorithm2
-
+from suprb.optimizer.solution.saga3 import SelfAdaptingGeneticAlgorithm, SasGeneticAlgorithm
 from utils import log_scores
 
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
             random_state=random_state,
             n_jobs=1,
         ),
-        solution_composition=SelfAdaptingGeneticAlgorithm2(
+        solution_composition=SelfAdaptingGeneticAlgorithm(
             n_iter=2,
             population_size=2,
             elitist_ratio=0.2,
