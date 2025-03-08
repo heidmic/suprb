@@ -7,6 +7,7 @@ from sklearn.datasets import fetch_openml
 from suprb import SupRB
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.nsga2 import NonDominatedSortingGeneticAlgorithm2
+from suprb.optimizer.solution.spea2 import StrengthParetoEvolutionaryAlgorithm2
 
 from utils import log_scores
 
@@ -32,7 +33,7 @@ if __name__ == "__main__":
             random_state=random_state,
             n_jobs=1,
         ),
-        solution_composition=NonDominatedSortingGeneticAlgorithm2(
+        solution_composition=StrengthParetoEvolutionaryAlgorithm2(
             n_iter=32,
             population_size=32,
             random_state=random_state,
