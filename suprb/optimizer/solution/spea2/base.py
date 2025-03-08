@@ -111,10 +111,10 @@ class StrengthParetoEvolutionaryAlgorithm2(PopulationBasedSolutionComposition):
             self.population_ = mutated_children
             return
 
-    def elitist(self) -> Optional[Solution]:
+    def pareto_front(self) -> list[Solution]:
         if not hasattr(self, "population_") or not self.population_:
-            return None
+            return []
         fitness_values = np.array([solution.fitness_ for solution in self.archive.population_])
         pareto_ranks = calculate_raw_internal_fitness(fitness_values)
         pareto_front = np.array(self.population_)[pareto_ranks == 0]
-        return self.sampler(pareto_front, self.random_state_)
+        return pareto_front

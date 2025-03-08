@@ -123,10 +123,10 @@ class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
             intermediate_pop = [intermediate_pop[index] for index in sorting_permutation]
             self.population_ = intermediate_pop[: self.population_size]
 
-    def elitist(self) -> Optional[Solution]:
+    def pareto_front(self) -> list[Solution]:
         if not hasattr(self, "population_") or not self.population_:
-            return None
+            return []
         fitness_values = np.array([solution.fitness_ for solution in self.population_])
         pareto_ranks = fast_non_dominated_sort(fitness_values)
         pareto_front = np.array(self.population_)[pareto_ranks == 0]
-        return self.sampler(pareto_front, self.random_state_)
+        return pareto_front

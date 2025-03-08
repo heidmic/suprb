@@ -7,7 +7,7 @@ from suprb.solution import Solution, SolutionInit
 from suprb.optimizer import BaseOptimizer
 from suprb.rule import Rule
 from suprb.utils import check_random_state
-from . import SolutionArchive
+from . import SolutionArchive, SolutionSampler
 
 
 class SolutionComposition(BaseOptimizer, metaclass=ABCMeta):
@@ -145,3 +145,38 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
         super()._reset()
         if hasattr(self, "population_"):
             del self.population_
+
+
+class MOOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMeta):
+    def __init__(
+        self,
+        population_size: int,
+        n_iter: int,
+        init: SolutionInit,
+        archive: SolutionArchive,
+        sampler: SolutionSampler,
+        random_state: int,
+        n_jobs: int,
+        warm_start: bool,
+    ):
+        super().__init__(
+            population_size = population_size,
+            n_iter = n_iter,
+            init = init,
+            archive = archive,
+            random_state = random_state,
+            n_jobs = n_jobs,
+            warm_start = warm_start,
+        )
+        self.sampler = sampler
+
+    @abstractmethod
+    def pareto_front(self) -> list[Solution]:
+        pass
+
+    def elitist(self) -> Optional[Solution]:
+        """Sample an elitist from the Pareto front"""""
+        pf = self.pareto_front()
+        if len(pf) == 0:
+            return None
+        return self.sampler(pf, random_state=self.random_state_)
