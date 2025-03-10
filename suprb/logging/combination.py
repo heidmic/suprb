@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 from sklearn import clone
 
-from suprb.base import BaseRegressor
+from suprb.base import BaseSupervised
 from . import BaseLogger
 
 
@@ -16,7 +16,7 @@ class CombinedLogger(BaseLogger):
         """An unique name for every logger must be supplied, such that the parameter get/set are well-defined."""
         self.loggers = loggers
 
-    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
+    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: BaseSupervised):
         if any(map(lambda logger: isinstance(logger, CombinedLogger), self.loggers)):
             warnings.warn("Nesting loggers is not recommended. Please add all loggers to this top-level logger.")
 
@@ -25,11 +25,11 @@ class CombinedLogger(BaseLogger):
         for _, logger in self.loggers_:
             logger.log_init(X=X, y=y, estimator=estimator)
 
-    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
+    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseSupervised, iteration: int):
         for _, logger in self.loggers_:
             logger.log_iteration(X=X, y=y, estimator=estimator, iteration=iteration)
 
-    def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
+    def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseSupervised):
         for _, logger in self.loggers_:
             logger.log_final(X=X, y=y, estimator=estimator)
 
@@ -71,5 +71,5 @@ class CombinedLogger(BaseLogger):
                 break
         self.loggers = new_loggers
 
-    def get_elitist(self, estimator: BaseRegressor):
+    def get_elitist(self, estimator: BaseSupervised):
         pass

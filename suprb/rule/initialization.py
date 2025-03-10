@@ -6,7 +6,7 @@ from sklearn.base import RegressorMixin, ClassifierMixin, clone
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 
-from suprb.base import BaseComponent, BaseSupervised
+from suprb.base import BaseComponent
 from suprb.rule.matching import MatchingFunction, OrderedBound, UnorderedBound, CenterSpread, MinPercentage
 from suprb.utils import check_random_state, RandomState
 from . import Rule, RuleFitness

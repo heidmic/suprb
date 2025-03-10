@@ -68,7 +68,6 @@ class BaseSupervised(BaseEstimator, metaclass=ABCMeta):
         self : BaseEstimator
             Returns self.
         """
-
         pass
 
     @abstractmethod
@@ -98,38 +97,10 @@ class BaseRegressor(BaseSupervised, RegressorMixin, metaclass=ABCMeta):
 
     @abstractmethod
     def fit(self, X: np.ndarray, y: np.ndarray) -> BaseRegressor:
-        """ A reference implementation of a fitting function.
-
-        Parameters
-        ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The training input samples.
-        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
-            The target values.
-
-        Returns
-        -------
-        self : BaseEstimator
-            Returns self.
-        """
-
         pass
 
     @abstractmethod
     def predict(self, X: np.ndarray):
-        """ A reference implementation of a predicting function.
-
-        Parameters
-        ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The training input samples.
-
-        Returns
-        -------
-        y : np.ndarray
-            Returns the estimation with shape (n_samples,).
-        """
-
         pass
 
 
@@ -140,38 +111,10 @@ class BaseClassifier(BaseSupervised, ClassifierMixin, metaclass=ABCMeta):
 
     @abstractmethod
     def fit(self, X: np.ndarray, y: np.ndarray) -> BaseClassifier:
-        """ A reference implementation of a fitting function.
-
-        Parameters
-        ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The training input samples.
-        y : array-like, shape (n_samples,) or (n_samples, n_outputs)
-            The target values.
-
-        Returns
-        -------
-        self : BaseEstimator
-            Returns self.
-        """
-
         pass
 
     @abstractmethod
     def predict(self, X: np.ndarray):
-        """ A reference implementation of a predicting function.
-
-        Parameters
-        ----------
-        X : {array-like, sparse matrix}, shape (n_samples, n_features)
-            The training input samples.
-
-        Returns
-        -------
-        y : np.ndarray
-            Returns the estimation with shape (n_samples,).
-        """
-
         pass
 
 class SupervisedMixin(ABC):

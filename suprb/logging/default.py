@@ -6,7 +6,7 @@ import numpy as np
 from . import BaseLogger
 from .metrics import matched_training_samples, genome_diversity
 from .. import json as suprb_json
-from suprb.base import BaseRegressor, BaseSupervised
+from suprb.base import BaseSupervised
 
 
 class DefaultLogger(BaseLogger):
@@ -25,13 +25,13 @@ class DefaultLogger(BaseLogger):
         for key, value in kwargs.items():
             self.log_param(key=key, value=value)
 
-    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
+    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: BaseSupervised):
         self.params_ = {}
         self.metrics_ = defaultdict(dict)
 
         self.log_params(**estimator.get_params())
 
-    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
+    def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseSupervised, iteration: int):
         def log_metric(key, value):
             self.log_metric(key=key, value=value, step=estimator.step_)
 
@@ -76,5 +76,5 @@ class DefaultLogger(BaseLogger):
         suprb_json._save_pool(estimator.solution_composition_.elitist().pool, json_data)
         return json_data
 
-    def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
+    def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseSupervised):
         pass

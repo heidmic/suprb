@@ -62,8 +62,8 @@ class Solution(SolutionBase, SupervisedMixin):
             return r2_score(y, y_pred, sample_weight=sample_weight)
             
 
-    def fit(self, X: np.ndarray, y: np.ndarray) -> Solution:
-        pred = self.predict(X, cache=True)
+    def fit(self, X: np.ndarray, y: np.ndarray, cache = True) -> Solution:
+        pred = self.predict(X, cache=cache)
         if not self.pool:
             self.error_ = 9999
         else:
