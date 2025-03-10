@@ -11,5 +11,6 @@ authors:
     given-names: Jonathan
     orcid: https://orcid.org/0000-0002-5799-024X
 title: "SupRB: The Supervised Rule-based Learning System"
+url: "https://github.com/heidmic/suprb"
 version: 1.0.0
 date-released: 2024-11-18
