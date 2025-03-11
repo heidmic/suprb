@@ -1,10 +1,9 @@
-from typing import Optional
 
 import numpy as np
 
 from suprb import Solution
 from suprb.solution.initialization import SolutionInit, RandomInit
-from ..base import PopulationBasedSolutionComposition
+from ..base import MOSolutionComposition
 from suprb.solution.fitness import BasicMOSolutionFitness
 from suprb.utils import flatten
 
@@ -16,7 +15,7 @@ from .sorting import fast_non_dominated_sort, calculate_crowding_distances
 from ..sampler import SolutionSampler, NormalSolutionSampler
 
 
-class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
+class NonDominatedSortingGeneticAlgorithm2(MOSolutionComposition):
     """A fast and elitist multiobjective genetic algorithm.
 
     Implemented as described in 10.1109/4235.996017
@@ -58,6 +57,7 @@ class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
             init=init,
             archive=None,
             random_state=random_state,
+            sampler=sampler,
             n_jobs=n_jobs,
             warm_start=warm_start,
         )
@@ -65,7 +65,6 @@ class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
         self.mutation = mutation
         self.crossover = crossover
         self.selection = selection
-        self.sampler = sampler
 
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
@@ -129,4 +128,4 @@ class NonDominatedSortingGeneticAlgorithm2(PopulationBasedSolutionComposition):
         fitness_values = np.array([solution.fitness_ for solution in self.population_])
         pareto_ranks = fast_non_dominated_sort(fitness_values)
         pareto_front = np.array(self.population_)[pareto_ranks == 0]
-        return pareto_front
+        return sorted(pareto_front, key=lambda x: x.fitness_[0], reverse=True)

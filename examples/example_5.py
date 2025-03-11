@@ -4,10 +4,13 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import cross_validate
 from sklearn.datasets import fetch_openml
 
+from matplotlib import pyplot as plt
+
 from suprb import SupRB
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.nsga2 import NonDominatedSortingGeneticAlgorithm2
 from suprb.optimizer.solution.spea2 import StrengthParetoEvolutionaryAlgorithm2
+from suprb.logging.multi_objective import MOLogger
 
 from utils import log_scores
 
@@ -39,13 +42,14 @@ if __name__ == "__main__":
             random_state=random_state,
             n_jobs=1,
         ),
+        logger=MOLogger()
     )
 
     scores = cross_validate(
         model,
         X,
         y,
-        cv=4,
+        cv=2,
         n_jobs=1,
         verbose=10,
         scoring=["r2", "neg_mean_squared_error"],
@@ -54,3 +58,9 @@ if __name__ == "__main__":
     )
 
     log_scores(scores)
+    pareto_front = scores["estimator"][0].logger_.pareto_front_
+    x = pareto_front[:, 0]
+    y = pareto_front[:, 1]
+    plt.plot(x, y, color="black", linestyle="-", marker="o")
+    plt.show()
+    print("Finished!")

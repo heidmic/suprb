@@ -7,7 +7,8 @@ from suprb.solution import Solution, SolutionInit
 from suprb.optimizer import BaseOptimizer
 from suprb.rule import Rule
 from suprb.utils import check_random_state
-from . import SolutionArchive, SolutionSampler
+from .archive import SolutionArchive
+from .sampler import SolutionSampler
 
 
 class SolutionComposition(BaseOptimizer, metaclass=ABCMeta):
@@ -147,7 +148,7 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
             del self.population_
 
 
-class MOOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMeta):
+class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMeta):
     def __init__(
         self,
         population_size: int,

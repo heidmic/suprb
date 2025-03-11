@@ -1,4 +1,3 @@
-from typing import Optional
 
 import numpy as np
 from matplotlib.cbook import flatten
@@ -7,16 +6,16 @@ from suprb import Solution
 from suprb.solution.fitness import BasicMOSolutionFitness
 from suprb.solution.initialization import SolutionInit, RandomInit
 
-from ..base import PopulationBasedSolutionComposition
+from ..base import MOSolutionComposition
 from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, BinaryTournament
 from .crossover import SolutionCrossover, NPoint
 from .archive import EnvironmentalArchive
 from ..sampler import SolutionSampler, NormalSolutionSampler
-from .internal_fitness import calculate_raw_internal_fitness, calculate_density
+from .internal_fitness import calculate_raw_internal_fitness
 
 
-class StrengthParetoEvolutionaryAlgorithm2(PopulationBasedSolutionComposition):
+class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
     """Stringth Pareto Evolutionary Algorithm 2.
 
     Implemented as described in 10.3929/ethz-a-004284029
@@ -60,6 +59,7 @@ class StrengthParetoEvolutionaryAlgorithm2(PopulationBasedSolutionComposition):
             population_size=population_size,
             init=init,
             archive=EnvironmentalArchive(archive_size, kth_nearest if kth_nearest != -1 else int((population_size + archive_size) ** 0.5)),
+            sampler=sampler,
             random_state=random_state,
             n_jobs=n_jobs,
             warm_start=warm_start,
@@ -67,7 +67,6 @@ class StrengthParetoEvolutionaryAlgorithm2(PopulationBasedSolutionComposition):
         self.mutation = mutation
         self.crossover = crossover
         self.selection = selection
-        self.sampler = sampler
 
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
@@ -117,4 +116,4 @@ class StrengthParetoEvolutionaryAlgorithm2(PopulationBasedSolutionComposition):
         fitness_values = np.array([solution.fitness_ for solution in self.archive.population_])
         pareto_ranks = calculate_raw_internal_fitness(fitness_values)
         pareto_front = np.array(self.population_)[pareto_ranks == 0]
-        return pareto_front
+        return sorted(pareto_front, key=lambda x: x.fitness_[0], reverse=True)

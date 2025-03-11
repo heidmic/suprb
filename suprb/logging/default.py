@@ -77,7 +77,7 @@ class DefaultLogger(BaseLogger):
         log_metric("population_size", len(population))
         # log_metric("population_diversity", genome_diversity(population)) # When using default logging, not all approaches are compatible with this
 
-        # This is a bit of a hack to support multidimensional objective functions
+        # This is a bit of a hack to support multidimensional objective functions ~Felix
         if population[0].fitness_.__class__.__name__ == "tuple":
             for i in range(len(population[0].fitness_)):
                 log_metric_stats(f"population_fitness_o_{i}", "fitness_", population, i)
