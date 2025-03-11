@@ -115,5 +115,5 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
             return []
         fitness_values = np.array([solution.fitness_ for solution in self.archive.population_])
         pareto_ranks = calculate_raw_internal_fitness(fitness_values)
-        pareto_front = np.array(self.population_)[pareto_ranks == 0]
+        pareto_front = np.array(self.archive.population_)[pareto_ranks == 0]
         return sorted(pareto_front, key=lambda x: x.fitness_[0], reverse=True)
