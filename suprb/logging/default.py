@@ -5,7 +5,7 @@ import numpy as np
 
 from . import BaseLogger
 from .metrics import matched_training_samples, genome_diversity
-from .. import json as suprb_json
+from .. import suprb_json
 from suprb.base import BaseSupervised
 
 
@@ -61,7 +61,7 @@ class DefaultLogger(BaseLogger):
         elitist = estimator.solution_composition_.elitist()
         log_metric("elitist_fitness", elitist.fitness_)
         log_metric("elitist_error", elitist.error_)
-        if elitist.isClass:
+        if elitist.isClassifierifier:
             log_metric("elitist_accuracy", elitist.score(X, y))
             log_metric("elitist_f1", elitist.f1_score(X, y))
         log_metric("elitist_complexity", elitist.complexity_)

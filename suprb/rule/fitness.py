@@ -16,7 +16,7 @@ class PseudoAccuracy(RuleFitness):
     def __call__(self, rule: Rule) -> float:
         # note that we multiply solely for readability reasons without
         # any performance impact
-        if rule.isClass:
+        if rule.isClassifier:
             return  actual_accuracy(rule.error_) * 100
         return pseudo_accuracy(rule.error_) * 100
 
@@ -35,7 +35,7 @@ class VolumeRuleFitness(RuleFitness, metaclass=ABCMeta):
         input_space_volume = np.prod(diff)
 
         volume_share = rule.volume_ / input_space_volume
-        if rule.isClass:
+        if rule.isClassifier:
             accuracy = actual_accuracy(rule.error_)
         else:
             accuracy = pseudo_accuracy(rule.error_, beta=2)

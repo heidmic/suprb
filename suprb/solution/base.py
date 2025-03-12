@@ -45,17 +45,17 @@ class Solution(SolutionBase, SupervisedMixin):
         self.pool = pool
         self.mixing = mixing
         self.fitness = fitness
-        self.isClass = None
+        self.isClassifier = None
 
     def score(self, X, y, sample_weight=None):
         if not self.pool:
             return 0.0
-        if self.isClass is None:
+        if self.isClassifier is None:
             if isinstance(self.pool[0].model, ClassifierMixin):
-                self.isClass = True
+                self.isClassifier = True
             else:
-                self.isClass = False
-        if self.isClass:
+                self.isClassifier = False
+        if self.isClassifier:
             return accuracy_score(y, self.predict(X), sample_weight=sample_weight)
         else:
             y_pred = self.predict(X)
@@ -67,12 +67,12 @@ class Solution(SolutionBase, SupervisedMixin):
         if not self.pool:
             self.error_ = 9999
         else:
-            if self.isClass is None:
+            if self.isClassifier is None:
                 if isinstance(self.pool[0].model, ClassifierMixin):
-                    self.isClass = True
+                    self.isClassifier = True
                 else:
-                    self.isClass = False
-            if self.isClass:
+                    self.isClassifier = False
+            if self.isClassifier:
                 self.error_ = max(pseudo_error(accuracy_score(y, pred)), 1e-4)
             else:
                 self.error_ = max(mean_squared_error(y, pred), 1e-4)

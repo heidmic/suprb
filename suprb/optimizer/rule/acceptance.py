@@ -41,7 +41,7 @@ class Variance(RuleAcceptance):
             return False
         local_y = y[rule.match_set_]
         default_error = np.sum(local_y ** 2) / (len(local_y) * self.beta)
-        if rule.isClass:
+        if rule.isClassifier:
             # default error is the trivial solution of always choosing the most common label
             local_y = [round(y) for y in local_y]
             default_accuracy = np.bincount(local_y).max() / (len(local_y) * self.beta)

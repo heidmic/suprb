@@ -106,7 +106,7 @@ class SupRB(BaseSupervised):
         self.n_jobs = n_jobs
         self.early_stopping_patience = early_stopping_patience
         self.early_stopping_delta = early_stopping_delta
-        self.isClass = None
+        self.isClassifier = None
 
     def check_early_stopping(self):
         if self.early_stopping_patience > 0:
@@ -126,12 +126,12 @@ class SupRB(BaseSupervised):
     def score(self, X, y, sample_weight=None):
         if not self.pool_:
             return 0.0
-        if self.isClass is None:
+        if self.isClassifier is None:
             if isinstance(self.pool_[0].model, ClassifierMixin):
-                self.isClass = True
+                self.isClassifier = True
             else:
-                self.isClass = False
-        if self.isClass:
+                self.isClassifier = False
+        if self.isClassifier:
             return accuracy_score(y, self.predict(X), sample_weight=sample_weight)
         else:
             y_pred = self.predict(X)
@@ -373,7 +373,7 @@ class SupRB(BaseSupervised):
         pool = []
         for old_rule in solution.pool:
             rule = old_rule.clone(model = copy.deepcopy(local_model))
-            rule.isClass = old_rule.isClass
+            rule.isClassifier = old_rule.isClassifier
             pool.append(rule)
         solution.pool = pool
         self.is_fitted_ = True

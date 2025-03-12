@@ -29,7 +29,7 @@ class ComplexitySolutionFitness(SolutionFitness, metaclass=ABCMeta):
         self.alpha = alpha
 
     def __call__(self, solution: Solution) -> float:
-        acc = actual_accuracy(solution.error_) if solution.isClass else pseudo_accuracy(solution.error_)
+        acc = actual_accuracy(solution.error_) if solution.isClassifier else pseudo_accuracy(solution.error_)
         return self.fitness_func_(self.alpha, acc,
                                   c_norm(solution.complexity_, self.max_genome_length_)) * 100
 

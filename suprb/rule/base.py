@@ -44,9 +44,9 @@ class Rule(SolutionBase):
         self.model = model
         self.fitness = fitness
         if isinstance(model, ClassifierMixin):
-            self.isClass = True
+            self.isClassifier = True
         else:
-            self.isClass = False
+            self.isClassifier = False
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Rule:
 
@@ -75,7 +75,7 @@ class Rule(SolutionBase):
         X, y = X[self.match_set_], y[self.match_set_]
 
         # No reason to fit if only one label in match_set
-        if self.isClass:
+        if self.isClassifier:
             if len(np.unique(y)) == 1:
                 self.pred_ = y[0]
                 self.error_ = 1
@@ -88,9 +88,9 @@ class Rule(SolutionBase):
         self.model.fit(X, y)
 
         self.pred_ = self.model.predict(X)
-        if not self.isClass:
+        if not self.isClassifier:
             self.error_ = max(mean_squared_error(y, self.pred_), 1e-4)  # TODO: make min a parameter?
-        elif self.isClass:
+        elif self.isClassifier:
             self.error_ = max(pseudo_error(accuracy_score(y, self.pred_)), 1e-4)
         self.fitness_ = self.fitness(self)
         self.experience_ = float(X.shape[0])
