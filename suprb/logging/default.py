@@ -5,7 +5,7 @@ import numpy as np
 
 from . import BaseLogger
 from .metrics import matched_training_samples, genome_diversity
-from .. import suprb_json
+from .. import json
 from suprb.base import BaseSupervised
 
 
@@ -73,7 +73,7 @@ class DefaultLogger(BaseLogger):
 
     def get_elitist(self, estimator: BaseSupervised):
         json_data = {}
-        suprb_json._save_pool(estimator.solution_composition_.elitist().pool, json_data)
+        json._save_pool(estimator.solution_composition_.elitist().pool, json_data)
         return json_data
 
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseSupervised):
