@@ -43,6 +43,7 @@ class MultiObjectiveSolutionFitness(SolutionFitness, metaclass=ABCMeta):
 
     error_func_: Callable
     complexity_func_: Callable
+    hv_reference_: list[float]
 
     def __init__(self):
         pass
@@ -56,7 +57,7 @@ class BasicMOSolutionFitness(MultiObjectiveSolutionFitness):
         super().__init__()
         self.error_func_ = pseudo_accuracy
         self.complexity_func_ = c_norm
-
+        self.hv_reference_ = [1., 1.]
 
 class ComplexityEmary(ComplexitySolutionFitness):
     """

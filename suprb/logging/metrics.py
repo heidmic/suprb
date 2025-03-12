@@ -27,3 +27,15 @@ def matched_training_samples(pool: list[Rule]):
     matched = np.stack([rule.match_set_ for rule in pool]).any(axis=0).nonzero()[0].shape[0]
     total = pool[0].match_set_.shape[0]
     return matched / total
+
+def hypervolume(pareto_front: list[Solution]):
+    pareto_front = sorted(pareto_front, key=lambda solution: solution.fitness_[0], reverse=True)
+    fitness_values = np.array([solution.fitness_ for solution in pareto_front])
+    # Needs a MultiObjectiveSolutionFitness
+    reference_point = pareto_front[0].fitness.hv_reference_
+    last_x = reference_point[0]
+    volume = 0
+    for fitness in fitness_values:
+        volume += (last_x - fitness[0]) * np.prod(reference_point[1:] - fitness[1:])
+        last_x = fitness[0]
+    return volume

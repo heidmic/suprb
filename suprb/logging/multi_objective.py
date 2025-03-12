@@ -2,14 +2,17 @@ import numpy as np
 
 from . import DefaultLogger
 from ..base import BaseRegressor
+from suprb.solution import Solution
+
+from .metrics import hypervolume
 
 
 class MOLogger(DefaultLogger):
 
-    pareto_front_: np.ndarray
+    pareto_front_: list[Solution]
 
     def log_final(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
-        pareto_front = estimator.solution_composition_.pareto_front()
-        pareto_front = np.array([solution.fitness_ for solution in pareto_front])
-        self.pareto_front_ = pareto_front
+        super().log_final(X, y, estimator)
+        self.pareto_front_ = estimator.solution_composition_.pareto_front()
+        self.metrics_["hypervolume"] = hypervolume(self.pareto_front_)
         return

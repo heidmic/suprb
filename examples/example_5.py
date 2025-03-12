@@ -1,3 +1,4 @@
+import numpy as np
 import sklearn
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -59,8 +60,19 @@ if __name__ == "__main__":
 
     log_scores(scores)
     pareto_front = scores["estimator"][0].logger_.pareto_front_
-    x = pareto_front[:, 0]
-    y = pareto_front[:, 1]
-    plt.plot(x, y, color="black", linestyle="-", marker="o")
+    pareto_front = np.array([solution.fitness_ for solution in pareto_front])
+    hypervolume = 0
+
+    for run in scores["estimator"]:
+        hypervolume += run.logger_.metrics_["hypervolume"] / len(scores["estimator"])
+
+    x = pareto_front[:, 1]
+    y = pareto_front[:, 0]
+    plt.step(x, y, color="black", linestyle="-", marker="x")
+    plt.title(f"HV = {hypervolume}")
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.xlabel("Complexity")
+    plt.ylabel("Error")
     plt.show()
     print("Finished!")
