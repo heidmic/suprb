@@ -1,6 +1,6 @@
 import numpy as np
 
-from suprb.optimizer.solution.saga3.solution_extension import SagaSolution
+from suprb.optimizer.solution.saga.solution_extension import SagaSolution
 from suprb.rule import Rule
 from suprb.solution.initialization import SolutionInit, MixingModel, SolutionFitness
 from ..utils import RandomState

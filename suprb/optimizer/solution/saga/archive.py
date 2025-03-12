@@ -4,7 +4,7 @@ import numpy as np
 
 from suprb.base import BaseComponent
 from suprb.optimizer.solution.archive import SolutionArchive
-from suprb.optimizer.solution.saga3.solution_extension import SagaSolution
+from suprb.optimizer.solution.saga.solution_extension import SagaSolution
 from suprb.solution import Solution
 from suprb.rule import Rule
 

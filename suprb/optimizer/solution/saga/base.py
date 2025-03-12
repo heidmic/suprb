@@ -1,6 +1,6 @@
 import numpy as np
 
-from suprb.optimizer.solution.saga3.archive import SagaElitist
+from suprb.optimizer.solution.saga.archive import SagaElitist
 
 from .initialization import SagaRandomInit
 from suprb.solution.initialization import SolutionInit
@@ -13,7 +13,7 @@ from ..archive import Elitist, SolutionArchive
 from ..base import PopulationBasedSolutionComposition
 
 
-class SelfAdaptingGeneticAlgorithm(PopulationBasedSolutionComposition):
+class SelfAdaptingGeneticAlgorithm3(PopulationBasedSolutionComposition):
     """A simple self adapting Genetic Algorithm, implemented acording to 10.1023/A:1022521428870 .
 
     Parameters
@@ -192,8 +192,8 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
                 flatten(
                     [
                         (
-                            self.crossover(A, B, self.crossover_rate, random_state=self.random_state_),
-                            self.crossover(B, A, self.crossover_rate, random_state=self.random_state_),
+                            self.crossover(A, B, crossover_rate=self.crossover_rate, random_state=self.random_state_),
+                            self.crossover(B, A, crossover_rate=self.crossover_rate, random_state=self.random_state_),
                         )
                         for A, B in parent_pairs
                     ]
@@ -201,9 +201,7 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
             )
 
             # Mutation
-            mutated_children = [
-                self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children
-            ]
+            mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
 
             # Replacement
             self.population_ = parents
