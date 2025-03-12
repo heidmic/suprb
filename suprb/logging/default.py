@@ -63,7 +63,6 @@ class DefaultLogger(BaseLogger):
         log_metric("elitist_error", elitist.error_)
         if elitist.isClassifier:
             log_metric("elitist_accuracy", elitist.score(X, y))
-            log_metric("elitist_f1", elitist.f1_score(X, y))
         log_metric("elitist_complexity", elitist.complexity_)
         log_metric("elitist_matched", matched_training_samples(elitist.subpopulation))
         log_metric("elitist_rules", elitist.pool)
