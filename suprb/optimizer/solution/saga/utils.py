@@ -70,18 +70,6 @@ class SagaSolution(Solution):
         return solution
 
 
-class Uniform(SolutionCrossover):
-    """Decide for every bit with uniform probability if the bit in genome A or B is used."""
-
-    def _crossover(self, A: SagaSolution, B: SagaSolution, random_state: RandomState) -> SagaSolution:
-        indices = random_state.random(size=len(A.genome)) <= 0.5
-        genome = np.empty(A.genome.shape)
-        genome[indices] = A.genome[indices]
-        genome[~indices] = B.genome[~indices]
-
-        return A.clone(genome=genome)
-
-
 class SagaElitist(SolutionArchive):
 
     def __call__(self, new_population: list[SagaSolution]):
