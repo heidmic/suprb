@@ -4,4 +4,3 @@ from .base import (
     SelfAdaptingGeneticAlgorithm3,
     SasGeneticAlgorithm,
 )
-from .initialization import SagaRandomInit

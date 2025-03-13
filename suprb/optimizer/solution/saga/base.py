@@ -4,12 +4,10 @@ import numpy as np
 from suprb.optimizer.solution.ga.mutation import SolutionMutation, BitFlips
 from suprb.optimizer.solution.ga.crossover import NPoint, SolutionCrossover
 from suprb.optimizer.solution.ga.selection import SolutionSelection, Tournament, Ageing
-from suprb.optimizer.solution.saga.utils import SagaSolution, SagaCrossover, SagaElitist
+from suprb.optimizer.solution.saga.utils import SagaSolution, SagaCrossover, SagaElitist, SagaRandomInit
 
 from suprb.solution.initialization import SolutionInit, RandomInit, Solution
 
-from .initialization import SagaRandomInit
-from suprb.solution.initialization import SolutionInit
 from suprb.utils import flatten
 
 from ..archive import Elitist, SolutionArchive
