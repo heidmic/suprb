@@ -2,13 +2,13 @@ import numpy as np
 
 from suprb.optimizer.solution.saga.archive import SagaElitist
 from suprb.optimizer.solution.ga import GeneticAlgorithm
+from suprb.optimizer.solution.ga.mutation import SolutionMutation, BitFlips
 from suprb.solution.initialization import SolutionInit, RandomInit, Solution
 
 from .initialization import SagaRandomInit
 from suprb.solution.initialization import SolutionInit
 from suprb.utils import flatten
 from .crossover import SagaCrossover, SolutionCrossover
-from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, Tournament, Ageing
 from .solution_extension import SagaSolution, NPoint
 from ..archive import Elitist, SolutionArchive
