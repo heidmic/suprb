@@ -5,6 +5,7 @@ import numpy as np
 from suprb.base import BaseComponent
 from suprb.solution import Solution
 from suprb.utils import RandomState
+from suprb.optimizer.solution.saga.utils import SagaSolution
 
 
 class SolutionSelection(BaseComponent, metaclass=ABCMeta):

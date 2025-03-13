@@ -3,7 +3,7 @@ from abc import ABCMeta
 import numpy as np
 
 from suprb.base import BaseComponent
-from .solution_extension import SagaSolution
+from suprb.optimizer.solution.saga.utils import SagaSolution
 from suprb.utils import RandomState
 
 
