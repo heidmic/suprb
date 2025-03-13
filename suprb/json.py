@@ -173,7 +173,7 @@ def _update_same_base_keys(json_config, base_key):
         if json_config[key] == "NoneType":
             params[param] = None
         elif isinstance(json_config[key], str) and json_config[key].startswith(CLASS_PREFIX):
-            json_config[key] = _get_class(json_config[key])()
+            params[param] = _get_class(json_config[key])()
         else:
             params[param] = json_config[key]
 
