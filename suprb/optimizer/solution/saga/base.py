@@ -4,7 +4,7 @@ import numpy as np
 from suprb.optimizer.solution.ga.mutation import SolutionMutation, BitFlips
 from suprb.optimizer.solution.ga.crossover import NPoint, SolutionCrossover, SagaCrossover
 from suprb.optimizer.solution.ga.selection import SolutionSelection, Tournament, Ageing
-from suprb.optimizer.solution.saga.utils import SagaSolution, SagaElitist, SagaRandomInit
+from suprb.optimizer.solution.saga.utils import SagaSolution, SagaRandomInit
 
 from suprb.solution.initialization import SolutionInit, RandomInit, Solution
 
@@ -462,7 +462,7 @@ class SelfAdaptingGeneticAlgorithm3(PopulationBasedSolutionComposition):
         crossover: SagaCrossover = SagaCrossover(parameter_mutation_rate=0.05),
         selection: SolutionSelection = Tournament(),
         init: SolutionInit = SagaRandomInit(),
-        archive: SolutionArchive = SagaElitist(),
+        archive: SolutionArchive = Elitist(),
         random_state: int = None,
         n_jobs: int = 1,
         warm_start: bool = True,
@@ -560,7 +560,7 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
         crossover: SolutionCrossover = NPoint(n=3),
         selection: SolutionSelection = Ageing(),
         init: SolutionInit = SagaRandomInit(),
-        archive: SolutionArchive = SagaElitist(),
+        archive: SolutionArchive = Elitist(),
         random_state: int = None,
         n_jobs: int = 1,
         warm_start: bool = True,

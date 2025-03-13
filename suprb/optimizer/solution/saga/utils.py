@@ -70,18 +70,6 @@ class SagaSolution(Solution):
         return solution
 
 
-class SagaElitist(SolutionArchive):
-
-    def __call__(self, new_population: list[SagaSolution]):
-        best = max(new_population, key=lambda i: i.fitness_)
-        if self.population_:
-            if self.population_[0].fitness_ < best.fitness_:
-                self.population_.pop(0)
-                self.population_.append(best.clone())
-        else:
-            self.population_.append(best.clone())
-
-
 def padding_size(solution: SagaSolution) -> int:
     """Calculates the number of bits to add to the genome after the pool was expanded."""
 
