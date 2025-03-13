@@ -9,42 +9,18 @@ from suprb.utils import RandomState
 
 class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
     def __call__(self, A: Solution, B: Solution, crossover_rate, random_state: RandomState) -> Solution:
-        if random_state.random() < crossover_rate:
-            return self._crossover(A=A, B=B, random_state=random_state)
+        result = None
 
-        return A
+        if random_state.random() < crossover_rate:
+            result = self._crossover(A=A, B=B, random_state=random_state)
+        else:
+            result = A
+
+        return result
 
     @abstractmethod
     def _crossover(self, A: Solution, B: Solution, random_state: RandomState) -> Solution:
         pass
-
-    def saga2_crossover(
-        self,
-        A: Solution,
-        B: Solution,
-        crossover_rate_min,
-        crossover_rate_max,
-        fitness_mean,
-        fitness_min,
-        fitness_max,
-        random_state: RandomState,
-    ) -> Solution:
-        fitness_parents_mean = (A.fitness_ + B.fitness_) / 2
-
-        crossover_rate_diff = crossover_rate_max - crossover_rate_min
-        fitness_diff = abs(fitness_mean - fitness_parents_mean)
-
-        if fitness_mean in {fitness_min, fitness_max}:
-            crossover_rate = crossover_rate_max
-        elif fitness_parents_mean <= fitness_mean:
-            crossover_rate = crossover_rate_max - crossover_rate_diff * (fitness_diff / (fitness_mean - fitness_min))
-        else:
-            crossover_rate = crossover_rate_max - crossover_rate_diff * (fitness_diff / (fitness_max - fitness_mean))
-
-        if random_state.random() < crossover_rate:
-            return self._crossover(A=A, B=B, random_state=random_state)
-
-        return A
 
 
 class NPoint(SolutionCrossover):

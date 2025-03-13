@@ -6,6 +6,7 @@ import numpy as np
 from suprb.base import BaseComponent
 from .solution_extension import SagaSolution
 from suprb.utils import RandomState
+from suprb.solution import Solution
 
 
 class SolutionMutation(BaseComponent, metaclass=ABCMeta):
@@ -22,5 +23,10 @@ class BitFlips(SolutionMutation):
 
     def __call__(self, solution: SagaSolution, random_state: RandomState) -> SagaSolution:
         bit_flips = random_state.random(solution.genome.shape) < solution.mutation_rate
+        genome = np.logical_xor(solution.genome, bit_flips)
+        return solution.clone(genome=genome)
+
+    def __call__(self, solution: Solution, mutation_rate: float, random_state: RandomState) -> Solution:
+        bit_flips = random_state.random(solution.genome.shape) < mutation_rate
         genome = np.logical_xor(solution.genome, bit_flips)
         return solution.clone(genome=genome)

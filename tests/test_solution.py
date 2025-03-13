@@ -4,8 +4,13 @@ from sklearn.utils.estimator_checks import check_estimator
 
 import suprb
 import suprb.logging.stdout
-from suprb.optimizer.solution.ga import GeneticAlgorithm, SelfAdaptingGeneticAlgorithm1, SelfAdaptingGeneticAlgorithm2
-from suprb.optimizer.solution.saga import SelfAdaptingGeneticAlgorithm3, SasGeneticAlgorithm
+from suprb.optimizer.solution.ga import GeneticAlgorithm
+from suprb.optimizer.solution.saga import (
+    SelfAdaptingGeneticAlgorithm1,
+    SelfAdaptingGeneticAlgorithm2,
+    SelfAdaptingGeneticAlgorithm3,
+    SasGeneticAlgorithm,
+)
 from suprb.optimizer.rule.es import ES1xLambda
 
 
