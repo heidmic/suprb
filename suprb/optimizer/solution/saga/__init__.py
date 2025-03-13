@@ -4,7 +4,6 @@ from .base import (
     SelfAdaptingGeneticAlgorithm3,
     SasGeneticAlgorithm,
 )
-from .crossover import SagaCrossover
 from .selection import SolutionSelection
 from .solution_extension import SagaSolution, SolutionCrossover
 from .initialization import SagaRandomInit
