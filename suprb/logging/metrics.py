@@ -39,3 +39,11 @@ def hypervolume(pareto_front: list[Solution]):
         volume += (last_x - fitness[0]) * np.prod(reference_point[1:] - fitness[1:])
         last_x = fitness[0]
     return volume
+
+def spread(pareto_front: list[Solution]):
+    pareto_front = sorted(pareto_front, key=lambda solution: solution.fitness_[0], reverse=True)
+    fitness_values = np.array([solution.fitness_ for solution in pareto_front])
+    distances = np.linalg.norm(fitness_values[:-1] - fitness_values[1:], axis=1)
+    avg_distance = np.mean(distances)
+    np.sum(np.abs(distances - avg_distance) / distances.shape[0] - 1)
+    return np.max(distances)
