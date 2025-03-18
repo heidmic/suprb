@@ -2,7 +2,7 @@ import numpy as np
 
 
 from suprb.optimizer.solution.ga.mutation import SolutionMutation, BitFlips
-from suprb.optimizer.solution.ga.crossover import NPoint, SolutionCrossover, SagaCrossover
+from suprb.optimizer.solution.ga.crossover import NPoint, SolutionCrossover, SelfAdaptiveCrossover
 from suprb.optimizer.solution.ga.selection import SolutionSelection, Tournament, Ageing
 from suprb.optimizer.solution.saga.utils import SagaSolution, SagaRandomInit
 
@@ -15,7 +15,123 @@ from ..base import PopulationBasedSolutionComposition
 from suprb.utils import RandomState
 
 
-class SelfAdaptingGeneticAlgorithm1(PopulationBasedSolutionComposition):
+class SelfAdaptingGeneticAlgorithmBase(PopulationBasedSolutionComposition):
+    """A simple self adapting Genetic Algorithm, implemented acording to 10.1109/20.952626 .
+
+    Parameters
+    ----------
+    n_iter: int
+        Iterations the the metaheuristic will perform.
+    population_size: int
+        Number of solutions in the population.
+    mutation: SolutionMutation
+    crossover: SolutionCrossover
+    selection: SolutionSelection
+    v_min: float
+        Lower bound for the population diversity, where a higher number means less diverse.
+    v_max: float
+        Upper bound for the population diversity, where a higher number means less diverse.
+    init: SolutionInit
+    archive: SolutionArchive
+    random_state : int, RandomState instance or None, default=None
+        Pass an int for reproducible results across multiple function calls.
+    warm_start: bool
+        If False, solutions are generated new for every `optimize()` call.
+        If True, solutions are used from previous runs.
+    n_jobs: int
+        The number of threads / processes the optimization uses.
+    """
+
+    n_elitists_: int
+
+    def __init__(
+        self,
+        n_iter: int,
+        population_size: int,
+        elitist_ratio: float,
+        mutation: SolutionMutation,
+        crossover: SolutionCrossover,
+        selection: SolutionSelection,
+        init: SolutionInit,
+        archive: SolutionArchive,
+        random_state: int,
+        n_jobs: int,
+        warm_start: bool,
+    ):
+        super().__init__(
+            n_iter=n_iter,
+            population_size=population_size,
+            init=init,
+            archive=archive,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            warm_start=warm_start,
+        )
+
+        self.mutation = mutation
+        self.crossover = crossover
+        self.selection = selection
+        self.elitist_ratio = elitist_ratio
+
+    def fitness_calculation(self):
+        pass
+
+    def update_genetic_operator_rates(self):
+        pass
+
+    def crossover_children(self, parent_pairs):
+        pass
+
+    def mutate_children(self, children):
+        pass
+
+    def mutate_children(self, children, X, y):
+        pass
+
+    def parent_selection(self):
+        return self.selection(
+            population=self.population_,
+            n=self.population_size,
+            random_state=self.random_state_,
+        )
+
+    def _optimize(self, X: np.ndarray, y: np.ndarray):
+        assert self.population_size % 2 == 0
+        self.fit_population(X, y)
+
+        self.n_elitists_ = int(self.population_size * self.elitist_ratio)
+
+        for _ in range(self.n_iter):
+            self.fitness_calculation()
+            # Adjust Rates for current fitness
+            self.update_genetic_operator_rates()
+
+            # Eltitism
+            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
+
+            # Selection
+            parents = self.parent_selection()
+
+            # Note that this expression swallows the last element, if `population_size` is odd
+            parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
+
+            # Crossover
+            children = self.crossover_children(parent_pairs)
+
+            # Mutation
+            try:
+                mutated_children = self.mutate_children(children)
+            except TypeError:
+                mutated_children = self.mutate_children(children, X, y)
+
+            # Replacement
+            self.population_ = elitists
+            self.population_.extend(mutated_children)
+
+            self.fit_population(X, y)
+
+
+class SelfAdaptingGeneticAlgorithm1(SelfAdaptingGeneticAlgorithmBase):
     """A simple self adapting Genetic Algorithm, implemented acording to 10.1109/20.952626 .
 
     Parameters
@@ -71,6 +187,10 @@ class SelfAdaptingGeneticAlgorithm1(PopulationBasedSolutionComposition):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
+            elitist_ratio=elitist_ratio,
+            mutation=mutation,
+            crossover=crossover,
+            selection=selection,
             init=init,
             archive=archive,
             random_state=random_state,
@@ -78,22 +198,21 @@ class SelfAdaptingGeneticAlgorithm1(PopulationBasedSolutionComposition):
             warm_start=warm_start,
         )
 
+        self.mutation_rate = mutation_rate
+        self.crossover_rate = crossover_rate
+
+        self.mutation_rate_multiplier = mutation_rate_multiplier
+        self.crossover_rate_multiplier = crossover_rate_multiplier
+
         self.v_min = v_min
         self.v_max = v_max
-        self.mutation_rate = mutation_rate
+
         self.mutation_rate_min = mutation_rate_min
         self.mutation_rate_max = mutation_rate_max
-        self.mutation_rate_multiplier = mutation_rate_multiplier
-        self.crossover_rate = crossover_rate
         self.crossover_rate_min = crossover_rate_min
         self.crossover_rate_max = crossover_rate_max
-        self.crossover_rate_multiplier = crossover_rate_multiplier
-        self.mutation = mutation
-        self.crossover = crossover
-        self.selection = selection
-        self.elitist_ratio = elitist_ratio
 
-    def adjust_rates(self):
+    def update_genetic_operator_rates(self):
         gdm = np.mean([i.fitness_ for i in self.population_]) / np.max([i.fitness_ for i in self.population_])
         if gdm > self.v_max:
             self.mutation_rate = min(self.mutation_rate_max, self.mutation_rate * self.mutation_rate_multiplier)
@@ -118,43 +237,8 @@ class SelfAdaptingGeneticAlgorithm1(PopulationBasedSolutionComposition):
     def mutate_children(self, children):
         return [self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children]
 
-    def _optimize(self, X: np.ndarray, y: np.ndarray):
-        assert self.population_size % 2 == 0
-        self.fit_population(X, y)
 
-        self.n_elitists_ = int(self.population_size * self.elitist_ratio)
-
-        for _ in range(self.n_iter):
-            # Adjust Rates for current fitness
-            self.adjust_rates()
-
-            # Eltitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
-
-            # Selection
-            parents = self.selection(
-                population=self.population_,
-                n=self.population_size,
-                random_state=self.random_state_,
-            )
-
-            # Note that this expression swallows the last element, if `population_size` is odd
-            parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
-
-            # Crossover
-            children = self.crossover_children(parent_pairs)
-
-            # Mutation
-            mutated_children = self.mutate_children(children)
-
-            # Replacement
-            self.population_ = elitists
-            self.population_.extend(mutated_children)
-
-            self.fit_population(X, y)
-
-
-class SelfAdaptingGeneticAlgorithm2(PopulationBasedSolutionComposition):
+class SelfAdaptingGeneticAlgorithm2(SelfAdaptingGeneticAlgorithmBase):
     """A simple self adapting Genetic Algorithm, implemented acording to 10.1007/s00521-018-3438-9 .
 
     Parameters
@@ -166,10 +250,6 @@ class SelfAdaptingGeneticAlgorithm2(PopulationBasedSolutionComposition):
     mutation: SolutionMutation
     crossover: SolutionCrossover
     selection: SolutionSelection
-    v_min: float
-        Lower bound for the population diversity, where a higher number means less diverse.
-    v_max: float
-        Upper bound for the population diversity, where a higher number means less diverse.
     init: SolutionInit
     archive: SolutionArchive
     random_state : int, RandomState instance or None, default=None
@@ -210,6 +290,10 @@ class SelfAdaptingGeneticAlgorithm2(PopulationBasedSolutionComposition):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
+            elitist_ratio=elitist_ratio,
+            mutation=mutation,
+            crossover=crossover,
+            selection=selection,
             init=init,
             archive=archive,
             random_state=random_state,
@@ -219,14 +303,8 @@ class SelfAdaptingGeneticAlgorithm2(PopulationBasedSolutionComposition):
 
         self.mutation_rate_min = mutation_rate_min
         self.mutation_rate_max = mutation_rate_max
-        self.mutation_rate_current_max = mutation_rate_max
         self.crossover_rate_min = crossover_rate_min
-        self.crossover_rate_current_min = crossover_rate_min
         self.crossover_rate_max = crossover_rate_max
-        self.mutation = mutation
-        self.crossover = crossover
-        self.selection = selection
-        self.elitist_ratio = elitist_ratio
 
     def fitness_calculation(self):
         fitness_variance = np.var([i.fitness_ for i in self.population_])
@@ -236,43 +314,6 @@ class SelfAdaptingGeneticAlgorithm2(PopulationBasedSolutionComposition):
         self.fitness_mean = np.mean([i.fitness_ for i in self.population_])
         self.fitness_min = np.min([i.fitness_ for i in self.population_])
         self.fitness_max = np.max([i.fitness_ for i in self.population_])
-
-    def _optimize(self, X: np.ndarray, y: np.ndarray):
-        assert self.population_size % 2 == 0
-        self.fit_population(X, y)
-
-        self.n_elitists_ = int(self.population_size * self.elitist_ratio)
-
-        for _ in range(self.n_iter):
-            self.fitness_calculation()
-
-            # Adjust Rates for current fitness
-            self.adjust_rates()
-
-            # Eltitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
-
-            # Selection
-            parents = self.selection(
-                population=self.population_,
-                n=self.population_size,
-                random_state=self.random_state_,
-            )
-
-            # Note that this expression swallows the last element, if `population_size` is odd
-            parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
-
-            # Crossover
-            children = self.crossover_children(parent_pairs)
-
-            # Mutation
-            mutated_children = self.mutate_children(X, y, children)
-
-            # Replacement
-            self.population_ = elitists
-            self.population_.extend(mutated_children)
-
-            self.fit_population(X, y)
 
     def saga2_mutation(
         self,
@@ -356,7 +397,7 @@ class SelfAdaptingGeneticAlgorithm2(PopulationBasedSolutionComposition):
             )
         )
 
-    def mutate_children(self, X, y, children):
+    def mutate_children(self, children, X, y):
         for child in children:
             child.fit(X, y)
 
@@ -415,7 +456,7 @@ class SelfAdaptingGeneticAlgorithm2(PopulationBasedSolutionComposition):
     def calc_quality(self):
         return self.calc_diversity() * (1 - self.calc_similarity())
 
-    def adjust_rates(self):
+    def update_genetic_operator_rates(self):
         quality = self.calc_quality()
         # crossover rate
         self.crossover_rate_current_min = (
@@ -427,7 +468,7 @@ class SelfAdaptingGeneticAlgorithm2(PopulationBasedSolutionComposition):
         )
 
 
-class SelfAdaptingGeneticAlgorithm3(PopulationBasedSolutionComposition):
+class SelfAdaptingGeneticAlgorithm3(SelfAdaptingGeneticAlgorithmBase):
     """A simple self adapting Genetic Algorithm, implemented acording to 10.1023/A:1022521428870 .
 
     Parameters
@@ -459,7 +500,7 @@ class SelfAdaptingGeneticAlgorithm3(PopulationBasedSolutionComposition):
         population_size: int = 32,
         elitist_ratio: float = 0.17,
         mutation: SolutionMutation = BitFlips(),
-        crossover: SagaCrossover = SagaCrossover(parameter_mutation_rate=0.05),
+        crossover: SelfAdaptiveCrossover = SelfAdaptiveCrossover(parameter_mutation_rate=0.05),
         selection: SolutionSelection = Tournament(),
         init: SolutionInit = SagaRandomInit(),
         archive: SolutionArchive = Elitist(),
@@ -471,6 +512,10 @@ class SelfAdaptingGeneticAlgorithm3(PopulationBasedSolutionComposition):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
+            elitist_ratio=elitist_ratio,
+            mutation=mutation,
+            crossover=crossover,
+            selection=selection,
             init=init,
             archive=archive,
             random_state=random_state,
@@ -478,55 +523,26 @@ class SelfAdaptingGeneticAlgorithm3(PopulationBasedSolutionComposition):
             warm_start=warm_start,
         )
 
-        self.mutation = mutation
-        self.crossover = crossover
-        self.selection = selection
-        self.elitist_ratio = elitist_ratio
         self.parameter_mutation_rate = parameter_mutation_rate
 
-    def _optimize(self, X: np.ndarray, y: np.ndarray):
-        assert self.population_size % 2 == 0
-        self.fit_population(X, y)
-
-        self.n_elitists_ = int(self.population_size * self.elitist_ratio)
-
-        for _ in range(self.n_iter):
-            # Eltitism
-            elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
-
-            # Selection
-            parents = self.selection(
-                population=self.population_,
-                n=self.population_size,
-                random_state=self.random_state_,
+    def crossover_children(self, parent_pairs):
+        return list(
+            flatten(
+                [
+                    (
+                        self.crossover(A, B, self.parameter_mutation_rate, random_state=self.random_state_),
+                        self.crossover(B, A, self.parameter_mutation_rate, random_state=self.random_state_),
+                    )
+                    for A, B in parent_pairs
+                ]
             )
-            # Note that this expression swallows the last element, if `population_size` is odd
-            parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
+        )
 
-            # Crossover
-            children = list(
-                flatten(
-                    [
-                        (
-                            self.crossover(A, B, self.parameter_mutation_rate, random_state=self.random_state_),
-                            self.crossover(B, A, self.parameter_mutation_rate, random_state=self.random_state_),
-                        )
-                        for A, B in parent_pairs
-                    ]
-                )
-            )
-
-            # Mutation
-            mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
-
-            # Replacement
-            self.population_ = elitists
-            self.population_.extend(mutated_children)
-
-            self.fit_population(X, y)
+    def mutate_children(self, children):
+        return [self.mutation(child, random_state=self.random_state_) for child in children]
 
 
-class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
+class SasGeneticAlgorithm(SelfAdaptingGeneticAlgorithmBase):
     """A simple self adapting Genetic Algorithm, implemented acording to 10.1007/978-3-642-21219-2_16 .
 
     Parameters
@@ -569,7 +585,11 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
     ):
         super().__init__(
             n_iter=n_iter,
-            population_size=initial_population_size,
+            population_size=32,
+            elitist_ratio=0,
+            mutation=mutation,
+            crossover=crossover,
+            selection=selection,
             init=init,
             archive=archive,
             random_state=random_state,
@@ -577,50 +597,29 @@ class SasGeneticAlgorithm(PopulationBasedSolutionComposition):
             warm_start=warm_start,
         )
 
-        self.initial_population_size = initial_population_size
-        self.mutation = mutation
-        self.crossover = crossover
-        self.selection = selection
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
+        self.initial_population_size = initial_population_size
 
-    def _optimize(self, X: np.ndarray, y: np.ndarray):
-        self.fit_population(X, y)
-
-        for _ in range(self.n_iter):
-            # Selection
-            parents = self.selection(
-                population=self.population_,
-                initial_population_size=self.initial_population_size,
-                random_state=self.random_state_,
+    def crossover_children(self, parent_pairs):
+        return list(
+            flatten(
+                [
+                    (
+                        self.crossover(A, B, crossover_rate=self.crossover_rate, random_state=self.random_state_),
+                        self.crossover(B, A, crossover_rate=self.crossover_rate, random_state=self.random_state_),
+                    )
+                    for A, B in parent_pairs
+                ]
             )
+        )
 
-            # Correct value for population_size
-            self.population_size = len(parents)
+    def mutate_children(self, children):
+        return [self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children]
 
-            # Note that this expression swallows the last element, if `population_size` is odd
-            parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
-
-            # Crossover
-            children = list(
-                flatten(
-                    [
-                        (
-                            self.crossover(A, B, crossover_rate=self.crossover_rate, random_state=self.random_state_),
-                            self.crossover(B, A, crossover_rate=self.crossover_rate, random_state=self.random_state_),
-                        )
-                        for A, B in parent_pairs
-                    ]
-                )
-            )
-
-            # Mutation
-            mutated_children = [
-                self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children
-            ]
-
-            # Replacement
-            self.population_ = parents
-            self.population_.extend(mutated_children)
-
-            self.fit_population(X, y)
+    def parent_selection(self):
+        return self.selection(
+            population=self.population_,
+            initial_population_size=self.initial_population_size,
+            random_state=self.random_state_,
+        )

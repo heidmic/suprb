@@ -1,6 +1,6 @@
 import numpy as np
 
-from suprb.solution.initialization import SolutionInit, RandomInit, Solution
+from suprb.solution.initialization import SolutionInit, RandomInit
 from suprb.utils import flatten
 from .crossover import SolutionCrossover, NPoint
 from .mutation import SolutionMutation, BitFlips
@@ -67,40 +67,12 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
 
-    def adjust_rates(self):
-        pass
-
-    def fitness_calculation(self):
-        pass
-
-    def crossover_children(self, parent_pairs):
-        return list(
-            flatten(
-                [
-                    (
-                        self.crossover(A, B, self.crossover_rate, random_state=self.random_state_),
-                        self.crossover(B, A, self.crossover_rate, random_state=self.random_state_),
-                    )
-                    for A, B in parent_pairs
-                ]
-            )
-        )
-
-    def mutate_children(self, children):
-        return [self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children]
-
     def _optimize(self, X: np.ndarray, y: np.ndarray):
-        assert self.population_size % 2 == 0
         self.fit_population(X, y)
 
         self.n_elitists_ = int(self.population_size * self.elitist_ratio)
 
         for _ in range(self.n_iter):
-            self.fitness_calculation()
-
-            # Adjust Rates for current fitness
-            self.adjust_rates()
-
             # Eltitism
             elitists = sorted(self.population_, key=lambda i: i.fitness_, reverse=True)[: self.n_elitists_]
 
@@ -110,15 +82,29 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
                 n=self.population_size,
                 random_state=self.random_state_,
             )
-
             # Note that this expression swallows the last element, if `population_size` is odd
             parent_pairs = map(lambda *x: x, *([iter(parents)] * 2))
 
             # Crossover
-            children = self.crossover_children(parent_pairs)
+            children = list(
+                flatten(
+                    [
+                        (
+                            self.crossover(A, B, self.crossover_rate, random_state=self.random_state_),
+                            self.crossover(B, A, self.crossover_rate, random_state=self.random_state_),
+                        )
+                        for A, B in parent_pairs
+                    ]
+                )
+            )
+            # If `population_size` is odd, we add the solution not selected for reproduction directly
+            if self.population_size % 2 != 0:
+                children.append(parents[-1])
 
             # Mutation
-            mutated_children = self.mutate_children(children)
+            mutated_children = [
+                self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children
+            ]
 
             # Replacement
             self.population_ = elitists

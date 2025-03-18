@@ -6,11 +6,9 @@ from suprb.base import BaseComponent
 from suprb.solution import Solution
 from suprb.utils import RandomState
 
-# from suprb.optimizer.solution.saga.solution_extension import SagaSolution
-
 
 class SolutionCrossover(BaseComponent, metaclass=ABCMeta):
-    def __call__(self, A: Solution, B: Solution, crossover_rate, random_state: RandomState) -> Solution:
+    def __call__(self, A: Solution, B: Solution, crossover_rate: float, random_state: RandomState) -> Solution:
         result = None
 
         if random_state.random() < crossover_rate:
@@ -55,8 +53,8 @@ class Uniform(SolutionCrossover):
         return A.clone(genome=genome)
 
 
-class SagaCrossover(BaseComponent):
-    """Performs crossover and mutation of Parameters, then calls resulting crossover function"""
+class SelfAdaptiveCrossover(BaseComponent):
+    """Performs crossover and mutation of Rules, then calls resulting crossover function as per 10.1007/s00521-018-3438-9"""
 
     def __init__(self, parameter_mutation_rate: float):
         self.parameter_mutation_rate = parameter_mutation_rate
