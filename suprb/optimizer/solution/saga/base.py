@@ -50,6 +50,7 @@ class SelfAdaptingGeneticAlgorithmBase(PopulationBasedSolutionComposition):
         population_size: int,
         elitist_ratio: float,
         mutation: SolutionMutation,
+        mutation_rate: float,
         crossover: SolutionCrossover,
         crossover_rate: float,
         selection: SolutionSelection,
@@ -74,6 +75,7 @@ class SelfAdaptingGeneticAlgorithmBase(PopulationBasedSolutionComposition):
         self.selection = selection
         self.elitist_ratio = elitist_ratio
         self.crossover_rate = crossover_rate
+        self.mutation_rate = mutation_rate
 
     def fitness_calculation(self):
         pass
@@ -94,11 +96,8 @@ class SelfAdaptingGeneticAlgorithmBase(PopulationBasedSolutionComposition):
             )
         )
 
-    def mutate_children(self, children):
-        pass
-
-    def mutate_children(self, children, X, y):
-        pass
+    def mutate_children(self, children, X=None, y=None):
+        return [self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children]
 
     def parent_selection(self):
         return self.selection(
@@ -134,10 +133,7 @@ class SelfAdaptingGeneticAlgorithmBase(PopulationBasedSolutionComposition):
                 children = self.crossover_children(parent_pairs)
 
             # Mutation
-            try:
-                mutated_children = self.mutate_children(children)
-            except TypeError:
-                mutated_children = self.mutate_children(children, X, y)
+            mutated_children = self.mutate_children(children, X, y)
 
             # Replacement
             self.population_ = elitists
@@ -203,9 +199,10 @@ class SelfAdaptingGeneticAlgorithm1(SelfAdaptingGeneticAlgorithmBase):
             n_iter=n_iter,
             population_size=population_size,
             elitist_ratio=elitist_ratio,
-            mutation=mutation,
             crossover=crossover,
             selection=selection,
+            mutation=mutation,
+            mutation_rate=mutation_rate,
             crossover_rate=crossover_rate,
             init=init,
             archive=archive,
@@ -213,8 +210,6 @@ class SelfAdaptingGeneticAlgorithm1(SelfAdaptingGeneticAlgorithmBase):
             n_jobs=n_jobs,
             warm_start=warm_start,
         )
-
-        self.mutation_rate = mutation_rate
 
         self.mutation_rate_multiplier = mutation_rate_multiplier
         self.crossover_rate_multiplier = crossover_rate_multiplier
@@ -235,9 +230,6 @@ class SelfAdaptingGeneticAlgorithm1(SelfAdaptingGeneticAlgorithmBase):
         elif gdm < self.v_min:
             self.mutation_rate = max(self.mutation_rate_min, self.mutation_rate / self.mutation_rate_multiplier)
             self.crossover_rate = min(self.crossover_rate_max, self.crossover_rate * self.crossover_rate_multiplier)
-
-    def mutate_children(self, children):
-        return [self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children]
 
 
 class SelfAdaptingGeneticAlgorithm2(SelfAdaptingGeneticAlgorithmBase):
@@ -296,6 +288,7 @@ class SelfAdaptingGeneticAlgorithm2(SelfAdaptingGeneticAlgorithmBase):
             mutation=mutation,
             crossover=crossover,
             selection=selection,
+            mutation_rate=None,
             crossover_rate=None,
             init=init,
             archive=archive,
@@ -519,6 +512,7 @@ class SelfAdaptingGeneticAlgorithm3(SelfAdaptingGeneticAlgorithmBase):
             mutation=mutation,
             crossover=crossover,
             selection=selection,
+            mutation_rate=parameter_mutation_rate,
             crossover_rate=parameter_mutation_rate,
             init=init,
             archive=archive,
@@ -528,11 +522,6 @@ class SelfAdaptingGeneticAlgorithm3(SelfAdaptingGeneticAlgorithmBase):
         )
 
         self.parameter_mutation_rate = parameter_mutation_rate
-
-    def mutate_children(self, children):
-        return [
-            self.mutation(child, self.parameter_mutation_rate, random_state=self.random_state_) for child in children
-        ]
 
 
 class SasGeneticAlgorithm(SelfAdaptingGeneticAlgorithmBase):
@@ -583,6 +572,7 @@ class SasGeneticAlgorithm(SelfAdaptingGeneticAlgorithmBase):
             mutation=mutation,
             crossover=crossover,
             selection=selection,
+            mutation_rate=mutation_rate,
             crossover_rate=crossover_rate,
             init=init,
             archive=archive,
@@ -591,11 +581,7 @@ class SasGeneticAlgorithm(SelfAdaptingGeneticAlgorithmBase):
             warm_start=warm_start,
         )
 
-        self.mutation_rate = mutation_rate
         self.initial_population_size = initial_population_size
-
-    def mutate_children(self, children):
-        return [self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children]
 
     def parent_selection(self):
         return self.selection(
