@@ -24,22 +24,29 @@ class SelfAdaptingGeneticAlgorithmBase(PopulationBasedSolutionComposition):
         Iterations the the metaheuristic will perform.
     population_size: int
         Number of solutions in the population.
+    elitist_ratio: float
+        Ratio of elitist to population size
     mutation: SolutionMutation
+        Class used for mutation
+    mutation_rate: float
+        Mutation rate for Rules
     crossover: SolutionCrossover
+        Class used for crossover
+    crossover_rate: float
+        Crossover rate for Rules
     selection: SolutionSelection
-    v_min: float
-        Lower bound for the population diversity, where a higher number means less diverse.
-    v_max: float
-        Upper bound for the population diversity, where a higher number means less diverse.
+        Class used for solution selection
     init: SolutionInit
+        Class used for solution initialization
     archive: SolutionArchive
+        Class used for solution archive
     random_state : int, RandomState instance or None, default=None
         Pass an int for reproducible results across multiple function calls.
+    n_jobs: int
+        The number of threads / processes the optimization uses.
     warm_start: bool
         If False, solutions are generated new for every `optimize()` call.
         If True, solutions are used from previous runs.
-    n_jobs: int
-        The number of threads / processes the optimization uses.
     """
 
     n_elitists_: int
@@ -128,9 +135,9 @@ class SelfAdaptingGeneticAlgorithmBase(PopulationBasedSolutionComposition):
 
             # Crossover
             try:
-                children = self.crossover_children(parent_pairs, self.crossover_rate)
-            except TypeError:
                 children = self.crossover_children(parent_pairs)
+            except TypeError:
+                children = self.crossover_children(parent_pairs, self.crossover_rate)
 
             # Mutation
             mutated_children = self.mutate_children(children, X, y)
@@ -143,30 +150,25 @@ class SelfAdaptingGeneticAlgorithmBase(PopulationBasedSolutionComposition):
 
 
 class SelfAdaptingGeneticAlgorithm1(SelfAdaptingGeneticAlgorithmBase):
-    """A simple self adapting Genetic Algorithm, implemented acording to 10.1109/20.952626 .
-
+    """
     Parameters
     ----------
-    n_iter: int
-        Iterations the the metaheuristic will perform.
-    population_size: int
-        Number of solutions in the population.
-    mutation: SolutionMutation
-    crossover: SolutionCrossover
-    selection: SolutionSelection
+    mutation_rate_multiplier: float
+        Multiplier for mutation rate
+    crossover_rate_multiplier: float
+        Multiplier for crossover rate
     v_min: float
         Lower bound for the population diversity, where a higher number means less diverse.
     v_max: float
         Upper bound for the population diversity, where a higher number means less diverse.
-    init: SolutionInit
-    archive: SolutionArchive
-    random_state : int, RandomState instance or None, default=None
-        Pass an int for reproducible results across multiple function calls.
-    warm_start: bool
-        If False, solutions are generated new for every `optimize()` call.
-        If True, solutions are used from previous runs.
-    n_jobs: int
-        The number of threads / processes the optimization uses.
+    mutation_rate_min: float
+        Lower bound for mutation rate
+    mutation_rate_max: float
+        Upper bound for mutation rate
+    crossover_rate_min: float
+        Lower bound for crossover rate
+    crossover_rate_max: float
+        Upper bound for crossover rate
     """
 
     n_elitists_: int
@@ -233,26 +235,17 @@ class SelfAdaptingGeneticAlgorithm1(SelfAdaptingGeneticAlgorithmBase):
 
 
 class SelfAdaptingGeneticAlgorithm2(SelfAdaptingGeneticAlgorithmBase):
-    """A simple self adapting Genetic Algorithm, implemented acording to 10.1007/s00521-018-3438-9 .
-
+    """
     Parameters
     ----------
-    n_iter: int
-        Iterations the the metaheuristic will perform.
-    population_size: int
-        Number of solutions in the population.
-    mutation: SolutionMutation
-    crossover: SolutionCrossover
-    selection: SolutionSelection
-    init: SolutionInit
-    archive: SolutionArchive
-    random_state : int, RandomState instance or None, default=None
-        Pass an int for reproducible results across multiple function calls.
-    warm_start: bool
-        If False, solutions are generated new for every `optimize()` call.
-        If True, solutions are used from previous runs.
-    n_jobs: int
-        The number of threads / processes the optimization uses.
+    mutation_rate_min: float
+        Lower bound for mutation rate
+    mutation_rate_max: float
+        Upper bound for mutation rate
+    crossover_rate_min: float
+        Lower bound for crossover rate
+    crossover_rate_max: float
+        Upper bound for crossover rate
     """
 
     n_elitists_: int
@@ -465,26 +458,11 @@ class SelfAdaptingGeneticAlgorithm2(SelfAdaptingGeneticAlgorithmBase):
 
 
 class SelfAdaptingGeneticAlgorithm3(SelfAdaptingGeneticAlgorithmBase):
-    """A simple self adapting Genetic Algorithm, implemented acording to 10.1023/A:1022521428870 .
-
+    """
     Parameters
     ----------
-    n_iter: int
-        Iterations the the metaheuristic will perform.
-    population_size: int
-        Number of solutions in the population.
-    mutation: SolutionMutation
-    crossover: SolutionCrossover
-    selection: SolutionSelection
-    init: SolutionInit
-    archive: SolutionArchive
-    random_state : int, RandomState instance or None, default=None
-        Pass an int for reproducible results across multiple function calls.
-    warm_start: bool
-        If False, solutions are generated new for every `optimize()` call.
-        If True, solutions are used from previous runs.
-    n_jobs: int
-        The number of threads / processes the optimization uses.
+    parameter_mutation_rate: float
+        Rate for doing crossover and mutation on rules
     """
 
     n_elitists_: int
@@ -523,28 +501,28 @@ class SelfAdaptingGeneticAlgorithm3(SelfAdaptingGeneticAlgorithmBase):
 
         self.parameter_mutation_rate = parameter_mutation_rate
 
+    def crossover_children(self, parent_pairs):
+        return list(
+            flatten(
+                [
+                    (
+                        self.crossover(A, B, random_state=self.random_state_),
+                        self.crossover(B, A, random_state=self.random_state_),
+                    )
+                    for A, B in parent_pairs
+                ]
+            )
+        )
+
+    def mutate_children(self, children, X=None, y=None):
+        return children
+
 
 class SasGeneticAlgorithm(SelfAdaptingGeneticAlgorithmBase):
-    """A simple self adapting Genetic Algorithm, implemented acording to 10.1007/978-3-642-21219-2_16 .
-
+    """
     Parameters
     ----------
-    n_iter: int
-        Iterations the the metaheuristic will perform.
-    population_size: int
-        Number of solutions in the population.
-    mutation: SolutionMutation
-    crossover: SolutionCrossover
-    selection: SolutionSelection
-    init: SolutionInit
-    archive: SolutionArchive
-    random_state : int, RandomState instance or None, default=None
-        Pass an int for reproducible results across multiple function calls.
-    warm_start: bool
-        If False, solutions are generated new for every `optimize()` call.
-        If True, solutions are used from previous runs.
-    n_jobs: int
-        The number of threads / processes the optimization uses.
+    initial_population_size: The initialize population size
     """
 
     n_elitists_: int

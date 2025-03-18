@@ -59,7 +59,7 @@ class SelfAdaptiveCrossover(BaseComponent):
     def __init__(self, parameter_mutation_rate: float):
         self.parameter_mutation_rate = parameter_mutation_rate
 
-    def __call__(self, A, B, crossover_rate, random_state: RandomState):
+    def __call__(self, A, B, random_state: RandomState):
         # Crossover of parent parameters
         new_crossover_rate = random_state.choice([A.crossover_rate, B.crossover_rate])
         new_mutation_rate = random_state.choice([A.mutation_rate, B.mutation_rate])
@@ -72,10 +72,7 @@ class SelfAdaptiveCrossover(BaseComponent):
             new_crossover_method = random_state.choice([NPoint(n=3), Uniform()])
 
         # Crossover of genome
-        try:
-            new_solution = new_crossover_method(A, B, new_crossover_rate, random_state=random_state)
-        except TypeError:
-            new_solutionn = new_crossover_method(A, B, random_state=random_state)
+        new_solution = new_crossover_method(A, B, new_crossover_rate, random_state=random_state)
 
         new_solution.crossover_rate = new_crossover_rate
         new_solution.mutation_rate = new_mutation_rate
