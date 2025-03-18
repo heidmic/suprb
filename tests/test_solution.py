@@ -60,7 +60,7 @@ class TestSolution(unittest.TestCase):
 
         check_estimator(estimator)
 
-    def test_check_saga3(self):
+    def test_check_sas(self):
         estimator = suprb.SupRB(
             n_iter=1,
             rule_discovery=ES1xLambda(n_iter=4, lmbda=1, delay=2),
