@@ -12,6 +12,7 @@ from suprb import SupRB
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.nsga2 import NonDominatedSortingGeneticAlgorithm2
 from suprb.optimizer.solution.spea2 import StrengthParetoEvolutionaryAlgorithm2
+from suprb.optimizer.solution.nsga3 import NonDominatedSortingGeneticAlgorithm3
 from suprb.logging.multi_objective import MOLogger
 
 from utils import log_scores
@@ -20,16 +21,9 @@ from utils import log_scores
 if __name__ == "__main__":
     random_state = 42
 
-    data, _ = fetch_openml(name="Concrete_Data", version=1, return_X_y=True)
-    data = data.to_numpy()
-
-    X, y = data[:, :8], data[:, 8]
-    X, y = sklearn.utils.shuffle(X, y, random_state=random_state)
-
-    X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
-    y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
-
-    sc_algos = (NonDominatedSortingGeneticAlgorithm2, StrengthParetoEvolutionaryAlgorithm2)
+    sc_algos = (NonDominatedSortingGeneticAlgorithm3,
+                NonDominatedSortingGeneticAlgorithm2,
+                StrengthParetoEvolutionaryAlgorithm2)
 
     score_list = []
 
@@ -38,7 +32,6 @@ if __name__ == "__main__":
     })
 
     for sc in sc_algos:
-        random_state = 42
 
         data, _ = fetch_openml(name="Concrete_Data", version=1, return_X_y=True)
         data = data.to_numpy()
@@ -48,8 +41,6 @@ if __name__ == "__main__":
 
         X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
         y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
-
-        sc_algos = (NonDominatedSortingGeneticAlgorithm2, StrengthParetoEvolutionaryAlgorithm2)
 
         model = SupRB(
             rule_discovery=ES1xLambda(
