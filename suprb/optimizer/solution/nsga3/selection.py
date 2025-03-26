@@ -21,7 +21,7 @@ class SolutionSelection(BaseComponent, metaclass=ABCMeta):
         pass
 
 
-class BinaryTournament(SolutionSelection):
+class ReferenceBasedBinaryTournament(SolutionSelection):
     """Draw 2 solutions n_parents times and select the best solution from each pair."""
 
     def __init__(self):
