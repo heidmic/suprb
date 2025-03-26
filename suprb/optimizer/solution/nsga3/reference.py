@@ -51,32 +51,14 @@ def calc_ref_direction_distances(fitness_values: np.ndarray, reference_points: n
     solution_count, _ = fitness_values.shape
     reference_count, _ = reference_points.shape
     min_distances = np.zeros(solution_count)
-    min_ref_points = np.zeros(solution_count)
+    min_ref_points = np.zeros(solution_count, dtype=np.int32)
 
     for fit_idx in range(solution_count):
         distances = np.zeros(reference_count)
         for ref_idx in range(reference_points.shape[0]):
             numerator = np.dot(np.dot(reference_points[ref_idx].T, fitness_values[fit_idx]), reference_points[ref_idx])
-            denominator = np.linalg.norm(reference_points) ** 2
+            denominator = np.linalg.norm(reference_points[ref_idx]) ** 2
             distances[ref_idx] = np.linalg.norm(fitness_values[fit_idx] - (numerator / denominator))
         min_distances[fit_idx] = np.min(distances)
         min_ref_points[fit_idx] = np.argmin(distances)
     return min_distances, min_ref_points
-
-
-if __name__ == "__main__":
-    from matplotlib import pyplot as plt
-    points = das_dennis_points(6, 2)
-    if points.shape[1] == 3:
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
-        ax.set_ylim(ax.get_ylim()[::-1])
-        plt.plot(points[:,0], points[:,1], points[:,2], 'o')
-        ax.view_init(elev=10, azim=-80)
-    else:
-        plt.plot(points[:,0], points[:,1], 'o')
-    plt.show()
-    print(len(points))
