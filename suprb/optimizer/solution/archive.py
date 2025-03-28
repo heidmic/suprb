@@ -35,7 +35,7 @@ class SolutionArchive(BaseComponent, metaclass=ABCMeta):
 
 class Elitist(SolutionArchive):
 
-    def __call__(self, new_population):
+    def __call__(self, new_population: list[Solution]):
         best = max(new_population, key=lambda i: i.fitness_)
         if self.population_:
             if self.population_[0].fitness_ < best.fitness_:
