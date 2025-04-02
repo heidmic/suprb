@@ -62,8 +62,8 @@ class BasicMOSolutionFitness(MultiObjectiveSolutionFitness):
     worst_point_estimate_ = np.array([1., 1.])
 
     def __call__(self, solution: Solution) -> list:
-        return [self.objective_func_[0](solution.complexity_, self.max_genome_length_),
-                self.objective_func_[1](solution.error_)]
+        return [1 - self.objective_func_[0](solution.complexity_, self.max_genome_length_),
+                1 - self.objective_func_[1](solution.error_)]
 
     def __init__(self):
         super().__init__()
