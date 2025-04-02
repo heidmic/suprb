@@ -1,5 +1,7 @@
+import traceback
 from abc import ABCMeta, abstractmethod
-from ..base import Solution
+
+from suprb.solution import Solution
 
 import numpy as np
 
@@ -13,9 +15,9 @@ class NSGAIIINormaliser(BaseComponent, metaclass=ABCMeta):
 
     def _update_ideal_point(self, fitness_values: np.ndarray) -> np.ndarray:
         if self._ideal_point is not None:
-            self._ideal_point = np.argmin(np.concatenate([fitness_values, self._ideal_point[np.newaxis, :]]), axis=0)
-        else:
-            self._ideal_point = np.argmin(fitness_values, axis=0)
+            fitness_values = np.concatenate([fitness_values, self._ideal_point[np.newaxis, :]])
+
+        self._ideal_point = np.min(fitness_values, axis=0)
         return self._ideal_point
 
     @abstractmethod
@@ -36,7 +38,7 @@ class NSGAIIINormaliser(BaseComponent, metaclass=ABCMeta):
         np.ndarray
             Normalised fitness values.
         """
-        fitness_values = np.asarray([solution.fitness_ for solution in population])
+        fitness_values = np.array([solution.fitness_ for solution in population])
         self._update_ideal_point(fitness_values)
         self._update_nadir_point(fitness_values, pareto_ranks)
         return (fitness_values - self._ideal_point) / (self._nadir_point - self._ideal_point)
@@ -47,14 +49,13 @@ class HyperPlaneNormaliser(NSGAIIINormaliser):
     Implemented as described in 10.1007/978-3-030-12598-1_19
     """
     def __init__(self, objective_count,
-                 worst_points_estimate,
                  epsilon_asf: float = 10e-6,
                  epsilon_nad: float = 10e-6) -> None:
         super().__init__()
         self.objective_count = objective_count
         self.epsilon_asf = epsilon_asf
         self._extreme_points: np.ndarray | None = None
-        self.worst_points_estimate = worst_points_estimate
+        self._worst_points_estimate = np.zeros(self.objective_count)
         self.epsilon_nad = epsilon_nad
 
     def _update_extreme_points(self, fitness_values: np.ndarray) -> np.ndarray:
@@ -69,21 +70,24 @@ class HyperPlaneNormaliser(NSGAIIINormaliser):
             scalarised = asf(fitness_values, self._ideal_point, weights)
             k = np.argmin(scalarised)
             self._extreme_points[obj_idx] = fitness_values[k]
+        return self._extreme_points
 
     def _update_nadir_point(self, fitness_values: np.ndarray, pareto_ranks: np.ndarray) -> np.ndarray:
+        self._worst_points_estimate = np.max(np.concatenate([fitness_values, self._worst_points_estimate[None, :]]),
+                                             axis=0)
         self._update_extreme_points(fitness_values)
         try:
-            normal, distance = find_plane_from_points(self._extreme_points)
+            normal, distance = find_plane_from_points(self._extreme_points - self._ideal_point)
             intercepts = find_hyperplane_axis_intercepts(normal, distance)
             nadir_point = np.zeros(self.objective_count)
             for k in range(self.objective_count):
                 nadir_k = intercepts[k] + self._ideal_point[k]
-                if intercepts[k] < self.epsilon_nad or nadir_k > self.worst_points_estimate:
+                if intercepts[k] < self.epsilon_nad or nadir_k > self._worst_points_estimate[k]:
                     raise ValueError("Nadir point outside worst point")
                 nadir_point[k] = intercepts[k] + self._ideal_point[k]
 
         except Exception as e:
-            print(e)
+            print(traceback.format_exc())
             print("Falling back to per-axis maximum normalisation!")
             nadir_point = np.max(fitness_values, axis=0)
 
@@ -148,4 +152,46 @@ def find_plane_from_points(points: np.ndarray) -> tuple[np.ndarray, float]:
 
 
 def asf(fitness_values: np.ndarray, ideal_point: np.ndarray, weights: np.ndarray) -> float:
-    return np.max((fitness_values - ideal_point) / weights)
+    return np.max((fitness_values - ideal_point) / weights, axis=1)
+
+
+if __name__ == "__main__":
+    import numpy as np
+    from matplotlib import pyplot as plt
+    from suprb.optimizer.solution.nsga3.sorting import fast_non_dominated_sort
+
+    # np.random.seed(7)
+
+    points = np.random.normal(loc=0.4, scale=0.1, size=(32, 2))
+    pareto_ranks = fast_non_dominated_sort(points)
+    normaliser = HyperPlaneNormaliser(2)
+    normalised_points = normaliser(points, pareto_ranks)
+    extreme_points = normaliser._extreme_points
+    nadir_point = normaliser._nadir_point
+    worst_estimate = normaliser._worst_points_estimate
+
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    # Plot original points
+    plt.scatter(points[:, 0], points[:, 1], label="Points")
+
+    # Mark extreme points in red
+    plt.scatter(extreme_points[:, 0], extreme_points[:, 1], color='red', label='Extreme Points')
+    plt.scatter(nadir_point[ 0], nadir_point[1], color='green', label='Nadir Point')
+
+    # Draw vertical and horizontal lines through extreme points
+    plt.axvline(x=worst_estimate[0], color='red', linestyle='dashed')
+    plt.axhline(y=worst_estimate[1], color='red', linestyle='dashed')
+
+    m = (extreme_points[1][1] - extreme_points[0][1]) / (extreme_points[1][0] - extreme_points[0][0])
+    b = extreme_points[0][1] - m * extreme_points[0][0]
+
+    # Define extended x-range (beyond p1 and p2)
+    x_vals = np.linspace(0, 1, 100)  # Adjust this range as needed
+    y_vals = m * x_vals + b
+
+    # Plot the extended line
+    plt.plot(x_vals, y_vals, 'r--', label="Extended Line")
+
+    plt.legend()
+    plt.show()
