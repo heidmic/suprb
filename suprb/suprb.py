@@ -30,6 +30,8 @@ class SupRB(BaseRegressor):
         Optimizer used to evolve the :class:`Rule`s. If None is passed, it is set to :class:`ES1xLambda`.
     solution_composition: SolutionComposition
         Optimizer used to evolve the :class:`Solution`s. If None is passed, it is set to :class:`GeneticAlgorithm`.
+    last_sc_factor: float
+        Number of iterations in the last SC phase is multiplied by this factor and rounded down.
     n_iter: int
         Iterations the LCS will perform.
     n_initial_rules: int
@@ -81,6 +83,7 @@ class SupRB(BaseRegressor):
         self,
         rule_discovery: RuleDiscovery = None,
         solution_composition: SolutionComposition = None,
+        last_sc_factor: float = 1.0,
         matching_type: MatchingFunction = None,
         n_iter: int = 32,
         n_initial_rules: int = 0,
@@ -92,6 +95,7 @@ class SupRB(BaseRegressor):
         early_stopping_patience: int = -1,
         early_stopping_delta: int = 0,
     ):
+        self.last_sc_factor = last_sc_factor
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
         self.n_rules = n_rules
@@ -133,7 +137,6 @@ class SupRB(BaseRegressor):
         cleanup : bool
             Optional cleanup of unused rules and components after fitting. Can be used to reduce size if only the
             final model is relevant. Note that all information about the fitting process itself is removed.
-
         Returns
         -------
         self : BaseEstimator
@@ -267,6 +270,10 @@ class SupRB(BaseRegressor):
 
         # Update the random state
         self.solution_composition_.random_state = self.solution_composition_seeds_[self.step_]
+
+        # Adjust SC iterations if its the last SC phase
+        if self.step_ == (self.n_iter - 1):
+            self.solution_composition_.n_iter = int(self.solution_composition_.n_iter * self.last_sc_factor)
 
         # Optimize
         self.solution_composition_.optimize(X, y)
