@@ -24,12 +24,12 @@ class NSGAIIINormaliser(BaseComponent, metaclass=ABCMeta):
     def _update_nadir_point(self, fitness_values: np.ndarray, pareto_ranks: np.ndarray) -> np.ndarray:
         pass
 
-    def __call__(self, population: list[Solution], pareto_ranks: np.ndarray) -> np.ndarray:
+    def __call__(self, fitness_values: np.ndarray, pareto_ranks: np.ndarray) -> np.ndarray:
         """
         Parameters
         ----------
-        population : list[Solution]
-            Population from which to update ideal and nadir points.
+        fitness_values : np.ndarray
+            Fitness values from which to update ideal and nadir points.
         pareto_ranks: np.ndarray
             Associated levels of pareto domination used to update nadir points.
 
@@ -38,7 +38,6 @@ class NSGAIIINormaliser(BaseComponent, metaclass=ABCMeta):
         np.ndarray
             Normalised fitness values.
         """
-        fitness_values = np.array([solution.fitness_ for solution in population])
         self._update_ideal_point(fitness_values)
         self._update_nadir_point(fitness_values, pareto_ranks)
         return (fitness_values - self._ideal_point) / (self._nadir_point - self._ideal_point)

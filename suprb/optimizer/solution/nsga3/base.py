@@ -86,7 +86,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
         self.fit_population(X, y)
         fitness_values = np.array([solution.fitness_ for solution in self.population_])
         pareto_ranks = fast_non_dominated_sort(fitness_values)
-        normalised_fitness = self.normaliser(self.population_, pareto_ranks)
+        normalised_fitness = self.normaliser(fitness_values, pareto_ranks)
 
         for i in range(len(self.population_)):
             self.population_[i].internal_fitness_ = normalised_fitness[i]
@@ -133,7 +133,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
             union_pareto_ranks = fast_non_dominated_sort(union_fitness_values)
             # I think we need to normalise the population in every iteration outside of the following if clause
             # As the parent selection depends on objective values in U-NSGA-III
-            union_fitness_values = self.normaliser(union_pop, union_pareto_ranks)
+            union_fitness_values = self.normaliser(union_fitness_values, union_pareto_ranks)
             for l in range(len(union_pop)):
                 union_pop[l].internal_fitness_ = union_fitness_values[l]
             union_pop = np.array(union_pop)
