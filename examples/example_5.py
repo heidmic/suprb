@@ -14,6 +14,7 @@ from suprb.optimizer.solution.nsga2 import NonDominatedSortingGeneticAlgorithm2
 from suprb.optimizer.solution.spea2 import StrengthParetoEvolutionaryAlgorithm2
 from suprb.optimizer.solution.nsga3 import NonDominatedSortingGeneticAlgorithm3
 from suprb.optimizer.solution.saga3 import SelfAdaptingGeneticAlgorithm
+from suprb.optimizer.solution.ga import GeneticAlgorithm
 from suprb.optimizer.solution.ts import TwoStageSolutionComposition
 from suprb.logging.multi_objective import MOLogger
 
@@ -30,9 +31,9 @@ if __name__ == "__main__":
                 random_state=random_state,
                 n_jobs=1,
             )
-    saga = SelfAdaptingGeneticAlgorithm()
+    ga = GeneticAlgorithm()
     ts = TwoStageSolutionComposition(
-        algorithm_1=saga,
+        algorithm_1=ga,
         algorithm_2=nsga2,
         switch_iteration=32,
     )
