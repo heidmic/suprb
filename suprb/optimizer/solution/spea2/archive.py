@@ -30,7 +30,7 @@ class EnvironmentalArchive(SolutionArchive):
         non_dominated_count = np.unique(internal_fitness_values, return_counts=True)[1][0]
 
         if non_dominated_count < self.max_population_size:
-            self.population_ = pop_and_arch[:self.max_population_size]
+            self.population_ = pop_and_arch[: self.max_population_size]
         else:
             # In this case the population needs to be truncated!
             self.population_ = pop_and_arch[:non_dominated_count]

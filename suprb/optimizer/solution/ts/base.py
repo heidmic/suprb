@@ -22,24 +22,19 @@ class TwoStageSolutionComposition(SolutionComposition):
     """
 
     def __init__(
-            self,
-            algorithm_1: PopulationBasedSolutionComposition,
-            algorithm_2: PopulationBasedSolutionComposition,
-            switch_iteration: int,
-            n_iter: int = None,
-            init: SolutionInit = RandomInit(),
-            archive: SolutionArchive = None,
-            random_state: int = None,
-            n_jobs: int = None,
-            warm_start: bool = None
-            ):
+        self,
+        algorithm_1: PopulationBasedSolutionComposition,
+        algorithm_2: PopulationBasedSolutionComposition,
+        switch_iteration: int,
+        n_iter: int = None,
+        init: SolutionInit = RandomInit(),
+        archive: SolutionArchive = None,
+        random_state: int = None,
+        n_jobs: int = None,
+        warm_start: bool = None,
+    ):
         super().__init__(
-            n_iter=n_iter,
-            init=init,
-            archive=archive,
-            random_state=random_state,
-            n_jobs=n_jobs,
-            warm_start=warm_start
+            n_iter=n_iter, init=init, archive=archive, random_state=random_state, n_jobs=n_jobs, warm_start=warm_start
         )
         self.algorithm_1 = algorithm_1
         self.algorithm_2 = algorithm_2

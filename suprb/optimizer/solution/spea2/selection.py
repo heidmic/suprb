@@ -10,11 +10,7 @@ from suprb.utils import RandomState
 class SolutionSelection(BaseComponent, metaclass=ABCMeta):
 
     def __call__(
-        self,
-        population: list[Solution],
-        n: int,
-        random_state: RandomState,
-        internal_fitness: np.ndarray
+        self, population: list[Solution], n: int, random_state: RandomState, internal_fitness: np.ndarray
     ) -> list[Solution]:
         pass
 

@@ -37,19 +37,22 @@ class NonDominatedSortingGeneticAlgorithm2(MOSolutionComposition):
     n_jobs: int
         The number of threads / processes the optimization uses.
     """
-    def __init__(self,
-                 n_iter: int = 32,
-                 population_size: int = 32,
-                 mutation: SolutionMutation = BitFlips(),
-                 crossover: SolutionCrossover = NPoint(n=3),
-                 selection: SolutionSelection = BinaryTournament(),
-                 sampler: SolutionSampler = NormalSolutionSampler(),
-                 mutation_rate: float = 0.025,
-                 crossover_rate: float = 0.75,
-                 init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,):
+
+    def __init__(
+        self,
+        n_iter: int = 32,
+        population_size: int = 32,
+        mutation: SolutionMutation = BitFlips(),
+        crossover: SolutionCrossover = NPoint(n=3),
+        selection: SolutionSelection = BinaryTournament(),
+        sampler: SolutionSampler = NormalSolutionSampler(),
+        mutation_rate: float = 0.025,
+        crossover_rate: float = 0.75,
+        init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -81,7 +84,7 @@ class NonDominatedSortingGeneticAlgorithm2(MOSolutionComposition):
                 n=self.population_size,
                 random_state=self.random_state_,
                 pareto_ranks=pareto_ranks,
-                crowding_distances=crowding_distances
+                crowding_distances=crowding_distances,
             )
 
             # Note that this expression swallows the last element, if `population_size` is odd

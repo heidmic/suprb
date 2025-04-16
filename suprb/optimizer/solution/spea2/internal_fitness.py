@@ -67,8 +67,7 @@ def calculate_density(fitness_values: np.ndarray, k: int) -> np.ndarray:
     return density_values
 
 
-def distance_to_kth(fitness_i:np.ndarray, fitness_values: np.ndarray, k: int) -> np.ndarray:
+def distance_to_kth(fitness_i: np.ndarray, fitness_values: np.ndarray, k: int) -> np.ndarray:
     distances = np.linalg.norm(fitness_i[None, :] - fitness_values, axis=-1)
     distances = np.sort(distances)
     return distances[k]
-

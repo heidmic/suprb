@@ -1,4 +1,3 @@
-
 import numpy as np
 from matplotlib.cbook import flatten
 
@@ -38,27 +37,31 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
     n_jobs: int
         The number of threads / processes the optimization uses.
     """
-    def __init__(self,
-                 n_iter: int = 32,
-                 population_size: int = 32,
-                 archive_size: int = 32,
-                 mutation: SolutionMutation = BitFlips(),
-                 crossover: SolutionCrossover = NPoint(n=3),
-                 selection: SolutionSelection = BinaryTournament(),
-                 sampler: SolutionSampler = NormalSolutionSampler(),
-                 mutation_rate: float = 0.025,
-                 crossover_rate: float = 0.75,
-                 kth_nearest: int = -1,
-                 init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True,
-                 ):
+
+    def __init__(
+        self,
+        n_iter: int = 32,
+        population_size: int = 32,
+        archive_size: int = 32,
+        mutation: SolutionMutation = BitFlips(),
+        crossover: SolutionCrossover = NPoint(n=3),
+        selection: SolutionSelection = BinaryTournament(),
+        sampler: SolutionSampler = NormalSolutionSampler(),
+        mutation_rate: float = 0.025,
+        crossover_rate: float = 0.75,
+        kth_nearest: int = -1,
+        init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
             init=init,
-            archive=EnvironmentalArchive(archive_size, kth_nearest if kth_nearest != -1 else int((population_size + archive_size) ** 0.5)),
+            archive=EnvironmentalArchive(
+                archive_size, kth_nearest if kth_nearest != -1 else int((population_size + archive_size) ** 0.5)
+            ),
             sampler=sampler,
             random_state=random_state,
             n_jobs=n_jobs,
