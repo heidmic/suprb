@@ -15,7 +15,7 @@ class SolutionSelection(BaseComponent, metaclass=ABCMeta):
         n: int,
         random_state: RandomState,
         pareto_ranks: np.ndarray,
-        crowding_distances: np.ndarray
+        crowding_distances: np.ndarray,
     ) -> list[Solution]:
         pass
 
@@ -32,7 +32,7 @@ class BinaryTournament(SolutionSelection):
         n: int,
         random_state: RandomState,
         pareto_ranks: np.ndarray,
-        crowding_distances: np.ndarray
+        crowding_distances: np.ndarray,
     ) -> list[Solution]:
 
         selection = []

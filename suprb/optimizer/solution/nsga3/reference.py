@@ -29,8 +29,9 @@ def das_dennis_points(num_partitions: int, num_dimensions: int = 2) -> np.ndarra
     return np.array(points)
 
 
-def calc_ref_direction_distances(fitness_values: np.ndarray, reference_points: np.ndarray) -> tuple[
-    np.ndarray, np.ndarray]:
+def calc_ref_direction_distances(
+    fitness_values: np.ndarray, reference_points: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Calculate distances between fitness values and reference points, and find the closest reference points.
 

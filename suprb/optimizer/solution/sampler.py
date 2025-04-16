@@ -24,7 +24,7 @@ class UniformSolutionSampler(SolutionSampler):
 
 class NormalSolutionSampler(SolutionSampler):
 
-    def __call__(self, pareto_front: list[Solution], random_state: RandomState, mu: float = 5.) -> Solution:
+    def __call__(self, pareto_front: list[Solution], random_state: RandomState, mu: float = 5.0) -> Solution:
         weights = stats.norm.pdf(np.linspace(0, len(pareto_front), len(pareto_front)), len(pareto_front) / 2, mu)
         weights = weights / np.sum(weights)
         return random_state.choice(pareto_front, p=weights)

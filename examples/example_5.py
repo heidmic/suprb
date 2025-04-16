@@ -1,4 +1,3 @@
-
 import numpy as np
 import sklearn
 
@@ -26,11 +25,11 @@ import time
 if __name__ == "__main__":
     random_state = 42
     nsga2 = NonDominatedSortingGeneticAlgorithm2(
-                n_iter=32,
-                population_size=32,
-                random_state=random_state,
-                n_jobs=1,
-            )
+        n_iter=32,
+        population_size=32,
+        random_state=random_state,
+        n_jobs=1,
+    )
     ga = GeneticAlgorithm()
     ts = TwoStageSolutionComposition(
         algorithm_1=ga,
@@ -42,9 +41,11 @@ if __name__ == "__main__":
     score_list = []
     time_list = []
 
-    plt.rcParams.update({
-        "text.usetex": True,
-    })
+    plt.rcParams.update(
+        {
+            "text.usetex": True,
+        }
+    )
 
     for sc in sc_algos:
 

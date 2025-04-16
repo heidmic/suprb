@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from suprb import Solution
@@ -40,22 +39,25 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
     n_jobs: int
         The number of threads / processes the optimization uses.
     """
-    def __init__(self,
-                 n_iter: int = 32,
-                 n_reference_points: int = 15,
-                 n_dimensions: int = 2,
-                 population_size: int = 32,
-                 normaliser: NSGAIIINormaliser = None,
-                 mutation: SolutionMutation = BitFlips(),
-                 crossover: SolutionCrossover = NPoint(n=3),
-                 selection: SolutionSelection = ReferenceBasedBinaryTournament(),
-                 sampler: SolutionSampler = NormalSolutionSampler(),
-                 mutation_rate: float = 0.025,
-                 crossover_rate: float = 0.75,
-                 init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
-                 random_state: int = None,
-                 n_jobs: int = 1,
-                 warm_start: bool = True, ):
+
+    def __init__(
+        self,
+        n_iter: int = 32,
+        n_reference_points: int = 15,
+        n_dimensions: int = 2,
+        population_size: int = 32,
+        normaliser: NSGAIIINormaliser = None,
+        mutation: SolutionMutation = BitFlips(),
+        crossover: SolutionCrossover = NPoint(n=3),
+        selection: SolutionSelection = ReferenceBasedBinaryTournament(),
+        sampler: SolutionSampler = NormalSolutionSampler(),
+        mutation_rate: float = 0.025,
+        crossover_rate: float = 0.75,
+        init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
+        random_state: int = None,
+        n_jobs: int = 1,
+        warm_start: bool = True,
+    ):
         super().__init__(
             n_iter=n_iter,
             population_size=population_size,
@@ -75,9 +77,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
         self.sampler = sampler
         fitness = self.init.fitness
         if normaliser is None:
-            normaliser = HyperPlaneNormaliser(
-                    len(fitness.objective_func_), fitness.worst_point_estimate_
-            )
+            normaliser = HyperPlaneNormaliser(len(fitness.objective_func_), fitness.worst_point_estimate_)
         self.normaliser = normaliser
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
@@ -95,8 +95,9 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
         for _ in range(self.n_iter):
             fitness_values = np.array([solution.internal_fitness_ for solution in self.population_])
             pareto_ranks = fast_non_dominated_sort(fitness_values)
-            ref_direction_distance, closest_ref_direction = calc_ref_direction_distances(fitness_values,
-                                                                                         reference_points)
+            ref_direction_distance, closest_ref_direction = calc_ref_direction_distances(
+                fitness_values, reference_points
+            )
 
             parents = self.selection(
                 population=self.population_,
@@ -104,7 +105,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
                 random_state=self.random_state_,
                 pareto_ranks=pareto_ranks,
                 closest_ref_direction=closest_ref_direction,
-                ref_direction_distance=ref_direction_distance
+                ref_direction_distance=ref_direction_distance,
             )
 
             # Note that this expression swallows the last element, if `population_size` is odd
@@ -151,8 +152,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
 
             solutions_left_count = self.population_size - len(next_pop)
 
-            union_ref_dist, union_closest_ref = calc_ref_direction_distances(union_fitness_values,
-                                                                  reference_points)
+            union_ref_dist, union_closest_ref = calc_ref_direction_distances(union_fitness_values, reference_points)
             niche_count = np.zeros(reference_points.shape[0])
             values, counts = np.unique(union_closest_ref[union_pareto_ranks < l], return_counts=True)
             niche_count[values] = counts
@@ -189,4 +189,3 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
         pareto_ranks = fast_non_dominated_sort(fitness_values)
         pareto_front = np.array(self.population_)[pareto_ranks == 0]
         return sorted(pareto_front, key=lambda x: x.fitness_[0], reverse=True)
-

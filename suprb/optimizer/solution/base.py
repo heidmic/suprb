@@ -161,13 +161,13 @@ class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMet
         warm_start: bool,
     ):
         super().__init__(
-            population_size = population_size,
-            n_iter = n_iter,
-            init = init,
-            archive = archive,
-            random_state = random_state,
-            n_jobs = n_jobs,
-            warm_start = warm_start,
+            population_size=population_size,
+            n_iter=n_iter,
+            init=init,
+            archive=archive,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            warm_start=warm_start,
         )
         self.sampler = sampler
 
@@ -176,7 +176,7 @@ class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMet
         pass
 
     def elitist(self) -> Optional[Solution]:
-        """Sample an elitist from the Pareto front"""""
+        """Sample an elitist from the Pareto front""" ""
         pf = self.pareto_front()
         if len(pf) == 0:
             return None

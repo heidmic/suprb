@@ -7,6 +7,7 @@ import numpy as np
 
 from suprb.base import BaseComponent
 
+
 class NSGAIIINormaliser(BaseComponent, metaclass=ABCMeta):
 
     def __init__(self) -> None:
@@ -47,9 +48,8 @@ class HyperPlaneNormaliser(NSGAIIINormaliser):
     """
     Implemented as described in 10.1007/978-3-030-12598-1_19
     """
-    def __init__(self, objective_count,
-                 epsilon_asf: float = 10e-6,
-                 epsilon_nad: float = 10e-6) -> None:
+
+    def __init__(self, objective_count, epsilon_asf: float = 10e-6, epsilon_nad: float = 10e-6) -> None:
         super().__init__()
         self.objective_count = objective_count
         self.epsilon_asf = epsilon_asf
@@ -72,8 +72,9 @@ class HyperPlaneNormaliser(NSGAIIINormaliser):
         return self._extreme_points
 
     def _update_nadir_point(self, fitness_values: np.ndarray, pareto_ranks: np.ndarray) -> np.ndarray:
-        self._worst_points_estimate = np.max(np.concatenate([fitness_values, self._worst_points_estimate[None, :]]),
-                                             axis=0)
+        self._worst_points_estimate = np.max(
+            np.concatenate([fitness_values, self._worst_points_estimate[None, :]]), axis=0
+        )
         self._update_extreme_points(fitness_values)
         try:
             normal, distance = find_plane_from_points(self._extreme_points - self._ideal_point)
@@ -95,6 +96,7 @@ class HyperPlaneNormaliser(NSGAIIINormaliser):
         nadir_point[mask] = fallback_nadir[mask]
         self._nadir_point = nadir_point
         return nadir_point
+
 
 def find_hyperplane_axis_intercepts(normal_vector, distance) -> np.ndarray:
     """

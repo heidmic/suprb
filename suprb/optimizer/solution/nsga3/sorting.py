@@ -82,9 +82,8 @@ def calculate_crowding_distances(fitness_values: np.ndarray, pareto_ranks: np.nd
             if max_f > min_f:
                 normalized_range = max_f - min_f
                 for i in range(1, front_size - 1):
-                    crowding_distances[sorted_front[i]] += ((
-                                                                   front_fitness[sorting_permutation[i + 1], m] -
-                                                                   front_fitness[sorting_permutation[i - 1], m])
-                                                            / normalized_range)
+                    crowding_distances[sorted_front[i]] += (
+                        front_fitness[sorting_permutation[i + 1], m] - front_fitness[sorting_permutation[i - 1], m]
+                    ) / normalized_range
 
     return crowding_distances

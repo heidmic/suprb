@@ -16,7 +16,7 @@ class SolutionSelection(BaseComponent, metaclass=ABCMeta):
         random_state: RandomState,
         pareto_ranks: np.ndarray,
         closest_ref_direction: np.ndarray,
-        ref_direction_distance: np.ndarray
+        ref_direction_distance: np.ndarray,
     ) -> list[Solution]:
         pass
 
@@ -34,7 +34,7 @@ class ReferenceBasedBinaryTournament(SolutionSelection):
         random_state: RandomState,
         pareto_ranks: np.ndarray,
         closest_ref_direction: np.ndarray,
-        ref_direction_distance: np.ndarray
+        ref_direction_distance: np.ndarray,
     ) -> list[Solution]:
 
         selection = []
