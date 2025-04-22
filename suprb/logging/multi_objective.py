@@ -2,19 +2,22 @@ import numpy as np
 
 from . import DefaultLogger
 from ..base import BaseRegressor
-from suprb.solution import Solution
 
 from .metrics import hypervolume, spread
 
 
 class MOLogger(DefaultLogger):
 
-    pareto_fronts_: list[list[Solution]] = []
+    pareto_fronts_: dict
+
+    def log_init(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor):
+        super().log_init(X, y, estimator)
+        self.pareto_fronts_ = {}
 
     def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
-        super().log_iteration(X, y, estimator, iteration)
-        self.pareto_fronts_.append(estimator.solution_composition_.pareto_front())
-        # Very hacky way to check if were in the first Stage of TS or not
-        if len(self.pareto_fronts_[-1]) > 1:
-            self.log_metric("hypervolume", hypervolume(self.pareto_fronts_[-1]), estimator.step_)
-            self.log_metric("spread", spread(self.pareto_fronts_[-1]), estimator.step_)
+        super().log_iteration(X, y, estimator, estimator.step_)
+        current_front = estimator.solution_composition_.pareto_front()
+        self.pareto_fronts_[iteration] = [solution.fitness_ for solution in current_front]
+        # Very hacky way to check if we are in the first Stage of TS or not
+        self.log_metric("hypervolume", hypervolume(current_front), estimator.step_)
+        self.log_metric("spread", spread(current_front), estimator.step_)

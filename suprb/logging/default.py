@@ -90,7 +90,13 @@ class DefaultLogger(BaseLogger):
 
         # Log elitist
         elitist = estimator.solution_composition_.elitist()
-        log_metric("elitist_fitness", elitist.fitness_)
+
+        if elitist.fitness_.__class__.__name__ == "list":
+            for i in range(len(elitist.fitness_)):
+                log_metric(f"elitist_fitness_o_{i}", elitist.fitness_[i])
+        else:
+            log_metric("elitist_fitness", elitist.fitness_)
+
         log_metric("elitist_error", elitist.error_)
         log_metric("elitist_complexity", elitist.complexity_)
         # log_metric("elitist_matched", matched_training_samples(elitist.subpopulation)) # When using default logging, not all approaches are compatible with this
