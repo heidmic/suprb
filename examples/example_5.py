@@ -33,7 +33,7 @@ if __name__ == "__main__":
     ts = TwoStageSolutionComposition(
         algorithm_1=ga,
         algorithm_2=nsga2,
-        switch_iteration=32,
+        switch_iteration=2,
     )
     sc_algos = (ts, nsga2)
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
             X,
             y,
             cv=2,
-            n_jobs=1,
+            n_jobs=2,
             verbose=10,
             scoring=["r2", "neg_mean_squared_error"],
             return_estimator=True,
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         score_list.append(scores)
 
         pareto_front = scores["estimator"][0].logger_.pareto_fronts_
-        pareto_front = np.array([[solution.complexity_, solution.error_] for solution in pareto_front[-1]])
+        pareto_front = np.array(pareto_front[suprb_iter - 1])
 
         x = pareto_front[:, 0]
         y = pareto_front[:, 1]
@@ -103,9 +103,9 @@ if __name__ == "__main__":
         hv = hvs[suprb_iter - 1]
         spreads = scores["estimator"][0].logger_.metrics_["spread"]
         spread = spreads[suprb_iter - 1]
-        plt.title(f"$HV = {hv}, \Delta = {spread}$")
-        plt.xlim(0, 80)
-        plt.ylim(0, 0.2)
+        plt.title(f"$HV = {hv:.4f}, \Delta = {spread:.4f}$")
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
         plt.xlabel("Complexity")
         plt.ylabel("Error")
         plt.show()
