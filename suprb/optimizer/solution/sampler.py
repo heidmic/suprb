@@ -47,11 +47,11 @@ class SolutionSampler(BaseComponent, metaclass=ABCMeta):
 
 class NormalSolutionSampler(SolutionSampler):
 
-    def __init__(self, mu: float = 0.0):
-        self.mu = mu
+    def __init__(self, sigma: float = 0.2):
+        self.sigma = sigma
 
     def __call__(self, pareto_front: list[Solution], random_state: RandomState) -> Solution:
-        weights = stats.norm.pdf(np.linspace(0, 1, len(pareto_front)), 0.5, self.mu)
+        weights = stats.norm.pdf(np.linspace(0, 1, len(pareto_front)), 0.5, self.sigma)
         weights = weights / np.sum(weights)
         return random_state.choice(pareto_front, p=weights)
 
