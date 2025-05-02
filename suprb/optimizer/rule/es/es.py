@@ -54,7 +54,7 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
         lmbda: int = 20,
         operator: str = "&",
         delay: int = 146,
-        origin_generation: RuleOriginGeneration = Matching(),
+        origin_generation: RuleOriginGeneration = SquaredError(),
         init: RuleInit = MeanInit(),
         mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
         selection: RuleSelection = Fittest(),
