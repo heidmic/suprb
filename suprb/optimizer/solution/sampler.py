@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Callable
+from sklearn.utils import Bunch
+
 
 from suprb.base import BaseComponent
 from suprb.solution import Solution
@@ -46,9 +48,10 @@ class SolutionSampler(BaseComponent, metaclass=ABCMeta):
 
 class PDFSolutionSampler(SolutionSampler):
 
-    def __init__(self, pdf: Callable[..., np.ndarray], pdf_args: Optional[dict] = None, projected: bool = True):
+    def __init__(self, pdf: Callable[..., np.ndarray], pdf_args: Optional[Bunch] = None, projected: bool = True):
         if pdf_args is None:
-            pdf_args = {}
+            pdf_args = Bunch()
+
         self.pdf = pdf
         self.pdf_args = pdf_args
         self.projected = projected
@@ -59,7 +62,7 @@ class PDFSolutionSampler(SolutionSampler):
             points = points / np.sum(points, axis=1, keepdims=True)
             points = points[:, 0]
         else:
-            points = np.linspace(0, 1, len(pareto_front))
+            points = np.linspace(0.0001, 1 - 0.0001, len(pareto_front))
 
         weights = self.pdf(points, **self.pdf_args)
         weights = weights / np.sum(weights)
