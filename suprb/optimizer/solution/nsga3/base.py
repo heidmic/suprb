@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats as stats
 
 from suprb import Solution
 from suprb.solution.initialization import SolutionInit, RandomInit
@@ -13,7 +14,7 @@ from .crossover import SolutionCrossover, NPoint
 from .sorting import fast_non_dominated_sort
 from .reference import das_dennis_points, calc_ref_direction_distances
 from .normalise import NSGAIIINormaliser, HyperPlaneNormaliser
-from ..sampler import SolutionSampler, NormalSolutionSampler
+from ..sampler import SolutionSampler, PDFSolutionSampler
 
 
 class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
@@ -50,7 +51,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
         mutation: SolutionMutation = BitFlips(),
         crossover: SolutionCrossover = NPoint(n=3),
         selection: SolutionSelection = ReferenceBasedBinaryTournament(),
-        sampler: SolutionSampler = NormalSolutionSampler(),
+        sampler: SolutionSampler = PDFSolutionSampler(stats.uniform.pdf),
         mutation_rate: float = 0.025,
         crossover_rate: float = 0.75,
         init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),

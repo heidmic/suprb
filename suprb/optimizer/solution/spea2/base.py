@@ -1,16 +1,17 @@
 import numpy as np
-from matplotlib.cbook import flatten
+import scipy.stats as stats
 
 from suprb import Solution
 from suprb.solution.fitness import BasicMOSolutionFitness
 from suprb.solution.initialization import SolutionInit, RandomInit
+from suprb.utils import flatten
 
 from ..base import MOSolutionComposition
 from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, BinaryTournament
 from .crossover import SolutionCrossover, NPoint
 from .archive import EnvironmentalArchive
-from ..sampler import SolutionSampler, NormalSolutionSampler
+from ..sampler import SolutionSampler, PDFSolutionSampler
 from .internal_fitness import calculate_raw_internal_fitness
 
 
@@ -46,7 +47,7 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
         mutation: SolutionMutation = BitFlips(),
         crossover: SolutionCrossover = NPoint(n=3),
         selection: SolutionSelection = BinaryTournament(),
-        sampler: SolutionSampler = NormalSolutionSampler(),
+        sampler: SolutionSampler = PDFSolutionSampler(stats.uniform.pdf),
         mutation_rate: float = 0.025,
         crossover_rate: float = 0.75,
         kth_nearest: int = -1,

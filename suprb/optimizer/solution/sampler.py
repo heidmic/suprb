@@ -56,7 +56,7 @@ class PDFSolutionSampler(SolutionSampler):
     def __call__(self, pareto_front: list[Solution], random_state: RandomState) -> Solution:
         if self.projected:
             points = np.array([solution.fitness_ for solution in pareto_front])
-            points = points / np.sum(points, axis=1)
+            points = points / np.sum(points, axis=1, keepdims=True)
             points = points[:, 0]
         else:
             points = np.linspace(0, 1, len(pareto_front))
