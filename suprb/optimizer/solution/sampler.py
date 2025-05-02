@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
-
-import scipy.stats as stats
+from typing import Optional, Callable
 
 from suprb.base import BaseComponent
 from suprb.solution import Solution
@@ -45,22 +44,13 @@ class SolutionSampler(BaseComponent, metaclass=ABCMeta):
         pass
 
 
-class NormalSolutionSampler(SolutionSampler):
+class PDFSolutionSampler(SolutionSampler):
 
-    def __init__(self, sigma: float = 0.2):
-        self.sigma = sigma
-
-    def __call__(self, pareto_front: list[Solution], random_state: RandomState) -> Solution:
-        weights = stats.norm.pdf(np.linspace(0, 1, len(pareto_front)), 0.5, self.sigma)
-        weights = weights / np.sum(weights)
-        return random_state.choice(pareto_front, p=weights)
-
-
-class BetaSolutionSampler(SolutionSampler):
-
-    def __init__(self, alpha: float = 1.0, beta: float = 1.0, projected: bool = True):
-        self.alpha = alpha
-        self.beta = beta
+    def __init__(self, pdf: Callable[..., np.ndarray], pdf_args: Optional[dict] = None, projected: bool = True):
+        if pdf_args is None:
+            pdf_args = {}
+        self.pdf = pdf
+        self.pdf_args = pdf_args
         self.projected = projected
 
     def __call__(self, pareto_front: list[Solution], random_state: RandomState) -> Solution:
@@ -71,7 +61,7 @@ class BetaSolutionSampler(SolutionSampler):
         else:
             points = np.linspace(0, 1, len(pareto_front))
 
-        weights = stats.norm.beta(points, self.alpha, self.beta)
+        weights = self.pdf(points, **self.pdf_args)
         weights = weights / np.sum(weights)
         return random_state.choice(pareto_front, p=weights)
 
