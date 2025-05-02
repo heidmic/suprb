@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
+import scipy.stats as stats
 from typing import Optional, Callable
 from sklearn.utils import Bunch
-
 
 from suprb.base import BaseComponent
 from suprb.solution import Solution
@@ -46,14 +46,11 @@ class SolutionSampler(BaseComponent, metaclass=ABCMeta):
         pass
 
 
-class PDFSolutionSampler(SolutionSampler):
+class BetaSolutionSampler(SolutionSampler):
 
-    def __init__(self, pdf: Callable[..., np.ndarray], pdf_args: Optional[Bunch] = None, projected: bool = True):
-        if pdf_args is None:
-            pdf_args = Bunch()
-
-        self.pdf = pdf
-        self.pdf_args = pdf_args
+    def __init__(self, a: float = 1.5, b: float = 1.5, projected: bool = True):
+        self.a = a
+        self.b = b
         self.projected = projected
 
     def __call__(self, pareto_front: list[Solution], random_state: RandomState) -> Solution:
@@ -64,7 +61,7 @@ class PDFSolutionSampler(SolutionSampler):
         else:
             points = np.linspace(0.0001, 1 - 0.0001, len(pareto_front))
 
-        weights = self.pdf(points, **self.pdf_args)
+        weights = stats.beta.pdf(points, a=self.a, b=self.b)
         weights = weights / np.sum(weights)
         return random_state.choice(pareto_front, p=weights)
 

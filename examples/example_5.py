@@ -12,7 +12,7 @@ from sklearn.utils import Bunch
 from suprb import SupRB
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.nsga2 import NonDominatedSortingGeneticAlgorithm2
-from suprb.optimizer.solution.sampler import PDFSolutionSampler
+from suprb.optimizer.solution.sampler import BetaSolutionSampler
 from suprb.optimizer.solution.spea2 import StrengthParetoEvolutionaryAlgorithm2
 from suprb.optimizer.solution.nsga3 import NonDominatedSortingGeneticAlgorithm3
 from suprb.optimizer.solution.ga import GeneticAlgorithm
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         population_size=32,
         random_state=random_state,
         n_jobs=1,
-        sampler=PDFSolutionSampler(stats.beta.pdf, Bunch(a=1.5, b=1.5), projected=False),
+        sampler=BetaSolutionSampler(a=1.5, b=1.5, projected=False),
     )
     ga = GeneticAlgorithm()
     ts = TwoStageSolutionComposition(

@@ -11,7 +11,7 @@ from .mutation import SolutionMutation, BitFlips
 from .selection import SolutionSelection, BinaryTournament
 from .crossover import SolutionCrossover, NPoint
 from .archive import EnvironmentalArchive
-from ..sampler import SolutionSampler, PDFSolutionSampler
+from ..sampler import SolutionSampler, BetaSolutionSampler
 from .internal_fitness import calculate_raw_internal_fitness
 
 
@@ -47,7 +47,7 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
         mutation: SolutionMutation = BitFlips(),
         crossover: SolutionCrossover = NPoint(n=3),
         selection: SolutionSelection = BinaryTournament(),
-        sampler: SolutionSampler = PDFSolutionSampler(stats.uniform.pdf),
+        sampler: SolutionSampler = BetaSolutionSampler(1.5, 1.5),
         mutation_rate: float = 0.025,
         crossover_rate: float = 0.75,
         kth_nearest: int = -1,
