@@ -31,7 +31,7 @@ if __name__ == "__main__":
         population_size=32,
         random_state=random_state,
         n_jobs=1,
-        sampler=DiversitySolutionSampler(),
+        sampler=BetaSolutionSampler(0.1, 0.1, projected=True),
     )
     ga = GeneticAlgorithm()
     ts = TwoStageSolutionComposition(

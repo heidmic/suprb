@@ -69,7 +69,8 @@ class BetaSolutionSampler(SolutionSampler):
             points = np.linspace(0.0001, 1 - 0.0001, len(pareto_front))
 
         weights = stats.beta.pdf(points, a=self.a, b=self.b)
-        weights = weights / np.sum(weights)
+        weights[weights == np.inf] = 0
+        weights = (weights / np.sum(weights)) if np.sum(weights) > 0 else (np.ones(len(weights)) / len(weights))
         return random_state.choice(pareto_front, p=weights)
 
 
@@ -79,5 +80,5 @@ class DiversitySolutionSampler(SolutionSampler):
         fitness_values = np.array([solution.fitness_ for solution in pareto_front])
         weights = calculate_crowding_distances(fitness_values, np.zeros(len(pareto_front)))
         weights[weights == np.inf] = 0
-        weights = (weights / np.sum(weights)) if np.sum(weights) > 0 else np.ones(len(weights)) / len(weights)
+        weights = (weights / np.sum(weights)) if np.sum(weights) > 0 else (np.ones(len(weights)) / len(weights))
         return random_state.choice(pareto_front, p=weights)
