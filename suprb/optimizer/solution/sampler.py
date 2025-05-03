@@ -10,31 +10,38 @@ from suprb.utils import RandomState
 import numpy as np
 
 
-def calculate_crowding_distances(fitness_values: np.ndarray) -> np.ndarray:
-    objective_count = fitness_values.shape[1]
-    crowding_distances = np.zeros(fitness_values.shape[0])
+def calculate_crowding_distances(fitness_values: np.ndarray, pareto_ranks: np.ndarray) -> np.ndarray:
+    solution_count, objective_count = fitness_values.shape
+    crowding_distances = np.zeros(solution_count)
 
-    if fitness_values.shape[0] <= 2:
-        crowding_distances[:] = 1
+    for rank in np.unique(pareto_ranks):
+        front_indices = np.where(pareto_ranks == rank)[0]
+        front_size = len(front_indices)
 
-    for m in range(objective_count):
-        sorting_permutation = np.argsort(fitness_values[:, m])
-        sorted_front = fitness_values[sorting_permutation]
+        if front_size <= 2:
+            crowding_distances[front_indices] = np.inf
+            continue
 
-        crowding_distances[sorted_front[0]] = np.inf
-        crowding_distances[sorted_front[-1]] = np.inf
+        front_fitness = fitness_values[front_indices]
 
-        min_f = fitness_values[sorting_permutation[0], m]
-        max_f = fitness_values[sorting_permutation[-1], m]
+        for m in range(objective_count):
+            sorting_permutation = np.argsort(front_fitness[:, m])
+            sorted_front = front_indices[sorting_permutation]
 
-        # if max_f == min_f the crowding distance parts that result from objective_m are all 0 as all
-        # solution share the same coordinate in this dimension of the fitness function
-        if max_f > min_f:
-            normalized_range = max_f - min_f
-            for i in range(1, len(crowding_distances) - 1):
-                crowding_distances[sorted_front[i]] += (
-                    fitness_values[sorting_permutation[i + 1], m] - fitness_values[sorting_permutation[i - 1], m]
-                ) / normalized_range
+            crowding_distances[sorted_front[0]] = np.inf
+            crowding_distances[sorted_front[-1]] = np.inf
+
+            min_f = front_fitness[sorting_permutation[0], m]
+            max_f = front_fitness[sorting_permutation[-1], m]
+
+            # if max_f == min_f the crowding distance parts that result from objective_m are all 0 as all
+            # solution share the same coordinate in this dimension of the fitness function
+            if max_f > min_f:
+                normalized_range = max_f - min_f
+                for i in range(1, front_size - 1):
+                    crowding_distances[sorted_front[i]] += (
+                        front_fitness[sorting_permutation[i + 1], m] - front_fitness[sorting_permutation[i - 1], m]
+                    ) / normalized_range
 
     return crowding_distances
 
@@ -70,6 +77,7 @@ class DiversitySolutionSampler(SolutionSampler):
 
     def __call__(self, pareto_front: list[Solution], random_state: RandomState) -> Solution:
         fitness_values = np.array([solution.fitness_ for solution in pareto_front])
-        weights = calculate_crowding_distances(fitness_values)
-        weights = weights / np.sum(weights)
+        weights = calculate_crowding_distances(fitness_values, np.zeros(len(pareto_front)))
+        weights[weights == np.inf] = 0
+        weights = (weights / np.sum(weights)) if np.sum(weights) > 0 else np.ones(len(weights)) / len(weights)
         return random_state.choice(pareto_front, p=weights)
