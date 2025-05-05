@@ -14,7 +14,7 @@ from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import ParallelSingleRuleDiscovery
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import Matching, RuleOriginGeneration
+from ..origin import Matching, SquaredError, RuleOriginGeneration
 
 
 class ES1xLambda(ParallelSingleRuleDiscovery):
