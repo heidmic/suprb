@@ -8,6 +8,7 @@ from suprb.solution.initialization import RandomInit
 from ..base import SolutionComposition, SolutionArchive, MOSolutionComposition, PopulationBasedSolutionComposition
 from suprb.utils import check_random_state
 
+
 class TwoStageSolutionComposition(SolutionComposition):
     """
     Wrapper class for switching between different solution composition algorithms
