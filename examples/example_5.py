@@ -24,22 +24,27 @@ from utils import log_scores
 import time
 
 
+def plot_pareto_front(pareto_front: np.ndarray, title: str):
+    x = pareto_front[:, 0]
+    y = pareto_front[:, 1]
+    plt.step(x, y, linestyle="-", marker="x")
+    plt.title(title)
+    plt.xlabel("Complexity")
+    plt.ylabel("Error")
+
+
 if __name__ == "__main__":
     random_state = 42
-    nsga2 = NonDominatedSortingGeneticAlgorithm2(
+
+    suprb_iter = 8
+
+    nsga2 = StrengthParetoEvolutionaryAlgorithm2(
         n_iter=32,
         population_size=32,
-        random_state=random_state,
-        n_jobs=1,
-        sampler=BetaSolutionSampler(0.1, 0.1, projected=True),
+        sampler=BetaSolutionSampler(),
     )
-    ga = GeneticAlgorithm()
-    ts = TwoStageSolutionComposition(
-        algorithm_1=ga,
-        algorithm_2=nsga2,
-        switch_iteration=2,
-    )
-    sc_algos = (ts, nsga2)
+
+    sc_algos = (nsga2, )
 
     score_list = []
     time_list = []
@@ -50,7 +55,7 @@ if __name__ == "__main__":
         }
     )
 
-    for sc in sc_algos:
+    for i, sc in enumerate(sc_algos):
 
         data, _ = fetch_openml(name="Concrete_Data", version=1, return_X_y=True)
         data = data.to_numpy()
@@ -61,8 +66,6 @@ if __name__ == "__main__":
         X = MinMaxScaler(feature_range=(-1, 1)).fit_transform(X)
         y = StandardScaler().fit_transform(y.reshape((-1, 1))).reshape((-1,))
 
-        suprb_iter = 32
-
         model = SupRB(
             n_iter=suprb_iter,
             rule_discovery=ES1xLambda(
@@ -70,7 +73,6 @@ if __name__ == "__main__":
                 lmbda=16,
                 operator="+",
                 delay=150,
-                random_state=random_state,
                 n_jobs=1,
             ),
             solution_composition=sc,
@@ -97,23 +99,29 @@ if __name__ == "__main__":
 
         score_list.append(scores)
 
-        pareto_front = scores["estimator"][0].logger_.pareto_fronts_
-        pareto_front = np.array(pareto_front[suprb_iter - 1])
+        try:
+            pareto_front = scores["estimator"][0].logger_.pareto_fronts_
+            pareto_front = np.array(pareto_front[suprb_iter - 1])
+            hvs = scores["estimator"][0].logger_.metrics_["hypervolume"]
+            hv = hvs[suprb_iter - 1]
+            spreads = scores["estimator"][0].logger_.metrics_["spread"]
+            spread = spreads[suprb_iter - 1]
+            plot_pareto_front(pareto_front, f"$HV = {hv:.2f}, SP = {spread:.2f}$")
+        except Exception:
+            elitist_error = scores["estimator"][0].logger_.metrics_["elitist_error"]
+            elitist_complexity = scores["estimator"][0].logger_.metrics_["elitist_complexity"]
+            elitist_error = np.array(list(elitist_error.values()))
+            elitist_complexity = np.array(list(elitist_complexity.values()))
+            pseudo_accuracy = 1 - np.exp(-2 * elitist_error)
+            c_norm = elitist_complexity / (4 * suprb_iter)
 
-        x = pareto_front[:, 0]
-        y = pareto_front[:, 1]
-        plt.step(x, y, color="black", linestyle="-", marker="x")
-        hvs = scores["estimator"][0].logger_.metrics_["hypervolume"]
-        hv = hvs[suprb_iter - 1]
-        spreads = scores["estimator"][0].logger_.metrics_["spread"]
-        spread = spreads[suprb_iter - 1]
-        plt.title(f"$HV = {hv:.4f}, \Delta = {spread:.4f}$")
-        plt.xlim(0, 1)
-        plt.ylim(0, 1)
-        plt.xlabel("Complexity")
-        plt.ylabel("Error")
-        plt.show()
-        print("Finished!")
+            plt.plot(c_norm, pseudo_accuracy, marker='o', linestyle='-')
+            for idx, (x, y) in enumerate(zip(c_norm, pseudo_accuracy)):
+                plt.text(x, y, str(idx), fontsize=8, ha='right', va='bottom')
+            plt.xlim(0, 1)
+            plt.ylim(0, 1)
+    plt.show()
+    print("Finished!")
 
     for t in time_list:
         print(f"Time taken: {t}")
