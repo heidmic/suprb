@@ -16,8 +16,8 @@ class MOLogger(DefaultLogger):
 
     def log_iteration(self, X: np.ndarray, y: np.ndarray, estimator: BaseRegressor, iteration: int):
         super().log_iteration(X, y, estimator, estimator.step_)
-        current_front = estimator.solution_composition_.pareto_front()
-        if isinstance(current_front[0].fitness_, list):
+        if hasattr(estimator.solution_composition_, "pareto_front"):
+            current_front = estimator.solution_composition_.pareto_front()
             self.pareto_fronts_[iteration] = [solution.fitness_ for solution in current_front]
             # Very hacky way to check if we are in the first Stage of TS or not
             self.log_metric("hypervolume", hypervolume(current_front), estimator.step_)
