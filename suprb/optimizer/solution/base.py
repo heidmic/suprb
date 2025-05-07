@@ -176,7 +176,7 @@ class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMet
         pass
 
     def elitist(self) -> Optional[Solution]:
-        """Sample an elitist from the Pareto front""" ""
+        """Sample an elitist from the Pareto front"""
         pf = self.pareto_front()
         if len(pf) == 0:
             return None
