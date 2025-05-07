@@ -173,7 +173,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
                     candidate_distances = front_l_ref_dist[front_l_closest_ref == min_index]
                     next_pop.append(candidates[np.argmin(candidate_distances)])
                 else:
-                    next_pop.append(np.random.choice(candidates))
+                    next_pop.append(self.random_state_.choice(candidates))
                 niche_count[min_index] = niche_count[min_index] + 1
                 front_l_closest_ref = front_l_closest_ref[front_l != next_pop[-1]]
                 front_l_ref_dist = front_l_ref_dist[front_l != next_pop[-1]]
