@@ -14,7 +14,7 @@ from .. import RuleAcceptance, RuleConstraint
 from ..acceptance import Variance
 from ..base import ParallelSingleRuleDiscovery
 from ..constraint import CombinedConstraint, MinRange, Clip
-from ..origin import Matching, RuleOriginGeneration
+from ..origin import Matching, SquaredError, RuleOriginGeneration
 
 
 class ES1xLambda(ParallelSingleRuleDiscovery):
@@ -54,7 +54,7 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
         lmbda: int = 20,
         operator: str = "&",
         delay: int = 146,
-        origin_generation: RuleOriginGeneration = Matching(),
+        origin_generation: RuleOriginGeneration = SquaredError(),
         init: RuleInit = MeanInit(),
         mutation: RuleMutation = HalfnormIncrease(sigma=1.22),
         selection: RuleSelection = Fittest(),
