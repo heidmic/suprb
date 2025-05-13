@@ -78,12 +78,13 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
         self.sampler = sampler
         fitness = self.init.fitness
         if normaliser is None:
-            normaliser = HyperPlaneNormaliser(len(fitness.objective_func_), fitness.worst_point_estimate_)
+            normaliser = HyperPlaneNormaliser(len(fitness.objective_func_))
         self.normaliser = normaliser
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
 
     def _optimize(self, X: np.ndarray, y: np.ndarray):
+        self.normaliser.reset()
         self.fit_population(X, y)
         fitness_values = np.array([solution.fitness_ for solution in self.population_])
         pareto_ranks = fast_non_dominated_sort(fitness_values)

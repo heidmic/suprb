@@ -14,6 +14,10 @@ class NSGAIIINormaliser(BaseComponent, metaclass=ABCMeta):
         self._ideal_point = None
         self._nadir_point = None
 
+    def reset(self):
+        self._ideal_point = None
+        self._nadir_point = None
+
     def _update_ideal_point(self, fitness_values: np.ndarray) -> np.ndarray:
         if self._ideal_point is not None:
             fitness_values = np.concatenate([fitness_values, self._ideal_point[np.newaxis, :]])
@@ -57,6 +61,11 @@ class HyperPlaneNormaliser(NSGAIIINormaliser):
         self._worst_points_estimate = np.zeros(self.objective_count)
         self.epsilon_nad = epsilon_nad
 
+    def reset(self):
+        super().reset()
+        self._extreme_points = None
+        self._worst_points_estimate = np.zeros(self.objective_count)
+
     def _update_extreme_points(self, fitness_values: np.ndarray) -> np.ndarray:
         if self._extreme_points is not None:
             fitness_values = np.concatenate([fitness_values, self._extreme_points])
@@ -82,13 +91,13 @@ class HyperPlaneNormaliser(NSGAIIINormaliser):
             nadir_point = np.zeros(self.objective_count)
             for k in range(self.objective_count):
                 nadir_k = intercepts[k] + self._ideal_point[k]
-                if intercepts[k] < self.epsilon_nad or nadir_k > self._worst_points_estimate[k]:
+                if intercepts[k] < self.epsilon_nad:
+                    raise ValueError("Negative intercept")
+                if nadir_k > self._worst_points_estimate[k]:
                     raise ValueError("Nadir point outside worst point")
                 nadir_point[k] = intercepts[k] + self._ideal_point[k]
 
         except Exception as e:
-            print(traceback.format_exc())
-            print("Falling back to per-axis maximum normalisation!")
             nadir_point = np.max(fitness_values, axis=0)
 
         fallback_nadir = np.max(fitness_values[pareto_ranks == 0], axis=0)
@@ -131,7 +140,7 @@ def find_hyperplane_axis_intercepts(normal_vector, distance) -> np.ndarray:
 
 def find_plane_from_points(points: np.ndarray) -> tuple[np.ndarray, float]:
     """
-    Compute a n dimensional hyperplane from a set of n points.
+    Compute a n-dimensional hyperplane from a set of n points.
 
     Parameters
     ----------
