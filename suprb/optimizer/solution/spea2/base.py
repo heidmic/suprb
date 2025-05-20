@@ -121,10 +121,10 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
             if self.check_early_stopping():
                 break
 
-    def _pareto_front(self) -> list[Solution]:
+    def pareto_front(self) -> list[Solution]:
         if not hasattr(self, "population_") or not self.population_:
             return []
-        fitness_values = np.array([solution.fitness_ for solution in self.population_])
+        fitness_values = np.array([solution.fitness_ for solution in self.archive.population_])
         pareto_ranks = fast_non_dominated_sort(fitness_values)
         pareto_front = np.array(self.archive.population_)[pareto_ranks == 0]
         return sorted(pareto_front, key=lambda x: x.fitness_[0], reverse=True)

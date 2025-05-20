@@ -190,17 +190,18 @@ class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMet
         self._best_hypervolume = 0
         self._best_pareto_front = None
         self._early_stopping_counter = 0
-        self._step = 0
+        self.step_ = 0
 
     def check_early_stopping(self):
-        self._step += 1
+        self.step_ += 1
         if self.early_stopping_patience < 0:
             return False
         hv = self.hypervolume()
         hv_diff = hv - self._best_hypervolume
         if self._best_hypervolume < hv:
             self._best_hypervolume = hv
-            self._best_pareto_front = self._pareto_front()
+            self._best_pareto_front = self.pareto_front()
+
         if hv_diff > self.early_stopping_delta:
             self._early_stopping_counter = 0
         else:
@@ -209,24 +210,16 @@ class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMet
                 print(
                     f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes."
                 )
-                print(
-                    f"The early stopping criterion value was: {self._best_hypervolume} after {self._step} iterations."
-                )
+                print(f"The early stopping criterion value was: {self.hypervolume()} after {self.step_} iterations.")
                 return True
         return False
-
-    def pareto_front(self):
-        if self._best_pareto_front:
-            return self._best_pareto_front
-        else:
-            return self._pareto_front()
 
     @abstractmethod
     def _pareto_front(self) -> list[Solution]:
         pass
 
     def hypervolume(self) -> float:
-        return hypervolume(self._pareto_front())
+        return hypervolume(self.pareto_front())
 
     def elitist(self) -> Optional[Solution]:
         """Sample an elitist from the Pareto front"""
@@ -239,5 +232,5 @@ class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMet
         self._best_hypervolume = 0
         self._best_pareto_front = None
         self._early_stopping_counter = 0
-        self._step = 0
+        self.step_ = 0
         super().optimize(X, y, **kwargs)

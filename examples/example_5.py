@@ -61,8 +61,13 @@ if __name__ == "__main__":
         early_stopping_delta=0,
         early_stopping_patience=10,
     )
-
-    sc_algos = (nsga2, nsga3, spea2)
+    ga = GeneticAlgorithm()
+    ts = TwoStageSolutionComposition(
+        algorithm_1=ga,
+        algorithm_2=nsga3,
+        switch_iteration=8,
+    )
+    sc_algos = (nsga2, nsga3, spea2, ts)
 
     score_list = []
     time_list = []

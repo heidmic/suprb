@@ -190,7 +190,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
             if self.check_early_stopping():
                 break
 
-    def _pareto_front(self) -> list[Solution]:
+    def pareto_front(self) -> list[Solution]:
         if not hasattr(self, "population_") or not self.population_:
             return []
         fitness_values = np.array([solution.fitness_ for solution in self.population_])
