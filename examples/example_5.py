@@ -31,20 +31,37 @@ def plot_pareto_front(pareto_front: np.ndarray, title: str):
     plt.title(title)
     plt.xlabel("Complexity")
     plt.ylabel("Error")
-
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
 
 if __name__ == "__main__":
     random_state = 42
 
-    suprb_iter = 8
+    suprb_iter = 32
 
-    nsga2 = StrengthParetoEvolutionaryAlgorithm2(
-        n_iter=32,
+    spea2 = StrengthParetoEvolutionaryAlgorithm2(
+        n_iter=128,
         population_size=32,
         sampler=BetaSolutionSampler(),
+        early_stopping_delta=0,
+        early_stopping_patience=10,
     )
+    nsga2 = NonDominatedSortingGeneticAlgorithm2(
+        n_iter=128,
+        population_size=32,
+        sampler=BetaSolutionSampler(),
+        early_stopping_delta=0,
+        early_stopping_patience=10,
+    )
+    nsga3 = (NonDominatedSortingGeneticAlgorithm3(
+        n_iter=128,
+        population_size=32,
+        sampler=BetaSolutionSampler(),
+        early_stopping_delta=0,
+        early_stopping_patience=10,
+    ))
 
-    sc_algos = (nsga2, )
+    sc_algos = (nsga2, nsga3, spea2)
 
     score_list = []
     time_list = []

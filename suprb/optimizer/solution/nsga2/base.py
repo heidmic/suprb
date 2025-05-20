@@ -53,6 +53,8 @@ class NonDominatedSortingGeneticAlgorithm2(MOSolutionComposition):
         random_state: int = None,
         n_jobs: int = 1,
         warm_start: bool = True,
+        early_stopping_patience: int = -1,
+        early_stopping_delta: float = 0,
     ):
         super().__init__(
             n_iter=n_iter,
@@ -63,6 +65,8 @@ class NonDominatedSortingGeneticAlgorithm2(MOSolutionComposition):
             sampler=sampler,
             n_jobs=n_jobs,
             warm_start=warm_start,
+            early_stopping_patience=early_stopping_patience,
+            early_stopping_delta=early_stopping_delta
         )
 
         self.mutation = mutation
@@ -125,7 +129,10 @@ class NonDominatedSortingGeneticAlgorithm2(MOSolutionComposition):
             intermediate_pop = [intermediate_pop[index] for index in sorting_permutation]
             self.population_ = intermediate_pop[: self.population_size]
 
-    def pareto_front(self) -> list[Solution]:
+            if self.check_early_stopping():
+                break
+
+    def _pareto_front(self) -> list[Solution]:
         if not hasattr(self, "population_") or not self.population_:
             return []
         fitness_values = np.array([solution.fitness_ for solution in self.population_])
