@@ -5,6 +5,7 @@ from suprb import Solution
 from suprb.solution.fitness import BasicMOSolutionFitness
 from suprb.solution.initialization import SolutionInit, RandomInit
 from suprb.utils import flatten
+from .sorting import fast_non_dominated_sort
 
 from ..base import MOSolutionComposition
 from .mutation import SolutionMutation, BitFlips
@@ -55,6 +56,8 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
         random_state: int = None,
         n_jobs: int = 1,
         warm_start: bool = True,
+        early_stopping_patience: int = -1,
+        early_stopping_delta: float = 0,
     ):
         super().__init__(
             n_iter=n_iter,
@@ -67,6 +70,8 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
             random_state=random_state,
             n_jobs=n_jobs,
             warm_start=warm_start,
+            early_stopping_patience=early_stopping_patience,
+            early_stopping_delta=early_stopping_delta,
         )
         self.mutation = mutation
         self.crossover = crossover
@@ -112,12 +117,14 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
             # Mutation
             mutated_children = [self.mutation(child, random_state=self.random_state_).fit(X, y) for child in children]
             self.population_ = mutated_children
-            return
 
-    def pareto_front(self) -> list[Solution]:
+            if self.check_early_stopping():
+                break
+
+    def _pareto_front(self) -> list[Solution]:
         if not hasattr(self, "population_") or not self.population_:
             return []
-        fitness_values = np.array([solution.fitness_ for solution in self.archive.population_])
-        pareto_ranks = calculate_raw_internal_fitness(fitness_values)
+        fitness_values = np.array([solution.fitness_ for solution in self.population_])
+        pareto_ranks = fast_non_dominated_sort(fitness_values)
         pareto_front = np.array(self.archive.population_)[pareto_ranks == 0]
         return sorted(pareto_front, key=lambda x: x.fitness_[0], reverse=True)

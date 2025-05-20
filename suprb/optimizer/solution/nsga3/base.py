@@ -58,6 +58,8 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
         random_state: int = None,
         n_jobs: int = 1,
         warm_start: bool = True,
+        early_stopping_patience: int = -1,
+        early_stopping_delta: float = 0,
     ):
         super().__init__(
             n_iter=n_iter,
@@ -68,6 +70,8 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
             random_state=random_state,
             n_jobs=n_jobs,
             warm_start=warm_start,
+            early_stopping_patience=early_stopping_patience,
+            early_stopping_delta=early_stopping_delta,
         )
 
         self.n_dimensions = n_dimensions
@@ -182,9 +186,11 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
                 k += 1
 
             self.population_ = next_pop
-        return
 
-    def pareto_front(self) -> list[Solution]:
+            if self.check_early_stopping():
+                break
+
+    def _pareto_front(self) -> list[Solution]:
         if not hasattr(self, "population_") or not self.population_:
             return []
         fitness_values = np.array([solution.fitness_ for solution in self.population_])
