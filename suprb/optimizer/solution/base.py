@@ -209,7 +209,9 @@ class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMet
                 print(
                     f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes."
                 )
-                print(f"The early stopping criterion value was: {self._best_hypervolume} after {self._step} iterations.")
+                print(
+                    f"The early stopping criterion value was: {self._best_hypervolume} after {self._step} iterations."
+                )
                 return True
         return False
 

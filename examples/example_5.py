@@ -34,6 +34,7 @@ def plot_pareto_front(pareto_front: np.ndarray, title: str):
     plt.xlim(0, 1)
     plt.ylim(0, 1)
 
+
 if __name__ == "__main__":
     random_state = 42
 
@@ -53,13 +54,13 @@ if __name__ == "__main__":
         early_stopping_delta=0,
         early_stopping_patience=10,
     )
-    nsga3 = (NonDominatedSortingGeneticAlgorithm3(
+    nsga3 = NonDominatedSortingGeneticAlgorithm3(
         n_iter=128,
         population_size=32,
         sampler=BetaSolutionSampler(),
         early_stopping_delta=0,
         early_stopping_patience=10,
-    ))
+    )
 
     sc_algos = (nsga2, nsga3, spea2)
 
@@ -132,9 +133,9 @@ if __name__ == "__main__":
             pseudo_accuracy = 1 - np.exp(-2 * elitist_error)
             c_norm = elitist_complexity / (4 * suprb_iter)
 
-            plt.plot(c_norm, pseudo_accuracy, marker='o', linestyle='-')
+            plt.plot(c_norm, pseudo_accuracy, marker="o", linestyle="-")
             for idx, (x, y) in enumerate(zip(c_norm, pseudo_accuracy)):
-                plt.text(x, y, str(idx), fontsize=8, ha='right', va='bottom')
+                plt.text(x, y, str(idx), fontsize=8, ha="right", va="bottom")
             plt.xlim(0, 1)
             plt.ylim(0, 1)
     plt.show()

@@ -66,7 +66,7 @@ class NonDominatedSortingGeneticAlgorithm2(MOSolutionComposition):
             n_jobs=n_jobs,
             warm_start=warm_start,
             early_stopping_patience=early_stopping_patience,
-            early_stopping_delta=early_stopping_delta
+            early_stopping_delta=early_stopping_delta,
         )
 
         self.mutation = mutation
