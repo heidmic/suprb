@@ -1,22 +1,16 @@
 import unittest
+import numpy as np
 
 from sklearn.utils.estimator_checks import check_estimator
 
 import suprb
 import suprb.logging.stdout
-from suprb.optimizer.rule.es import ES1xLambda
-from suprb.solution import Solution
-import numpy as np
-import unittest
-import numpy as np
 
 from suprb import SupRB
-from suprb.utils import check_random_state
 from suprb.rule import Rule
 from suprb.rule.fitness import VolumeWu
 from suprb.rule.matching import OrderedBound
-
-import suprb.solution.mixing_model as mixing_model
+from suprb.optimizer.rule.es import ES1xLambda
 
 
 class TestSupRB(unittest.TestCase):
