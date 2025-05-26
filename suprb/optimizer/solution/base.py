@@ -128,7 +128,6 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
         population = self.population_.copy()  # shallow copy
         if self.archive is not None:
             population.extend(self.archive.population_)
-
         return max(population, key=lambda elitist: elitist.fitness_)
 
     def _init_population(self):
