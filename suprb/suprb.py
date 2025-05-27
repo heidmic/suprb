@@ -90,7 +90,7 @@ class SupRB(BaseRegressor):
         logger: BaseLogger = None,
         n_jobs: int = 1,
         early_stopping_patience: int = -1,
-        early_stopping_delta: int = 0,
+        early_stopping_delta: float = 0,
     ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
@@ -202,6 +202,8 @@ class SupRB(BaseRegressor):
 
             if self.check_early_stopping():
                 break
+
+            self.previous_fitness_ = self.solution_composition_.elitist().fitness_
 
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
