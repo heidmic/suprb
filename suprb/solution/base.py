@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 from abc import ABCMeta, abstractmethod
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
 from sklearn.base import RegressorMixin
@@ -30,7 +30,7 @@ class SolutionFitness(BaseFitness, metaclass=ABCMeta):
     max_genome_length_: int
 
     @abstractmethod
-    def __call__(self, solution: Solution) -> float | Tuple[float, float]:
+    def __call__(self, solution: Solution) -> Union[float, Tuple[float, float]]:
         pass
 
 
@@ -68,7 +68,7 @@ class Solution(SolutionBase, RegressorMixin):
         The attribute `cache` decides if the prediction should use the cached data from the rules, which
         includes rule error, fitness, predictions and the binary match string.
         It is True while fitting, because the data is identical there and caching saves a good amount of time.
-        For predictions after fitting, it is false, because all data needs to be recalculated from scratch.
+        For predictions after fitting, it is false because all data needs to be recalculated from scratch.
         """
 
         return self.mixing(X=X, subpopulation=self.subpopulation, cache=cache)

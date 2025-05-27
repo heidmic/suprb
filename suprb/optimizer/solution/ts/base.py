@@ -1,9 +1,11 @@
 from typing import Optional, Union
+import copy
 
 import numpy as np
 
 from suprb import Solution
-from suprb.solution import SolutionInit
+from suprb.solution import SolutionInit, SolutionFitness
+from suprb.solution.fitness import NormalizedMOSolutionFitness
 from suprb.solution.initialization import RandomInit
 from ..base import SolutionComposition, SolutionArchive, MOSolutionComposition, PopulationBasedSolutionComposition
 from suprb.utils import check_random_state
@@ -35,6 +37,7 @@ class TwoStageSolutionComposition(SolutionComposition):
         random_state: int = None,
         n_jobs: int = None,
         warm_start: bool = True,
+        output_fitness: SolutionFitness = NormalizedMOSolutionFitness(),
     ):
         super().__init__(
             n_iter=n_iter, init=init, archive=archive, random_state=random_state, n_jobs=n_jobs, warm_start=warm_start
@@ -45,6 +48,8 @@ class TwoStageSolutionComposition(SolutionComposition):
 
         self.step_ = 0
         self.current_algo_ = algorithm_1
+
+        self.output_fitness = output_fitness
 
     def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Solution, list[Solution], None]:
         # This is mega hacky but necessary if the initialisation is to be kept in the suprb fit method
@@ -80,8 +85,7 @@ class TwoStageSolutionComposition(SolutionComposition):
         return self.current_algo_.elitist()
 
     def pareto_front(self) -> list[Solution]:
-        algo = self.algorithm_1 if self.step_ < self.switch_iteration else self.algorithm_2
-        if isinstance(algo, MOSolutionComposition):
-            return algo.pareto_front()
+        if isinstance(self.current_algo_, MOSolutionComposition):
+            return self.current_algo_.pareto_front()
         else:
-            return [algo.elitist()]
+            return [self.current_algo_.elitist()]

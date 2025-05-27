@@ -68,10 +68,11 @@ if __name__ == "__main__":
         early_stopping_delta=0,
         early_stopping_patience=10,
     )
-    ga = GeneticAlgorithm(n_iter=sc_iter)
+    ga1 = GeneticAlgorithm(n_iter=sc_iter)
+    ga2 = GeneticAlgorithm(n_iter=sc_iter)
     ts = TwoStageSolutionComposition(
-        algorithm_1=ga,
-        algorithm_2=ga,
+        algorithm_1=ga1,
+        algorithm_2=ga2,
         switch_iteration=suprb_iter,
     )
     sc_algos = (nsga3, ts)

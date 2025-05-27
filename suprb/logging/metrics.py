@@ -29,25 +29,21 @@ def matched_training_samples(pool: list[Rule]):
     return matched / total
 
 
-def hypervolume(pareto_front: list[Solution]):
-    pareto_front = sorted(pareto_front, key=lambda solution: solution.fitness_[0], reverse=True)
-    fitness_values = np.array([solution.fitness_ for solution in pareto_front])
-    # Needs a MultiObjectiveSolutionFitness
-    reference_point = pareto_front[0].fitness.hv_reference_
+def hypervolume(pareto_front: np.ndarray, reference_point: np.ndarray = None):
+    """Assumes that the pareto front is sorted by complexity in ascending order."""
     last_x = reference_point[0]
     volume = 0
-    for fitness in fitness_values:
+    for fitness in pareto_front:
         volume += (last_x - fitness[0]) * np.prod(reference_point[1:] - fitness[1:])
         last_x = fitness[0]
     return volume
 
 
-def spread(pareto_front: list[Solution]):
+def spread(pareto_front: np.ndarray):
     if len(pareto_front) <= 1:
         return 0
-    pareto_front = sorted(pareto_front, key=lambda solution: solution.fitness_[0], reverse=True)
-    fitness_values = np.array([solution.fitness_ for solution in pareto_front])
-    distances = np.linalg.norm(fitness_values[:-1] - fitness_values[1:], axis=1)
+    """Assumes that the pareto front is sorted by complexity in ascending order."""
+    distances = np.linalg.norm(pareto_front[:-1] - pareto_front[1:], axis=1)
     avg_distance = np.mean(distances)
     np.sum(np.abs(distances - avg_distance) / distances.shape[0] - 1)
     return np.max(distances)
