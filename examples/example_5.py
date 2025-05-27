@@ -23,6 +23,13 @@ from utils import log_scores
 
 import time
 
+algo_names = {
+    StrengthParetoEvolutionaryAlgorithm2: "SPEA2",
+    NonDominatedSortingGeneticAlgorithm2: "NSGA-II",
+    NonDominatedSortingGeneticAlgorithm3: "NSGA-III",
+    TwoStageSolutionComposition: "TS",
+}
+
 
 def plot_pareto_front(pareto_front: np.ndarray, title: str):
     x = pareto_front[:, 0]
@@ -37,39 +44,38 @@ def plot_pareto_front(pareto_front: np.ndarray, title: str):
 
 if __name__ == "__main__":
     random_state = 42
-
-    suprb_iter = 32
+    suprb_iter = 4
+    sc_iter = 4
 
     spea2 = StrengthParetoEvolutionaryAlgorithm2(
-        n_iter=128,
+        n_iter=sc_iter,
         population_size=32,
         sampler=BetaSolutionSampler(),
         early_stopping_delta=0,
         early_stopping_patience=10,
     )
     nsga2 = NonDominatedSortingGeneticAlgorithm2(
-        n_iter=128,
+        n_iter=sc_iter,
         population_size=32,
         sampler=BetaSolutionSampler(),
         early_stopping_delta=0,
         early_stopping_patience=10,
     )
     nsga3 = NonDominatedSortingGeneticAlgorithm3(
-        n_iter=128,
+        n_iter=sc_iter,
         population_size=32,
         sampler=BetaSolutionSampler(),
         early_stopping_delta=0,
         early_stopping_patience=10,
     )
-    ga = GeneticAlgorithm()
+    ga = GeneticAlgorithm(n_iter=sc_iter)
     ts = TwoStageSolutionComposition(
         algorithm_1=ga,
-        algorithm_2=nsga3,
-        switch_iteration=8,
+        algorithm_2=ga,
+        switch_iteration=suprb_iter,
     )
-    sc_algos = (nsga2, nsga3, spea2, ts)
-
-    score_list = []
+    sc_algos = (nsga3, ts)
+    logger_list = []
     time_list = []
 
     plt.rcParams.update(
@@ -91,18 +97,11 @@ if __name__ == "__main__":
 
         model = SupRB(
             n_iter=suprb_iter,
-            rule_discovery=ES1xLambda(
-                n_iter=32,
-                lmbda=16,
-                operator="+",
-                delay=150,
-                n_jobs=1,
-            ),
+            rule_discovery=ES1xLambda(n_iter=1000),
             solution_composition=sc,
             logger=MOLogger(),
             random_state=random_state,
         )
-
         start_time = time.time()
         scores = cross_validate(
             model,
@@ -117,34 +116,22 @@ if __name__ == "__main__":
         )
         end_time = time.time()
         time_list.append(end_time - start_time)
-
         log_scores(scores)
-
-        score_list.append(scores)
-
-        try:
-            pareto_front = scores["estimator"][0].logger_.pareto_fronts_
-            pareto_front = np.array(pareto_front[suprb_iter - 1])
-            hvs = scores["estimator"][0].logger_.metrics_["hypervolume"]
-            hv = hvs[suprb_iter - 1]
-            spreads = scores["estimator"][0].logger_.metrics_["spread"]
-            spread = spreads[suprb_iter - 1]
-            plot_pareto_front(pareto_front, f"$HV = {hv:.2f}, SP = {spread:.2f}$")
-        except Exception:
-            elitist_error = scores["estimator"][0].logger_.metrics_["elitist_error"]
-            elitist_complexity = scores["estimator"][0].logger_.metrics_["elitist_complexity"]
-            elitist_error = np.array(list(elitist_error.values()))
-            elitist_complexity = np.array(list(elitist_complexity.values()))
-            pseudo_accuracy = 1 - np.exp(-2 * elitist_error)
-            c_norm = elitist_complexity / (4 * suprb_iter)
-
-            plt.plot(c_norm, pseudo_accuracy, marker="o", linestyle="-")
-            for idx, (x, y) in enumerate(zip(c_norm, pseudo_accuracy)):
-                plt.text(x, y, str(idx), fontsize=8, ha="right", va="bottom")
-            plt.xlim(0, 1)
-            plt.ylim(0, 1)
-    plt.show()
+        logger_list.append(scores["estimator"][0].logger_)
     print("Finished!")
 
     for t in time_list:
         print(f"Time taken: {t}")
+    axes, plots = plt.subplots()
+    for l in logger_list:
+        ##### Plot Pareto Fronts #####
+        pareto_front = l.pareto_fronts_
+        pareto_front = np.array(pareto_front[suprb_iter - 1])
+        hvs = l.metrics_["hypervolume"]
+        hv = hvs[suprb_iter - 1]
+        spreads = l.metrics_["spread"]
+        spread = spreads[suprb_iter - 1]
+        plot_pareto_front(pareto_front, f"$HV = {hv:.2f}, \Delta = {spread:.2f}$")
+        plt.show()
+
+        ##### Plot Hypervolume #####

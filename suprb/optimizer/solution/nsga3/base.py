@@ -4,7 +4,7 @@ import scipy.stats as stats
 from suprb import Solution
 from suprb.solution.initialization import SolutionInit, RandomInit
 from ..base import MOSolutionComposition
-from suprb.solution.fitness import BasicMOSolutionFitness
+from suprb.solution.fitness import NormalizedMOSolutionFitness
 from suprb.utils import flatten
 
 
@@ -54,7 +54,7 @@ class NonDominatedSortingGeneticAlgorithm3(MOSolutionComposition):
         sampler: SolutionSampler = BetaSolutionSampler(1.5, 1.5),
         mutation_rate: float = 0.025,
         crossover_rate: float = 0.75,
-        init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
+        init: SolutionInit = RandomInit(fitness=NormalizedMOSolutionFitness()),
         random_state: int = None,
         n_jobs: int = 1,
         warm_start: bool = True,

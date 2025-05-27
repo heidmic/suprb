@@ -52,7 +52,7 @@ class MultiObjectiveSolutionFitness(SolutionFitness, metaclass=ABCMeta):
         return [self.objective_func_[i](solution) for i in range(len(self.objective_func_))]
 
 
-class BasicMOSolutionFitness(MultiObjectiveSolutionFitness):
+class NormalizedMOSolutionFitness(MultiObjectiveSolutionFitness):
     objective_func_: list[Callable] = [c_norm, pseudo_accuracy]
     hv_reference_: np.ndarray = np.array([1.0, 1.0])
     worst_point_estimate_ = np.array([1.0, 1.0])
@@ -65,6 +65,12 @@ class BasicMOSolutionFitness(MultiObjectiveSolutionFitness):
 
     def __init__(self):
         super().__init__()
+
+
+class SimpleMOSolutionFitness(MultiObjectiveSolutionFitness):
+
+    def __call__(self, solution: Solution):
+        return [solution.error_, solution.complexity_]
 
 
 class ComplexityEmary(ComplexitySolutionFitness):

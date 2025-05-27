@@ -2,7 +2,7 @@ import numpy as np
 import scipy.stats as stats
 
 from suprb import Solution
-from suprb.solution.fitness import BasicMOSolutionFitness
+from suprb.solution.fitness import NormalizedMOSolutionFitness
 from suprb.solution.initialization import SolutionInit, RandomInit
 from suprb.utils import flatten
 from .sorting import fast_non_dominated_sort
@@ -52,7 +52,7 @@ class StrengthParetoEvolutionaryAlgorithm2(MOSolutionComposition):
         mutation_rate: float = 0.025,
         crossover_rate: float = 0.75,
         kth_nearest: int = -1,
-        init: SolutionInit = RandomInit(fitness=BasicMOSolutionFitness()),
+        init: SolutionInit = RandomInit(fitness=NormalizedMOSolutionFitness()),
         random_state: int = None,
         n_jobs: int = 1,
         warm_start: bool = True,
