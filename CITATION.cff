@@ -14,3 +14,22 @@ title: "SupRB: The Supervised Rule-based Learning System"
 url: "https://github.com/heidmic/suprb"
 version: 1.0.0
 date-released: 2024-11-18
+
+preferred-citation:
+  type: conference-paper
+  authors:
+    - family-names: Heider
+      given-names: Michael
+    - family-names: Stegherr
+      given-names: Helena
+    - family-names: Wurth
+      given-names: Jonathan
+    - family-names: Sraj
+      given-names: Roman
+    - family-names: Hähner
+      given-names: Jörg
+  title: "Separating Rule Discovery and Global Solution Composition in a Learning Classifier System"
+  year: 2022
+  conference: "Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion)"
+  doi: "10.1145/3520304.3529014"
+  url: "https://doi.org/10.1145/3520304.3529014"
