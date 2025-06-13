@@ -22,6 +22,18 @@ from .solution.fitness import PseudoBIC
 
 
 class SupRB(BaseRegressor):
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.target_tags.single_output = False
+        tags.non_deterministic = True
+        return tags
+
+    def _more_tags(self):
+        # additional or override tags
+        return {
+            # 'some_tag': True,
+        }
+
     """The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
 
     Parameters
@@ -149,9 +161,13 @@ class SupRB(BaseRegressor):
         self.elitist_.error_ = 99999
         self.elitist_.complexity_ = 99999
 
-        # Check that x and y have correct shape
-        X, y = check_X_y(X, y, dtype="float64", y_numeric=True)
-        y = check_array(y, ensure_2d=False, dtype="float64")
+        from sklearn.utils.validation import validate_data, check_is_fitted
+
+        X, y = validate_data(self, X, y, ensure_2d=True)
+
+        # # Check that x and y have correct shape
+        # X, y = check_X_y(X, y, dtype="float64", y_numeric=True)
+        # y = check_array(y, ensure_2d=False, dtype="float64")
 
         # Init sklearn interface
         self.n_features_in_ = X.shape[1]
@@ -273,12 +289,14 @@ class SupRB(BaseRegressor):
         # Optimize
         self.solution_composition_.optimize(X, y)
 
-    def predict(self, X: np.ndarray):
-        # Check is fit had been called
-        check_is_fitted(self, ["is_fitted_"])
-        # Input validation
-        X = check_array(X)
+    def predict(self, X):
+        from sklearn.utils.validation import validate_data, check_is_fitted
 
+        check_is_fitted(self)
+
+        # validiere Input, ohne n_features_in_ zu resetten (reset=False)
+        X = validate_data(self, X, ensure_2d=True, reset=False)
+        # Falls is_error_ gesetzt, gib Dummy-Ausgabe
         if hasattr(self, "is_error_") and self.is_error_:
             return [0] * len(X)
         else:
