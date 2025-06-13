@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from sklearn.utils.estimator_checks import check_estimator
+from sklearn.utils.estimator_checks import check_estimator, _regression_dataset
 
 import suprb
 import suprb.logging.stdout
@@ -35,12 +35,15 @@ class TestSupRB(unittest.TestCase):
 
         # Low n_iter for speed. Still takes forever though.
         estimator = suprb.SupRB(
-            n_iter=1,
+            n_iter=4,
             rule_discovery=ES1xLambda(n_iter=4, lmbda=1, delay=2),
             solution_composition=suprb.optimizer.solution.ga.GeneticAlgorithm(n_iter=2, population_size=2),
             logger=suprb.logging.stdout.StdoutLogger(),
             verbose=10,
         )
+
+        X, y = _regression_dataset()
+        estimator.fit(X, y)
 
         check_estimator(estimator)
 
