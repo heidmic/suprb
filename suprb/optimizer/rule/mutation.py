@@ -2,6 +2,7 @@ from typing import Union
 
 import numpy as np
 from scipy.stats import halfnorm
+import warnings
 
 from suprb.rule import Rule
 from suprb.utils import RandomState
@@ -30,6 +31,7 @@ class RuleMutation(GenerationOperator):
         return mutated_rule
 
     def execute(self, rule: Rule, random_state: RandomState):
+        warnings.warn("No matching_type was set! This will impact mutation.")
         pass
 
 
