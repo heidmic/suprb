@@ -47,7 +47,7 @@ The examples in the examples directory are:
     pip3 install -r requirements.txt
 
 
-Tested with Python 3.9.4.
+We recommend to use Python version 3.12
 
 
 ## Contributing
