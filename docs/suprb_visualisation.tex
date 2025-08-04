@@ -1,0 +1,467 @@
+\documentclass[border=10pt]{standalone}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{pgf}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+
+\usetikzlibrary{arrows}
+\usetikzlibrary{calc}
+\usetikzlibrary{shapes}
+\usetikzlibrary{trees}
+\usetikzlibrary{patterns}
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{shapes.misc}
+\usetikzlibrary{positioning}
+%\tikzset{>=stealth'}
+
+\usetikzlibrary{decorations.pathreplacing,calligraphy}
+\usetikzlibrary{datavisualization}
+
+\newcommand{\blue}{\color{blue}}
+\newcommand{\black}{\color{black}}
+
+\newcommand{\Cross}{$\mathbin{\tikz [x=2ex,y=2ex,line width=.4ex, red] \draw (0,0) -- (1,1) (0,1) -- (1,0);}$}%
+
+\newcommand{\Checkmark}{\scalebox{2.0}{$\color{green}\checkmark$}}
+
+
+\begin{document}
+
+
+\pgfplotstableread[col sep = comma]{function_data.dat}{\data}
+\pgfplotstableread[col sep = comma]{noise_data.dat}{\noise}
+
+
+\begin{tikzpicture}[every node/.style={draw=none,minimum width=2cm,align=center,font=\Huge},node distance=7cm and 1cm]
+ 
+ 
+% DATA 
+ 
+\node (data) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+\addplot[red, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, only marks] table [x ={x}, y = {y}] {\noise};
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+}; 
+
+
+
+% MATCHED SAMPLES
+ 
+\node[below=of data,xshift=-18cm] (samples1) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, only marks] table [x ={x}, y = {y}] {\noise};
+
+\draw[very thick,color=blue,fill=blue,opacity=0.1] (1,0) rectangle (35,300);
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+};
+
+\node[below=of data,xshift=-6cm] (samples2) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, only marks] table [x ={x}, y = {y}] {\noise};
+
+\draw[very thick,color=blue,fill=blue,opacity=0.1] (20,0) rectangle (50,300);
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+};
+
+\node[circle,draw,fill,below=10cm of data, xshift=6cm, minimum height=0.2cm,minimum width=0.2cm] (dots1) {};
+\node[circle,draw,fill,right=of dots1, minimum height=0.2cm,minimum width=0.2cm] (dots11) {};
+\node[circle,draw,fill,left=of dots1, minimum height=0.2cm,minimum width=0.2cm] (dots12) {};
+
+
+\node[below=of data,xshift=6cm,opacity=0] (samples3) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, only marks] table [x ={x}, y = {y}] {\noise};
+
+\draw[very thick,color=blue,fill=blue] (30,0) rectangle (65,300);
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+};
+
+%\node[below of=data,yshift=-15cm,xshift=12cm] (samples4) {%
+%\begin{tikzpicture}
+%% Coordinates
+%\begin{axis}[
+%    xmin = 0, xmax = 10,
+%    ymin = -1.5, ymax = 2.0,
+%	ytick=\empty,
+%	xtick=\empty,
+%	axis lines=left,
+%	axis line style = {-latex, line width=2.5pt},
+%%    xlabel = {$x$},
+%%    ylabel = {$y$},
+%    ]
+% 
+%
+%
+%\addplot[red, only marks] table [x ={x}, y = {y}] {\data};
+%\addplot[red, only marks] table [x ={x}, y = {y}] {\noise};
+%
+%\draw[very thick,color=blue,fill=blue,opacity=0.1] (55,0) rectangle (70,300);
+% 
+%\end{axis}
+% 
+%\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+%};
+ 
+\node[below=of data,xshift=18cm] (samples5) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, only marks] table [x ={x}, y = {y}] {\noise};
+
+\draw[very thick,color=blue,fill=blue,opacity=0.1] (60,0) rectangle (100,300);
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+};
+
+
+% RULES
+
+\node[below=4cm of samples1] (rule1) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, opacity=0.2, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, opacity=0.2, only marks] table [x ={x}, y = {y}] {\noise};
+
+\draw[ultra thick,color=blue] (1,260) -- (35,40);
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+};
+
+\node[below=4cm of samples2] (rule2) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, opacity=0.2, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, opacity=0.2, only marks] table [x ={x}, y = {y}] {\noise};
+
+\draw[ultra thick,color=blue] (20,80) -- (50,80);
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+};
+
+
+% \node[circle,draw,fill,below=13cm of dots1, minimum height=0.2cm,minimum width=0.2cm] (dots2) {};
+% \node[circle,draw,fill,right=of dots2, minimum height=0.2cm,minimum width=0.2cm] (dots21) {};
+% \node[circle,draw,fill,left=of dots2, minimum height=0.2cm,minimum width=0.2cm] (dots22) {};
+\node[circle,draw,fill,minimum height=0.2cm,minimum width=0.2cm] at (rule2 -| dots1) (dots2) {};
+\node[circle,draw,fill,right=of dots2, minimum height=0.2cm,minimum width=0.2cm] (dots21) {};
+\node[circle,draw,fill,left=of dots2, minimum height=0.2cm,minimum width=0.2cm] (dots22) {};
+
+\node[below=4cm of samples3,opacity=0] (rule3) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, only marks] table [x ={x}, y = {y}] {\noise};
+
+\draw[ultra thick,color=blue] (30,40) -- (65,210);
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+};
+
+%\node[below of=samples4,yshift=-15cm] (rule4) {%
+%\begin{tikzpicture}
+%% Coordinates
+%\begin{axis}[
+%    xmin = 0, xmax = 10,
+%    ymin = -1.5, ymax = 2.0,
+%	ytick=\empty,
+%	xtick=\empty,
+%	axis lines=left,
+%	axis line style = {-latex, line width=2.5pt},
+%%    xlabel = {$x$},
+%%    ylabel = {$y$},
+%    ]
+% 
+%
+%
+%\addplot[red, opacity=0.1, only marks] table [x ={x}, y = {y}] {\data};
+%\addplot[red, opacity=0.1, only marks] table [x ={x}, y = {y}] {\noise};
+%
+%\draw[ultra thick,color=blue] (55,190) -- (75,220);
+% 
+%\end{axis}
+% 
+%\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+%};
+ 
+\node[below=4cm of samples5] (rule5) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, opacity=0.2, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, opacity=0.2, only marks] table [x ={x}, y = {y}] {\noise};
+
+\draw[ultra thick,color=blue] (60,200) -- (100,90);
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+};
+
+
+\node[below=1cm of rule2, minimum height=1.5cm] (cross) {\Huge \Cross};
+%\node[below of=rule4, minimum height=1.5cm, yshift=-3.5cm] {\Huge \Cross};
+
+\node[below=1cm of rule1, minimum height=1.5cm] (check1) {\Huge \Checkmark};
+\node[below=1cm of rule3, minimum height=1.5cm] (check3) {};
+\node[below=1cm of rule5, minimum height=1.5cm] (check5) {\Huge \Checkmark};
+
+
+% RESULT
+
+\node[below=of cross, xshift=6cm] (ruleset) {%
+\begin{tikzpicture}
+% Coordinates
+\begin{axis}[
+    xmin = 0, xmax = 10,
+    ymin = -1.5, ymax = 2.0,
+	ytick=\empty,
+	xtick=\empty,
+	axis lines=left,
+	axis line style = {-latex, line width=2.5pt},
+%    xlabel = {$x$},
+%    ylabel = {$y$},
+    ]
+ 
+
+
+\addplot[red, opacity=0.2, only marks] table [x ={x}, y = {y}] {\data};
+\addplot[red, opacity=0.2, only marks] table [x ={x}, y = {y}] {\noise};
+
+%overlapping
+%\draw[ultra thick,color=blue] (1,260) -- (35,40);
+%\draw[ultra thick,color=blue] (30,40) -- (65,210); 
+%\draw[ultra thick,color=blue] (60,200) -- (100,90); 
+
+%best rule wins
+%\draw[ultra thick,color=blue] (1,260) -- (35,40);
+%\draw[ultra thick,color=blue] (35,65) -- (65,210); 
+%\draw[ultra thick,color=blue] (65,190) -- (100,90); 
+%\draw[ultra thick,color=blue,dotted] (35,40) -- (35,60);
+%\draw[ultra thick,color=blue,dotted] (65,190) -- (65,210);
+
+%best rule wins - Stetigkeitsnotation
+\draw[-{Circle[open,sep=-1.196825pt -1.595769]},ultra thick,color=blue] (1,260) -- (35,40);
+\draw[{Circle[sep=-1.196825pt -1.595769]}-{Circle[open,sep=-1.196825pt -1.595769]},ultra thick,color=blue] (35,65) -- (65,210); 
+\draw[{Circle[sep=-1.196825pt -1.595769]}-,ultra thick,color=blue] (65,190) -- (100,90); 
+
+
+
+%Stetigkeitsnotation hier ziemlich hässlich wegen zu kurzen aber dicken linien
+%weighted
+%\draw[ultra thick,color=blue] (1,260) -- (30,65) ;
+%\draw[ultra thick,color=blue] (35,60) -- (60,190); 
+%\draw[ultra thick,color=blue] (65,190) -- (100,90); 
+%"lines"
+%\draw[ultra thick,color=blue] (30,50) -- (35,50);
+%\draw[ultra thick,color=blue] (60,205) -- (65,205);
+%"squares"
+%\draw[ultra thick,color=blue] (30,65) -- (30,50) -- (35,50) -- (35,60);
+%\draw[ultra thick,color=blue] (60,190) -- (60,205) -- (65,205) -- (65,190);
+%dotted
+%\draw[ultra thick,color=blue,dotted] (30,65) -- (30,50);
+%\draw[ultra thick,color=blue,dotted] (35,50) -- (35,60);
+%\draw[ultra thick,color=blue,dotted] (60,190) -- (60,205); 
+%\draw[ultra thick,color=blue,dotted] (65,205) -- (65,190);
+%Stetigkeitsnotation
+%\draw[-{Circle[open,sep=-1.196825pt -1.595769]},ultra thick,color=blue] (1,260) -- (30,65) ;
+%\draw[{Circle[open,sep=-1.196825pt -1.595769]}-{Circle[open,sep=-1.196825pt -1.595769]},ultra thick,color=blue] (35,60) -- (60,190); 
+%\draw[{Circle[open,sep=-1.196825pt -1.595769]}-,ultra thick,color=blue] (65,190) -- (100,90); 
+%\draw[{Circle[sep=-1.196825pt -1.595769]}-{Circle[sep=-1.196825pt -1.595769]},ultra thick,color=blue] (30,50) -- (35,50);
+%\draw[{Circle[sep=-1.196825pt -1.595769]}-{Circle[sep=-1.196825pt -1.595769]},ultra thick,color=blue] (60,205) -- (65,205);
+
+
+ 
+\end{axis}
+ 
+\end{tikzpicture}%< -- das prozent nicht vergessen hier! Sonst gibts ein space zuviel
+}; 
+
+
+
+% ARROWS
+%\draw[->,ultra thick,dashed] (data.south) ++(0,-1cm) -- ++(0,-4cm) -- ++(-24cm,0) -- ++(0,-4cm) (samples1);
+%\draw[->,ultra thick,dashed] (data.south) ++(0,-1cm) -- ++(0,-4cm) -- ++(-12cm,0) -- ++(0,-4cm) (samples2);
+%\draw[->,ultra thick,dashed] (data.south) ++(0,-1cm) -- ++(0,-8cm) (samples3);
+%\draw[->,ultra thick,dashed] (data.south) ++(0,-1cm) -- ++(0,-4cm) -- ++(12cm,0) -- ++(0,-4cm) (samples4);
+%\draw[->,ultra thick,dashed] (data.south) ++(0,-1cm) -- ++(0,-4cm) -- ++(24cm,0) -- ++(0,-4cm) (samples5);
+
+%curved
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (data.south) ++(0,-1cm) .. controls +(0,-4) and +(0,4) .. (samples1.north);
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (data.south) ++(0,-1cm) .. controls +(0,-4) and +(0,4) .. (samples2.north);
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (data.south) ++(0,-1cm) .. controls +(0,-4) and +(0,4) .. (samples3.north);
+%\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (data.south) ++(0,-1cm) .. controls +(0,-5) and +(0,3) .. (dots1.north);
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (data.south) ++(0,-1cm) .. controls +(0,-4) and +(0,4) .. (samples5.north);
+
+
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (samples1.south) ++(0,-1cm) -- (rule1);
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (samples2.south) ++(0,-1cm) -- (rule2);
+%\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (samples3.south) ++(0,-1cm) -- ++(0,-8cm) (rule3);
+%\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (samples4.south) ++(0,-1cm) -- ++(0,-8cm) (rule4);
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (samples5.south) ++(0,-1cm) -- (rule5);
+
+
+%\node[cross out,draw,black,very thick,minimum height=1.5cm,below of = rule2,yshift=-5cm] {};
+%\node[cross out,draw,black,very thick,minimum height=1.5cm,below of = rule4,yshift=-5cm] {};
+
+%\draw[->,ultra thick,dashed] (check1.south) ++(0,-1cm) -- ++(0,-5cm) -- ++(24cm,0) -- ++(0,-6cm) (ruleset);
+%%\draw[->,ultra thick,dashed] (rule2) ++(0,-1cm) -- ++(0,-5cm);
+%\draw[->,ultra thick,dashed] (check3.south) ++(0,-1cm) -- ++(0,-11cm) (ruleset);
+%%\draw[->,ultra thick,dashed] (rule4) ++(0,-1cm) -- ++(0,-5cm);
+%\draw[->,ultra thick,dashed] (check5.south) ++(0,-1cm) -- ++(0,-5cm) -- ++(-24cm,0) -- ++(0,-6cm) (ruleset);
+
+%curved
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (check3.south) ++(0,-1cm) .. controls +(0,-4) and +(0,4) .. (ruleset.north);
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (check1.south) ++(0,-1cm) .. controls +(0,-4) and +(0,4) .. (ruleset.north);
+\draw[>={Stealth[length=20pt,scale width=1.3]},->,line width=3pt,loosely dashed] (check5.south) ++(0,-1cm) .. controls +(0,-4) and +(0,4) .. (ruleset.north);
+
+\end{tikzpicture}
+
+
+
+\end{document}
