@@ -27,7 +27,7 @@ class NSGA2GlobalNovelty(NSGA2):
     Adapted from: A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II by Kalyanmoy Deb et al.
     Uses Crowding Distance and NonDominatedSorting from pymoo package.
     Uses novelty as a fitness objective.
-     TODO Deprecated!
+    Not optimized. Deprecated.
     """
     def __init__(
         self,

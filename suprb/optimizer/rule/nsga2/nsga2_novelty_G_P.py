@@ -29,10 +29,48 @@ import pstats
 
 class NSGA2Novelty_G_P(NSGA2):
     """
-    NSGA-II variant that adds novelty as an objective and supports restart logic:
+    MOO-RD variant that adds novelty as an objective and supports restart logic:
     If a run's Pareto front only contains trivial rules (e.g., experience == 1),
     the algorithm restarts and accumulates only 'useful' rules until `mu` useful
-    rules are collected or a restart cap is hit.
+    rules are collected or the restart limit is hit.
+
+    Parameters
+    ----------
+    n_iter : int
+        Number of evolutionary iterations.
+    mu : int
+        Population size
+    lmbda : int
+        Number of children sampled each generation.
+    origin_generation : RuleOriginGeneration
+    init : RuleInit
+    mutation : RuleMutation
+    constraint : RuleConstraint
+    acceptance : RuleAcceptance
+    random_state : int or None
+    n_jobs : int
+    fitness_objs : list, optional
+        List of fitness objectives
+        Defaults to [rule.error_, -rule.volume_].
+        Variance reduction objective is added internally.
+    fitness_objs_labels : list of str, optional
+        Names corresponding to the objective functions.
+        Defaults to ["obj_0", "obj_1", ...].
+    novelty_calc: NoveltyCalculation
+        Class to calculate the novelty score based on NoveltySearchType, Archive and k_neigbor.
+    novelty_mode: Literal
+        Either 'P' or 'G'.
+        In 'P' mode, only the current cohort is used for novelty score calculation.
+        In 'G' mode, the current cohort and a local archive is used for novelty score calculation.
+        Defaults to 'P'.
+    profile : bool, default=False
+        If True, wraps the optimization loop in a profiler and prints stats.
+    min_experience: int
+        Threshold used to determine whether a rule is trivial.
+    max_restarts: int
+        Restart limit.
+    keep_archive_across_restarts: bool
+        Determines whether in novelty mode = 'G' the local archive is kept across restarts.
     """
 
     def __init__(
@@ -92,14 +130,18 @@ class NSGA2Novelty_G_P(NSGA2):
         self._archive_seen_ids: Set[int] = set()
 
 
-    # ────────────────────────────────────────────────────────────────
-    # Novelty scoring
-    # ────────────────────────────────────────────────────────────────
     def _score_novelty(self,
         rules: List[Rule],
         cohort: Optional[List[Rule]] = None,
         force: bool = False,
     ) -> None:
+        """
+        Compute novelty scores for the given rules.
+        Selects only unscored rules (unless forced),
+        builds a reference archive based on the configured novelty mode ('G' or 'P'),
+        caps the archive size,
+        and delegates scoring to the novelty calculator.
+        """
         if not rules:
             return
 
@@ -124,7 +166,7 @@ class NSGA2Novelty_G_P(NSGA2):
                 EXTRA_MAX = 256
                 extra_slice = extra[-EXTRA_MAX:] if len(extra) > EXTRA_MAX else extra
                 ref.extend(copy.copy(r) for r in extra_slice)
-        #novelty_mode = "P"
+        #novelty_mode = 'P'
         else:
             ref = [copy.copy(r) for r in cohort] if cohort else [copy.copy(r) for r in rules]
 
@@ -133,9 +175,9 @@ class NSGA2Novelty_G_P(NSGA2):
         _ = self.novelty_calc(to_score)
 
 
-    # ────────────────────────────────────────────────────────────────
-    # Helpers for restart logic
-    # ────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────
+# Helpers for restart logic
+# ────────────────────────────────────────────────────────────────
     def _is_useful(self, r: Rule) -> bool:
         """Define 'useful' rules here."""
         return getattr(r, "experience_", 0) >= self.min_experience
@@ -148,10 +190,6 @@ class NSGA2Novelty_G_P(NSGA2):
                 seen.add(id(r))
 
 
-
-    # ────────────────────────────────────────────────────────────────
-    # One full NSGA-II run: returns a Pareto front
-    # ────────────────────────────────────────────────────────────────
     def _run_once(
             self,
             X: np.ndarray,
@@ -170,7 +208,7 @@ class NSGA2Novelty_G_P(NSGA2):
             X=X,
             y=y,
             pool=self.pool_,
-            elitist=self.elitist_,  # will be non-None if your init.model trained successfully
+            elitist=self.elitist_,
             random_state=random_state,
         )
 
@@ -220,9 +258,7 @@ class NSGA2Novelty_G_P(NSGA2):
 
         return pareto_front
 
-    # ────────────────────────────────────────────────────────────────
-    # Running until `mu` useful rules are collected or max_restarts is hit
-    # ────────────────────────────────────────────────────────────────
+
     def _optimize(
             self,
             X: np.ndarray,
@@ -269,9 +305,9 @@ class NSGA2Novelty_G_P(NSGA2):
         print(f"Iterations needed to generate mu useful rules: {restarts + 1}")
         return useful_rules if useful_rules else (pareto_front or None)
 
-    # ────────────────────────────────────────────────────────────────
-    # Helper functions
-    # ────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────
+# Helper functions
+# ────────────────────────────────────────────────────────────────
     def _fitness_objs_runtime(self) -> List[Callable[[Rule], float]]:
         return list(self.fitness_objs) + [self._novelty_obj]
 

@@ -111,8 +111,9 @@ class ParallelSingleRuleDiscovery(RuleDiscovery, metaclass=ABCMeta):
 
 class MultiRuleDiscovery(RuleDiscovery, metaclass=ABCMeta):
     """
-    Implements basic functionality to return all Pareto-optimal rules in one run,
-    then let the caller pick the top n_rules.
+    Implements basic functionality to generate a rule population,
+    returning the valid ones.
+    Warns the user if not enough valid rules were found.
     """
 
     def optimize(self, X: np.array, y: np.array, n_rules: int = 1) -> List[Rule]:

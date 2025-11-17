@@ -16,8 +16,35 @@ from .nsga2 import NSGA2
 
 class NSGA2VarianceReduction(NSGA2):
     """
-    NSGA-II variant using rule error and variance reduction (regression-style information gain)
-    as optimization objectives.
+    MOO-RD variant using rule error and variance reduction (regression-style information gain)
+    as fitness objectives.
+    Created because,
+    theoretically, the information gain version should not work for regression tasks.
+
+    Parameters
+    ----------
+    n_iter : int
+        Number of evolutionary iterations.
+    mu : int
+        Population size
+    lmbda : int
+        Number of children sampled each generation.
+    origin_generation : RuleOriginGeneration
+    init : RuleInit
+    mutation : RuleMutation
+    constraint : RuleConstraint
+    acceptance : RuleAcceptance
+    random_state : int or None
+    n_jobs : int
+    fitness_objs : list, optional
+        List of fitness objectives
+        Defaults to [rule.error_, -rule.volume_].
+        Variance reduction objective is added internally.
+    fitness_objs_labels : list of str, optional
+        Names corresponding to the objective functions.
+        Defaults to ["obj_0", "obj_1", ...].
+    profile : bool, default=False
+        If True, wraps the optimization loop in a profiler and prints stats.
     """
 
     def __init__(
@@ -52,9 +79,7 @@ class NSGA2VarianceReduction(NSGA2):
             profile=profile,
         )
 
-    # ────────────────────────────────────────────────────────────────
-    # Main optimization entry
-    # ────────────────────────────────────────────────────────────────
+
     def _optimize(self, X: np.ndarray, y: np.ndarray, random_state: RandomState):
         self._var_y = np.var(y)
 
@@ -65,9 +90,9 @@ class NSGA2VarianceReduction(NSGA2):
 
         return super()._optimize(X, y, random_state)
 
-    # ────────────────────────────────────────────────────────────────
-    # Variance Reduction Helpers
-    # ────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────
+# Variance Reduction Helpers
+# ────────────────────────────────────────────────────────────────
     @staticmethod
     def _variance_reduction(mask: np.ndarray, y: np.ndarray, var_y: float) -> float:
         """
@@ -84,9 +109,9 @@ class NSGA2VarianceReduction(NSGA2):
         var_not_match = np.var(y[~mask]) if np.any(~mask) else 0.0
         return var_y - (p * var_match + (1.0 - p) * var_not_match)
 
-    # ────────────────────────────────────────────────────────────────
-    # Helper functions
-    # ────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────
+# Helper functions
+# ────────────────────────────────────────────────────────────────
     def _fitness_objs_runtime(self) -> List[Callable[[Rule], float]]:
         return list(self.fitness_objs) + [self._varred_obj]
 

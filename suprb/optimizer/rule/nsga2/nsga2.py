@@ -22,8 +22,37 @@ from pymoo.operators.survival.rank_and_crowding.metrics import calc_crowding_dis
 
 class NSGA2(MultiRuleDiscovery):
     """
-    Adapted from: A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II by Kalyanmoy Deb et al.
-    Uses Crowding Distance and NonDominatedSorting from pymoo package.
+    Adapted from: A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II
+    by Kalyanmoy Deb et al..
+
+    This class implements a multi-objective evolutionary algorithm for
+    rule discovery. It uses pymoo's fast nondominated sorting and crowding
+    distance operators, and serves as a base class for multi-objective
+    optimization in MOO-RD.
+
+    Parameters
+    ----------
+    n_iter : int
+        Number of evolutionary iterations.
+    mu : int
+        Population size
+    lmbda : int
+        Number of children sampled each generation.
+    origin_generation : RuleOriginGeneration
+    init : RuleInit
+    mutation : RuleMutation
+    constraint : RuleConstraint
+    acceptance : RuleAcceptance
+    random_state : int or None
+    n_jobs : int
+    fitness_objs : list, optional
+        List of fitness objectives
+        Defaults to [rule.error_, -rule.volume_].
+    fitness_objs_labels : list of str, optional
+        Names corresponding to the objective functions.
+        Defaults to ["obj_0", "obj_1", ...].
+    profile : bool, default=False
+        If True, wraps the optimization loop in a profiler and prints stats.
     """
     def __init__(
             self,
@@ -61,7 +90,6 @@ class NSGA2(MultiRuleDiscovery):
                 lambda r: -r.volume_,
             ]
 
-        # Change fitness objectives List to tuple avoid accidental changes.
         # Extra objectives in subclasses are added during runtime to avoid sklearn.clone errors.
         self.fitness_objs: Tuple[Callable[[Rule], float], ...] = tuple(fitness_objs)
 
@@ -81,8 +109,8 @@ class NSGA2(MultiRuleDiscovery):
         if profiler:
             profiler.enable()
 
+        # Generate initial population.
         population = []
-
         origins = self.origin_generation(
             n_rules=self.mu,
             X=X,
@@ -96,37 +124,44 @@ class NSGA2(MultiRuleDiscovery):
             delayed(self._init_valid_origin)(origin, X, y, random_state)
             for origin in origins
         )
-
         population = [p for p in population if p is not None]
 
+        # Main loop.
         for _ in range(self.n_iter):
+            # Select parents and generate children.
             parents = random_state.choice(population, size=self.lmbda, replace=True)
-
             children = Parallel(n_jobs=self.n_jobs)(
                 delayed(self._generate_valid_child)(parent, X, y, random_state)
                 for parent in parents
             )
-
             children = [c for c in children if c is not None]
 
+            # Combine current population and children (mu + lmbda), then nondominated sorting into fronts.
             population_combined = population + children
-
             pareto_fronts = self._fast_nondominated_sort(population_combined)
-            population = self._build_next_population(pareto_fronts) #assigns crowding distance
+            population = self._build_next_population(pareto_fronts) #asigns crowding distance, build next population of size mu.
 
+        # The nondominated set.
         pareto_front = pareto_fronts[0] if pareto_fronts else []
+
         if profiler:
             profiler.disable()
             stats = pstats.Stats(profiler).sort_stats("cumtime")
             stats.print_stats(20)
 
+        # Visualize the objective space distribution for the chosen fitness objectives. Is intended for the isolated experiments.
+        # Comment out if not run in isolation or for more than one iteration.
         #visualize_pareto_front(self, pareto_front)
+
         return pareto_front
 
 # ────────────────────────────────────────────────────────────────────
 # Helper Functions
 # ────────────────────────────────────────────────────────────────────
     def _fast_nondominated_sort(self, population: List[Rule]) -> List[List[Rule]]:
+        """
+        Sorts population into fronts using pymoo's fast nondominated sort.
+        """
         if not population:
             return []
         objs = self._fitness_objs_runtime()
@@ -143,6 +178,9 @@ class NSGA2(MultiRuleDiscovery):
             front: List[Rule],
             cd_func,
     ):
+        """
+        Calculate crowding distance using pymoo's crowding distance function.
+        """
         if not front:
             return
 
@@ -150,6 +188,7 @@ class NSGA2(MultiRuleDiscovery):
         obj_matrix = np.vstack(
             [[obj(rule) for obj in objs] for rule in front]
         )
+
         crowding_distances = cd_func.do(obj_matrix)
 
         for rule, dist in zip(front, crowding_distances):
@@ -182,6 +221,10 @@ class NSGA2(MultiRuleDiscovery):
             self,
             pareto_fronts,
     ):
+        """
+        Add fronts starting from F_0 until population limit mu is reached.
+        Last front is truncated if necessary and the population then is extended by the individuals with the highest crowding distance.
+        """
         population_new = []
 
         cd_func = FunctionalDiversity(calc_crowding_distance, filter_out_duplicates=True)
@@ -199,8 +242,15 @@ class NSGA2(MultiRuleDiscovery):
 
 
     def _fitness_objs_runtime(self) -> List[Callable[[Rule], float]]:
+        """
+        Used in the subclasses to add the secondary objective at runtime.
+        If set otherwise, the objectives generate a sklearn error.
+        """
         return list(self.fitness_objs)
 
 
     def _fitness_labels_runtime(self) -> List[str]:
+        """
+        Returns list of all fitness objectives used.
+        """
         return list(self.fitness_objs_labels)

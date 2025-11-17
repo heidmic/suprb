@@ -26,7 +26,8 @@ import pstats
 class PymooNSGA2(ParallelSingleRuleDiscovery):
     """
     Adapted from: A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II by Kalyanmoy Deb et al.
-    This implementation is slower because repeated vectorization of the rule objects.
+    In the original plan for the MOO-RD was to use pymoo's precompiled algorithms.
+    This was slower in the end as repeated vectorization of the rule objects was necessary.
     Deprecated.
     """
     def __init__(

@@ -15,8 +15,33 @@ from .nsga2 import NSGA2
 
 class NSGA2InfoGain(NSGA2):
     """
-    NSGA2 with error and information gain as objectives.
-    TODO: Better Description
+    MOO-RD with rule error and information gain as fitness objectives.
+    Information gain objective based on Shannon entropy.
+
+    Parameters
+    ----------
+    n_iter : int
+        Number of evolutionary iterations.
+    mu : int
+        Population size
+    lmbda : int
+        Number of children sampled each generation.
+    origin_generation : RuleOriginGeneration
+    init : RuleInit
+    mutation : RuleMutation
+    constraint : RuleConstraint
+    acceptance : RuleAcceptance
+    random_state : int or None
+    n_jobs : int
+    fitness_objs : list, optional
+        List of fitness objectives
+        Defaults to [rule.error_, -rule.volume_].
+        Information gain objective is added internally.
+    fitness_objs_labels : list of str, optional
+        Names corresponding to the objective functions.
+        Defaults to ["obj_0", "obj_1", ...].
+    profile : bool, default=False
+        If True, wraps the optimization loop in a profiler and prints stats.
     """
     def __init__(
         self,
@@ -57,7 +82,7 @@ class NSGA2InfoGain(NSGA2):
         y: np.ndarray,
         random_state: RandomState
     ):
-        # Bind dataset for the IG objective
+        # Bind dataset for the IG objective.
         self._X_ref = X
         self._y_ref = y
         self._H_y   = self._entropy(y)
@@ -91,9 +116,9 @@ class NSGA2InfoGain(NSGA2):
         H_nm = NSGA2InfoGain._entropy(y[~mask])
         return H_y - (p * H_m + (1.0 - p) * H_nm)
 
-    # ────────────────────────────────────────────────────────────────
-    # Helper functions
-    # ────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────
+# Helper functions
+# ────────────────────────────────────────────────────────────────
     def _fitness_objs_runtime(self) -> List[Callable[[Rule], float]]:
         return list(self.fitness_objs) + [self._infogain_obj]
 

@@ -5,6 +5,10 @@ from suprb.rule.base import Rule
 from suprb.optimizer.rule.constraint import RuleConstraint
 
 class PymooRuleMutation(Mutation):
+    """
+    Wrapper class for SupRB's mutation to work with pymoo.
+    Deprecated.
+    """
     def __init__(self, initial_rule: Rule, mutation_operator: RuleMutation, constraint: RuleConstraint, X_train, y_train, random_state):
         super().__init__()
         self.initial_rule = initial_rule

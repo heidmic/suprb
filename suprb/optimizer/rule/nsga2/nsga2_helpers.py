@@ -4,6 +4,9 @@ from typing import List
 from datetime import datetime
 
 def visualize_pareto_front(self, pareto_front: List, save_path: str = "Objective_Space_Distribution") -> None:
+    """
+    Generates PDF of the objective space distribution of the input list of rules.
+    """
     if not pareto_front:
         print("No Pareto front provided for visualization.")
         return
@@ -15,13 +18,12 @@ def visualize_pareto_front(self, pareto_front: List, save_path: str = "Objective
         print(f"Expected exactly 2 objectives, found {len(objs)}. Skipping plot.")
         return
 
-    # Compute objective matrix
     obj_matrix = np.array([[objs[0](r), objs[1](r)] for r in pareto_front])
 
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = ["Times New Roman", "Times", "DejaVu Serif"]
     plt.rcParams["mathtext.fontset"] = "cm"
-    plt.rcParams["pdf.fonttype"] = 42     # Keep text as selectable TrueType
+    plt.rcParams["pdf.fonttype"] = 42
     plt.rcParams["ps.fonttype"] = 42
     plt.rcParams["svg.fonttype"] = "none"
 
