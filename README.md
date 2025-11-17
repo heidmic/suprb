@@ -1,4 +1,10 @@
-[![DOI](https://zenodo.org/badge/303331999.svg)](https://zenodo.org/badge/latestdoi/303331999)
+[![DOI](https://zenodo.org/badge/303331999.svg)](https://zenodo.org/badge/latestdoi/303331999) \
+This project is a fork of the original SupRB repository (https://github.com/heidmic/suprb).
+It extends the original work by adding multi-objective rule discovery (MOO-RD) using NSGA-II, developed as part of my bachelor’s thesis. \
+The experiments can be found in the suprb-experimentation repository (https://github.com/DavidvProeck/suprb-experimentation),
+which builds upon the original experimentation (https://github.com/heidmic/suprb-experimentation).
+
+The source code of the proposed multi-objective rule discovery (MOO-RD) can be found here: **suprb/optimizer/rule/nsga2**
 
 # SupRB
 
