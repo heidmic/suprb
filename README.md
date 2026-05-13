@@ -1,6 +1,12 @@
-[![DOI](https://zenodo.org/badge/303331999.svg)](https://zenodo.org/badge/latestdoi/303331999)
+[![DOI](ZENODO PLACEHOLDER)](BADGE PLACEHOLDER)
 
-# SupRB
+# SupRB with MOO Solution Composition
+
+This repository implements the code for the paper "Exploring Multi-Objective Optimization to Balance Performance and Complexity in Explainable Machine Learning". It is a fork of the original SupRB repository, which can be found here:
+
+https://github.com/heidmic/suprb
+
+The original repository was published together with the paper **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
 
 ## What is SupRB?
 
@@ -79,48 +85,16 @@ The commit messages of all the commits in your PR should be properly formatted:
 
 Avoid merge commits by using rebase rather than merge when combining branches
 
-## Publications
-
-### The Concept
-
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
-
-### Comparisons with other Systems
-
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** In: Mernik, M., Eftimov, T., Črepinšek, M. (eds) Bioinspired Optimization Methods and Their Applications. BIOMA 2022. Lecture Notes in Computer Science, vol 13627. Springer, Cham. https://doi.org/10.1007/978-3-031-21094-5_11 http://arxiv.org/abs/2207.05582 A comparison with XCSF.
-
-Michael Heider, Helena Stegherr, Roman Sraj, David Pätzel, Jonathan Wurth and Jörg Hähner. 2023. **SupRB in the context of rule-based machine learning methods: a comparative study.** Applied Soft Computing 147, 110706. DOI: 10.1016/j.asoc.2023.110706 A comparison with XCSF, Decision Trees, and Random Forests.
-
-### Investigating Components
-
-Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 2022. **Comparing different Metaheuristics for Model Selection in a Supervised Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529015
-
-Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and Jörg Hähner. 2022. **Approaches for Rule Discovery in a Learning Classifier System.** In Proceedings of the 14th International Joint Conference on Computational Intelligence - ECTA. https://doi.org/10.5220/0011542000003332
-
-Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth, Benedikt Volger and Jörg Hähner. 2023. **Discovering rules for rule-based machine learning with the help of novelty search.** SN Computer Science 4, 6, 778. DOI: 10.1007/s42979-023-02198-x
-
-Michael Heider, Maximilian Krischan, Roman Sraj and Jörg Hähner. 2024 **Exploring Self-Adaptive Genetic Algorithms to Combine Compact Sets of Rules.** In Proceedings of the 2024 IEEE Congress on Evolutionary Computation (CEC). https://doi.org/10.1109/CEC60901.2024.10612101.
-
-### Explainability of LCS
-
-Michael Heider, Helena Stegherr, Richard Nordsieck and Jörg Hähner. 2023. **Assessing model requirements for explainable AI: a template and exemplary case study.** Artificial Life 29, 4, 468-486. MIT press. DOI: https://doi.org/10.1162/artl_a_00414
-
-### A general description of LCS and its optimizers
-
-Michael Heider, David Pätzel, Helena Stegherr, Jörg Hähner. 2023. **A Metaheuristic Perspective on Learning Classifier Systems.** In: Eddaly, M., Jarboui, B., Siarry, P. (eds) Metaheuristics for Machine Learning. Computational Intelligence Methods and Applications. Springer, Singapore. https://doi.org/10.1007/978-981-19-3888-7_3
-
-
 ## Experiments
 
-We provide the experiment scripts used in associated publications under: https://github.com/heidmic/suprb-experimentation
+We provide the experiment scripts used in associated publications under: PLACEHOLDER
 
 
 ## Citation
 
 If you use this code for research, please cite:
 
-Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Separating Rule Discovery and Global Solution Composition in a Learning Classifier System.** In Genetic and Evolutionary Computation Conference Companion (GECCO ’22 Companion). https://doi.org/10.1145/3520304.3529014
-
+PLACEHOLDER
 
 
 ## Formatting

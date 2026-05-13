@@ -1,5 +1,5 @@
 from abc import ABCMeta
-from typing import Callable
+from typing import Callable, Tuple
 
 import numpy as np
 
@@ -36,6 +36,41 @@ class ComplexitySolutionFitness(SolutionFitness, metaclass=ABCMeta):
             )
             * 100
         )
+
+
+class MultiObjectiveSolutionFitness(SolutionFitness, metaclass=ABCMeta):
+    """Passes on fitness and complexity measures for MOOAs to minimize complexity along with error."""
+
+    objective_func_: list[Callable]
+    hv_reference_: np.ndarray
+    worst_point_estimate_: np.ndarray
+
+    def __init__(self):
+        pass
+
+    def __call__(self, solution: Solution) -> list:
+        return [self.objective_func_[i](solution) for i in range(len(self.objective_func_))]
+
+
+class NormalizedMOSolutionFitness(MultiObjectiveSolutionFitness):
+    objective_func_: list[Callable] = [c_norm, pseudo_accuracy]
+    hv_reference_: np.ndarray = np.array([1.0, 1.0])
+    worst_point_estimate_ = np.array([1.0, 1.0])
+
+    def __call__(self, solution: Solution) -> list:
+        return [
+            1 - self.objective_func_[0](solution.complexity_, self.max_genome_length_),
+            1 - self.objective_func_[1](solution.error_),
+        ]
+
+    def __init__(self):
+        super().__init__()
+
+
+class SimpleMOSolutionFitness(MultiObjectiveSolutionFitness):
+
+    def __call__(self, solution: Solution):
+        return [solution.complexity_, solution.error_]
 
 
 class ComplexityEmary(ComplexitySolutionFitness):

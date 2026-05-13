@@ -27,3 +27,23 @@ def matched_training_samples(pool: list[Rule]):
     matched = np.stack([rule.match_set_ for rule in pool]).any(axis=0).nonzero()[0].shape[0]
     total = pool[0].match_set_.shape[0]
     return matched / total
+
+
+def hypervolume(pareto_front: np.ndarray, reference_point: np.ndarray = None):
+    """Assumes that the pareto front is sorted by complexity in ascending order."""
+    last_x = reference_point[0]
+    volume = 0
+    for fitness in pareto_front:
+        volume += (last_x - fitness[0]) * np.prod(reference_point[1:] - fitness[1:])
+        last_x = fitness[0]
+    return volume
+
+
+def spread(pareto_front: np.ndarray):
+    if len(pareto_front) <= 1:
+        return 0
+    """Assumes that the pareto front is sorted by complexity in ascending order."""
+    distances = np.linalg.norm(pareto_front[:-1] - pareto_front[1:], axis=1)
+    avg_distance = np.mean(distances)
+    delta = np.sum(np.abs(distances - avg_distance)) / ((len(distances)) * avg_distance)
+    return delta

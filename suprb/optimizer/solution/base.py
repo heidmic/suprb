@@ -7,7 +7,8 @@ from suprb.solution import Solution, SolutionInit
 from suprb.optimizer import BaseOptimizer
 from suprb.rule import Rule
 from suprb.utils import check_random_state
-from . import SolutionArchive
+from .archive import SolutionArchive
+from .sampler import SolutionSampler
 
 
 class SolutionComposition(BaseOptimizer, metaclass=ABCMeta):
@@ -145,3 +146,87 @@ class PopulationBasedSolutionComposition(SolutionComposition, metaclass=ABCMeta)
         super()._reset()
         if hasattr(self, "population_"):
             del self.population_
+
+
+def hypervolume(pareto_front: list[Solution]):
+    pareto_front = sorted(pareto_front, key=lambda solution: solution.fitness_[0], reverse=True)
+    fitness_values = np.array([solution.fitness_ for solution in pareto_front])
+    # Needs a MultiObjectiveSolutionFitness
+    reference_point = pareto_front[0].fitness.hv_reference_
+    last_x = reference_point[0]
+    volume = 0
+    for fitness in fitness_values:
+        volume += (last_x - fitness[0]) * np.prod(reference_point[1:] - fitness[1:])
+        last_x = fitness[0]
+    return volume
+
+
+class MOSolutionComposition(PopulationBasedSolutionComposition, metaclass=ABCMeta):
+    def __init__(
+        self,
+        population_size: int,
+        n_iter: int,
+        init: SolutionInit,
+        archive: SolutionArchive,
+        sampler: SolutionSampler,
+        random_state: int,
+        n_jobs: int,
+        warm_start: bool,
+        early_stopping_patience: int = -1,
+        early_stopping_delta: float = 0,
+    ):
+        super().__init__(
+            population_size=population_size,
+            n_iter=n_iter,
+            init=init,
+            archive=archive,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            warm_start=warm_start,
+        )
+        self.sampler = sampler
+        self.early_stopping_patience = early_stopping_patience
+        self.early_stopping_delta = early_stopping_delta
+        self._best_hypervolume = 0
+        self._best_pareto_front = None
+        self._early_stopping_counter = 0
+        self.step_ = 0
+
+    def check_early_stopping(self):
+        self.step_ += 1
+        if self.early_stopping_patience < 0:
+            return False
+        hv = self.hypervolume()
+        hv_diff = hv - self._best_hypervolume
+        if self._best_hypervolume < hv:
+            self._best_hypervolume = hv
+            self._best_pareto_front = self.pareto_front()
+
+        if hv_diff > self.early_stopping_delta:
+            self._early_stopping_counter = 0
+        else:
+            self._early_stopping_counter += 1
+            if self.early_stopping_patience <= self._early_stopping_counter:
+                return True
+        return False
+
+    @abstractmethod
+    def pareto_front(self) -> list[Solution]:
+        pass
+
+    def hypervolume(self) -> float:
+        return hypervolume(self.pareto_front())
+
+    def elitist(self) -> Optional[Solution]:
+        """Sample an elitist from the Pareto front"""
+        pf = self.pareto_front()
+        if len(pf) == 0:
+            return None
+        return self.sampler(pf, random_state=self.random_state_)
+
+    def optimize(self, X: np.ndarray, y: np.ndarray, **kwargs) -> Union[Solution, list[Solution], None]:
+        self._best_hypervolume = 0
+        self._best_pareto_front = None
+        self._early_stopping_counter = 0
+        self.step_ = 0
+        super().optimize(X, y, **kwargs)

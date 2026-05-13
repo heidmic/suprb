@@ -146,7 +146,6 @@ class SupRB(BaseRegressor):
         cleanup : bool
             Optional cleanup of unused rules and components after fitting. Can be used to reduce size if only the
             final model is relevant. Note that all information about the fitting process itself is removed.
-
         Returns
         -------
         self : BaseEstimator
@@ -281,7 +280,6 @@ class SupRB(BaseRegressor):
 
         # Update the random state
         self.solution_composition_.random_state = self.solution_composition_seeds_[self.step_]
-
         # Optimize
         self.solution_composition_.optimize(X, y)
 
