@@ -2,9 +2,11 @@ from abc import ABCMeta
 from typing import Callable
 
 import numpy as np
+import warnings
 
-from suprb.fitness import pseudo_accuracy, emary, wu
+from suprb.fitness import pseudo_accuracy, emary, wu, moo
 from . import Rule, RuleFitness
+from ..fitness import BaseFitness
 
 
 class PseudoAccuracy(RuleFitness):
@@ -64,3 +66,28 @@ class VolumeWu(VolumeRuleFitness):
     def __init__(self, alpha: float = 0.05):
         super().__init__(alpha)
         self.fitness_func_ = wu
+
+class MooFitness(RuleFitness, metaclass=ABCMeta):
+    """
+    A placeholder fitness function which always returns NaN.
+    This function is used in multi-objective optimization (MOO) as the rule attribute `.fitness_` is never accessed.
+    Using another fitness function has no impact on the MOO and may be misleading.
+
+    Changing the fitness attribute to a vector may make the code more intuitive.
+    """
+
+    fitness_func_: Callable
+
+    def __init__(self):
+        super().__init__()
+        self.fitness_func_ = moo
+        warnings.warn(
+            "MooFitness is a dummy fitness function which always returns NaN. "
+            "When using multi-objective optimization (MOO), the rule attribute `.fitness_` is never accessed. "
+            "Using another fitness function has no impact on the MOO and may be misleading.",
+            UserWarning,
+            stacklevel=2,
+        )
+
+    def __call__(self, rule: Rule) -> float:
+        return self.fitness_func_()

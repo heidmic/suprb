@@ -4,8 +4,7 @@ import traceback
 import numpy as np
 from sklearn import clone
 from sklearn.utils import check_X_y
-from sklearn.utils.validation import check_is_fitted, check_array, validate_data
-
+from sklearn.utils.validation import check_is_fitted, check_array
 
 from .base import BaseRegressor
 from .exceptions import PopulationEmptyWarning
@@ -23,18 +22,6 @@ from .solution.fitness import PseudoBIC
 
 
 class SupRB(BaseRegressor):
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.target_tags.single_output = False
-        tags.non_deterministic = True
-        return tags
-
-    def _more_tags(self):
-        # additional or override tags
-        return {
-            # 'some_tag': True,
-        }
-
     """The multi-solution batch learning LCS developed by the Organic Computing group at Universität Augsburg.
 
     Parameters
@@ -162,7 +149,8 @@ class SupRB(BaseRegressor):
         self.elitist_.complexity_ = 99999
 
         # Check that x and y have correct shape
-        X, y = validate_data(self, X, y, ensure_2d=True)
+        X, y = check_X_y(X, y, dtype="float64", y_numeric=True)
+        y = check_array(y, ensure_2d=False, dtype="float64")
 
         # Init sklearn interface
         self.n_features_in_ = X.shape[1]
@@ -197,6 +185,7 @@ class SupRB(BaseRegressor):
         if self.n_initial_rules > 0:
             if self._catch_errors(self._discover_rules, X, y, self.n_initial_rules):
                 return self
+            self._log_to_stdout(f"{len(self.pool_)} initial rules discovered before first step.")
 
         # Main loop
         for self.step_ in range(self.n_iter):
@@ -255,9 +244,18 @@ class SupRB(BaseRegressor):
 
         self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
 
-        # Update the current elitist
-        self.rule_discovery_.elitist_ = self.solution_composition_.elitist()
 
+        # Update the current elitist
+        # try catch block needed for n_initial_rules as elitist is None Type without it
+        elit = None
+        try:
+            elit = self.solution_composition_.elitist()
+        except AttributeError:
+            pass
+        if elit is None:
+            elit = self.elitist_ #Initially dummy elitist: Solution([0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC())
+
+        self.rule_discovery_.elitist_ = elit
         # Update the random state
         self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
 
@@ -283,9 +281,11 @@ class SupRB(BaseRegressor):
         # Optimize
         self.solution_composition_.optimize(X, y)
 
-    def predict(self, X):
-        check_is_fitted(self)
-        X = validate_data(self, X, ensure_2d=True, reset=False)
+    def predict(self, X: np.ndarray):
+        # Check is fit had been called
+        check_is_fitted(self, ["is_fitted_"])
+        # Input validation
+        X = check_array(X)
 
         if hasattr(self, "is_error_") and self.is_error_:
             return [0] * len(X)

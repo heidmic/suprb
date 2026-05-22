@@ -59,6 +59,7 @@ def _save_elitist(suprb, json_config):
         "complexity_": suprb.elitist_.complexity_,
         "error_": suprb.elitist_.error_,
         "fitness_": suprb.elitist_.fitness_,
+        # "genome_" : np.ones(len(suprb.pool_))
     }
 
 

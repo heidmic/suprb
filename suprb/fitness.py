@@ -40,3 +40,12 @@ def wu(alpha: float, x1: float, x2: float) -> float:
     """
 
     return ((1 + alpha**2) * x1 * x2) / (alpha**2 * x1 + x2)
+
+
+def moo() -> float:
+    """
+    A placeholder fitness function which always returns NaN.
+    This function is used in multi-objective optimization (MOO) as the rule attribute `.fitness_` is never accessed.
+    Using another fitness function has no impact on the MOO and may be misleading.
+    """
+    return np.nan

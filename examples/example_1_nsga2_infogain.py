@@ -1,16 +1,32 @@
 import sklearn
-import numpy as np
 import matplotlib.pyplot as plt
-
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import cross_validate, train_test_split
 
-from suprb import SupRB, WarmupSupRB
+from suprb import SupRB
 from suprb.utils import check_random_state
 from suprb.optimizer.rule.es import ES1xLambda
 from suprb.optimizer.solution.ga import GeneticAlgorithm
 
+from suprb.optimizer.rule.nsga2 import NSGA2InfoGain
 from utils import log_scores
+
+import numpy as np
+
+from sklearn.linear_model import Ridge
+from sklearn.utils import Bunch, shuffle
+
+from suprb import rule, SupRB
+from suprb.logging.combination import CombinedLogger
+from suprb.logging.default import DefaultLogger
+from suprb.logging.stdout import StdoutLogger
+from suprb.optimizer.solution import ga
+from suprb.optimizer.rule import origin, mutation
+
+from suprb.optimizer.rule.ns.novelty_calculation import NoveltyCalculation
+from suprb.optimizer.rule.ns.novelty_search_type import MinimalCriteria
+
+
 
 
 def load_higdon_gramacy_lee(n_samples=1000, noise=0, random_state=None):
@@ -49,7 +65,27 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=random_state)
 
-    model = WarmupSupRB(rule_discovery=ES1xLambda(), solution_composition=GeneticAlgorithm())
+    model = SupRB(
+        rule_discovery=NSGA2InfoGain(
+            n_iter=16,
+            mu=16,
+            lmbda=64,
+            origin_generation=origin.SquaredError(),
+            init=rule.initialization.MeanInit(
+                fitness=rule.fitness.MooFitness(),
+                model=Ridge(alpha=0.01, random_state=random_state),
+                # matching_type=rule.matching.OrderedBound([-1, 1])
+            ),
+            mutation=mutation.Normal(
+                # matching_type=rule.matching.OrderedBound([-1, 1]),
+                sigma=1.22
+            ),
+            fitness_objs=[lambda r: r.error_],
+            fitness_objs_labels=["Error"],  # infogain objective is added internally
+        ),
+        solution_composition=GeneticAlgorithm(),
+        n_initial_rules=4,
+    )
 
     scores = cross_validate(
         model,

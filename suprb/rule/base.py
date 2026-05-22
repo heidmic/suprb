@@ -105,3 +105,18 @@ class Rule(SolutionBase):
 
     def _more_str_attributes(self) -> dict:
         return {"experience": self.experience_}
+
+    def get_param_vector(self) -> np.array:
+        """
+        Returns rule parameter vector.
+        Created for MOO-RD with pymoo's precompiled algorithms.
+        """
+        return self.match.get_param_vector()
+    
+    def set_param_vector(self, x:np.array) -> Rule:
+        """
+        Sets rule parameter vector.
+        """
+        rule = self.clone()
+        rule.match.set_param_vector(x)
+        return rule

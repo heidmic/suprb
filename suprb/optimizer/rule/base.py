@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -106,4 +106,34 @@ class ParallelSingleRuleDiscovery(RuleDiscovery, metaclass=ABCMeta):
         initial_rule: Rule,
         random_state: RandomState,
     ) -> Optional[Rule]:
+        pass
+
+
+class MultiRuleDiscovery(RuleDiscovery, metaclass=ABCMeta):
+    """
+    Implements basic functionality to generate a rule population,
+    returning the valid ones.
+    Warns the user if not enough valid rules were found.
+    """
+
+    def optimize(self, X: np.array, y: np.array, n_rules: int = 1) -> List[Rule]:
+        self.random_state_ = check_random_state(self.random_state)
+        random_state = self.random_state_
+
+
+        all_rules = self._optimize(X, y, random_state) or [] #origins created in optimize function of subclass
+
+        valid = self._filter_invalid_rules(X=X, y=y, rules=all_rules)
+
+        if len(valid) < n_rules:
+            print(f"Warning: Requested {n_rules} but only {len(valid)} Pareto-optimal rule(s) generated.")
+        
+        return valid[:n_rules]
+    
+    def _optimize(
+            self,
+            X: np.ndarray,
+            y: np.ndarray,
+            random_state: RandomState,
+    ) -> Optional[List[Rule]]:
         pass

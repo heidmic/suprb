@@ -41,6 +41,14 @@ class MatchingFunction(BaseComponent, metaclass=ABCMeta):
 
         if self.bounds.shape[0] != X.shape[1]:
             raise ValueError(f"bounds- and input data dimension mismatch: {self.bounds.shape[0]} != {X.shape[1]}")
+    
+    @abstractmethod
+    def get_param_vector(self) -> np.array:
+        pass
+
+    @abstractmethod
+    def set_param_vector(self, x: np.array ) -> None:
+        pass
 
 
 class OrderedBound(MatchingFunction):
@@ -76,6 +84,14 @@ class OrderedBound(MatchingFunction):
             invalid_indices = np.argwhere(diff < min_range)
             self.bounds[invalid_indices, 0] -= min_range / 2
             self.bounds[invalid_indices, 1] += min_range / 2
+
+    def get_param_vector(self):
+        return self.bounds.flatten()
+    
+    def set_param_vector(self, x):
+        x = np.asarray(x)
+        self.bounds = x.reshape((-1, 2))
+
 
 
 class UnorderedBound(MatchingFunction):
@@ -124,6 +140,13 @@ class UnorderedBound(MatchingFunction):
             self.bounds[invalid_indices_r, 0] -= min_range / 2
             self.bounds[invalid_indices_r, 1] += min_range / 2
 
+    def get_param_vector(self):
+        return self.bounds.flatten()
+
+    def set_param_vector(self, x):
+        d = x.shape[0] // 2
+        self.bounds = x.reshape((d, 2))
+
 
 class CenterSpread(MatchingFunction):
     """
@@ -168,6 +191,13 @@ class CenterSpread(MatchingFunction):
             invalid_indices = np.argwhere(diff < min_range)
             self.bounds[invalid_indices, 1] += min_range / 2
 
+    def get_param_vector(self):
+        return self.bounds.flatten()
+
+    def set_param_vector(self, x):
+        d = x.shape[0] // 2
+        self.bounds = x.reshape((d, 2))
+
 
 class MinPercentage(MatchingFunction):
     """
@@ -211,3 +241,10 @@ class MinPercentage(MatchingFunction):
             # Approximate increasing the width by min_range
             self.bounds[invalid_indices, 0] -= min_range / 2
             self.bounds[invalid_indices, 1] += min_range
+    
+    def get_param_vector(self):
+        return self.bounds.flatten()
+
+    def set_param_vector(self, x):
+        d = x.shape[0] // 2
+        self.bounds = x.reshape((d, 2))
