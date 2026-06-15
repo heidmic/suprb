@@ -46,7 +46,9 @@ class SupRB(BaseRegressor):
     n_iter: int
         Iterations the LCS will perform.
     n_initial_rules: int
-        Number of :class:`Rule`s generated before the first step.
+        Number of :class:`Rule`s generated before the first step. Note that 
+        n_initial_rules + n_rules will be created before the first elitist is 
+        selected using solution composition.
     n_rules: int
         Number of :class:`Rule`s generated in the every step.
     random_state : int, RandomState/Generator instance or None, default=None
