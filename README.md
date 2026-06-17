@@ -82,7 +82,7 @@ Avoid merge commits by using rebase rather than merge when combining branches
 
 ### Formatting
 
-Install black formatter (pip install black) and use it in the root directory of the project to format all python files (line length is automatically set to 120):
+Install black formatter (pip install black) and use it in the root directory of the project to format all python files (line length is set to 120):
 ```
 black .
 ```
