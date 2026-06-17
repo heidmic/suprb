@@ -125,4 +125,7 @@ Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 
 
 ## Formatting
 
-Install black formatter (pip install black) and use it in the root directory of the project to format all python files (black .)
+Install black formatter (pip install black) and use it in the root directory of the project to format all python files:
+```
+black --line-length 120 .
+```
