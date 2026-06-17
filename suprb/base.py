@@ -51,7 +51,7 @@ class SolutionBase(metaclass=ABCMeta):
         return {}
 
 
-class BaseRegressor(BaseEstimator, RegressorMixin, metaclass=ABCMeta):
+class BaseRegressor(RegressorMixin, BaseEstimator, metaclass=ABCMeta):
     """A base (composite) Regressor."""
 
     is_fitted_: bool

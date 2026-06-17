@@ -50,8 +50,8 @@ if __name__ == "__main__":
             elitist_ratio=0.2,
             random_state=random_state,
             n_jobs=1,
-            mutation=suprb.optimizer.solution.ga.mutation.BitFlips(mutation_rate=0.1),
-            crossover=suprb.optimizer.solution.ga.crossover.NPoint(crossover_rate=0.9, n=2),
+            mutation=suprb.optimizer.solution.ga.mutation.BitFlips(),
+            crossover=suprb.optimizer.solution.ga.crossover.NPoint(n=2),
             selection=suprb.optimizer.solution.ga.selection.Tournament(k=6),
             init=suprb.solution.initialization.RandomInit(
                 mixing=suprb.solution.mixing_model.ErrorExperienceHeuristic(),
@@ -71,7 +71,6 @@ if __name__ == "__main__":
         verbose=10,
         scoring=["r2", "neg_mean_squared_error"],
         return_estimator=True,
-        fit_params={"cleanup": True},
     )
 
     log_scores(scores)

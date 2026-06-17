@@ -38,6 +38,7 @@ The examples in the examples directory are:
 - [example_2.py](https://github.com/heidmic/suprb/blob/master/examples/example_2.py): With one level of changed parameters
 - [example_3.py](https://github.com/heidmic/suprb/blob/master/examples/example_3.py): With two levels of changed parameters
 - [example_4.py](https://github.com/heidmic/suprb/blob/master/examples/example_4.py): Without any default parameters
+- [example_5.py](https://github.com/heidmic/suprb/blob/master/examples/example_5.py): Demonstrating the core of MOO solution composition
 - [compare_sklearn.py](https://github.com/heidmic/suprb/blob/153_add_usage_guide/examples/compare_sklearn.py): Code to run a direct comparison between suprb and various other sklearn models
 
 
@@ -47,7 +48,7 @@ The examples in the examples directory are:
     pip3 install -r requirements.txt
 
 
-Tested with Python 3.9.4.
+We recommend to use Python version 3.12
 
 
 ## Contributing
@@ -89,7 +90,7 @@ Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 
 
 Michael Heider, Helena Stegherr, Jonathan Wurth, Roman Sraj, and Jörg Hähner. 2022. **Investigating the Impact of Independent Rule Fitnesses in a Learning Classifier System.** In: Mernik, M., Eftimov, T., Črepinšek, M. (eds) Bioinspired Optimization Methods and Their Applications. BIOMA 2022. Lecture Notes in Computer Science, vol 13627. Springer, Cham. https://doi.org/10.1007/978-3-031-21094-5_11 http://arxiv.org/abs/2207.05582 A comparison with XCSF.
 
-Michael Heider, Helena Stegherr, Roman Sraj, David Pätzel, Jonathan Wurth and Jörg Hähner. 2023. **SupRB in the context of rule-based machine learning methods: a comparative study.** Applied Soft Computing 147, 110706. DOI: 10.1016/j.asoc.2023.110706 A comparison with XCSF, Decision Trees, and Random Forests.
+Michael Heider, Helena Stegherr, Roman Sraj, David Pätzel, Jonathan Wurth and Jörg Hähner. 2023. **SupRB in the context of rule-based machine learning methods: a comparative study.** Applied Soft Computing 147, 110706. https://doi.org/10.1016/j.asoc.2023.110706 A comparison with XCSF, Decision Trees, and Random Forests.
 
 ### Investigating Components
 
@@ -97,15 +98,17 @@ Jonathan Wurth, Michael Heider, Helena Stegherr, Roman Sraj, and Jörg Hähner. 
 
 Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth and Jörg Hähner. 2022. **Approaches for Rule Discovery in a Learning Classifier System.** In Proceedings of the 14th International Joint Conference on Computational Intelligence - ECTA. https://doi.org/10.5220/0011542000003332
 
-Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth, Benedikt Volger and Jörg Hähner. 2023. **Discovering rules for rule-based machine learning with the help of novelty search.** SN Computer Science 4, 6, 778. DOI: 10.1007/s42979-023-02198-x
+Michael Heider, Helena Stegherr, David Pätzel, Roman Sraj, Jonathan Wurth, Benedikt Volger and Jörg Hähner. 2023. **Discovering rules for rule-based machine learning with the help of novelty search.** SN Computer Science 4, 6, 778. https://doi.org/10.1007/s42979-023-02198-x
 
-Michael Heider, Maximilian Krischan, Roman Sraj and Jörg Hähner. 2024 **Exploring Self-Adaptive Genetic Algorithms to Combine Compact Sets of Rules.** In Proceedings of the 2024 IEEE Congress on Evolutionary Computation (CEC). https://doi.org/10.1109/CEC60901.2024.10612101.
+Michael Heider, Maximilian Krischan, Roman Sraj and Jörg Hähner. 2024 **Exploring Self-Adaptive Genetic Algorithms to Combine Compact Sets of Rules.** In Proceedings of the 2024 IEEE Congress on Evolutionary Computation (CEC). https://doi.org/10.1109/CEC60901.2024.10612101
+
+David von Proeck, Jonathan Wurth, Jörg Hähner, and Michael Heider. 2026. Exploring Multi-objective Approaches for Rule Generation in Rule-based Machine Learning. In Genetic and Evolutionary Computation Conference (GECCO Companion ’26). https://doi.org/10.1145/3795101.3814669
 
 ### Explainability of LCS
 
 Michael Heider, Helena Stegherr, Richard Nordsieck and Jörg Hähner. 2023. **Assessing model requirements for explainable AI: a template and exemplary case study.** Artificial Life 29, 4, 468-486. MIT press. DOI: https://doi.org/10.1162/artl_a_00414
 
-### A general description of LCS and its optimizers
+### A general description of LCSs and their optimizers
 
 Michael Heider, David Pätzel, Helena Stegherr, Jörg Hähner. 2023. **A Metaheuristic Perspective on Learning Classifier Systems.** In: Eddaly, M., Jarboui, B., Siarry, P. (eds) Metaheuristics for Machine Learning. Computational Intelligence Methods and Applications. Springer, Singapore. https://doi.org/10.1007/978-981-19-3888-7_3
 

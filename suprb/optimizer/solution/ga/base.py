@@ -39,7 +39,7 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
         n_iter: int = 32,
         population_size: int = 32,
         elitist_ratio: float = 0.17,
-        mutation: SolutionMutation = BitFlips(mutation_rate=0.001),
+        mutation: SolutionMutation = BitFlips(),
         crossover: SolutionCrossover = NPoint(n=3),
         selection: SolutionSelection = Tournament(),
         init: SolutionInit = RandomInit(),
@@ -47,6 +47,8 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
         random_state: int = None,
         n_jobs: int = 1,
         warm_start: bool = True,
+        mutation_rate: float = 0.001,
+        crossover_rate: float = 0.9,
     ):
         super().__init__(
             n_iter=n_iter,
@@ -62,6 +64,8 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
         self.crossover = crossover
         self.selection = selection
         self.elitist_ratio = elitist_ratio
+        self.mutation_rate = mutation_rate
+        self.crossover_rate = crossover_rate
 
     def _optimize(self, X: np.ndarray, y: np.ndarray):
         self.fit_population(X, y)
@@ -86,8 +90,8 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
                 flatten(
                     [
                         (
-                            self.crossover(A, B, random_state=self.random_state_),
-                            self.crossover(B, A, random_state=self.random_state_),
+                            self.crossover(A, B, self.crossover_rate, random_state=self.random_state_),
+                            self.crossover(B, A, self.crossover_rate, random_state=self.random_state_),
                         )
                         for A, B in parent_pairs
                     ]
@@ -98,7 +102,9 @@ class GeneticAlgorithm(PopulationBasedSolutionComposition):
                 children.append(parents[-1])
 
             # Mutation
-            mutated_children = [self.mutation(child, random_state=self.random_state_) for child in children]
+            mutated_children = [
+                self.mutation(child, self.mutation_rate, random_state=self.random_state_) for child in children
+            ]
 
             # Replacement
             self.population_ = elitists
