@@ -172,7 +172,7 @@ class SupRB(BaseRegressor):
 
         # Random state
         self.random_state_ = check_random_state(self.random_state)
-        seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter*2+1)
+        seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter * 2 + 1)
         self.rule_discovery_seeds_ = seeds[:-1:2]
         self.solution_composition_seeds_ = seeds[1::2]
         self.initial_rule_seeds_ = seeds[-1:]

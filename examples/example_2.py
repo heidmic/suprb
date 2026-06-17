@@ -10,7 +10,6 @@ from suprb.optimizer.solution.ga import GeneticAlgorithm
 
 from utils import log_scores
 
-
 if __name__ == "__main__":
     random_state = 42
 
