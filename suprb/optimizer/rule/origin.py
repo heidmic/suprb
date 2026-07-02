@@ -61,7 +61,7 @@ class RouletteWheelOrigin(RuleOriginGeneration):
 
         subgroup = elitist.subpopulation if elitist is not None and self.use_elitist else pool
 
-        if subgroup:
+        if subgroup and elitist is not None:
             weights = self._calculate_weights(
                 subgroup=subgroup, X=X, elitist=elitist, random_state=random_state, **kwargs
             )
@@ -69,7 +69,7 @@ class RouletteWheelOrigin(RuleOriginGeneration):
             # If all weights are zero, no bias is needed
             probabilities = weights / weights_sum if weights_sum != 0 else None
         else:
-            # No bias needed when no rule exists
+            # No bias needed when no rule exists or no elitist has been fit on them
             probabilities = None
 
         indices = random_state.choice(np.arange(len(X)), n_rules, p=probabilities)

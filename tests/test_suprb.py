@@ -47,6 +47,21 @@ class TestSupRB(unittest.TestCase):
 
         check_estimator(estimator)
 
+    def test_check_initial_rules(self):
+        estimator = suprb.SupRB(
+            n_iter=4,
+            n_initial_rules=4,
+            rule_discovery=ES1xLambda(n_iter=4, lmbda=1, delay=2),
+            solution_composition=suprb.optimizer.solution.ga.GeneticAlgorithm(n_iter=2, population_size=2),
+            logger=suprb.logging.stdout.StdoutLogger(),
+            verbose=10,
+        )
+
+        X, y = _regression_dataset()
+        estimator.fit(X, y)
+
+        check_estimator(estimator)
+
     def test_early_stopping(self):
         estimator = suprb.SupRB(
             n_iter=1,

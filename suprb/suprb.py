@@ -46,7 +46,9 @@ class SupRB(BaseRegressor):
     n_iter: int
         Iterations the LCS will perform.
     n_initial_rules: int
-        Number of :class:`Rule`s generated before the first step.
+        Number of :class:`Rule`s generated before the first step. Note that 
+        n_initial_rules + n_rules will be created before the first elitist is 
+        selected using solution composition.
     n_rules: int
         Number of :class:`Rule`s generated in the every step.
     random_state : int, RandomState/Generator instance or None, default=None
@@ -79,10 +81,11 @@ class SupRB(BaseRegressor):
     random_state_: np.random.Generator
 
     rule_discovery_: RuleDiscovery
-    rule_discovery_seeds_: list[int]
+    rule_discovery_seeds_: list[np.random.SeedSequence]
+    initial_rule_seeds_: list[np.random.SeedSequence]
 
     solution_composition_: SolutionComposition
-    solution_composition_seeds_: list[int]
+    solution_composition_seeds_: list[np.random.SeedSequence]
 
     matching_type_: MatchingFunction
 
@@ -169,9 +172,10 @@ class SupRB(BaseRegressor):
 
         # Random state
         self.random_state_ = check_random_state(self.random_state)
-        seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter * 2)
-        self.rule_discovery_seeds_ = seeds[::2]
+        seeds = np.random.SeedSequence(self.random_state).spawn(self.n_iter * 2 + 1)
+        self.rule_discovery_seeds_ = seeds[:-1:2]
         self.solution_composition_seeds_ = seeds[1::2]
+        self.initial_rule_seeds_ = seeds[-1:]
 
         # Initialise components
         self.pool_ = []
@@ -195,17 +199,17 @@ class SupRB(BaseRegressor):
 
         # Fill population before first step
         if self.n_initial_rules > 0:
-            if self._catch_errors(self._discover_rules, X, y, self.n_initial_rules):
+            if self._catch_errors(self._discover_rules, X, y, initial=True):
                 return self
 
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-            if self._catch_errors(self._discover_rules, X, y, self.n_rules):
+            if self._catch_errors(self._discover_rules, X, y, initial=False):
                 return self
 
             # Optimize solutions
-            if self._catch_errors(self._compose_solution, X, y, False):
+            if self._catch_errors(self._compose_solution, X, y):
                 return self
 
             # Log Iteration
@@ -227,13 +231,9 @@ class SupRB(BaseRegressor):
 
         return self
 
-    def _catch_errors(self, func, X, y, n_rules):
+    def _catch_errors(self, func, X, y, **kwargs):
         try:
-            if not n_rules:
-                func(X, y)
-            else:
-                func(X, y, n_rules)
-
+            func(X, y, **kwargs)
             return False
         except ValueError as e:
             # Capture the full traceback and print it
@@ -250,8 +250,10 @@ class SupRB(BaseRegressor):
             self.is_error_ = True
             return True
 
-    def _discover_rules(self, X: np.ndarray, y: np.ndarray, n_rules: int):
+    def _discover_rules(self, X: np.ndarray, y: np.ndarray, initial: bool):
         """Performs the rule discovery / rule generation (RG) process."""
+
+        n_rules = self.n_initial_rules if initial else self.n_rules
 
         self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
 
@@ -259,7 +261,10 @@ class SupRB(BaseRegressor):
         self.rule_discovery_.elitist_ = self.solution_composition_.elitist()
 
         # Update the random state
-        self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
+        if initial:
+            self.rule_discovery_.random_state = self.initial_rule_seeds_[0]
+        else:
+            self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
 
         # Generate new rules
         new_rules = self.rule_discovery_.optimize(X, y, n_rules=n_rules)
