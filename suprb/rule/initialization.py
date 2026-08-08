@@ -13,6 +13,7 @@ from suprb.rule.matching import (
     UnorderedBound,
     CenterSpread,
     MinPercentage,
+    GABIL,
 )
 from suprb.utils import check_random_state, RandomState
 from . import Rule, RuleFitness
@@ -59,6 +60,8 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
             self.generate_matching_function = self.centre_spread
         elif isinstance(self.matching_type, MinPercentage):
             self.generate_matching_function = self.min_percentage
+        elif isinstance(self.matching_type, GABIL):
+            self.generate_matching_function = self.gabil
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """Generate a random rule.
@@ -106,6 +109,9 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     @abstractmethod
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
+    @abstractmethod
+    def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
 
 
 class MeanInit(RuleInit):
@@ -122,6 +128,27 @@ class MeanInit(RuleInit):
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return MinPercentage(np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1))
+    def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        """Cover a single observed category.
+
+        The interval variants above start from a zero-width interval at the
+        sampled point, which is the most specific rule expressible. The
+        categorical equivalent is a bitstring with exactly one bit set: the
+        level the sampled example belongs to. Mutation generalises from
+        there by switching further bits on.
+
+        `mean` carries the sampled point. For a categorical attribute its
+        single entry is the category code, so it is rounded to an integer
+        index. `n_levels` is read from the matching type, since the number
+        of levels is a property of the dataset rather than of one rule.
+        """
+        n_levels = self.matching_type.bits.size
+        bits = np.zeros(n_levels, dtype=bool)
+
+        level = int(np.round(mean.ravel()[0]))
+        bits[np.clip(level, 0, n_levels - 1)] = True
+
+        return GABIL(bits=bits)
 
 
 class NormalInit(RuleInit):
