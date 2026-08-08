@@ -66,6 +66,8 @@ class SigmaRange(RuleMutation):
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         pass
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
 
 
 class Normal(RuleMutation):
@@ -89,6 +91,8 @@ class Normal(RuleMutation):
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         self.individual_mutate(rule, random_state)
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
 
 
 class Halfnorm(RuleMutation):
@@ -110,6 +114,8 @@ class Halfnorm(RuleMutation):
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         raise TypeError("Halform Mutation is not implemented for MPR")
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
 
 
 class HalfnormIncrease(RuleMutation):
@@ -133,6 +139,31 @@ class HalfnormIncrease(RuleMutation):
         bounds = rule.match.bounds
         bounds[:, 0] -= halfnorm.rvs(scale=self.sigma[0] / 2, size=bounds.shape[0], random_state=random_state)
         bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
+    def gabil(self, rule: Rule, random_state: RandomState):
+        """Adding Alternative: switch further category bits on.
+
+        The interval variant of this operator only ever widens a rule,
+        because covering starts from a zero-width interval that has to be
+        generalised. GABIL's counterpart is the "adding alternative"
+        operator of De Jong & Spears (1991): flip bits from 0 to 1 only,
+        never the reverse. Covering sets exactly one bit, so the same
+        generalisation pressure applies here.
+
+        `sigma` is reused as the per-bit flip probability, so the existing
+        mutation-strength parameter keeps its meaning without adding a new
+        hyperparameter for the categorical case.
+        """
+        bits = rule.match.bits
+        if bits.size == 0:
+            return
+
+        rate = float(np.asarray(self.sigma).ravel()[0])
+
+        # Only unset bits are candidates, which is what makes this
+        # generalisation-only rather than an unbiased bit flip.
+        candidates = ~bits
+        flips = candidates & (random_state.random(bits.size) < rate)
+        bits[flips] = True
 
 
 class Uniform(RuleMutation):
@@ -155,6 +186,8 @@ class Uniform(RuleMutation):
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         self.individual_mutate(rule, random_state)
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
 
 
 class UniformIncrease(RuleMutation):
@@ -178,3 +211,5 @@ class UniformIncrease(RuleMutation):
         bounds = rule.match.bounds
         bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
