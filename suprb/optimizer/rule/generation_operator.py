@@ -6,6 +6,7 @@ from suprb.rule.matching import (
     UnorderedBound,
     CenterSpread,
     MinPercentage,
+    GABIL,
 )
 from suprb.rule import Rule
 from suprb.base import BaseComponent
@@ -33,6 +34,8 @@ class GenerationOperator(BaseComponent, metaclass=ABCMeta):
         elif isinstance(self.matching_type, MinPercentage):
             self.execute = self.min_percentage
             assert isinstance(self.sigma, np.ndarray) and self.sigma.shape[0] == 2
+        elif isinstance(self.matching_type, GABIL):
+            self.execute = self.gabil
 
     @abstractmethod
     def ordered_bound(self, rule: Rule, random_state: RandomState):
@@ -48,4 +51,7 @@ class GenerationOperator(BaseComponent, metaclass=ABCMeta):
 
     @abstractmethod
     def min_percentage(self, rule: Rule, random_state: RandomState):
+        pass
+    @abstractmethod
+    def gabil(self, rule: Rule, random_state: RandomState):
         pass
