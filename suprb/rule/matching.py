@@ -212,6 +212,7 @@ class MinPercentage(MatchingFunction):
             self.bounds[invalid_indices, 0] -= min_range / 2
             self.bounds[invalid_indices, 1] += min_range
 
+
 class GABIL(MatchingFunction):
     """A bitstring condition over a single categorical attribute.
 

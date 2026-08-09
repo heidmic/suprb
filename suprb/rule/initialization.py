@@ -109,6 +109,7 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     @abstractmethod
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
+
     @abstractmethod
     def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
@@ -128,6 +129,7 @@ class MeanInit(RuleInit):
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return MinPercentage(np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1))
+
     def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         """Cover a single observed category.
 

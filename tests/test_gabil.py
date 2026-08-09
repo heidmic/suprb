@@ -18,7 +18,6 @@ from suprb.optimizer.rule.mutation import HalfnormIncrease
 from suprb.optimizer.solution.ga import GeneticAlgorithm
 from suprb.utils import check_random_state
 
-
 N_LEVELS = 6
 TRUE_SUBSET = {1, 3, 4}
 
@@ -31,6 +30,7 @@ class FakeRule:
 
 
 # --- the matching contract -------------------------------------------
+
 
 def test_match_lookup():
     """A sample matches exactly when its level's bit is set."""
@@ -59,6 +59,7 @@ def test_copy_is_deep():
 
 
 # --- repair and constraints ------------------------------------------
+
 
 def test_clip_repairs_all_zero():
     """An all-zero bitstring matches nothing and must be repaired."""
@@ -98,6 +99,7 @@ def test_min_range_is_a_noop():
 
 
 # --- mutation ---------------------------------------------------------
+
 
 def test_mutation_never_unsets_a_bit():
     """This is the whole definition of Adding Alternative.
@@ -150,6 +152,7 @@ def test_mutation_is_seeded():
 
 # --- documented boundaries -------------------------------------------
 
+
 def test_rejects_multiple_columns():
     """One bitstring governs one attribute.
 
@@ -176,6 +179,7 @@ def test_rejects_out_of_range_codes():
 
 
 # --- integration ------------------------------------------------------
+
 
 def _make_data():
     rng = np.random.RandomState(42)
@@ -232,6 +236,7 @@ def test_fit_is_reproducible():
 
 
 # --- sklearn estimator checks ----------------------------------------
+
 
 @pytest.mark.xfail(
     reason="check_regressors_train fails on multi-column input: GABIL raises "
