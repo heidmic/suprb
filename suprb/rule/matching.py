@@ -290,22 +290,25 @@ class GABIL(MatchingFunction):
         return GABIL(bits=self.bits.copy())
 
     def clip(self, bounds: np.ndarray):
-        """Repair the rule if it has become invalid.
+        """No-op.
 
-        Bits are already constrained to {0, 1}, so there is no range to clip
-        into. What can go wrong is the all-zero state, which matches nothing.
-        The rule is repaired by setting its first bit, keeping the operation
-        deterministic so that seeding stays reproducible.
+        The real-valued version keeps a bound from drifting outside the
+        feature range, for instance to 1.000004 on a unit interval. Bits are
+        drawn from {0, 1} by construction, so there is no range to clip into.
+        """
+        pass
+
+    def min_range(self, min_range: float):
+        """Repair a rule that has become too specific to be valid.
+
+        For intervals this widens a bound that has collapsed to near-zero
+        width. The categorical counterpart of a degenerate rule is the
+        all-zero bitstring, which matches nothing, so that is what is
+        repaired here.
+
+        The first bit is set rather than a random one, since this method
+        receives no random_state and a non-deterministic repair would break
+        seeding.
         """
         if self.bits.size and not self.bits.any():
             self.bits[0] = True
-
-    def min_range(self, min_range: float):
-        """No-op.
-
-        This exists to stop interval rules from collapsing to near-zero
-        width. A bitstring has no continuous extent to widen, and its
-        smallest valid state (one bit set) is already meaningful, so there
-        is nothing to enforce here.
-        """
-        pass

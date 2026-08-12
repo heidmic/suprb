@@ -61,39 +61,44 @@ def test_copy_is_deep():
 # --- repair and constraints ------------------------------------------
 
 
-def test_clip_repairs_all_zero():
-    """An all-zero bitstring matches nothing and must be repaired."""
+def test_min_range_repairs_all_zero():
+    """An all-zero bitstring matches nothing and must be repaired.
+
+    For intervals min_range widens a bound that has collapsed to near-zero
+    width. The categorical counterpart of that degenerate state is a rule
+    with no bits set.
+    """
     cond = GABIL(bits=np.zeros(4, dtype=bool))
-    cond.clip(None)
+    cond.min_range(1e-6)
 
     assert cond.bits.any()
 
 
-def test_clip_leaves_valid_rules_alone():
+def test_min_range_leaves_valid_rules_alone():
     """Repair must not disturb a rule that is already valid."""
     cond = GABIL(bits=np.array([False, True, False, False]))
-    cond.clip(None)
+    cond.min_range(1e-6)
 
     assert np.array_equal(cond.bits, [False, True, False, False])
 
 
-def test_clip_is_deterministic():
+def test_min_range_is_deterministic():
     """Repair takes no random_state, so it must not behave randomly.
 
-    RuleConstraint's interface passes no generator. Choosing a random bit
-    here would make fits irreproducible under a fixed seed.
+    Choosing a random bit here would make fits irreproducible under a fixed
+    seed.
     """
     a, b = (GABIL(bits=np.zeros(4, dtype=bool)) for _ in range(2))
-    a.clip(None)
-    b.clip(None)
+    a.min_range(1e-6)
+    b.min_range(1e-6)
 
     assert np.array_equal(a.bits, b.bits)
 
 
-def test_min_range_is_a_noop():
-    """A bitstring has no continuous extent to widen."""
+def test_clip_is_a_noop():
+    """Bits are drawn from {0, 1}, so there is no range to clip into."""
     cond = GABIL(bits=np.array([False, True, False, False]))
-    cond.min_range(1e-6)
+    cond.clip(None)
 
     assert np.array_equal(cond.bits, [False, True, False, False])
 
