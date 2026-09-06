@@ -153,22 +153,28 @@ class HalfnormIncrease(RuleMutation):
         never the reverse. Covering sets exactly one bit, so the same
         generalisation pressure applies here.
 
-        `sigma` is reused as the per-bit flip probability, so the existing
-        mutation-strength parameter keeps its meaning without adding a new
-        hyperparameter for the categorical case.
+        `sigma` is drawn from the same halfnorm distribution the interval
+        variant uses, but interpreted as a count rather than a width: it
+        gives the number of additional levels to switch on. Treating it as
+        a per-bit probability would not work, because sigma is a magnitude
+        and its default value exceeds one, which would flip every unset bit
+        on every mutation and make all children of a parent identical.
         """
         bits = rule.match.bits
         if bits.size == 0:
             return
 
-        rate = float(np.asarray(self.sigma).ravel()[0])
+        unset = np.flatnonzero(~bits)
+        if unset.size == 0:
+            return
 
-        # Only unset bits are candidates, which is what makes this
-        # generalisation-only rather than an unbiased bit flip.
-        candidates = ~bits
-        flips = candidates & (random_state.random(bits.size) < rate)
-        bits[flips] = True
+        scale = float(np.asarray(self.sigma).ravel()[0]) / 2
+        n_flip = int(round(halfnorm.rvs(scale=scale, random_state=random_state)))
+        n_flip = min(n_flip, unset.size)
 
+        if n_flip > 0:
+            chosen = random_state.choice(unset, size=n_flip, replace=False)
+            bits[chosen] = True
 
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""

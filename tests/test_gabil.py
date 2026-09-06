@@ -116,7 +116,7 @@ def test_mutation_never_unsets_a_bit():
     bits[3] = True
     rule = FakeRule(bits)
 
-    mutation = HalfnormIncrease(matching_type=GABIL(np.zeros(10, dtype=bool)), sigma=0.3)
+    mutation = HalfnormIncrease(matching_type=GABIL(np.zeros(10, dtype=bool)), sigma=3.0)
     rs = check_random_state(42)
 
     for _ in range(20):
@@ -129,7 +129,7 @@ def test_mutation_only_grows():
     rule = FakeRule(np.zeros(10, dtype=bool))
     rule.match.bits[0] = True
 
-    mutation = HalfnormIncrease(matching_type=GABIL(np.zeros(10, dtype=bool)), sigma=0.3)
+    mutation = HalfnormIncrease(matching_type=GABIL(np.zeros(10, dtype=bool)), sigma=3.0)
     rs = check_random_state(42)
 
     previous = int(rule.match.bits.sum())
@@ -146,7 +146,7 @@ def test_mutation_is_seeded():
     for _ in range(2):
         rule = FakeRule(np.zeros(10, dtype=bool))
         rule.match.bits[3] = True
-        mutation = HalfnormIncrease(matching_type=GABIL(np.zeros(10, dtype=bool)), sigma=0.3)
+        mutation = HalfnormIncrease(matching_type=GABIL(np.zeros(10, dtype=bool)), sigma=3.0)
         rs = check_random_state(42)
         for _ in range(5):
             mutation.gabil(rule, rs)
@@ -201,7 +201,11 @@ def _build_model():
             lmbda=8,
             operator="+",
             init=MeanInit(),
-            mutation=HalfnormIncrease(sigma=0.3),
+            # sigma is a magnitude here, not a probability: it is the
+            # expected number of extra levels to switch on per mutation.
+            # A small value such as 0.3 would round to zero flips almost
+            # every time, so rules would never generalise past covering.
+            mutation=HalfnormIncrease(sigma=3.0),
         ),
         solution_composition=GeneticAlgorithm(n_iter=8, population_size=16),
         matching_type=GABIL(bits=np.zeros(N_LEVELS, dtype=bool)),
