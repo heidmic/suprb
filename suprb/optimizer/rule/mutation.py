@@ -8,6 +8,7 @@ from suprb.rule import Rule
 from suprb.utils import RandomState
 from suprb.optimizer.rule.generation_operator import GenerationOperator
 from suprb.rule.matching import MatchingFunction
+from types import SimpleNamespace
 
 
 class RuleMutation(GenerationOperator):
@@ -69,6 +70,9 @@ class SigmaRange(RuleMutation):
 
     def gabil(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for GABIL")
+    
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")
 
 
 class Normal(RuleMutation):
@@ -96,6 +100,8 @@ class Normal(RuleMutation):
     def gabil(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for GABIL")
 
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")
 
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""
@@ -120,6 +126,8 @@ class Halfnorm(RuleMutation):
     def gabil(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for GABIL")
 
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")
 
 class HalfnormIncrease(RuleMutation):
     """Increase bounds with (half)normal noise."""
@@ -180,6 +188,22 @@ class HalfnormIncrease(RuleMutation):
                 chosen = random_state.choice(unset, size=n_flip, replace=False)
                 bitstring[chosen] = True
 
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        """Mutate both halves with the operator each already has.
+
+        MixedTypes composes two matching functions, so mutation simply
+        forwards to the method written for each: the interval half widens
+        as it always has, and the categorical half switches further levels
+        on. Nothing new is needed here beyond the routing.
+
+        The existing methods read `rule.match.bounds` and `rule.match.bits`
+        directly, so each half is wrapped in a small object exposing it as
+        `match`. The wrapper holds the real sub-object rather than a copy,
+        so in-place changes land where they should.
+        """
+        self.ordered_bound(SimpleNamespace(match=rule.match.reals), random_state)
+        self.gabil(SimpleNamespace(match=rule.match.categoricals), random_state)
+
 
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""
@@ -205,7 +229,9 @@ class Uniform(RuleMutation):
     def gabil(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for GABIL")
 
-
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")
+    
 class UniformIncrease(RuleMutation):
     """Increase bounds with uniform noise."""
 
@@ -230,3 +256,6 @@ class UniformIncrease(RuleMutation):
 
     def gabil(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for GABIL")
+
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")

@@ -49,3 +49,6 @@ class UniformCrossover(RuleCrossover):
 
     def gabil(self, rule: Rule, random_state: RandomState):
         raise NotImplementedError
+
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError
