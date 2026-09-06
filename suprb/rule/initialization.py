@@ -14,6 +14,7 @@ from suprb.rule.matching import (
     CenterSpread,
     MinPercentage,
     GABIL,
+    MixedTypes,
 )
 from suprb.utils import check_random_state, RandomState
 from . import Rule, RuleFitness
@@ -62,6 +63,8 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
             self.generate_matching_function = self.min_percentage
         elif isinstance(self.matching_type, GABIL):
             self.generate_matching_function = self.gabil
+        elif isinstance(self.matching_type, MixedTypes):
+            self.generate_matching_function = self.mixed_types
 
     def __call__(self, random_state: RandomState, mean: np.ndarray = None) -> Rule:
         """Generate a random rule.
@@ -114,6 +117,10 @@ class RuleInit(BaseComponent, metaclass=ABCMeta):
     def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         pass
 
+    @abstractmethod
+    def mixed_types(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        pass
+
 
 class MeanInit(RuleInit):
     """Initializes both bounds with the mean."""
@@ -129,6 +136,22 @@ class MeanInit(RuleInit):
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return MinPercentage(np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1))
+
+    def _cover_categories(self, template: GABIL, codes: np.ndarray) -> GABIL:
+        """Build a bitstring per attribute with the observed level set.
+
+        The template supplies the number of levels per attribute, which is
+        a property of the dataset rather than of one rule. Taking it as an
+        argument rather than reading self.matching_type lets the composed
+        representation pass in its own categorical half.
+        """
+        bits = []
+        for bitstring, code in zip(template.bits, np.asarray(codes).ravel().astype(int)):
+            covered = np.zeros(bitstring.size, dtype=bool)
+            covered[code] = True
+            bits.append(covered)
+
+        return GABIL(bits=bits)
 
     def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         """Cover the observed category of each attribute.
@@ -147,16 +170,29 @@ class MeanInit(RuleInit):
         The number of levels per attribute is read from the matching type,
         since it is a property of the dataset rather than of one rule.
         """
-        levels = [bitstring.size for bitstring in self.matching_type.bits]
-        codes = np.asarray(mean).ravel().astype(int)
+        return self._cover_categories(self.matching_type, mean)
 
-        bits = []
-        for n_levels, code in zip(levels, codes):
-            bitstring = np.zeros(n_levels, dtype=bool)
-            bitstring[code] = True
-            bits.append(bitstring)
+    def mixed_types(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        """Cover the sampled point in both representations.
 
-        return GABIL(bits=bits)
+        The mean is split exactly as X is split during matching, so each
+        half receives only the attributes it governs and is then covered
+        by the logic that already exists for it.
+
+        The real half is initialised as an OrderedBound, which is the
+        representation MixedTypes composes. Supporting the other interval
+        representations here would mean dispatching on the type of the
+        real half as well, which is not needed yet.
+        """
+        mask = np.asarray(self.matching_type.mask, dtype=bool)
+        mean = np.asarray(mean).ravel()
+
+        return MixedTypes(
+            reals=self.ordered_bound(mean[~mask], random_state),
+            categoricals=self._cover_categories(self.matching_type.categoricals, mean[mask]),
+            mask=mask.copy(),
+        )
+
 
 class NormalInit(RuleInit):
     """Initializes both bounds with points drawn from a normal distribution."""
@@ -208,6 +244,9 @@ class NormalInit(RuleInit):
         """
         raise TypeError("Normal Init is not implemented for GABIL")
 
+    def mixed_types(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        raise TypeError("Normal Init is not implemented for MixedTypes")
+
 
 class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
@@ -248,3 +287,6 @@ class HalfnormInit(RuleInit):
         order, so there is nothing for the offset to move along.
         """
         raise TypeError("Halfnorm Init is not implemented for GABIL")
+
+    def mixed_types(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        raise TypeError("Halfnorm Init is not implemented for MixedTypes")

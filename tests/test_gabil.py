@@ -229,9 +229,7 @@ def test_mutation_reaches_every_attribute():
     """
     rule = FakeRule([_one_hot(8, 0), _one_hot(8, 0)])
 
-    mutation = HalfnormIncrease(
-        matching_type=GABIL([np.zeros(8, dtype=bool), np.zeros(8, dtype=bool)]), sigma=3.0
-    )
+    mutation = HalfnormIncrease(matching_type=GABIL([np.zeros(8, dtype=bool), np.zeros(8, dtype=bool)]), sigma=3.0)
     rs = check_random_state(42)
 
     for _ in range(20):
@@ -318,11 +316,7 @@ def test_fit_is_reproducible():
 
     assert score_a == score_b
     assert len(bits_a) == len(bits_b)
-    assert all(
-        np.array_equal(x, y)
-        for rule_a, rule_b in zip(bits_a, bits_b)
-        for x, y in zip(rule_a, rule_b)
-    )
+    assert all(np.array_equal(x, y) for rule_a, rule_b in zip(bits_a, bits_b) for x, y in zip(rule_a, rule_b))
 
 
 # --- sklearn estimator checks ----------------------------------------

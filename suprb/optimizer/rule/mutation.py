@@ -180,6 +180,7 @@ class HalfnormIncrease(RuleMutation):
                 chosen = random_state.choice(unset, size=n_flip, replace=False)
                 bitstring[chosen] = True
 
+
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""
 

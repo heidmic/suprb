@@ -258,10 +258,7 @@ class GABIL(MatchingFunction):
             X = X.reshape(-1, 1)
 
         if X.shape[1] != len(self.bits):
-            raise ValueError(
-                f"GABIL holds {len(self.bits)} bitstrings but X has "
-                f"{X.shape[1]} columns."
-            )
+            raise ValueError(f"GABIL holds {len(self.bits)} bitstrings but X has " f"{X.shape[1]} columns.")
 
         if not self.bits:
             return np.ones(X.shape[0], dtype=bool)
@@ -340,3 +337,110 @@ class GABIL(MatchingFunction):
         for bitstring in self.bits:
             if bitstring.size and not bitstring.any():
                 bitstring[0] = True
+
+
+class MixedTypes(MatchingFunction):
+    """A condition over a mix of real-valued and categorical attributes.
+
+    Neither OrderedBound nor GABIL can describe a dataset that contains
+    both kinds of attribute: intervals are meaningless for categories,
+    and bitstrings are meaningless for continuous values. Rather than
+    reimplementing both, this composes them and routes each attribute to
+    whichever representation suits it:
+
+        mask       [False, True, False]     True marks a categorical column
+        reals      OrderedBound over columns 0 and 2
+        categoricals  GABIL over column 1
+
+    A sample matches only if both halves match, so this behaves like a
+    hyperrectangle in the real dimensions and a set membership test in the
+    categorical ones.
+
+    `mask` marks the categorical columns rather than the real ones because
+    intervals are the default representation throughout SupRB, so the mask
+    identifies the exception.
+    """
+
+    def __init__(
+        self,
+        reals: MatchingFunction = None,
+        categoricals: MatchingFunction = None,
+        mask: np.ndarray = None,
+    ):
+        # Stored unchanged, since sklearn's clone reconstructs a component
+        # from exactly the values its constructor was given.
+        self.reals = reals
+        self.categoricals = categoricals
+        self.mask = np.array([], dtype=bool) if mask is None else mask
+
+    def __call__(self, X: np.ndarray):
+        """Return a boolean array: True where the rule matches the sample.
+
+        Both halves must match. This is the same rule that already applies
+        within each representation, where every dimension of a
+        hyperrectangle and every attribute of a bitstring has to hold.
+        """
+        X = np.asarray(X)
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
+
+        if X.shape[1] != self.mask.size:
+            raise ValueError(
+                f"MixedTypes was built for {self.mask.size} attributes but " f"X has {X.shape[1]} columns."
+            )
+
+        mask = np.asarray(self.mask, dtype=bool)
+        return self.reals(X[:, ~mask]) & self.categoricals(X[:, mask])
+
+    @property
+    def volume_(self):
+        """The share of the input space the rule covers.
+
+        The two halves multiply, since together they describe one region:
+        the real half contributes the volume of a hyperrectangle and the
+        categorical half the fraction of category combinations matched.
+
+        Note that these are not in the same units. The interval half is an
+        absolute width while the categorical half is normalised, so the
+        product is not directly comparable to input_space_volume in
+        VolumeRuleFitness. See issue #213.
+        """
+        return self.reals.volume_ * self.categoricals.volume_
+
+    def copy(self):
+        """Return a deep copy.
+
+        Both halves must be copied. Mutation modifies them in place, so
+        sharing either one would let a mutated child corrupt its parent.
+        The mask is copied as well, even though nothing mutates it, so that
+        a copy is independent in every respect.
+        """
+        return MixedTypes(
+            reals=self.reals.copy(),
+            categoricals=self.categoricals.copy(),
+            mask=self.mask.copy(),
+        )
+
+    def clip(self, bounds: np.ndarray):
+        """Keep the interval half inside the feature ranges.
+
+        `bounds` covers every attribute, so it is sliced down to the real
+        columns before being passed on. Handing over the full array would
+        clip each interval against the wrong feature's range.
+
+        The categorical half needs no clipping, since bits are drawn from
+        {0, 1} by construction.
+        """
+        mask = np.asarray(self.mask, dtype=bool)
+        self.reals.clip(bounds[~mask])
+        self.categoricals.clip(None)
+
+    def min_range(self, min_range: float):
+        """Repair rules that have become too specific to be valid.
+
+        Both halves are repaired, since matching ANDs them together: a
+        collapsed interval and an all-zero bitstring each make the whole
+        rule match nothing.
+        """
+        self.reals.min_range(min_range)
+        self.categoricals.min_range(min_range)
