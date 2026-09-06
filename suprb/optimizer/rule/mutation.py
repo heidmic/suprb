@@ -150,8 +150,11 @@ class HalfnormIncrease(RuleMutation):
         because covering starts from a zero-width interval that has to be
         generalised. GABIL's counterpart is the "adding alternative"
         operator of De Jong & Spears (1991): flip bits from 0 to 1 only,
-        never the reverse. Covering sets exactly one bit, so the same
-        generalisation pressure applies here.
+        never the reverse. Covering sets exactly one bit per attribute, so
+        the same generalisation pressure applies here.
+
+        Every attribute is mutated, mirroring how the interval variant
+        widens all dimensions of a rule rather than picking one.
 
         `sigma` is drawn from the same halfnorm distribution the interval
         variant uses, but interpreted as a count rather than a width: it
@@ -160,21 +163,22 @@ class HalfnormIncrease(RuleMutation):
         and its default value exceeds one, which would flip every unset bit
         on every mutation and make all children of a parent identical.
         """
-        bits = rule.match.bits
-        if bits.size == 0:
-            return
-
-        unset = np.flatnonzero(~bits)
-        if unset.size == 0:
-            return
-
         scale = float(np.asarray(self.sigma).ravel()[0]) / 2
-        n_flip = int(round(halfnorm.rvs(scale=scale, random_state=random_state)))
-        n_flip = min(n_flip, unset.size)
 
-        if n_flip > 0:
-            chosen = random_state.choice(unset, size=n_flip, replace=False)
-            bits[chosen] = True
+        for bitstring in rule.match.bits:
+            if bitstring.size == 0:
+                continue
+
+            unset = np.flatnonzero(~bitstring)
+            if unset.size == 0:
+                continue
+
+            n_flip = int(round(halfnorm.rvs(scale=scale, random_state=random_state)))
+            n_flip = min(n_flip, unset.size)
+
+            if n_flip > 0:
+                chosen = random_state.choice(unset, size=n_flip, replace=False)
+                bitstring[chosen] = True
 
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""

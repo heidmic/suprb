@@ -131,27 +131,32 @@ class MeanInit(RuleInit):
         return MinPercentage(np.stack((mean.T, np.zeros(mean.shape[0]).T), axis=1))
 
     def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
-        """Cover a single observed category.
+        """Cover the observed category of each attribute.
 
-        The interval variants above start from a zero-width interval at the
-        sampled point, which is the most specific rule expressible. The
-        categorical equivalent is a bitstring with exactly one bit set: the
-        level the sampled example belongs to. Mutation generalises from
-        there by switching further bits on.
+        The interval variants above start from a zero-width interval at
+        the sampled point, which is the most specific rule expressible.
+        The categorical equivalent is one bitstring per attribute with
+        exactly one bit set: the level the sampled example belongs to.
+        Mutation generalises from there by switching further bits on.
 
-        `mean` carries the sampled point. For a categorical attribute its
-        single entry is the category code, so it is rounded to an integer
-        index. `n_levels` is read from the matching type, since the number
-        of levels is a property of the dataset rather than of one rule.
+        `mean` carries the sampled point, which comes from a real row of X
+        under the default origin generation, so each entry is an observed
+        category code rather than an interpolated value. No rounding
+        between categories is therefore involved.
+
+        The number of levels per attribute is read from the matching type,
+        since it is a property of the dataset rather than of one rule.
         """
-        n_levels = self.matching_type.bits.size
-        bits = np.zeros(n_levels, dtype=bool)
+        levels = [bitstring.size for bitstring in self.matching_type.bits]
+        codes = np.asarray(mean).ravel().astype(int)
 
-        level = int(np.round(mean.ravel()[0]))
-        bits[np.clip(level, 0, n_levels - 1)] = True
+        bits = []
+        for n_levels, code in zip(levels, codes):
+            bitstring = np.zeros(n_levels, dtype=bool)
+            bitstring[code] = True
+            bits.append(bitstring)
 
         return GABIL(bits=bits)
-
 
 class NormalInit(RuleInit):
     """Initializes both bounds with points drawn from a normal distribution."""

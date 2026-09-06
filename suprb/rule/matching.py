@@ -232,83 +232,111 @@ class GABIL(MatchingFunction):
         no bits set     -> matches nothing, which is an invalid rule
     """
 
-    def __init__(self, bits: np.ndarray = None):
-        # Stored as a plain boolean array of length k (k = number of levels).
-        # The empty default mirrors OrderedBound, which starts with empty
-        # bounds and has them filled in by rule initialisation.
-        self.bits = np.array([], dtype=bool) if bits is None else bits
+    def __init__(self, bits: list = None):
+        # One bitstring per categorical attribute, mirroring how
+        # OrderedBound stores one [lower, upper] pair per dimension.
+        # Bitstrings may differ in length, since attributes can have
+        # different numbers of levels. The empty default is filled in by
+        # rule initialisation, as with the interval representations.
+        self.bits = [] if bits is None else bits
 
     def __call__(self, X: np.ndarray):
         """Return a boolean array: True where the rule matches the sample.
 
-        A bitstring condition governs exactly one categorical attribute, so
-        a two-dimensional X is only meaningful when it carries a single
-        column. Anything wider needs a composite matching function that
-        holds one condition per attribute, which does not exist yet; the
-        restriction is therefore reported rather than silently flattened.
+        A sample matches only if every attribute matches, which is the
+        categorical counterpart of a point lying inside every interval of
+        a hyperrectangle.
 
-        Codes are validated against the bitstring length for the same
-        reason: an out-of-range code is a malformed encoding, and clipping
-        it would quietly assign the sample to the wrong category.
+        The number of columns must equal the number of bitstrings. A
+        mismatch means the input does not correspond to the data the rule
+        was built on, so it is reported rather than padded or truncated:
+        either would silently score the sample against the wrong
+        attributes.
         """
         X = np.asarray(X)
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
 
-        if X.ndim == 2 and X.shape[1] != 1:
+        if X.shape[1] != len(self.bits):
             raise ValueError(
-                f"GABIL matches a single categorical attribute, but X has "
-                f"{X.shape[1]} columns. A composite matching function is "
-                f"required for mixed-type inputs."
+                f"GABIL holds {len(self.bits)} bitstrings but X has "
+                f"{X.shape[1]} columns."
             )
 
-        codes = X.astype(int).reshape(-1)
+        if not self.bits:
+            return np.ones(X.shape[0], dtype=bool)
 
-        if codes.size and (codes.min() < 0 or codes.max() >= self.bits.size):
-            raise ValueError(
-                f"Category codes must lie in [0, {self.bits.size}), but the "
-                f"observed range is [{codes.min()}, {codes.max()}]."
-            )
+        codes = X.astype(int)
+        matched = np.ones(X.shape[0], dtype=bool)
 
-        return self.bits[codes]
+        for column, bitstring in enumerate(self.bits):
+            column_codes = codes[:, column]
+
+            if column_codes.min() < 0 or column_codes.max() >= bitstring.size:
+                raise ValueError(
+                    f"Category codes in column {column} must lie in "
+                    f"[0, {bitstring.size}), but the observed range is "
+                    f"[{column_codes.min()}, {column_codes.max()}]."
+                )
+
+            matched &= bitstring[column_codes]
+
+        return matched
 
     @property
     def volume_(self):
         """How general the rule is, as a fraction of the category space.
 
         This is the categorical counterpart of interval width. A rule
-        matching 2 of 4 levels has volume 0.5, exactly as an interval
-        covering half its dimension would.
+        matching 2 of 4 levels covers half that attribute, exactly as an
+        interval spanning half its range does.
+
+        Attributes are combined by multiplication, mirroring how the
+        volume of a hyperrectangle is the product of its side lengths.
         """
-        return float(self.bits.mean()) if self.bits.size else 0.0
+        if not self.bits:
+            return 0.0
+
+        volume = 1.0
+        for bitstring in self.bits:
+            if bitstring.size == 0:
+                return 0.0
+            volume *= float(bitstring.mean())
+
+        return volume
 
     def copy(self):
         """Return a deep copy.
 
-        The bits array must be copied, not shared. Mutation modifies bits in
-        place, so a shared array would let a mutated child silently corrupt
-        its parent.
+        Every bitstring must be copied, not just the list holding them.
+        Mutation modifies bits in place, so a shallow list copy would
+        share the underlying arrays and let a mutated child silently
+        corrupt its parent.
         """
-        return GABIL(bits=self.bits.copy())
+        return GABIL(bits=[bitstring.copy() for bitstring in self.bits])
 
     def clip(self, bounds: np.ndarray):
         """No-op.
 
         The real-valued version keeps a bound from drifting outside the
-        feature range, for instance to 1.000004 on a unit interval. Bits are
-        drawn from {0, 1} by construction, so there is no range to clip into.
+        feature range, for instance to 1.000004 on a unit interval. Bits
+        are drawn from {0, 1} by construction, so there is no range to
+        clip into.
         """
         pass
 
     def min_range(self, min_range: float):
-        """Repair a rule that has become too specific to be valid.
+        """Repair rules that have become too specific to be valid.
 
         For intervals this widens a bound that has collapsed to near-zero
-        width. The categorical counterpart of a degenerate rule is the
-        all-zero bitstring, which matches nothing, so that is what is
-        repaired here.
+        width. The categorical counterpart of a degenerate rule is an
+        all-zero bitstring, which matches nothing, so each attribute is
+        repaired independently.
 
         The first bit is set rather than a random one, since this method
-        receives no random_state and a non-deterministic repair would break
-        seeding.
+        receives no random_state and a non-deterministic repair would
+        break seeding.
         """
-        if self.bits.size and not self.bits.any():
-            self.bits[0] = True
+        for bitstring in self.bits:
+            if bitstring.size and not bitstring.any():
+                bitstring[0] = True
