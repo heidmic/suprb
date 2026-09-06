@@ -191,6 +191,18 @@ class NormalInit(RuleInit):
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         return MinPercentage(self.sample_individual_bounds(mean, random_state))
 
+    def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        """Not supported for categorical attributes.
+
+        The interval variants sample bounds from a normal distribution
+        around the mean, which relies on the attribute being ordered.
+        Categories have no order, so a normally distributed offset from
+        a category index has no meaning. Most-frequent-category selection
+        would be a possible alternative, but it would require the category
+        frequencies to be passed down from fit.
+        """
+        raise TypeError("Normal Init is not implemented for GABIL")
+
 
 class HalfnormInit(RuleInit):
     """Initializes both bounds with points drawn from a halfnorm distribution, so that the mean is always matched."""
@@ -222,3 +234,12 @@ class HalfnormInit(RuleInit):
 
     def min_percentage(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         raise TypeError("Halform Init is not implemented for MPR")
+
+    def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
+        """Not supported for categorical attributes.
+
+        Halfnorm sampling produces a one-sided offset from the mean, which
+        only makes sense when the attribute is ordered. Categories have no
+        order, so there is nothing for the offset to move along.
+        """
+        raise TypeError("Halfnorm Init is not implemented for GABIL")

@@ -46,3 +46,6 @@ class UniformCrossover(RuleCrossover):
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         raise NotImplementedError
+
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise NotImplementedError
