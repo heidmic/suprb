@@ -16,7 +16,7 @@ from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleDiscovery
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
-from .rule.matching import MatchingFunction, OrderedBound
+from .rule.matching import MatchingFunction, OrderedBound, GABIL, MixedTypes
 from .utils import check_random_state, estimate_bounds
 from .solution.mixing_model import ErrorExperienceHeuristic
 from .solution.fitness import PseudoBIC
@@ -98,6 +98,7 @@ class SupRB(BaseRegressor):
         rule_discovery: RuleDiscovery = None,
         solution_composition: SolutionComposition = None,
         matching_type: MatchingFunction = None,
+        categorical_encoder=None,
         n_iter: int = 32,
         n_initial_rules: int = 0,
         n_rules: int = 4,
@@ -112,6 +113,7 @@ class SupRB(BaseRegressor):
         self.n_initial_rules = n_initial_rules
         self.n_rules = n_rules
         self.matching_type = matching_type
+        self.categorical_encoder = categorical_encoder
         self.rule_discovery = rule_discovery
         self.solution_composition = solution_composition
         self.random_state = random_state
@@ -187,6 +189,7 @@ class SupRB(BaseRegressor):
 
         self._propagate_component_parameters()
         self._init_bounds(X)
+        self._init_levels(X)
         self._init_matching_type()
 
         # Init optimizers
@@ -331,6 +334,68 @@ class SupRB(BaseRegressor):
             if key.endswith("bounds") and value is None:
                 self._log_to_stdout(f"Found empty bounds for {key}, estimating from data")
                 self.rule_discovery_.set_params(**{key: bounds})
+
+    def _init_levels(self, X: np.ndarray):
+        """Give the categorical half its level counts.
+
+        A bitstring needs to know how many levels the attribute has before
+        any rule can be built for it. That is a property of the dataset, so
+        it is resolved here rather than guessed inside the matching
+        function.
+
+        Three sources are used, in order of how much they can be trusted:
+        an encoder supplied by the user, which knows the full vocabulary
+        including levels absent from this particular split; otherwise the
+        largest code observed, plus one. The second is a fallback and warns,
+        because a level missing from the training data cannot be recovered
+        from X alone and would leave a bitstring too short at predict time.
+        """
+        matching_type = self.matching_type_
+
+        if isinstance(matching_type, MixedTypes):
+            categoricals = matching_type.categoricals
+            mask = np.asarray(matching_type.mask, dtype=bool)
+            columns = X[:, mask]
+        elif isinstance(matching_type, GABIL):
+            categoricals = matching_type
+            columns = X
+        else:
+            return
+
+        if categoricals.bits:
+            return
+
+        categoricals.bits = [np.zeros(n, dtype=bool) for n in self._level_counts(columns)]
+
+    def _level_counts(self, columns: np.ndarray) -> list:
+        """How many levels each categorical attribute has.
+
+        An encoder supplied by the user is preferred, because it was fitted
+        before the train-test split and therefore knows levels that this
+        particular training set happens not to contain. Falling back to the
+        largest observed code cannot recover those, so a rule would have a
+        bitstring too short for a level that only appears at predict time.
+        """
+        if self.categorical_encoder is not None:
+            categories = getattr(self.categorical_encoder, "categories_", None)
+            if categories is not None:
+                return [len(c) for c in categories]
+
+            warnings.warn(
+                "categorical_encoder has no categories_ attribute, so it "
+                "appears not to be fitted. Falling back to the observed "
+                "maximum, which cannot see levels absent from the training "
+                "data."
+            )
+
+        warnings.warn(
+            "Deriving the number of levels from the observed maximum. A "
+            "level that does not appear in the training data cannot be "
+            "detected this way and will raise at predict time. Pass a "
+            "fitted encoder as categorical_encoder to avoid this."
+        )
+
+        return [int(columns[:, i].max()) + 1 for i in range(columns.shape[1])]    
 
     def _init_matching_type(self):
         for key, value in self.rule_discovery_.get_params().items():
