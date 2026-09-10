@@ -80,7 +80,9 @@ def _get_full_class_name(instance):
 
 def _save_config(suprb, json_config):
     json_config["config"] = {}
-    primitive = (int, str, bool, float)
+    # None is not one of the primitives above, so without this it would be
+    # serialised as the class name "NoneType" and come back as a string.
+    primitive = (int, str, bool, float, type(None))
 
     for key, value in suprb.get_params().items():
         if key.startswith("logger"):
