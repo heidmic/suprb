@@ -340,12 +340,13 @@ class SupRB(BaseRegressor):
                 self._log_to_stdout(f"Found empty bounds for {key}, estimating from data")
                 self.rule_discovery_.set_params(**{key: bounds})
 
-    def _categorical_mask(self):
+    def _categorical_mask(self, X):
         """Which input columns are categorical, or None if none are.
 
         The mask lives on the matching function, since that is what decides
         how each attribute is interpreted. A plain GABIL treats every column
-        as categorical; MixedTypes carries an explicit mask.
+        as categorical, so its mask is derived from the width of X;
+        MixedTypes carries an explicit one.
         """
         matching_type = self.matching_type
 
@@ -353,7 +354,7 @@ class SupRB(BaseRegressor):
             return np.asarray(matching_type.mask, dtype=bool)
 
         if isinstance(matching_type, GABIL):
-            return None
+            return np.ones(np.asarray(X).shape[1], dtype=bool)
 
         return None
 
@@ -370,7 +371,7 @@ class SupRB(BaseRegressor):
         if not self.encode_categoricals:
             return X
 
-        mask = self._categorical_mask()
+        mask = self._categorical_mask(X)
         if mask is None or not mask.any():
             return X
 
