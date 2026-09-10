@@ -4,6 +4,7 @@ import traceback
 import numpy as np
 from sklearn import clone
 from sklearn.utils import check_X_y
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils.validation import check_is_fitted, check_array, validate_data
 
 
@@ -99,6 +100,7 @@ class SupRB(BaseRegressor):
         solution_composition: SolutionComposition = None,
         matching_type: MatchingFunction = None,
         categorical_encoder=None,
+        encode_categoricals: bool = False,
         n_iter: int = 32,
         n_initial_rules: int = 0,
         n_rules: int = 4,
@@ -114,6 +116,7 @@ class SupRB(BaseRegressor):
         self.n_rules = n_rules
         self.matching_type = matching_type
         self.categorical_encoder = categorical_encoder
+        self.encode_categoricals = encode_categoricals
         self.rule_discovery = rule_discovery
         self.solution_composition = solution_composition
         self.random_state = random_state
@@ -167,6 +170,7 @@ class SupRB(BaseRegressor):
         self.elitist_.complexity_ = 99999
 
         # Check that x and y have correct shape
+        X = self._encode_categoricals(X, fitting=True)
         X, y = validate_data(self, X, y, ensure_2d=True)
 
         # Init sklearn interface
@@ -293,6 +297,7 @@ class SupRB(BaseRegressor):
 
     def predict(self, X):
         check_is_fitted(self)
+        X = self._encode_categoricals(X, fitting=False)
         X = validate_data(self, X, ensure_2d=True, reset=False)
 
         if hasattr(self, "is_error_") and self.is_error_:
@@ -335,6 +340,55 @@ class SupRB(BaseRegressor):
                 self._log_to_stdout(f"Found empty bounds for {key}, estimating from data")
                 self.rule_discovery_.set_params(**{key: bounds})
 
+    def _categorical_mask(self):
+        """Which input columns are categorical, or None if none are.
+
+        The mask lives on the matching function, since that is what decides
+        how each attribute is interpreted. A plain GABIL treats every column
+        as categorical; MixedTypes carries an explicit mask.
+        """
+        matching_type = self.matching_type
+
+        if isinstance(matching_type, MixedTypes):
+            return np.asarray(matching_type.mask, dtype=bool)
+
+        if isinstance(matching_type, GABIL):
+            return None
+
+        return None
+
+    def _encode_categoricals(self, X, fitting: bool):
+        """Encode raw categorical columns to integer codes.
+
+        SupRB works on numeric codes throughout, so raw labels have to be
+        converted before sklearn's input validation, which would otherwise
+        reject them. The encoder is fitted once during fit and only applied
+        afterwards, so that a label keeps the same code at predict time. An
+        encoder refitted on the test data would silently assign different
+        codes to the same categories.
+        """
+        if not self.encode_categoricals:
+            return X
+
+        mask = self._categorical_mask()
+        if mask is None or not mask.any():
+            return X
+
+        X = np.asarray(X, dtype=object)
+        columns = X[:, mask]
+
+        if fitting:
+            self.fitted_encoder_ = OrdinalEncoder()
+            encoded = self.fitted_encoder_.fit_transform(columns)
+        else:
+            check_is_fitted(self, "fitted_encoder_")
+            encoded = self.fitted_encoder_.transform(columns)
+
+        X = X.copy()
+        X[:, mask] = encoded
+
+        return X.astype(float)
+
     def _init_levels(self, X: np.ndarray):
         """Give the categorical half its level counts.
 
@@ -376,8 +430,10 @@ class SupRB(BaseRegressor):
         largest observed code cannot recover those, so a rule would have a
         bitstring too short for a level that only appears at predict time.
         """
-        if self.categorical_encoder is not None:
-            categories = getattr(self.categorical_encoder, "categories_", None)
+        encoder = getattr(self, "fitted_encoder_", None) or self.categorical_encoder
+
+        if encoder is not None:
+            categories = getattr(encoder, "categories_", None)
             if categories is not None:
                 return [len(c) for c in categories]
 
