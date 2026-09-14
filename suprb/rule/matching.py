@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 
+import warnings
 import numpy as np
 
 from suprb.base import BaseComponent
@@ -214,31 +215,42 @@ class MinPercentage(MatchingFunction):
 
 
 class GABIL(MatchingFunction):
-    """A bitstring condition over a single categorical attribute.
+    """A bitstring condition over one or more categorical attributes.
 
     Real-valued conditions in SupRB use an interval per dimension. That is
     meaningless for categorical data, since categories have no order: there
     is no sense in which "Berlin" lies between "Lahore" and "Tokyo".
 
-    GABIL (De Jong & Spears, 1991) instead stores one bit per category level.
-    A set bit means the rule matches that level:
+    GABIL (De Jong & Spears, 1991) instead stores one bit per category
+    level, and one bitstring per attribute, the way OrderedBound stores one
+    [lower, upper] pair per dimension. A set bit means the rule matches
+    that level:
 
-        levels        [Lahore, Karachi, Berlin, Tokyo]
-        bits          [  1   ,    0   ,   1   ,   0  ]
-        reads as      "city is Lahore or Berlin"
+        city    [Lahore, Karachi, Berlin, Tokyo]   bits [1, 0, 1, 0]
+        size    [large, small]                     bits [1, 1]
+        reads as   "city is Lahore or Berlin, size does not matter"
 
-    Two states are special:
-        all bits set    -> matches everything (the "don't care" state)
+    Bitstrings may differ in length, since attributes can have different
+    numbers of levels. Two states are special:
+        all bits set    -> the level makes no difference to this rule
         no bits set     -> matches nothing, which is an invalid rule
     """
 
-    def __init__(self, bits: list = None):
+    def __init__(self, bits: list = None, observed: list = None):
         # One bitstring per categorical attribute, mirroring how
         # OrderedBound stores one [lower, upper] pair per dimension.
         # Bitstrings may differ in length, since attributes can have
         # different numbers of levels. The empty default is filled in by
         # rule initialisation, as with the interval representations.
         self.bits = [] if bits is None else bits
+
+        # What each bit stands for, in bit order and the same length as the
+        # bitstring: the category label where SupRB saw the labels, the code
+        # where the user supplied integers, or None where the level was
+        # allocated but never appeared in the training data. Without this a
+        # bitstring is only positions, and a rule cannot tell a level it was
+        # trained on from one it has no evidence for.
+        self.observed = [] if observed is None else observed
 
     def __call__(self, X: np.ndarray):
         """Return a boolean array: True where the rule matches the sample.
@@ -275,6 +287,16 @@ class GABIL(MatchingFunction):
                     f"[0, {bitstring.size}), but the observed range is "
                     f"[{column_codes.min()}, {column_codes.max()}]."
                 )
+            
+            if self.observed and column < len(self.observed):
+                seen = self.observed[column]
+                unseen = [code for code in np.unique(column_codes) if seen[code] is None]
+                if unseen:
+                    warnings.warn(
+                        f"Column {column} contains levels that never appeared "
+                        f"during fit. No rule has evidence for them, so any "
+                        f"prediction involving them is unreliable."
+                    )
 
             matched &= bitstring[column_codes]
 
@@ -309,8 +331,14 @@ class GABIL(MatchingFunction):
         Mutation modifies bits in place, so a shallow list copy would
         share the underlying arrays and let a mutated child silently
         corrupt its parent.
+
+        The observed categories are shared rather than copied. They
+        describe the dataset rather than the rule, are the same for every
+        rule in the pool, and nothing mutates them. This follows how
+        input_space is handled on Rule, which is passed by reference for
+        the same reason.
         """
-        return GABIL(bits=[bitstring.copy() for bitstring in self.bits])
+        return GABIL(bits=[bitstring.copy() for bitstring in self.bits], observed=self.observed)
 
     def clip(self, bounds: np.ndarray):
         """No-op.
@@ -330,13 +358,24 @@ class GABIL(MatchingFunction):
         all-zero bitstring, which matches nothing, so each attribute is
         repaired independently.
 
-        The first bit is set rather than a random one, since this method
-        receives no random_state and a non-deterministic repair would
-        break seeding.
+        The level is chosen deterministically, since this method receives
+        no random_state and a random repair would break seeding. Where the
+        observed categories are known, the first level that actually
+        appeared during fit is preferred, so the repair does not place the
+        rule on a level no rule has evidence for.
         """
-        for bitstring in self.bits:
-            if bitstring.size and not bitstring.any():
-                bitstring[0] = True
+        for column, bitstring in enumerate(self.bits):
+            if not bitstring.size or bitstring.any():
+                continue
+
+            index = 0
+            if self.observed and column < len(self.observed):
+                seen = [i for i, category in enumerate(self.observed[column]) if category is not None]
+                if seen:
+                    index = seen[0]
+
+            bitstring[index] = True
+
 
 
 class MixedTypes(MatchingFunction):
@@ -375,7 +414,6 @@ class MixedTypes(MatchingFunction):
 
     def __call__(self, X: np.ndarray):
         """Return a boolean array: True where the rule matches the sample.
-
         Both halves must match. This is the same rule that already applies
         within each representation, where every dimension of a
         hyperrectangle and every attribute of a bitstring has to hold.
@@ -384,12 +422,11 @@ class MixedTypes(MatchingFunction):
         if X.ndim == 1:
             X = X.reshape(-1, 1)
 
-        if X.shape[1] != self.mask.size:
-            raise ValueError(
-                f"MixedTypes was built for {self.mask.size} attributes but " f"X has {X.shape[1]} columns."
-            )
-
         mask = np.asarray(self.mask, dtype=bool)
+
+        if X.shape[1] != mask.size:
+            raise ValueError(f"MixedTypes was built for {mask.size} attributes but X has {X.shape[1]} columns.")
+
         return self.reals(X[:, ~mask]) & self.categoricals(X[:, mask])
 
     @property
