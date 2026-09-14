@@ -6,6 +6,7 @@ from suprb.suprb import SupRB
 from .solution import Solution
 
 from .rule import Rule
+from .rule.matching import MixedTypes, OrderedBound, GABIL
 import importlib
 
 """(De)Serialization currenlty only supports LinearRegression as local models. """
@@ -21,7 +22,7 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
-        return json.JSONEncoder.default(obj)
+        return super().default(obj)
 
 
 def dump(suprb, filename):
@@ -112,12 +113,35 @@ def _convert_dict_to_json(rule_dict):
 
     return converted_dict
 
+def _convert_match_to_json(match):
+    """Flatten a matching function into plain arrays.
+
+    Most matching functions hold arrays directly, so their __dict__ can be
+    converted as it stands. GABIL also carries what each bit stands for,
+    and MixedTypes holds two nested matching functions that the encoder
+    cannot serialise, so both are unpacked into their own keys and
+    reassembled on load.
+    """
+    if isinstance(match, MixedTypes):
+        return _convert_dict_to_json(
+            {
+                "mixed_mask": match.mask,
+                "mixed_reals": match.reals.bounds,
+                "mixed_categoricals": match.categoricals.bits,
+                "mixed_observed": match.categoricals.observed,
+            }
+        )
+
+    if isinstance(match, GABIL):
+        return _convert_dict_to_json({"bits": match.bits, "observed": match.observed})
+
+    return _convert_dict_to_json(vars(match))
 
 def _convert_rule_to_json(rule):
     return {
         "error_": rule.error_,
         "experience_": rule.experience_,
-        "match": _convert_dict_to_json(vars(rule.match)),
+        "match": _convert_match_to_json(rule.match),
         "is_fitted_": rule.is_fitted_,
         "model": {
             "coef_": _convert_to_json_format(getattr(rule.model, "coef_")),
