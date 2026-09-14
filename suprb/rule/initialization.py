@@ -140,19 +140,44 @@ class MeanInit(RuleInit):
     def _cover_categories(self, template: GABIL, codes: np.ndarray) -> GABIL:
         """Build a bitstring per attribute with the observed level set.
 
-        The template supplies the number of levels per attribute, which is
-        a property of the dataset rather than of one rule. Taking it as an
-        argument rather than reading self.matching_type lets the composed
-        representation pass in its own categorical half.
+        The template supplies the number of levels per attribute and what
+        each bit stands for, both of which are properties of the dataset
+        rather than of one rule. Taking it as an argument rather than
+        reading self.matching_type lets the composed representation pass
+        in its own categorical half.
+
+        Under the default origin generation the codes come from a real row
+        of X, so each one is an observed category. UniformInputOrigin
+        instead samples the input space uniformly, which produces a
+        fractional value that no category corresponds to. Truncating it
+        would pick a neighbouring category, and neighbouring means nothing
+        when the attribute has no order, so that case is rejected rather
+        than guessed at.
+
+        Choosing the most frequent category instead would be a reasonable
+        alternative, but it needs the category frequencies passed down from
+        fit, and it would give every rule the same level, which is at odds
+        with what UniformInputOrigin is for.
         """
+        codes = np.asarray(codes).ravel()
+
+        if not np.all(codes == np.floor(codes)):
+            raise TypeError(
+                "Mean Init received a fractional value for a categorical "
+                "attribute, which happens with UniformInputOrigin. "
+                "Categories have no order, so there is no meaningful "
+                "category between two codes. Use an origin that samples "
+                "real data points, such as SquaredError."
+            )
+
         bits = []
-        for bitstring, code in zip(template.bits, np.asarray(codes).ravel().astype(int)):
+        for bitstring, code in zip(template.bits, codes.astype(int)):
             covered = np.zeros(bitstring.size, dtype=bool)
             covered[code] = True
             bits.append(covered)
 
         return GABIL(bits=bits, observed=template.observed)
-
+    
     def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         """Cover the observed category of each attribute.
 
@@ -192,7 +217,6 @@ class MeanInit(RuleInit):
             categoricals=self._cover_categories(self.matching_type.categoricals, mean[mask]),
             mask=mask.copy(),
         )
-
 
 class NormalInit(RuleInit):
     """Initializes both bounds with points drawn from a normal distribution."""
