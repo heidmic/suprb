@@ -468,6 +468,21 @@ class SupRB(BaseRegressor):
         observed = []
         for i, levels in enumerate(categories):
             present = set(np.unique(columns[:, i]).astype(int).tolist())
+
+            # Reported here rather than at predict time, and by name rather
+            # than by count, so the user can act on it: a level the encoder
+            # knows but the training split lacks is usually a resplit away
+            # from being fixed. Once the level is recorded as None below,
+            # its label is no longer available to report.
+            absent = [str(levels[code]) for code in range(len(levels)) if code not in present]
+            if absent:
+                warnings.warn(
+                    f"Column {i}: the encoder knows these levels but the "
+                    f"training data does not contain them: "
+                    f"{', '.join(absent)}. Rules will have no evidence for "
+                    f"them, so any prediction involving them is unreliable."
+                )
+
             observed.append([levels[code] if code in present else None for code in range(len(levels))])
 
         return observed
