@@ -151,7 +151,7 @@ class MeanInit(RuleInit):
             covered[code] = True
             bits.append(covered)
 
-        return GABIL(bits=bits)
+        return GABIL(bits=bits, observed=template.observed)
 
     def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         """Cover the observed category of each attribute.

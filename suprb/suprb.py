@@ -391,19 +391,13 @@ class SupRB(BaseRegressor):
         return X.astype(float)
 
     def _init_levels(self, X: np.ndarray):
-        """Give the categorical half its level counts.
+        """Give the categorical half its bitstrings and their meaning.
 
         A bitstring needs to know how many levels the attribute has before
-        any rule can be built for it. That is a property of the dataset, so
-        it is resolved here rather than guessed inside the matching
-        function.
-
-        Three sources are used, in order of how much they can be trusted:
-        an encoder supplied by the user, which knows the full vocabulary
-        including levels absent from this particular split; otherwise the
-        largest code observed, plus one. The second is a fallback and warns,
-        because a level missing from the training data cannot be recovered
-        from X alone and would leave a bitstring too short at predict time.
+        any rule can be built for it, and what each bit stands for before
+        any rule can say whether it has evidence for a level. Both are
+        properties of the dataset, so they are resolved here rather than
+        guessed inside the matching function.
         """
         matching_type = self.matching_type_
 
@@ -420,39 +414,63 @@ class SupRB(BaseRegressor):
         if categoricals.bits:
             return
 
-        categoricals.bits = [np.zeros(n, dtype=bool) for n in self._level_counts(columns)]
+        observed = self._observed_categories(columns)
 
-    def _level_counts(self, columns: np.ndarray) -> list:
-        """How many levels each categorical attribute has.
+        categoricals.observed = observed
+        categoricals.bits = [np.zeros(len(levels), dtype=bool) for levels in observed]
+
+    def _observed_categories(self, columns: np.ndarray) -> list:
+        """What each bit will stand for, one entry per categorical column.
+
+        Each entry is a list as long as the bitstring, holding the category
+        that bit corresponds to, or None where the level exists but no
+        training sample had it. A rule can then tell a level it was trained
+        on from one it has no evidence for.
 
         An encoder supplied by the user is preferred, because it was fitted
-        before the train-test split and therefore knows levels that this
-        particular training set happens not to contain. Falling back to the
-        largest observed code cannot recover those, so a rule would have a
-        bitstring too short for a level that only appears at predict time.
+        before the train-test split and knows levels this training set
+        happens not to contain. Without one the levels are derived from the
+        largest observed code, which cannot see those levels at all, so a
+        warning is raised.
         """
         encoder = getattr(self, "fitted_encoder_", None) or self.categorical_encoder
+        categories = getattr(encoder, "categories_", None) if encoder is not None else None
 
-        if encoder is not None:
-            categories = getattr(encoder, "categories_", None)
-            if categories is not None:
-                return [len(c) for c in categories]
+        if categories is None:
+            if encoder is not None:
+                warnings.warn(
+                    "categorical_encoder has no categories_ attribute, so it "
+                    "appears not to be fitted. Falling back to the observed "
+                    "maximum, which cannot see levels absent from the "
+                    "training data."
+                )
+            else:
+                warnings.warn(
+                    "Deriving the number of levels from the observed maximum. "
+                    "A level that does not appear in the training data cannot "
+                    "be detected this way and will raise at predict time. "
+                    "Pass a fitted encoder as categorical_encoder to avoid "
+                    "this."
+                )
 
-            warnings.warn(
-                "categorical_encoder has no categories_ attribute, so it "
-                "appears not to be fitted. Falling back to the observed "
-                "maximum, which cannot see levels absent from the training "
-                "data."
-            )
+            # Only codes are available, so a bit can only stand for its own
+            # index. Codes inside the range that never appeared are still
+            # marked as unseen, since gaps in an ordinal encoding are just
+            # as possible as a missing level at the end.
+            fallback = []
+            for i in range(columns.shape[1]):
+                present = set(np.unique(columns[:, i]).astype(int).tolist())
+                n_levels = int(columns[:, i].max()) + 1
+                fallback.append([code if code in present else None for code in range(n_levels)])
 
-        warnings.warn(
-            "Deriving the number of levels from the observed maximum. A "
-            "level that does not appear in the training data cannot be "
-            "detected this way and will raise at predict time. Pass a "
-            "fitted encoder as categorical_encoder to avoid this."
-        )
+            return fallback
 
-        return [int(columns[:, i].max()) + 1 for i in range(columns.shape[1])]    
+        observed = []
+        for i, levels in enumerate(categories):
+            present = set(np.unique(columns[:, i]).astype(int).tolist())
+            observed.append([levels[code] if code in present else None for code in range(len(levels))])
+
+        return observed
 
     def _init_matching_type(self):
         for key, value in self.rule_discovery_.get_params().items():
