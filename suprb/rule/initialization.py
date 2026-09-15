@@ -177,7 +177,7 @@ class MeanInit(RuleInit):
             bits.append(covered)
 
         return GABIL(bits=bits, observed=template.observed)
-    
+
     def gabil(self, mean: np.ndarray, random_state: RandomState) -> MatchingFunction:
         """Cover the observed category of each attribute.
 
@@ -217,6 +217,7 @@ class MeanInit(RuleInit):
             categoricals=self._cover_categories(self.matching_type.categoricals, mean[mask]),
             mask=mask.copy(),
         )
+
 
 class NormalInit(RuleInit):
     """Initializes both bounds with points drawn from a normal distribution."""

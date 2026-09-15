@@ -287,7 +287,7 @@ class GABIL(MatchingFunction):
                     f"[0, {bitstring.size}), but the observed range is "
                     f"[{column_codes.min()}, {column_codes.max()}]."
                 )
-            
+
             if self.observed and column < len(self.observed):
                 seen = self.observed[column]
                 unseen = [code for code in np.unique(column_codes) if seen[code] is None]
@@ -375,7 +375,6 @@ class GABIL(MatchingFunction):
                     index = seen[0]
 
             bitstring[index] = True
-
 
 
 class MixedTypes(MatchingFunction):

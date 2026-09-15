@@ -113,6 +113,7 @@ def _convert_dict_to_json(rule_dict):
 
     return converted_dict
 
+
 def _convert_match_to_json(match):
     """Flatten a matching function into plain arrays.
 
@@ -136,6 +137,7 @@ def _convert_match_to_json(match):
         return _convert_dict_to_json({"bits": match.bits, "observed": match.observed})
 
     return _convert_dict_to_json(vars(match))
+
 
 def _convert_rule_to_json(rule):
     return {
@@ -280,6 +282,7 @@ def _as_bitstrings(json_bits):
     """
     return [np.array(bitstring, dtype=bool) for bitstring in json.loads(json_bits)]
 
+
 def _as_observed(json_observed):
     """One list per attribute of what each bit stands for.
 
@@ -288,6 +291,7 @@ def _as_observed(json_observed):
     lose the None that marks a level with no training data.
     """
     return [list(levels) for levels in json.loads(json_observed)]
+
 
 def _convert_model(json_model, model_type):
     model = _get_class(model_type)()

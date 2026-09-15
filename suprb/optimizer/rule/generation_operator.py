@@ -59,7 +59,7 @@ class GenerationOperator(BaseComponent, metaclass=ABCMeta):
     @abstractmethod
     def gabil(self, rule: Rule, random_state: RandomState):
         pass
-    
+
     @abstractmethod
     def mixed_types(self, rule: Rule, random_state: RandomState):
         pass

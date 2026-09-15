@@ -70,7 +70,7 @@ class SigmaRange(RuleMutation):
 
     def gabil(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for GABIL")
-    
+
     def mixed_types(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for MixedTypes")
 
@@ -103,6 +103,7 @@ class Normal(RuleMutation):
     def mixed_types(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for MixedTypes")
 
+
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""
 
@@ -128,6 +129,7 @@ class Halfnorm(RuleMutation):
 
     def mixed_types(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for MixedTypes")
+
 
 class HalfnormIncrease(RuleMutation):
     """Increase bounds with (half)normal noise."""
@@ -231,7 +233,8 @@ class Uniform(RuleMutation):
 
     def mixed_types(self, rule: Rule, random_state: RandomState):
         raise TypeError("This mutation is not implemented for MixedTypes")
-    
+
+
 class UniformIncrease(RuleMutation):
     """Increase bounds with uniform noise."""
 
