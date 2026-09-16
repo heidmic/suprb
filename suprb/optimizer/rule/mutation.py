@@ -8,6 +8,7 @@ from suprb.rule import Rule
 from suprb.utils import RandomState
 from suprb.optimizer.rule.generation_operator import GenerationOperator
 from suprb.rule.matching import MatchingFunction
+from types import SimpleNamespace
 
 
 class RuleMutation(GenerationOperator):
@@ -67,6 +68,12 @@ class SigmaRange(RuleMutation):
     def min_percentage(self, rule: Rule, random_state: RandomState):
         pass
 
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
+
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")
+
 
 class Normal(RuleMutation):
     """Normal noise on both bounds."""
@@ -90,6 +97,12 @@ class Normal(RuleMutation):
     def min_percentage(self, rule: Rule, random_state: RandomState):
         self.individual_mutate(rule, random_state)
 
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
+
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")
+
 
 class Halfnorm(RuleMutation):
     """Sample with (half)normal distribution around the center."""
@@ -110,6 +123,12 @@ class Halfnorm(RuleMutation):
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         raise TypeError("Halform Mutation is not implemented for MPR")
+
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
+
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")
 
 
 class HalfnormIncrease(RuleMutation):
@@ -134,6 +153,59 @@ class HalfnormIncrease(RuleMutation):
         bounds[:, 0] -= halfnorm.rvs(scale=self.sigma[0] / 2, size=bounds.shape[0], random_state=random_state)
         bounds[:, 1] += halfnorm.rvs(scale=self.sigma[1] / 2, size=bounds.shape[0], random_state=random_state)
 
+    def gabil(self, rule: Rule, random_state: RandomState):
+        """Adding Alternative: switch further category bits on.
+
+        The interval variant of this operator only ever widens a rule,
+        because covering starts from a zero-width interval that has to be
+        generalised. GABIL's counterpart is the "adding alternative"
+        operator of De Jong & Spears (1991): flip bits from 0 to 1 only,
+        never the reverse. Covering sets exactly one bit per attribute, so
+        the same generalisation pressure applies here.
+
+        Every attribute is mutated, mirroring how the interval variant
+        widens all dimensions of a rule rather than picking one.
+
+        `sigma` is drawn from the same halfnorm distribution the interval
+        variant uses, but interpreted as a count rather than a width: it
+        gives the number of additional levels to switch on. Treating it as
+        a per-bit probability would not work, because sigma is a magnitude
+        and its default value exceeds one, which would flip every unset bit
+        on every mutation and make all children of a parent identical.
+        """
+        scale = float(np.asarray(self.sigma).ravel()[0]) / 2
+
+        for bitstring in rule.match.bits:
+            if bitstring.size == 0:
+                continue
+
+            unset = np.flatnonzero(~bitstring)
+            if unset.size == 0:
+                continue
+
+            n_flip = int(round(halfnorm.rvs(scale=scale, random_state=random_state)))
+            n_flip = min(n_flip, unset.size)
+
+            if n_flip > 0:
+                chosen = random_state.choice(unset, size=n_flip, replace=False)
+                bitstring[chosen] = True
+
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        """Mutate both halves with the operator each already has.
+
+        MixedTypes composes two matching functions, so mutation simply
+        forwards to the method written for each: the interval half widens
+        as it always has, and the categorical half switches further levels
+        on. Nothing new is needed here beyond the routing.
+
+        The existing methods read `rule.match.bounds` and `rule.match.bits`
+        directly, so each half is wrapped in a small object exposing it as
+        `match`. The wrapper holds the real sub-object rather than a copy,
+        so in-place changes land where they should.
+        """
+        self.ordered_bound(SimpleNamespace(match=rule.match.reals), random_state)
+        self.gabil(SimpleNamespace(match=rule.match.categoricals), random_state)
+
 
 class Uniform(RuleMutation):
     """Uniform noise on both bounds."""
@@ -155,6 +227,12 @@ class Uniform(RuleMutation):
 
     def min_percentage(self, rule: Rule, random_state: RandomState):
         self.individual_mutate(rule, random_state)
+
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
+
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")
 
 
 class UniformIncrease(RuleMutation):
@@ -178,3 +256,9 @@ class UniformIncrease(RuleMutation):
         bounds = rule.match.bounds
         bounds[:, 0] -= random_state.uniform(0, self.sigma[0], size=bounds.shape[0])
         bounds[:, 1] += random_state.uniform(0, self.sigma[1], size=bounds.shape[0])
+
+    def gabil(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for GABIL")
+
+    def mixed_types(self, rule: Rule, random_state: RandomState):
+        raise TypeError("This mutation is not implemented for MixedTypes")

@@ -6,6 +6,7 @@ from suprb.suprb import SupRB
 from .solution import Solution
 
 from .rule import Rule
+from .rule.matching import MixedTypes, OrderedBound, GABIL
 import importlib
 
 """(De)Serialization currenlty only supports LinearRegression as local models. """
@@ -21,7 +22,7 @@ class NumpyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
-        return json.JSONEncoder.default(obj)
+        return super().default(obj)
 
 
 def dump(suprb, filename):
@@ -80,7 +81,9 @@ def _get_full_class_name(instance):
 
 def _save_config(suprb, json_config):
     json_config["config"] = {}
-    primitive = (int, str, bool, float)
+    # None is not one of the primitives above, so without this it would be
+    # serialised as the class name "NoneType" and come back as a string.
+    primitive = (int, str, bool, float, type(None))
 
     for key, value in suprb.get_params().items():
         if key.startswith("logger"):
@@ -111,11 +114,36 @@ def _convert_dict_to_json(rule_dict):
     return converted_dict
 
 
+def _convert_match_to_json(match):
+    """Flatten a matching function into plain arrays.
+
+    Most matching functions hold arrays directly, so their __dict__ can be
+    converted as it stands. GABIL also carries what each bit stands for,
+    and MixedTypes holds two nested matching functions that the encoder
+    cannot serialise, so both are unpacked into their own keys and
+    reassembled on load.
+    """
+    if isinstance(match, MixedTypes):
+        return _convert_dict_to_json(
+            {
+                "mixed_mask": match.mask,
+                "mixed_reals": match.reals.bounds,
+                "mixed_categoricals": match.categoricals.bits,
+                "mixed_observed": match.categoricals.observed,
+            }
+        )
+
+    if isinstance(match, GABIL):
+        return _convert_dict_to_json({"bits": match.bits, "observed": match.observed})
+
+    return _convert_dict_to_json(vars(match))
+
+
 def _convert_rule_to_json(rule):
     return {
         "error_": rule.error_,
         "experience_": rule.experience_,
-        "match": _convert_dict_to_json(vars(rule.match)),
+        "match": _convert_match_to_json(rule.match),
         "is_fitted_": rule.is_fitted_,
         "model": {
             "coef_": _convert_to_json_format(getattr(rule.model, "coef_")),
@@ -215,12 +243,54 @@ def _convert_json_to_rule(json_rule, json_dict):
 
 
 def _convert_matching_type(match, matching_type):
+    """Rebuild a matching function from its saved arrays.
+
+    Most matching functions hold their arrays directly, so each saved key
+    can be set back as an attribute. GABIL and MixedTypes are unpacked on
+    save, so they are reassembled from their own keys here rather than
+    through the generic path, which would set attributes that do not exist.
+    """
+    if "mixed_mask" in match:
+        return MixedTypes(
+            reals=OrderedBound(_convert_from_json_to_array(match["mixed_reals"])),
+            categoricals=GABIL(
+                bits=_as_bitstrings(match["mixed_categoricals"]),
+                observed=_as_observed(match["mixed_observed"]),
+            ),
+            mask=_convert_from_json_to_array(match["mixed_mask"]).astype(bool),
+        )
+
+    if "bits" in match:
+        return GABIL(
+            bits=_as_bitstrings(match["bits"]),
+            observed=_as_observed(match["observed"]),
+        )
+
     matching = _get_class(matching_type)([])
 
     for name, p in match.items():
         setattr(matching, name, _convert_from_json_to_array(p))
 
     return matching
+
+
+def _as_bitstrings(json_bits):
+    """One boolean array per attribute, as GABIL stores them.
+
+    Bitstrings can differ in length, so they are rebuilt individually
+    rather than as one array, which would either fail or pad them.
+    """
+    return [np.array(bitstring, dtype=bool) for bitstring in json.loads(json_bits)]
+
+
+def _as_observed(json_observed):
+    """One list per attribute of what each bit stands for.
+
+    Kept as plain lists rather than arrays, since an entry may be a label,
+    a code, or None, and an array would coerce them to a single type and
+    lose the None that marks a level with no training data.
+    """
+    return [list(levels) for levels in json.loads(json_observed)]
 
 
 def _convert_model(json_model, model_type):

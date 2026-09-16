@@ -4,6 +4,7 @@ import traceback
 import numpy as np
 from sklearn import clone
 from sklearn.utils import check_X_y
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils.validation import check_is_fitted, check_array, validate_data
 
 
@@ -16,7 +17,7 @@ from .optimizer.solution.ga import GeneticAlgorithm
 from .optimizer.rule import RuleDiscovery
 from .optimizer.rule.es import ES1xLambda
 from .rule import Rule
-from .rule.matching import MatchingFunction, OrderedBound
+from .rule.matching import MatchingFunction, OrderedBound, GABIL, MixedTypes
 from .utils import check_random_state, estimate_bounds
 from .solution.mixing_model import ErrorExperienceHeuristic
 from .solution.fitness import PseudoBIC
@@ -98,6 +99,8 @@ class SupRB(BaseRegressor):
         rule_discovery: RuleDiscovery = None,
         solution_composition: SolutionComposition = None,
         matching_type: MatchingFunction = None,
+        categorical_encoder=None,
+        encode_categoricals: bool = False,
         n_iter: int = 32,
         n_initial_rules: int = 0,
         n_rules: int = 4,
@@ -112,6 +115,8 @@ class SupRB(BaseRegressor):
         self.n_initial_rules = n_initial_rules
         self.n_rules = n_rules
         self.matching_type = matching_type
+        self.categorical_encoder = categorical_encoder
+        self.encode_categoricals = encode_categoricals
         self.rule_discovery = rule_discovery
         self.solution_composition = solution_composition
         self.random_state = random_state
@@ -165,6 +170,7 @@ class SupRB(BaseRegressor):
         self.elitist_.complexity_ = 99999
 
         # Check that x and y have correct shape
+        X = self._encode_categoricals(X, fitting=True)
         X, y = validate_data(self, X, y, ensure_2d=True)
 
         # Init sklearn interface
@@ -187,6 +193,7 @@ class SupRB(BaseRegressor):
 
         self._propagate_component_parameters()
         self._init_bounds(X)
+        self._init_levels(X)
         self._init_matching_type()
 
         # Init optimizers
@@ -290,6 +297,7 @@ class SupRB(BaseRegressor):
 
     def predict(self, X):
         check_is_fitted(self)
+        X = self._encode_categoricals(X, fitting=False)
         X = validate_data(self, X, ensure_2d=True, reset=False)
 
         if hasattr(self, "is_error_") and self.is_error_:
@@ -331,6 +339,153 @@ class SupRB(BaseRegressor):
             if key.endswith("bounds") and value is None:
                 self._log_to_stdout(f"Found empty bounds for {key}, estimating from data")
                 self.rule_discovery_.set_params(**{key: bounds})
+
+    def _categorical_mask(self, X):
+        """Which input columns are categorical, or None if none are.
+
+        The mask lives on the matching function, since that is what decides
+        how each attribute is interpreted. A plain GABIL treats every column
+        as categorical, so its mask is derived from the width of X;
+        MixedTypes carries an explicit one.
+        """
+        matching_type = self.matching_type
+
+        if isinstance(matching_type, MixedTypes):
+            return np.asarray(matching_type.mask, dtype=bool)
+
+        if isinstance(matching_type, GABIL):
+            return np.ones(np.asarray(X).shape[1], dtype=bool)
+
+        return None
+
+    def _encode_categoricals(self, X, fitting: bool):
+        """Encode raw categorical columns to integer codes.
+
+        SupRB works on numeric codes throughout, so raw labels have to be
+        converted before sklearn's input validation, which would otherwise
+        reject them. The encoder is fitted once during fit and only applied
+        afterwards, so that a label keeps the same code at predict time. An
+        encoder refitted on the test data would silently assign different
+        codes to the same categories.
+        """
+        if not self.encode_categoricals:
+            return X
+
+        mask = self._categorical_mask(X)
+        if mask is None or not mask.any():
+            return X
+
+        X = np.asarray(X, dtype=object)
+        columns = X[:, mask]
+
+        if fitting:
+            self.fitted_encoder_ = OrdinalEncoder()
+            encoded = self.fitted_encoder_.fit_transform(columns)
+        else:
+            check_is_fitted(self, "fitted_encoder_")
+            encoded = self.fitted_encoder_.transform(columns)
+
+        X = X.copy()
+        X[:, mask] = encoded
+
+        return X.astype(float)
+
+    def _init_levels(self, X: np.ndarray):
+        """Give the categorical half its bitstrings and their meaning.
+
+        A bitstring needs to know how many levels the attribute has before
+        any rule can be built for it, and what each bit stands for before
+        any rule can say whether it has evidence for a level. Both are
+        properties of the dataset, so they are resolved here rather than
+        guessed inside the matching function.
+        """
+        matching_type = self.matching_type_
+
+        if isinstance(matching_type, MixedTypes):
+            categoricals = matching_type.categoricals
+            mask = np.asarray(matching_type.mask, dtype=bool)
+            columns = X[:, mask]
+        elif isinstance(matching_type, GABIL):
+            categoricals = matching_type
+            columns = X
+        else:
+            return
+
+        if categoricals.bits:
+            return
+
+        observed = self._observed_categories(columns)
+
+        categoricals.observed = observed
+        categoricals.bits = [np.zeros(len(levels), dtype=bool) for levels in observed]
+
+    def _observed_categories(self, columns: np.ndarray) -> list:
+        """What each bit will stand for, one entry per categorical column.
+
+        Each entry is a list as long as the bitstring, holding the category
+        that bit corresponds to, or None where the level exists but no
+        training sample had it. A rule can then tell a level it was trained
+        on from one it has no evidence for.
+
+        An encoder supplied by the user is preferred, because it was fitted
+        before the train-test split and knows levels this training set
+        happens not to contain. Without one the levels are derived from the
+        largest observed code, which cannot see those levels at all, so a
+        warning is raised.
+        """
+        encoder = getattr(self, "fitted_encoder_", None) or self.categorical_encoder
+        categories = getattr(encoder, "categories_", None) if encoder is not None else None
+
+        if categories is None:
+            if encoder is not None:
+                warnings.warn(
+                    "categorical_encoder has no categories_ attribute, so it "
+                    "appears not to be fitted. Falling back to the observed "
+                    "maximum, which cannot see levels absent from the "
+                    "training data."
+                )
+            else:
+                warnings.warn(
+                    "Deriving the number of levels from the observed maximum. "
+                    "A level that does not appear in the training data cannot "
+                    "be detected this way and will raise at predict time. "
+                    "Pass a fitted encoder as categorical_encoder to avoid "
+                    "this."
+                )
+
+            # Only codes are available, so a bit can only stand for its own
+            # index. Codes inside the range that never appeared are still
+            # marked as unseen, since gaps in an ordinal encoding are just
+            # as possible as a missing level at the end.
+            fallback = []
+            for i in range(columns.shape[1]):
+                present = set(np.unique(columns[:, i]).astype(int).tolist())
+                n_levels = int(columns[:, i].max()) + 1
+                fallback.append([code if code in present else None for code in range(n_levels)])
+
+            return fallback
+
+        observed = []
+        for i, levels in enumerate(categories):
+            present = set(np.unique(columns[:, i]).astype(int).tolist())
+
+            # Reported here rather than at predict time, and by name rather
+            # than by count, so the user can act on it: a level the encoder
+            # knows but the training split lacks is usually a resplit away
+            # from being fixed. Once the level is recorded as None below,
+            # its label is no longer available to report.
+            absent = [str(levels[code]) for code in range(len(levels)) if code not in present]
+            if absent:
+                warnings.warn(
+                    f"Column {i}: the encoder knows these levels but the "
+                    f"training data does not contain them: "
+                    f"{', '.join(absent)}. Rules will have no evidence for "
+                    f"them, so any prediction involving them is unreliable."
+                )
+
+            observed.append([levels[code] if code in present else None for code in range(len(levels))])
+
+        return observed
 
     def _init_matching_type(self):
         for key, value in self.rule_discovery_.get_params().items():
