@@ -71,6 +71,22 @@ class SupRB(BaseRegressor):
         Sets the patience for how many iteration we try to find a better result before we do an early stopping (-1 disabling the early stopping).
     early_stopping_delta: int
         The current fitness needs to be higher than this delta of the previous iteration fitness to be considered a "better" iteration
+    extra_rules_patience: int
+        Sets the patience for how many consecutive iterations without a better result we tolerate before
+        generating additional rules (-1 disabling the adaptive extra rules). Once the patience is exceeded,
+        every further iteration without improvement increases the number of extra rules by one.
+    extra_rules_delta: float
+        The current convergence metric needs to be higher than this delta of the previous iteration's value
+        to be considered a "better" iteration. If it is not, the stagnation counter is increased; otherwise
+        the counter and the extra rules are reset to 0.
+    convergence_metric: str or callable, default=None
+        Metric used for early stopping and adaptive extra rules. Only relevant
+        if early_stopping_patience > 0 or extra_rules_patience > 0.
+        - "hypervolume": solution_composition_.hypervolume()
+        - "fitness": fitness of the current elitist
+        - callable: called with solution_composition_, must return a float
+        - None: "hypervolume" if the solution composition provides it,
+          otherwise "fitness" (the previous behaviour)
     """
 
     step_: int = 0
@@ -107,6 +123,9 @@ class SupRB(BaseRegressor):
         n_jobs: int = 1,
         early_stopping_patience: int = -1,
         early_stopping_delta: float = 0,
+        extra_rules_patience: int = -1,
+        extra_rules_delta: int = 0,
+        convergence_metric: str = None,
     ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
@@ -120,21 +139,78 @@ class SupRB(BaseRegressor):
         self.n_jobs = n_jobs
         self.early_stopping_patience = early_stopping_patience
         self.early_stopping_delta = early_stopping_delta
+        self.extra_rules_patience = extra_rules_patience
+        self.extra_rules_delta = extra_rules_delta
+        self.convergence_metric = convergence_metric
+
+    def _convergence_enabled(self):
+        return self.early_stopping_patience > 0 or self.extra_rules_patience > 0
+
+    def _resolve_convergence_metric(self):
+        metric = self.convergence_metric
+        if callable(metric):
+            return metric
+        if metric is None:
+            return "hypervolume" if hasattr(self.solution_composition_, "hypervolume") else "fitness"
+        if metric not in ("hypervolume", "fitness"):
+            raise ValueError(f"Unknown convergence_metric {metric!r}; use 'hypervolume', 'fitness' or a callable.")
+        if metric == "hypervolume" and not hasattr(self.solution_composition_, "hypervolume"):
+            raise ValueError(
+                f"convergence_metric='hypervolume' requires a solution composition with a "
+                f"hypervolume() method, got {type(self.solution_composition_).__name__}."
+            )
+        return metric
+
+    def _current_convergence_metric(self):
+        metric = self.convergence_metric_
+        if callable(metric):
+            return metric(self.solution_composition_)
+        if metric == "hypervolume":
+            return self.solution_composition_.hypervolume()
+        return self.solution_composition_.elitist().fitness_
+
+    def adaptive_rules(self):
+        if self.extra_rules_patience <= 0 or self.step_ == 0:
+            return 0
+
+        current = self._current_convergence_metric()
+
+        fitness_diff = current - self.previous_fitness_
+
+        if fitness_diff <= self.extra_rules_delta:
+            self.extra_rules_counter_ += 1
+        else:
+            self.extra_rules_counter_ = 0
+
+        if self.extra_rules_patience < self.extra_rules_counter_:
+            extra_rules = self.extra_rules_counter_ - self.extra_rules_patience
+            print(f"added {extra_rules} extra rules for next turn")
+            return extra_rules
+        else:
+            return 0
 
     def check_early_stopping(self):
-        if self.early_stopping_patience > 0:
-            fitness_diff = self.solution_composition_.elitist().fitness_ - self.previous_fitness_
 
-            if fitness_diff > self.early_stopping_delta:
-                self.early_stopping_counter_ = 0
-            else:
-                self.early_stopping_counter_ += 1
-                if self.early_stopping_patience <= self.early_stopping_counter_:
-                    print(
-                        f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes."
-                    )
-                    print(f"The elitist fitness value was: {self.previous_fitness_}")
-                    return True
+        if self.early_stopping_patience <= 0:
+            return False
+
+        current = self._current_convergence_metric()
+        print(
+            f"current convergence metric ({self.convergence_metric_ if isinstance(self.convergence_metric_, str) else 'custom'}): {current}"
+        )
+
+        fitness_diff = current - self.previous_fitness_
+
+        if fitness_diff > self.early_stopping_delta:
+            self.early_stopping_counter_ = 0
+        else:
+            self.early_stopping_counter_ += 1
+            if self.early_stopping_patience <= self.early_stopping_counter_:
+                print(
+                    f"Execution was stopped early after {self.early_stopping_patience} cycles with no significant changes."
+                )
+                print(f"The elitist fitness value was: {self.previous_fitness_}")
+                return True
         return False
 
     def fit(self, X: np.ndarray, y: np.ndarray, cleanup=False):
@@ -157,6 +233,8 @@ class SupRB(BaseRegressor):
 
         # Set these values so we gracefully exit on error
         self.early_stopping_counter_ = 0
+        self.extra_rules_counter_ = 0
+        self.n_rules_increment_ = 0
         self.previous_fitness_ = 0
         self.is_error_ = False
         self.elitist_ = Solution([0, 0, 0], [0, 0, 0], ErrorExperienceHeuristic(), PseudoBIC())
@@ -185,6 +263,8 @@ class SupRB(BaseRegressor):
         self._validate_matching_type(default=OrderedBound(np.array([])))
         self._validate_logger(default=DefaultLogger())
 
+        self.convergence_metric_ = self._resolve_convergence_metric() if self._convergence_enabled() else None
+
         self._propagate_component_parameters()
         self._init_bounds(X)
         self._init_matching_type()
@@ -205,7 +285,12 @@ class SupRB(BaseRegressor):
         # Main loop
         for self.step_ in range(self.n_iter):
             # Insert new rules into population
-            if self._catch_errors(self._discover_rules, X, y, initial=False):
+            if self._catch_errors(
+                self._discover_rules,
+                X,
+                y,
+                initial=False,
+            ):
                 return self
 
             # Optimize solutions
@@ -218,7 +303,10 @@ class SupRB(BaseRegressor):
             if self.check_early_stopping():
                 break
 
-            self.previous_fitness_ = self.solution_composition_.elitist().fitness_
+            self.n_rules_increment_ = self.adaptive_rules()
+
+            if self._convergence_enabled():
+                self.previous_fitness_ = self._current_convergence_metric()
 
         self.elitist_ = self.solution_composition_.elitist().clone()
         self.is_fitted_ = True
@@ -250,14 +338,12 @@ class SupRB(BaseRegressor):
             self.is_error_ = True
             return True
 
-    def _discover_rules(self, X: np.ndarray, y: np.ndarray, initial: bool):
+    def _discover_rules(self, X: np.ndarray, y: np.ndarray, initial: bool, max_restarts: int = 0):
         """Performs the rule discovery / rule generation (RG) process."""
 
-        n_rules = self.n_initial_rules if initial else self.n_rules
+        n_rules = self.n_initial_rules if initial else self.n_rules + self.n_rules_increment_
 
         self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
-
-        # Update the current elitist
         self.rule_discovery_.elitist_ = self.solution_composition_.elitist()
 
         # Update the random state
@@ -266,10 +352,21 @@ class SupRB(BaseRegressor):
         else:
             self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
 
-        # Generate new rules
-        new_rules = self.rule_discovery_.optimize(X, y, n_rules=n_rules)
+        base_seed = self.rule_discovery_seeds_[self.step_]
+        retry_seeds = base_seed.spawn(max_restarts + 1)
 
-        # Extend the pool with the new rules
+        new_rules = []
+        for attempt, seed in enumerate(retry_seeds):
+            self.rule_discovery_.random_state = seed
+            new_rules = self.rule_discovery_.optimize(X, y, n_rules=n_rules)
+            if new_rules:
+                break
+            self._log_to_stdout(
+                f"All {n_rules} newly discovered rules were subsumed; "
+                f"restarting RD (attempt {attempt + 1}/{max_restarts + 1})",
+                priority=4,
+            )
+
         self.pool_.extend(new_rules)
 
         if not self.pool_:

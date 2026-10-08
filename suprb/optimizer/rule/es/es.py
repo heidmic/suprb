@@ -7,6 +7,7 @@ import warnings
 
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import MeanInit
+from suprb.rule.subsumption import RuleSubsumption
 from suprb.utils import RandomState
 from ..mutation import RuleMutation, HalfnormIncrease
 from ..selection import RuleSelection, Fittest
@@ -62,6 +63,7 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
         constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
         random_state: int = None,
         n_jobs: int = 1,
+        subsumption: RuleSubsumption = None,
     ):
         super().__init__(
             n_iter=n_iter,
@@ -71,6 +73,7 @@ class ES1xLambda(ParallelSingleRuleDiscovery):
             constraint=constraint,
             random_state=random_state,
             n_jobs=n_jobs,
+            subsumption=subsumption,
         )
         self.lmbda = lmbda
         self.delay = delay

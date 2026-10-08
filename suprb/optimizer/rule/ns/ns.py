@@ -5,6 +5,7 @@ from itertools import product
 
 from suprb.rule import Rule, RuleInit
 from suprb.rule.initialization import HalfnormInit
+from suprb.rule.subsumption import RuleSubsumption
 from suprb.utils import check_random_state
 from ..crossover import RuleCrossover, UniformCrossover
 from .novelty_calculation import NoveltyCalculation
@@ -72,6 +73,7 @@ class NoveltySearch(RuleDiscovery):
         acceptance: RuleAcceptance = Variance(),
         constraint: RuleConstraint = CombinedConstraint(MinRange(), Clip()),
         novelty_calculation: NoveltyCalculation = NoveltyCalculation(),
+        subsumption: RuleSubsumption = None,
     ):
         super().__init__(
             n_iter=n_iter,
@@ -81,6 +83,7 @@ class NoveltySearch(RuleDiscovery):
             constraint=constraint,
             random_state=random_state,
             n_jobs=n_jobs,
+            subsumption=subsumption,
         )
         self.n_iter = n_iter
         self.mu = mu
@@ -109,7 +112,8 @@ class NoveltySearch(RuleDiscovery):
 
         rules = self._optimize(X=X, y=y, n_rules=n_rules)
 
-        return self._filter_invalid_rules(X=X, y=y, rules=rules)
+        valid_rules = self._filter_invalid_rules(X=X, y=y, rules=rules)
+        return self._apply_subsumption(X, y, valid_rules)
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
         """Steps of the novelty Search Algorithm containing:
