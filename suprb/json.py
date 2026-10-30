@@ -183,12 +183,20 @@ def _update_same_base_keys(json_config, base_key):
 
 
 def _get_keys_with_same_base(json_config, base):
-    same_base_key_list = []
-    for key in json_config:
-        if key.startswith(base) and key != base:
-            same_base_key_list.append(key)
+    """Collect the parameters belonging to the component at `base`.
 
-    return same_base_key_list
+    The match is on the "__" separator rather than on the raw string, so a
+    sibling whose name merely begins with the component's name is not taken
+    for one of its parameters. GeneticAlgorithm has both a `crossover`
+    component and a `crossover_rate` of its own, and
+    "solution_composition__crossover_rate" starts with
+    "solution_composition__crossover"; passing the rate into the crossover
+    raised "NPoint.__init__() got an unexpected keyword argument
+    'crossover_rate'". The same pair exists for `mutation` and
+    `mutation_rate`.
+    """
+    prefix = base + "__"
+    return [key for key in json_config if key.startswith(prefix)]
 
 
 def _load_pool(json_dict, suprb):

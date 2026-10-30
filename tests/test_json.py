@@ -110,3 +110,32 @@ class TestJsonIO:
 
         assert (original_prediction == loaded_prediction).all()
         os.remove("save_state.json")
+
+    def test_component_with_parameters_keeps_sibling_parameters(self):
+        """A component whose name prefixes a sibling must not absorb it.
+
+        GeneticAlgorithm has a `crossover` component and a `crossover_rate`
+        of its own, so "solution_composition__crossover_rate" begins with
+        "solution_composition__crossover". The tests above use Uniform,
+        which takes no constructor arguments, so no
+        "solution_composition__crossover__*" key is written and the
+        ambiguity never arises. NPoint, the default crossover, does take
+        one, which is what exposes it.
+        """
+        model, X, y = setup()
+        model.set_params(solution_composition__crossover=ga.crossover.NPoint(n=3))
+
+        scores = cross_validate(model, X, y, cv=4, n_jobs=1, return_estimator=True)
+        model = scores["estimator"][0]
+
+        json.dump(model, "save_state_npoint.json")
+        try:
+            loaded = json.load("save_state_npoint.json")
+        finally:
+            os.remove("save_state_npoint.json")
+
+        composition = loaded.solution_composition
+        assert isinstance(composition.crossover, ga.crossover.NPoint)
+        assert composition.crossover.n == 3
+        assert composition.crossover_rate == model.solution_composition.crossover_rate
+        assert composition.mutation_rate == model.solution_composition.mutation_rate
