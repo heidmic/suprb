@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 from sklearn.datasets import fetch_openml
 from sklearn.ensemble import (
     RandomForestRegressor,
@@ -64,22 +65,44 @@ if __name__ == "__main__":
     ]
     models = {model.__class__.__name__: model for model in models}
 
+    # small hack to avoid complicated Tuple unpacking
+    times = {}
+
     def run(name, model):
         print(f"[EVALUATION] {name}")
-        return pd.Series(
-            cross_val_score(
-                model,
-                X,
-                y,
-                cv=4,
-                n_jobs=4,
-                verbose=10,
-                scoring="neg_root_mean_squared_error",
-            ),
-            name="negated RMSE",
+
+        start = time.perf_counter()
+
+        cv_scores = cross_val_score(
+            model,
+            X,
+            y,
+            cv=4,
+            n_jobs=4,
+            verbose=10,
+            scoring="neg_root_mean_squared_error",
         )
 
-    scores = pd.concat({name: run(name=name, model=model) for name, model in models.items()}, axis=0).to_frame()
+        times[name] = time.perf_counter() - start
+
+        return pd.Series(cv_scores, name="negated RMSE")
+
+
+    scores = pd.concat(
+        {name: run(name, model) for name, model in models.items()},
+        axis=0
+    ).to_frame()
+
     scores.index.names = ["model", "cv"]
 
-    print(scores.groupby(by="model").describe().to_string())
+    summary = scores.groupby("model")["negated RMSE"].agg(
+        mean="mean",
+        std="std",
+        min="min",
+        max="max",
+    )
+
+    summary["cv_time_seconds"] = pd.Series(times)
+
+    print(summary.to_string())
+
