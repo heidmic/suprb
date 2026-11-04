@@ -71,6 +71,7 @@ class TestSupRB(unittest.TestCase):
             verbose=10,
             early_stopping_patience=3,
             early_stopping_delta=10,
+            convergence_metric="fitness",
         )
 
         # Setup necessary parameter for early stopping test

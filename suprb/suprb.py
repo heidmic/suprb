@@ -79,14 +79,14 @@ class SupRB(BaseRegressor):
         The current convergence metric needs to be higher than this delta of the previous iteration's value
         to be considered a "better" iteration. If it is not, the stagnation counter is increased; otherwise
         the counter and the extra rules are reset to 0.
-    convergence_metric: str or callable, default=None
+    convergence_metric: str or callable, default="auto"
         Metric used for early stopping and adaptive extra rules. Only relevant
         if early_stopping_patience > 0 or extra_rules_patience > 0.
+        - "auto": "hypervolume" if the solution composition provides it,
+        otherwise "fitness" (the previous behaviour)
         - "hypervolume": solution_composition_.hypervolume()
         - "fitness": fitness of the current elitist
         - callable: called with solution_composition_, must return a float
-        - None: "hypervolume" if the solution composition provides it,
-          otherwise "fitness" (the previous behaviour)
     """
 
     step_: int = 0
@@ -125,7 +125,7 @@ class SupRB(BaseRegressor):
         early_stopping_delta: float = 0,
         extra_rules_patience: int = -1,
         extra_rules_delta: int = 0,
-        convergence_metric: str = None,
+        convergence_metric: str = "auto",
     ):
         self.n_iter = n_iter
         self.n_initial_rules = n_initial_rules
@@ -150,10 +150,12 @@ class SupRB(BaseRegressor):
         metric = self.convergence_metric
         if callable(metric):
             return metric
-        if metric is None:
+        if metric is None or metric == "auto":
             return "hypervolume" if hasattr(self.solution_composition_, "hypervolume") else "fitness"
         if metric not in ("hypervolume", "fitness"):
-            raise ValueError(f"Unknown convergence_metric {metric!r}; use 'hypervolume', 'fitness' or a callable.")
+            raise ValueError(
+                f"Unknown convergence_metric {metric!r}; use 'auto', 'hypervolume', 'fitness' or a callable."
+            )
         if metric == "hypervolume" and not hasattr(self.solution_composition_, "hypervolume"):
             raise ValueError(
                 f"convergence_metric='hypervolume' requires a solution composition with a "
@@ -232,6 +234,7 @@ class SupRB(BaseRegressor):
         """
 
         # Set these values so we gracefully exit on error
+        self.step_ = 0
         self.early_stopping_counter_ = 0
         self.extra_rules_counter_ = 0
         self.n_rules_increment_ = 0
@@ -338,42 +341,42 @@ class SupRB(BaseRegressor):
             self.is_error_ = True
             return True
 
-    def _discover_rules(self, X: np.ndarray, y: np.ndarray, initial: bool, max_restarts: int = 0):
-        """Performs the rule discovery / rule generation (RG) process."""
+def _discover_rules(self, X: np.ndarray, y: np.ndarray, initial: bool, max_restarts: int = 0):
+    """Performs the rule discovery / rule generation (RG) process."""
 
-        n_rules = self.n_initial_rules if initial else self.n_rules + self.n_rules_increment_
+    n_rules = self.n_initial_rules if initial else self.n_rules + self.n_rules_increment_
 
-        self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
-        self.rule_discovery_.elitist_ = self.solution_composition_.elitist()
+    self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
+    self.rule_discovery_.elitist_ = self.solution_composition_.elitist()
 
-        # Update the random state
-        if initial:
-            self.rule_discovery_.random_state = self.initial_rule_seeds_[0]
-        else:
-            self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
+    # Update the random state
+    if initial:
+        self.rule_discovery_.random_state = self.initial_rule_seeds_[0]
+    else:
+        self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
 
-        base_seed = self.rule_discovery_seeds_[self.step_]
-        retry_seeds = base_seed.spawn(max_restarts + 1)
+    new_rules = []
+    for attempt in range(max_restarts + 1):
+        if attempt > 0:
+            # A restart with the same seed would reproduce the same (empty) result,
+            # so every retry gets a fresh child seed.
+            self.rule_discovery_.random_state = self.rule_discovery_.random_state.spawn(1)[0]
+        new_rules = self.rule_discovery_.optimize(X, y, n_rules=n_rules)
+        if new_rules:
+            break
+        self._log_to_stdout(
+            f"All {n_rules} newly discovered rules were subsumed; "
+            f"restarting RD (attempt {attempt + 1}/{max_restarts + 1})",
+            priority=4,
+        )
 
-        new_rules = []
-        for attempt, seed in enumerate(retry_seeds):
-            self.rule_discovery_.random_state = seed
-            new_rules = self.rule_discovery_.optimize(X, y, n_rules=n_rules)
-            if new_rules:
-                break
-            self._log_to_stdout(
-                f"All {n_rules} newly discovered rules were subsumed; "
-                f"restarting RD (attempt {attempt + 1}/{max_restarts + 1})",
-                priority=4,
-            )
+    self.pool_.extend(new_rules)
 
-        self.pool_.extend(new_rules)
-
-        if not self.pool_:
-            warnings.warn(
-                "The population is empty, even after generating rules. " "Solution optimization will be skipped.",
-                PopulationEmptyWarning,
-            )
+    if not self.pool_:
+        warnings.warn(
+            "The population is empty, even after generating rules. " "Solution optimization will be skipped.",
+            PopulationEmptyWarning,
+        )
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""
