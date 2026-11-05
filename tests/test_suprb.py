@@ -76,6 +76,7 @@ class TestSupRB(unittest.TestCase):
 
         # Setup necessary parameter for early stopping test
         estimator._validate_solution_composition()
+        estimator.convergence_metric_ = estimator._resolve_convergence_metric()
         estimator.early_stopping_counter_ = 0
 
         # early_stopping_counter_ is increased to 1 [previous_fitness_(4) > current_fitness(3)]
