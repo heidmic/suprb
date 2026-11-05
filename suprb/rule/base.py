@@ -49,6 +49,7 @@ class Rule(SolutionBase):
         self.input_space = input_space
         self.model = model
         self.fitness = fitness
+        self.numerosity_ = 1
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Rule:
 
