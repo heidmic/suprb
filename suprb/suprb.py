@@ -341,42 +341,42 @@ class SupRB(BaseRegressor):
             self.is_error_ = True
             return True
 
-def _discover_rules(self, X: np.ndarray, y: np.ndarray, initial: bool, max_restarts: int = 0):
-    """Performs the rule discovery / rule generation (RG) process."""
+    def _discover_rules(self, X: np.ndarray, y: np.ndarray, initial: bool, max_restarts: int = 0):
+        """Performs the rule discovery / rule generation (RG) process."""
 
-    n_rules = self.n_initial_rules if initial else self.n_rules + self.n_rules_increment_
+        n_rules = self.n_initial_rules if initial else self.n_rules + self.n_rules_increment_
 
-    self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
-    self.rule_discovery_.elitist_ = self.solution_composition_.elitist()
+        self._log_to_stdout(f"Generating {n_rules} rules", priority=4)
+        self.rule_discovery_.elitist_ = self.solution_composition_.elitist()
 
-    # Update the random state
-    if initial:
-        self.rule_discovery_.random_state = self.initial_rule_seeds_[0]
-    else:
-        self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
+        # Update the random state
+        if initial:
+            self.rule_discovery_.random_state = self.initial_rule_seeds_[0]
+        else:
+            self.rule_discovery_.random_state = self.rule_discovery_seeds_[self.step_]
 
-    new_rules = []
-    for attempt in range(max_restarts + 1):
-        if attempt > 0:
-            # A restart with the same seed would reproduce the same (empty) result,
-            # so every retry gets a fresh child seed.
-            self.rule_discovery_.random_state = self.rule_discovery_.random_state.spawn(1)[0]
-        new_rules = self.rule_discovery_.optimize(X, y, n_rules=n_rules)
-        if new_rules:
-            break
-        self._log_to_stdout(
-            f"All {n_rules} newly discovered rules were subsumed; "
-            f"restarting RD (attempt {attempt + 1}/{max_restarts + 1})",
-            priority=4,
-        )
+        new_rules = []
+        for attempt in range(max_restarts + 1):
+            if attempt > 0:
+                # A restart with the same seed would reproduce the same (empty) result,
+                # so every retry gets a fresh child seed.
+                self.rule_discovery_.random_state = self.rule_discovery_.random_state.spawn(1)[0]
+            new_rules = self.rule_discovery_.optimize(X, y, n_rules=n_rules)
+            if new_rules:
+                break
+            self._log_to_stdout(
+                f"All {n_rules} newly discovered rules were subsumed; "
+                f"restarting RD (attempt {attempt + 1}/{max_restarts + 1})",
+                priority=4,
+            )
 
-    self.pool_.extend(new_rules)
+        self.pool_.extend(new_rules)
 
-    if not self.pool_:
-        warnings.warn(
-            "The population is empty, even after generating rules. " "Solution optimization will be skipped.",
-            PopulationEmptyWarning,
-        )
+        if not self.pool_:
+            warnings.warn(
+                "The population is empty, even after generating rules. " "Solution optimization will be skipped.",
+                PopulationEmptyWarning,
+            )
 
     def _compose_solution(self, X: np.ndarray, y: np.ndarray):
         """Performs solution composition."""
