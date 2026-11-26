@@ -87,11 +87,7 @@ if __name__ == "__main__":
 
         return pd.Series(cv_scores, name="negated RMSE")
 
-
-    scores = pd.concat(
-        {name: run(name, model) for name, model in models.items()},
-        axis=0
-    ).to_frame()
+    scores = pd.concat({name: run(name, model) for name, model in models.items()}, axis=0).to_frame()
 
     scores.index.names = ["model", "cv"]
 
@@ -105,4 +101,3 @@ if __name__ == "__main__":
     summary["cv_time_seconds"] = pd.Series(times)
 
     print(summary.to_string())
-
