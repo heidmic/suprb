@@ -106,12 +106,8 @@ class TestMatchingFunction(unittest.TestCase):
         name = matching_func.__name__
 
         return (
-                name in ("CenterSpread", "MinPercentage")
-                and (mutation == Halfnorm or initialization == HalfnormInit)
-        ) or (
-                name == "UnorderedBound"
-                and mutation in (HalfnormIncrease, UniformIncrease)
-        )
+            name in ("CenterSpread", "MinPercentage") and (mutation == Halfnorm or initialization == HalfnormInit)
+        ) or (name == "UnorderedBound" and mutation in (HalfnormIncrease, UniformIncrease))
 
     def test_smoke_test(self):
         for matching_func, mutation, initialization in self.combined_matching_params:
@@ -122,23 +118,23 @@ class TestMatchingFunction(unittest.TestCase):
             )
 
             with self.subTest(
-                    matching=case[0],
-                    mutation=case[1],
-                    initialization=case[2],
+                matching=case[0],
+                mutation=case[1],
+                initialization=case[2],
             ):
                 self.setup_model(matching_func, mutation, initialization)
 
                 # Prüft, dass setup_model tatsächlich ein Modell erzeugt hat.
                 self.assertIsNotNone(self.model)
 
-                if self._allows_fit_error(matching_func, mutation,
-                                          initialization):
+                if self._allows_fit_error(matching_func, mutation, initialization):
                     try:
                         self.model.fit(self.X, self.y)
                     except (TypeError, NotImplementedError):
                         pass
                 else:
                     self.model.fit(self.X, self.y)
+
 
 if __name__ == "__main__":
     unittest.main()
