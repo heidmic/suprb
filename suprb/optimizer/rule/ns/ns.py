@@ -107,9 +107,40 @@ class NoveltySearch(RuleDiscovery):
         self.novelty_calculation.archive.random_state = self.random_state_
         self.novelty_calculation.archive.archive = deepcopy(self.pool_)
 
-        rules = self._optimize(X=X, y=y, n_rules=n_rules)
+        eps = 0.0  # tolerance for similarity; 0 = suppress exact match duplicates.
+        candidates = self._optimize(X=X, y=y, n_rules=n_rules)
 
-        return self._filter_invalid_rules(X=X, y=y, rules=rules)
+        # with use_population_for_archive=True the same rule object can
+        # appear more than once in the archive.
+        unique = {id(r): r for r in candidates if r is not None and r.is_fitted_ and r.experience_ > 0}
+        eligible = self._filter_invalid_rules(X=X, y=y, rules=list(unique.values()))
+        if not eligible or n_rules <= 0:
+            return []
+
+        # Stable sort: np.argmax below resolves a distance tie by fitness, then archive order.
+        eligible.sort(key=lambda r: r.fitness_, reverse=True)
+
+        def distance(a, b):
+            return np.mean(a.match_set_ != b.match_set_)
+
+        # nearest[i] = distance to the closest rule in the pool or already chosen.
+        # Empty pool: all distances are infinite, so the first choice is by fitness.
+        nearest = np.array([min((distance(r, p) for p in self.pool_), default=np.inf) for r in eligible])
+
+        # Select from the archive and current pop and make sure to never
+        # select the same rule twice
+        chosen = []
+        for _ in range(min(n_rules, len(eligible))):
+            j = int(np.argmax(nearest))
+            if nearest[j] <= eps:
+                break
+
+            winner = eligible[j]
+            chosen.append(winner)
+            # update distances
+            nearest = np.minimum(nearest, [distance(r, winner) for r in eligible])
+
+        return self._get_optimized_rules(chosen, n_rules)
 
     def _optimize(self, X: np.ndarray, y: np.ndarray, n_rules: int) -> list[Rule]:
         """Steps of the novelty Search Algorithm containing:
@@ -137,7 +168,8 @@ class NoveltySearch(RuleDiscovery):
 
                 population = best_children + best_parents
 
-        return self._get_optimized_rules(best_children, n_rules)
+        new_entries = self.novelty_calculation.archive.archive[len(self.pool_) :]
+        return new_entries if new_entries else best_children
 
     def _init_population(self, X: np.ndarray, y: np.ndarray) -> list[Rule]:
         population = []

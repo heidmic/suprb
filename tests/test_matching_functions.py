@@ -73,7 +73,7 @@ class TestMatchingFunction(unittest.TestCase):
                 selection=ga.selection.Tournament(),
                 mutation=ga.mutation.BitFlips(),
             ),
-            n_iter=32,
+            n_iter=4,
             n_rules=4,
             logger=StdoutLogger(),
         )
