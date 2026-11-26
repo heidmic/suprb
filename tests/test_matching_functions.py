@@ -102,38 +102,38 @@ class TestMatchingFunction(unittest.TestCase):
 
         return super().setUp()
 
+    def _allows_fit_error(self, matching_func, mutation, initialization):
+        name = matching_func.__name__
+
+        return (
+            name in ("CenterSpread", "MinPercentage") and (mutation == Halfnorm or initialization == HalfnormInit)
+        ) or (name == "UnorderedBound" and mutation in (HalfnormIncrease, UniformIncrease))
+
     def test_smoke_test(self):
         for matching_func, mutation, initialization in self.combined_matching_params:
-            self.setup_model(matching_func, mutation, initialization)
+            case = (
+                matching_func.__name__,
+                mutation.__name__,
+                initialization.__name__,
+            )
 
-            print(f"\n\nChecking... {matching_func.__name__} with {mutation.__name__} and {initialization.__name__}")
+            with self.subTest(
+                matching=case[0],
+                mutation=case[1],
+                initialization=case[2],
+            ):
+                self.setup_model(matching_func, mutation, initialization)
 
-            try:
-                self.assertTrue(True),
-                print("PASSED [Model Generation]\n")
-            except:
-                self.assertTrue(
-                    False
-                ), f"FAILED! Model generation with this config:" f" {matching_func} with {mutation} and {initialization}"
+                # Prüft, dass setup_model tatsächlich ein Modell erzeugt hat.
+                self.assertIsNotNone(self.model)
 
-            try:
-                self.model.fit(self.X, self.y)
-                self.assertTrue(True),
-                print("PASSED [Model fit]\n")
-            except:
-                if (
-                    matching_func.__name__ in ("CenterSpread", "MinPercentage")
-                    and (mutation == Halfnorm or initialization == HalfnormInit)
-                    or matching_func.__name__ == "UnorderedBound"
-                    and mutation in (HalfnormIncrease, UniformIncrease)
-                ):
-                    # All scenarios where a type error is wanted
-                    self.assertTrue(True)
-
+                if self._allows_fit_error(matching_func, mutation, initialization):
+                    try:
+                        self.model.fit(self.X, self.y)
+                    except (TypeError, NotImplementedError):
+                        pass
                 else:
-                    self.assertTrue(
-                        False
-                    ), f"FAILED! Model fit with this config: " f"{matching_func} with {mutation} and {initialization}"
+                    self.model.fit(self.X, self.y)
 
 
 if __name__ == "__main__":
